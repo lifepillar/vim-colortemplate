@@ -35,7 +35,7 @@ endf
 " group: the name of the highlight group
 " fg: the foreground color for the group
 " bg: the background color for the group
-" attrs: a Dictionary of Lists of additional attributes
+" attrs: a Dictionary of additional attributes
 "
 " fg and bg must be three-element arrays of them form:
 " [GUI color, 256-based color, 16-based color]

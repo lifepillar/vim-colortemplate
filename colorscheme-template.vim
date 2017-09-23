@@ -162,7 +162,6 @@ call s:put("")
 call s:hl("ColorColumn",      'none',          'brightblack', {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("Conceal",          'cyan',          'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("Cursor",           'fg',            'blue',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("CursorIM",         'none',          'fg',          {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("CursorColumn",     'none',          'brightblack', {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("CursorLine",       'none',          'brightblack', {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("CursorLineNr",     'fg',            'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
@@ -237,6 +236,8 @@ call s:hl("Type",             'brightmagenta', 'none',        {'cterm': '',     
 call s:hl("Underlined",       'none',          'none',        {'cterm': 'underline',           'gui': 'underline',           'guisp': ''                    })
 " See `:help lCursor`
 call s:li("lCursor",          "Cursor")
+" See :help CursorIM
+call s:hl("CursorIM",         'none',          'fg',          {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 " Vim
 call s:hl("vimCommentTitle",  'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("vimMapModKey",     'yellow',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })

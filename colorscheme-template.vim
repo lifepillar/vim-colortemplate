@@ -155,7 +155,6 @@ call s:hl(  "Normal", 'fg', 'none', {'indent': 2})
 call s:put("else")
 call s:hl(  "Normal", 'fg', 'bg', {'indent': 2})
 " Move here other definitions that depend on the background not being transparent
-call s:put("else")
 call s:put("endif")
 call s:put("")
 " Default highlight groups (see `:help highlight-default`)

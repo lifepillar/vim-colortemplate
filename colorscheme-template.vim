@@ -46,9 +46,9 @@ fun! s:hlstring(group, fg, bg, attrs)
         \ 'ctermbg=' . s:palette[a:bg][get(g:, 'base16colors', 0) ? 2 : 1],
         \ 'guifg='   . s:palette[a:fg][0],
         \ 'guibg='   . s:palette[a:bg][0],
+        \ 'guisp='   . get(s:palette, get(a:attrs, 'guisp', ''), ['NONE'])[0],
         \ s:attr(a:attrs, 'cterm'),
-        \ s:attr(a:attrs, 'gui'),
-        \ s:attr(a:attrs, 'guisp')
+        \ s:attr(a:attrs, 'gui')
         \ ])
 endf
 
@@ -190,10 +190,10 @@ call s:li("QuickFixLine",     "Search")
 call s:hl("Search",           'yellow',        'fg',          {'cterm': 'reverse',             'gui': 'reverse',             'guisp': ''                    })
 call s:hl("SignColumn",       'white',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("SpecialKey",       'white',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("SpellBad",         'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'undecurl'            })
-call s:hl("SpellCap",         'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'undecurl'            })
-call s:hl("SpellLocal",       'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'undecurl'            })
-call s:hl("SpellRare",        'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'undecurl'            })
+call s:hl("SpellBad",         'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'white'               })
+call s:hl("SpellCap",         'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'white'               })
+call s:hl("SpellLocal",       'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'white'               })
+call s:hl("SpellRare",        'brightmagenta', 'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'white'               })
 call s:hl("StatusLine",       'cyan',          'fg',          {'cterm': 'reverse',             'gui': 'reverse',             'guisp': ''                    })
 call s:hl("StatusLineNC",     'cyan',          'bg',          {'cterm': 'reverse',             'gui': 'reverse',             'guisp': ''                    })
 call s:li("StatusLineTerm",   "StatusLine")
@@ -243,7 +243,7 @@ call s:hl("vimCommentTitle",  'red',           'none',        {'cterm': '',     
 call s:hl("vimMapModKey",     'yellow',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("vimMapMod",        'yellow',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("vimBracket",       'brightcyan',    'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("vimNotation",      'brightcyan',    'none',        {'cterm': 'bold,reverse,italic', 'gui': 'bold,reverse,italic', 'guisp': 'bold,reverse,italic' })
+call s:hl("vimNotation",      'brightcyan',    'none',        {'cterm': 'bold,reverse,italic', 'gui': 'bold,reverse,italic', 'guisp': ''                    })
 call s:li("vimUserFunc",      "Function")
 " Git
 call s:hl("gitcommitComment", 'brightblack',   'none',        {'cterm': 'italic',              'gui': 'italic',              'guisp': ''                    })

@@ -10,6 +10,7 @@ See also [this discussion](https://github.com/vim/vim/issues/1665).
 These are the requirements that a modern color scheme should satisfy:
 
 - support 256 colors and true color terminals, and GUI Vim.
+- Support transparent backgrounds.
 - Be minimal: no options, no documentation required (besides what Vim provides),
   no anti-hacking design (quoting @romainl).
 - Efficient loading. Avoid or minimize `execute` statements, complex logic, etc…

@@ -174,7 +174,7 @@ call s:hl("EndOfBuffer",      'brightblack',   'none',        {'cterm': '',     
 call s:hl("Error",            'red',           'fg',          {'cterm': 'reverse',             'gui': 'reverse',             'guisp': ''                    })
 call s:hl("ErrorMsg",         'red',           'fg',          {'cterm': 'reverse',             'gui': 'reverse',             'guisp': ''                    })
 call s:hl("FoldColumn",       'white',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Folded",           'white',         'brightblack', {'gui':   'italic'                                                                            })
+call s:hl("Folded",           'white',         'brightblack', {'cterm': 'italic',              'gui': 'italic',              'guisp': ''                    })
 call s:hl("IncSearch",        'yellow',        'fg',          {'cterm': 'reverse',             'gui': 'standout',            'guisp': ''                    })
 call s:hl("LineNr",           'white',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 call s:hl("MatchParen",       'brightblack',   'yellow',      {'cterm': 'bold,reverse',        'gui': 'bold,reverse',        'guisp': ''                    })

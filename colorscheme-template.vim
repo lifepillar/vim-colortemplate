@@ -236,7 +236,7 @@ call s:hl("Type",             'brightmagenta', 'none',        {'cterm': '',     
 call s:hl("Underlined",       'none',          'none',        {'cterm': 'underline',           'gui': 'underline',           'guisp': ''                    })
 " See `:help lCursor`
 call s:li("lCursor",          "Cursor")
-" See :help CursorIM
+" See `:help CursorIM`
 call s:hl("CursorIM",         'none',          'fg',          {'cterm': '',                    'gui': '',                    'guisp': ''                    })
 " Vim
 call s:hl("vimCommentTitle",  'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })

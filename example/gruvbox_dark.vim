@@ -1,6 +1,6 @@
 " Name:         Gruvbox Dark colorscheme for Vim
 " Author:       morhetz <morhetz@gmail.com>
-" Maintainer:   morhetz <lifepillar@lifepillar.me>
+" Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " License:      Vim License  (see `:help license`)
 
 " Color palette:

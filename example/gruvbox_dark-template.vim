@@ -73,7 +73,7 @@ endf
 fun! s:print_header()
   call setline(1, '" Name:         ' . s:colors_fullname . ' colorscheme for Vim'                     )
   call s:put  (   '" Author:       ' . s:author. ' <' . s:author_email. '>'                           )
-  call s:put  (   '" Maintainer:   ' . s:author. ' <' . s:maintainer_email. '>'                       )
+  call s:put  (   '" Maintainer:   ' . s:maintainer . ' <' . s:maintainer_email. '>'                  )
   call s:put  (   '" License:      Vim License  (see `:help license`)'                                )
   call s:put  (   ''                                                                                  )
   call s:put  (   '" Color palette:'                                                                  )

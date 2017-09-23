@@ -52,11 +52,36 @@ fun! s:hlstring(group, fg, bg, attrs)
         \ ])
 endf
 
-" Append a highlight group definition to the current buffer.
-" See s:hlstring() for the meaning of the parameters.
-fun! s:hl(group, fg, bg, attrs)
-  call append(line('$'), repeat(' ', get(a:attrs, 'indent', 0))
-        \   . s:hlstring(a:group, a:fg, a:bg, a:attrs))
+" Parse a highlight group specification of the form:
+"   Group fg bg [attributes] [guisp=color]
+" or
+"   Group fg bg [t=term_attr] [g=gui_attr] [s=color]
+" where the parts in [.] are optional.
+" Append the result at the end of the current buffer.
+fun! s:hl(line)
+  let l:elem = split(a:line, '\s\+')
+  let l:group = l:elem[0]
+  let l:fg = l:elem[1]
+  let l:bg = l:elem[2]
+  let l:term = ''
+  let l:gui = ''
+  let l:guisp = ''
+  for l:i in range(3, len(l:elem) - 1)
+    if l:elem[l:i] =~ '='
+      let [l:key, l:value] = split(l:elem[l:i], '=')
+      if l:key =~ '^t\a*'
+        let l:term = l:value
+      elseif l:key =~ '^g\a*'
+        let l:gui = l:value
+      elseif l:key =~ 's\a*'
+        let l:guisp = l:value
+      endif
+    else
+      let l:term = l:elem[l:i]
+      let l:gui = l:elem[l:i]
+    endif
+  endfor
+  call append('$', s:hlstring(l:group, l:fg, l:bg, { 'cterm': l:term, 'gui': l:gui, 'guisp': l:guisp }))
 endf
 
 " Append a linked highlight group definition (hi link) to the current buffer.
@@ -128,22 +153,20 @@ let s:palette = {
       \ 'dark2'             : [s:rgb(80,  73,  69),    239,    'DarkGreen'],
       \ 'dark3'             : [s:rgb(102, 92,  84),    241,   'DarkYellow'],
       \ 'dark4'             : [s:rgb(124, 111, 100),   243,     'DarkBlue'],
-      \ 'grey'              : [s:rgb(146, 131, 116),   245,  'DarkMagenta'],
-      \ 'light0'            : [s:rgb(253, 244, 193),   229,     'DarkCyan'],
-      \ 'light1'            : [s:rgb(235, 219, 178),   223,    'LightGrey'],
-      \ 'light2'            : [s:rgb(213, 196, 161),   250,     'DarkGrey'],
-      \ 'light3'            : [s:rgb(189, 174, 147),   248,     'LightRed'],
-      \ 'light4'            : [s:rgb(168, 153, 132),   246,   'LightGreen'],
+      \ 'orange'            : [s:rgb(254, 128, 25),    208,  'DarkMagenta'],
+      \ 'light3'            : [s:rgb(189, 174, 147),   248,     'DarkCyan'],
+      \ 'light4'            : [s:rgb(168, 153, 132),   246,    'LightGrey'],
+      \ 'grey'              : [s:rgb(146, 131, 116),   245,     'DarkGrey'],
       \ 'red'               : [s:rgb(251, 73,  52),    167,     'LightRed'],
       \ 'green'             : [s:rgb(184, 187, 38),    142,   'LightGreen'],
       \ 'yellow'            : [s:rgb(250, 189, 47),    214,  'LightYellow'],
       \ 'blue'              : [s:rgb(131, 165, 152),   109,    'LightBlue'],
-      \ 'purple'            : [s:rgb(211, 134, 155),   175,    'LightBlue'],
+      \ 'purple'            : [s:rgb(211, 134, 155),   175, 'LightMagenta'],
       \ 'aqua'              : [s:rgb(142, 192, 124),   108,    'LightCyan'],
-      \ 'orange'            : [s:rgb(254, 128, 25),    208,  'LightYellow'],
+      \ 'light1'            : [s:rgb(235, 219, 178),   223,        'White'],
       \ 'bg'                : [s:rgb( 40, 40,  40),    235,        'Black'],
-      \ 'fg'                : [s:rgb(235, 219, 178),   223,    'LightGrey'],
-      \ 'none'              : [             'NONE', 'NONE',         'NONE']
+      \ 'fg'                : [s:rgb(235, 219, 178),   223,        'White'],
+      \ 'none'              : [             'NONE', 'NONE',         'NONE'],
       \ }
 " }}}
 
@@ -152,101 +175,101 @@ call s:new_buffer()
 call s:print_header()
 call s:put('')
 call s:put("if !has('gui_running') && get(g:,'".s:colors_name."_transp_bg', 0)")
-call s:hl(  "Normal", 'fg', 'none', {'indent': 2})
+call s:hl (  'Normal fg none')
 " Move here other definitions that depend on the background being transparent
 call s:put("else")
-call s:hl(  "Normal", 'fg', 'bg', {'indent': 2})
+call s:hl (  'Normal fg bg')
 " Move here other definitions that depend on the background not being transparent
 call s:put("endif")
 call s:put("")
 " Default highlight groups (see `:help highlight-default`)
-call s:hl("ColorColumn",      'none',          'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Conceal",          'blue',          'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Cursor",           'none',          'none',        {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:li("CursorColumn",     'CursorLine')
-call s:hl("CursorLine",       'none',          'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("CursorLineNr",     'yellow',        'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("DiffAdd",          'green',         'bg',          {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("DiffChange",       'aqua',          'bg',          {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("DiffDelete",       'red',           'bg',          {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("DiffText",         'yellow',        'bg',          {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("Directory",        'green',         'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("EndOfBuffer",      'dark0',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Error",            'red',           'bg',          {'cterm': 'bold,inverse',        'gui': 'bold,inverse',        'guisp': ''                    })
-call s:hl("ErrorMsg",         'dark0',         'red',         {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("FoldColumn",       'grey',          'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Folded",           'grey',          'dark1',       {'cterm': 'italic',              'gui': 'italic',              'guisp': ''                    })
-call s:hl("IncSearch",        'orange',        'bg',          {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("LineNr",           'dark4',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("MatchParen",       'none',          'dark3',       {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("ModeMsg",          'yellow',        'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("MoreMsg",          'yellow',        'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("NonText",          'dark2',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Pmenu",            'light1',        'dark2',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("PmenuSbar",        'none',          'dark2',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("PmenuSel",         'dark2',         'blue',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("PmenuThumb",       'none',          'dark4',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Question",         'orange',        'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:li("QuickFixLine",     "Search")
-call s:hl("Search",           'yellow',        'bg',          {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("SignColumn",       'none',          'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("SpecialKey",       'dark2',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("SpellBad",         'none',          'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'blue'                })
-call s:hl("SpellCap",         'none',          'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'red'                 })
-call s:hl("SpellLocal",       'none',          'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'aqua'                })
-call s:hl("SpellRare",        'none',          'none',        {'cterm': 'underline',           'gui': 'undercurl',           'guisp': 'magenta'             })
-call s:hl("StatusLine",       'dark2',         'light1',      {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:hl("StatusLineNC",     'dark1',         'light4',      {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
-call s:li("StatusLineTerm",   "StatusLine")
-call s:li("StatusLineTermNC", "StatusLineNC")
-call s:li("TabLine",          "TabLineFill")
-call s:hl("TabLineFill",      'dark4',         'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("TabLineSel",       'green',         'dark1',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Title",            'green',         'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("VertSplit",        'dark3',         'dark0',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Visual",           'none',          'dark3',       {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:li("VisualNOS",        "Visual")
-call s:hl("WarningMsg",       'red',           'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("WildMenu",         'blue',          'dark2',       {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
+call s:hl('ColorColumn none dark1')
+call s:hl('Conceal blue none')
+call s:hl('Cursor none none inverse')
+call s:li('CursorColumn',     'CursorLine')
+call s:hl('CursorLine none dark1')
+call s:hl('CursorLineNr yellow dark1')
+call s:hl('DiffAdd green bg inverse')
+call s:hl('DiffChange aqua bg inverse')
+call s:hl('DiffDelete red bg inverse')
+call s:hl('DiffText yellow bg inverse')
+call s:hl('Directory green none bold')
+call s:hl('EndOfBuffer dark0 none')
+call s:hl('Error red bg bold,reverse')
+call s:hl('ErrorMsg dark0 red bold')
+call s:hl('FoldColumn grey dark1')
+call s:hl('Folded grey dark1 italic')
+call s:hl('IncSearch orange bg inverse')
+call s:hl('LineNr dark4 none')
+call s:hl('MatchParen none dark3 bold')
+call s:hl('ModeMsg yellow none bold')
+call s:hl('MoreMsg yellow none bold')
+call s:hl('NonText dark2 none')
+call s:hl('Pmenu light1 dark2')
+call s:hl('PmenuSbar none dark2')
+call s:hl('PmenuSel dark2 blue bold')
+call s:hl('PmenuThumb none dark4')
+call s:hl('Question orange none bold')
+call s:li('QuickFixLine', "Search")
+call s:hl('Search yellow bg inverse')
+call s:hl('SignColumn none dark1')
+call s:hl('SpecialKey dark2 none')
+call s:hl('SpellBad none none t=underline g=undercurl s=blue')
+call s:hl('SpellCap none none t=underline g=undercurl s=red')
+call s:hl('SpellLocal none none t=underline g=undercurl s=aqua')
+call s:hl('SpellRare none none t=underline g=undercurl s=magenta')
+call s:hl('StatusLine dark2 light1 inverse')
+call s:hl('StatusLineNC dark1 light4 inverse')
+call s:li('StatusLineTerm', "StatusLine")
+call s:li('StatusLineTermNC', "StatusLineNC")
+call s:li('TabLine', "TabLineFill")
+call s:hl('TabLineFill dark4 dark1')
+call s:hl('TabLineSel green dark1')
+call s:hl('Title green none bold')
+call s:hl('VertSplit dark3 dark0')
+call s:hl('Visual none dark3')
+call s:li('VisualNOS', "Visual")
+call s:hl('WarningMsg red none bold')
+call s:hl('WildMenu blue dark2 bold')
 " Other conventional group names (see `:help group-name`)
-call s:hl("Boolean",          'purple',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Character",        'purple',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Comment",          'grey',          'none',        {'cterm': 'italic',              'gui': 'italic',              'guisp': ''                    })
-call s:hl("Constant",         'purple',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Debug",            'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Delimiter",        'orange',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Float",            'purple',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Function",         'green',         'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("Identifier",       'blue',          'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Ignore",           'fg',            'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Include",          'aqua',          'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Keyword",          'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Label",            'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Number",           'purple',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:li("Operator",         "Normal")
-call s:hl("PreProc",          'aqua',          'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Special",          'orange',        'dark1',       {'cterm': 'italic',              'gui': 'italic',              'guisp': ''                    })
-call s:hl("SpecialChar",      'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("SpecialComment",   'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Statement",        'red',           'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("StorageClass",     'orange',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("String",           'green',         'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Structure",        'aqua',          'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Todo",             'fg',            'bg',          {'cterm': 'bold,italic',         'gui': 'bold,italic',         'guisp': ''                    })
-call s:hl("Type",             'yellow',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("Underlined",       'blue',          'none',        {'cterm': 'underline',           'gui': 'underline',           'guisp': ''                    })
+call s:hl('Boolean purple none')
+call s:hl('Character purple none')
+call s:hl('Comment grey none italic')
+call s:hl('Constant purple none')
+call s:hl('Debug red none')
+call s:hl('Delimiter orange none')
+call s:hl('Float purple none')
+call s:hl('Function green none bold')
+call s:hl('Identifier blue none')
+call s:hl('Ignore fg none')
+call s:hl('Include aqua none')
+call s:hl('Keyword red none')
+call s:hl('Label red none')
+call s:hl('Number purple none')
+call s:li('Operator', "Normal")
+call s:hl('PreProc aqua none')
+call s:hl('Special orange dark1 italic')
+call s:hl('SpecialChar red none')
+call s:hl('SpecialComment red none')
+call s:hl('Statement red none')
+call s:hl('StorageClass orange none')
+call s:hl('String green none')
+call s:hl('Structure aqua none')
+call s:hl('Todo fg bg bold,italic')
+call s:hl('Type yellow none')
+call s:hl('Underlined blue none underline')
 " See `:help lCursor`
-call s:li("lCursor",          "Cursor")
+call s:li('lCursor', "Cursor")
 " See `:help CursorIM`
-call s:hl("CursorIM",         'none',          'none',        {'cterm': 'inverse',             'gui': 'inverse',             'guisp': ''                    })
+call s:hl('CursorIM none none inverse')
 " Vim
-call s:hl("vimCommentTitle",  'light4',        'none',        {'cterm': 'bold',                'gui': 'bold',                'guisp': ''                    })
-call s:hl("vimMapModKey",     'orange',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:li("vimMapMod",        "vimMapModKey")
-call s:hl("vimBracket",       'orange',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
-call s:hl("vimNotation",      'orange',        'none',        {'cterm': '',                    'gui': '',                    'guisp': ''                    })
+call s:hl('vimCommentTitle light4 none bold')
+call s:hl('vimMapModKey orange none')
+call s:li('vimMapMod', "vimMapModKey")
+call s:hl('vimBracket orange none')
+call s:hl('vimNotation orange none')
 " Git
-call s:li("gitcommitComment", "Comment")
+call s:li('gitcommitComment', "Comment")
 
 if !get(g:, s:colors_name.'_test', 0)
   finish

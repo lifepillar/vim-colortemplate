@@ -4,27 +4,25 @@
 " License:      Vim License  (see `:help license`)
 
 " Color palette:
-"  "light4": ["#a89984", 246, "LightGreen"]
+"  "light4": ["#a89984", 246, "LightGrey"]
 "  "green": ["#b8bb26", 142, "LightGreen"]
 "  "yellow": ["#fabd2f", 214, "LightYellow"]
 "  "aqua": ["#8ec07c", 108, "LightCyan"]
 "  "bg": ["#282828", 235, "Black"]
 "  "none": ["NONE", NONE, "NONE"]
 "  "red": ["#fb4934", 167, "LightRed"]
-"  "orange": ["#fe8019", 208, "LightYellow"]
-"  "fg": ["#ebdbb2", 223, "LightGrey"]
+"  "purple": ["#d3869b", 175, "LightMagenta"]
+"  "fg": ["#ebdbb2", 223, "White"]
 "  "dark0": ["#282828", 235, "Black"]
 "  "dark1": ["#3c3836", 237, "DarkRed"]
 "  "dark2": ["#504945", 239, "DarkGreen"]
 "  "dark3": ["#665c54", 241, "DarkYellow"]
 "  "dark4": ["#7c6f64", 243, "DarkBlue"]
-"  "purple": ["#d3869b", 175, "LightBlue"]
+"  "orange": ["#fe8019", 208, "DarkMagenta"]
 "  "blue": ["#83a598", 109, "LightBlue"]
-"  "grey": ["#928374", 245, "DarkMagenta"]
-"  "light0": ["#fdf4c1", 229, "DarkCyan"]
-"  "light1": ["#ebdbb2", 223, "LightGrey"]
-"  "light2": ["#d5c4a1", 250, "DarkGrey"]
-"  "light3": ["#bdae93", 248, "LightRed"]
+"  "grey": ["#928374", 245, "DarkGrey"]
+"  "light1": ["#ebdbb2", 223, "White"]
+"  "light3": ["#bdae93", 248, "DarkCyan"]
 
 if !exists('&t_Co')
 " FIXME: Do something?
@@ -40,9 +38,9 @@ endif
 let g:colors_name = 'gruvbox_dark'
 
 if !has('gui_running') && get(g:,'gruvbox_dark_transp_bg', 0)
-  hi Normal ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Normal ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 else
-  hi Normal ctermfg=223 ctermbg=235 guifg=#ebdbb2 guibg=#282828 guisp=NONE cterm=NONE gui=NONE
+hi Normal ctermfg=223 ctermbg=235 guifg=#ebdbb2 guibg=#282828 guisp=NONE cterm=NONE gui=NONE
 endif
 
 hi ColorColumn ctermfg=NONE ctermbg=237 guifg=NONE guibg=#3c3836 guisp=NONE cterm=NONE gui=NONE
@@ -57,7 +55,7 @@ hi DiffDelete ctermfg=167 ctermbg=235 guifg=#fb4934 guibg=#282828 guisp=NONE cte
 hi DiffText ctermfg=214 ctermbg=235 guifg=#fabd2f guibg=#282828 guisp=NONE cterm=NONE,inverse gui=NONE,inverse
 hi Directory ctermfg=142 ctermbg=NONE guifg=#b8bb26 guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi EndOfBuffer ctermfg=235 ctermbg=NONE guifg=#282828 guibg=NONE guisp=NONE cterm=NONE gui=NONE
-hi Error ctermfg=167 ctermbg=235 guifg=#fb4934 guibg=#282828 guisp=NONE cterm=NONE,bold,inverse gui=NONE,bold,inverse
+hi Error ctermfg=167 ctermbg=235 guifg=#fb4934 guibg=#282828 guisp=NONE cterm=NONE,bold,reverse gui=NONE,bold,reverse
 hi ErrorMsg ctermfg=235 ctermbg=167 guifg=#282828 guibg=#fb4934 guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi FoldColumn ctermfg=245 ctermbg=237 guifg=#928374 guibg=#3c3836 guisp=NONE cterm=NONE gui=NONE
 hi Folded ctermfg=245 ctermbg=237 guifg=#928374 guibg=#3c3836 guisp=NONE cterm=NONE,italic gui=NONE,italic

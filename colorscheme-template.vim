@@ -114,9 +114,9 @@ let s:background       = 'dark' " 'dark' or 'light'
 " }}}
 
 " Define your color palette {{{
-" Change the color names as you see fit. Use such names to define the
-" highlight groups later. Define as many or as few colors as you need.
-" It is recommended not to use more than sixteen colors.
+" Change the color names as you see fit. Use those names to define the
+" highlight groups later. Define as many or as few colors as you need, but
+" leave the 'none' entry untouched.
 " You should always define GUI colors and base-256 colors. If you do not plan
 " to generate a base-16 colorscheme, you may leave the base-16 colors as they
 " are.

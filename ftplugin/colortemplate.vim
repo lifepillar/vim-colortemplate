@@ -259,7 +259,7 @@ endf
 " }}}
 
 " Colorscheme builder {{{
-fun! s:make_template(...)
+fun! s:make_colorscheme(...)
   call s:init()
   call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
   call s:new_buffer()
@@ -290,7 +290,7 @@ fun! s:make_template(...)
 endf
 
 " FIXME: make it global?
-command! -buffer -nargs=? -complete=file Colortemplate call <sid>make_template(<q-args>)
+command! -buffer -nargs=? -complete=file Colortemplate call <sid>make_colorscheme(<q-args>)
 " }}}
 
 " vim: foldmethod=marker nowrap

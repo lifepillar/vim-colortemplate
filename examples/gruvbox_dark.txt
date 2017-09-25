@@ -93,7 +93,7 @@ Label red none
 Number purple none
 Operator -> Normal
 PreProc aqua none
-Special orange dark1 italic
+Special orange none italic
 SpecialChar red none
 SpecialComment red none
 Statement red none
@@ -107,6 +107,7 @@ lCursor -> Cursor
 CursorIM none none inverse
 
 vimCommentTitle light4 none bold
+vimContinue light3 none
 vimMapModKey orange none
 vimMapMod -> vimMapModKey
 vimBracket orange none

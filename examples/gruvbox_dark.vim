@@ -87,7 +87,7 @@ hi Label ctermfg=167 ctermbg=NONE guifg=#fb4934 guibg=NONE guisp=NONE cterm=NONE
 hi Number ctermfg=175 ctermbg=NONE guifg=#d3869b guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Operator Normal
 hi PreProc ctermfg=108 ctermbg=NONE guifg=#8ec07c guibg=NONE guisp=NONE cterm=NONE gui=NONE
-hi Special ctermfg=208 ctermbg=237 guifg=#fe8019 guibg=#3c3836 guisp=NONE cterm=NONE,italic gui=NONE,italic
+hi Special ctermfg=208 ctermbg=NONE guifg=#fe8019 guibg=NONE guisp=NONE cterm=NONE,italic gui=NONE,italic
 hi SpecialChar ctermfg=167 ctermbg=NONE guifg=#fb4934 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi SpecialComment ctermfg=167 ctermbg=NONE guifg=#fb4934 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Statement ctermfg=167 ctermbg=NONE guifg=#fb4934 guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -100,6 +100,7 @@ hi Underlined ctermfg=109 ctermbg=NONE guifg=#83a598 guibg=NONE guisp=NONE cterm
 hi! link lCursor Cursor
 hi CursorIM ctermfg=NONE ctermbg=NONE guifg=NONE guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
 hi vimCommentTitle ctermfg=246 ctermbg=NONE guifg=#a89984 guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
+hi vimContinue ctermfg=248 ctermbg=NONE guifg=#bdae93 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi vimMapModKey ctermfg=208 ctermbg=NONE guifg=#fe8019 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link vimMapMod vimMapModKey
 hi vimBracket ctermfg=208 ctermbg=NONE guifg=#fe8019 guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -187,7 +188,7 @@ hi! link gitcommitComment Comment
 " Number purple none
 " Operator -> Normal
 " PreProc aqua none
-" Special orange dark1 italic
+" Special orange none italic
 " SpecialChar red none
 " SpecialComment red none
 " Statement red none
@@ -200,6 +201,7 @@ hi! link gitcommitComment Comment
 " lCursor -> Cursor
 " CursorIM none none inverse
 " vimCommentTitle light4 none bold
+" vimContinue light3 none
 " vimMapModKey orange none
 " vimMapMod -> vimMapModKey
 " vimBracket orange none

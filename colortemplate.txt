@@ -35,7 +35,7 @@ Color: brightwhite          #ffffff              206        White
 ### Highlight groups
 
 # Group              Foreground        Background        Attributes
-Normal               white             black
+Normal               white             black/none
 ColorColumn          fg                bg
 Conceal              none              none
 Cursor               white             black
@@ -113,7 +113,7 @@ Type                 white             none
 Underlined           white             none
 # See `:help lCursor`
 lCursor           -> Cursor
-" See `:help CursorIM`
+# See `:help CursorIM`
 CursorIM             none              fg
 # Vim
 vimCommentTitle      white             none

@@ -9,22 +9,24 @@ endif
 let b:did_ftplugin = 1
 
 " Variables {{{
-let s:template = []
-let s:full_name = ''
-let s:short_name = ''
-let s:author = ''
-let s:maintainer = ''
-let s:website = ''
-let s:description = ''
-let s:background = ''
-let s:palette = {
-      \ 'none': ['NONE', 'NONE', 'NONE'],
-      \ 'fg':   ['fg',   'fg',   'fg'  ],
-      \ 'bg':   ['bg',   'bg',   'bg'  ]
-      \ }
-let s:transp_hi_group = [] " hi group definitions for transparent background
-let s:opaque_hi_group = [] " hi group definitions for opaque background
-let s:hi_group        = [] " hi group definitions that do not depend on transparency
+fun! s:init()
+  let s:template = []
+  let s:full_name = ''
+  let s:short_name = ''
+  let s:author = ''
+  let s:maintainer = ''
+  let s:website = ''
+  let s:description = ''
+  let s:background = ''
+  let s:palette = {
+        \ 'none': ['NONE', 'NONE', 'NONE'],
+        \ 'fg':   ['fg',   'fg',   'fg'  ],
+        \ 'bg':   ['bg',   'bg',   'bg'  ]
+        \ }
+  let s:transp_hi_group = [] " hi group definitions for transparent background
+  let s:opaque_hi_group = [] " hi group definitions for opaque background
+  let s:hi_group        = [] " hi group definitions that do not depend on transparency
+endf
 " }}}
 
 " Helper functions {{{
@@ -258,6 +260,7 @@ endf
 
 " Colorscheme builder {{{
 fun! s:make_template(...)
+  call s:init()
   call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
   call s:new_buffer()
   call s:print_header()

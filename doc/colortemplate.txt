@@ -1,0 +1,128 @@
+==============================================================================
+Color templates				*color-templates* *ft-colortemplate*
+
+A colortemplate file is designed to help vimmers create their own colorschemes
+without much effort. It can also be used to create colorschemes suitable for
+distribution with Vim. Colorschemes created using a colortemplate have the
+following features:
+
+- support for 256-color terminals, for true color terminals and for GUI Vim;
+- support for transparent background;
+- no over-engineering, efficient loading and consistent structure;
+- automatically licensed under the Vim license.
+
+To get started quickly, open `colortemplate.txt` and type:
+>
+  :Colortemplate
+<
+This will open a new tab with the colorscheme generated from the template
+file. You may use `colorscheme.txt` as a starting point for creating your own
+colorscheme. The process is divided in four steps:
+
+1. start by editing your colorscheme's information;
+2. define your colors;
+3. define your highlight groups and links;
+4. and generate your colorscheme.
+
+Information about the colorscheme consists of the following mandatory and
+optional fields:
+>
+  # Mandatory information
+  Full name: A unique and attractive name
+  Short name: all_lowercase_with_no_spaces
+  Author: Myself <myself@somewhere.org>
+  Maintainer: Myself <myself@somewhere.org>
+  
+  # Optional information
+  Background: dark or light
+  Website: http://mysite.org
+  Description: A one line description
+<
+Color definitions consist of lines with the following form:
+>
+  Color: <name> <GUI spec> <base-256 spec> <base-16 spec>
+
+For example:
+>
+  Color: white  #ffffff  206  White
+<
+The color name is an arbitrary string (only letters, numbers and underscore
+allowed). Give each color a distinctive name. GUI color specifications may be
+given as hexadecimal values, as in the example above, or as RGB values:
+>
+  Color: white  rgb(255,255,255)  206  White
+<
+Base-256 specifications are used in terminals supporting 256 colors, but
+without support for true colors or when |termguicolors| is not set. Base-16
+colors should be given as color constants (see |cterm-colors|). They are
+normally not used (but see |g:base16template|). You may define as many or as
+few colors as you like.
+
+You may also define alternative colors to be used with a transparent
+background. Transparent background is enabled by setting
+|g:<colorscheme>_transp_bg| to 1 (where `<colorscheme>` is the short name of
+your colorscheme). For example, the following definition:
+>
+  Normal white black/none
+<
+instructs Vim to use a transparent background instead of a black background
+when |g:<colorscheme>_transp_bg| is set. The Normal highlight group should
+always be the first defined highlight group and it should always be defined
+with an alternative transparent background, as above.
+
+Highlight group definitions consist of lines with the following form:
+>
+  <GroupName> <foreground color> <background color> <style>
+<
+For example:
+>
+  SpellRare  white  black  bold,reverse  guisp=cyan
+<
+Colors must be specified using the color names defined in the `Color:` fields.
+The <style> part is used to specify comma-separated lists of attributes (see
+|attr-list|) and the special color to use in the GUI. Both parts are optional,
+so these are also valid highlight group specifications:
+>
+  Normal    white   black
+  DiffAdd   orange  blue   reverse
+  SpellBad  white   black  guisp=red
+<
+The foreground and background colors must always be present. You may use the
+special values `fg`, `bg`, and `none` for the default foreground color, the
+default background color and for disabling the corresponding highlighting,
+respectively.
+
+Attributes specified as above are used for both |cterm| and |gui|
+highlighting. If you want to use different values for the terminal and the
+GUI, you must prepend `term=` or `gui=`, respectively, as is done in Vim color
+schemes. For example:
+>
+  IncSearch  white  black  term=bold,reverse  gui=bold,standout
+<
+`term=` may be abbreviated `t=`, and `gui=` may be abbreviated `g=`. Instead
+of `guisp=`, you may also use `s=`.
+
+Linked groups are defined using the following syntax:
+>
+  <SourceGroup> -> <TargetGroup>
+
+For example:
+>
+  QuickFixLine  ->  Search
+<
+Finally, line comments may be added anywhere by starting a line with `#`.
+
+==============================================================================
+Colortemplate options		       	*colortemplate-options*
+
+						*g:base16template*
+If you want to use the shell's 16 color palette instead of the standard 256
+colors, set this variable to 1, and generate the colorscheme with
+|:Colortemplate|.
+
+==============================================================================
+Colortemplate command		       	*:Colortemplate*
+
+Use this command to create a Vim colorscheme from a colortemplate file.
+
+vim:tw=78:ts=8:ft=help:norl:

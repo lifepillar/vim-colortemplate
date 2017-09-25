@@ -1,0 +1,5 @@
+:Colortemplate	colortemplate.txt	/*:Colortemplate*
+color-templates	colortemplate.txt	/*color-templates*
+colortemplate-options	colortemplate.txt	/*colortemplate-options*
+ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
+g:base16template	colortemplate.txt	/*g:base16template*

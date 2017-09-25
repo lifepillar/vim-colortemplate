@@ -1,0 +1,126 @@
+# vim: ft=colortemplate
+
+# Mandatory information
+Full name: My Wonderful Colors
+Short name: my_wonder
+Author: Myself <myself@somewhere.org>
+Maintainer: Myself <myself@somewhere.org>
+
+# Optional information
+Background: dark
+Website:
+Description: Example of color template
+
+
+### Color palette
+
+# Color name                GUI                  Base256    Base16 (optional)
+Color: black                rgb( 41,  44,  54)   191        Black
+Color: red                  rgb(220,  60,  60)   192        DarkRed
+Color: green                rgb( 82, 189,  88)   193        DarkGreen
+Color: yellow               rgb(210, 142,  93)   194        DarkYellow
+Color: blue                 rgb( 70, 112, 216)   195        DarkBlue
+Color: magenta              rgb(183,  57, 153)   196        DarkMagenta
+Color: cyan                 rgb(100, 135, 143)   197        DarkCyan
+Color: white                rgb(153, 153, 153)   198        LightGrey
+Color: brightblack          rgb( 51,  51,  68)   199        DarkGrey
+Color: brightred            rgb(248,  69,  71)   200        LightRed
+Color: brightgreen          rgb(149, 199, 111)   201        LightGreen
+Color: brightyellow         rgb(239, 161, 107)   202        LightYellow
+Color: brightblue           rgb( 82, 131, 255)   203        LightBlue
+Color: brightmagenta        rgb(132, 133, 206)   204        LightMagenta
+Color: brightcyan           rgb(  0, 171, 165)   205        LightCyan
+Color: brightwhite          #ffffff              206        White
+
+### Highlight groups
+
+# Group              Foreground        Background        Attributes
+Normal               white             black
+ColorColumn          fg                bg
+Conceal              none              none
+Cursor               white             black
+CursorColumn         white             black
+CursorLine           white             black
+CursorLineNr         white             black
+DiffAdd              white             black             reverse
+DiffChange           white             black             reverse
+DiffDelete           white             black             reverse
+DiffText             white             black             bold,reverse
+Directory            white             black
+EndOfBuffer          white             black
+Error                white             black             reverse
+ErrorMsg             white             black             reverse
+FoldColumn           white             black
+Folded               white             black             italic
+IncSearch            white             black             t=reverse g=standout
+LineNr               white             black
+MatchParen           white             black
+ModeMsg              white             black
+MoreMsg              white             black
+NonText              white             black
+Pmenu                white             black
+PmenuSbar            white             black
+PmenuSel             white             black
+PmenuThumb           white             black
+Question             white             black
+QuickFixLine     ->  Search
+Search               white             black
+SignColumn           white             black
+SpecialKey           white             black
+SpellBad             white             black             s=red
+SpellCap             white             black             s=blue
+SpellLocal           white             black             s=magenta
+SpellRare            white             black             s=cyan reverse
+StatusLine           white             black
+StatusLineNC         white             black
+StatusLineTerm    -> StatusLine
+StatusLineTermNC  -> StatusLineNC
+TabLine              white             black
+TabLineFill          white             black
+TabLineSel           white             black
+Title                white             black
+VertSplit            white             black
+Visual               white             black
+VisualNOS            white             black
+WarningMsg           white             black
+WildMenu             white             black
+# Other conventional group names (see `:help group-name`)
+Boolean              white             none
+Character            white             none
+Comment              white             none
+Constant             white             none
+Debug                white             none
+Delimiter            white             none
+Float                white             none
+Function             white             none
+Identifier           white             none
+Ignore               white             none
+Include              white             none
+Keyword              white             none
+Label                white             none
+Number               white             none
+Operator             white             none
+PreProc              white             none
+Special              white             none
+SpecialChar          white             none
+SpecialComment       white             none
+Statement            white             none
+StorageClass         white             none
+String               white             none
+Structure            white             none
+Todo                 white             none
+Type                 white             none
+Underlined           white             none
+# See `:help lCursor`
+lCursor           -> Cursor
+" See `:help CursorIM`
+CursorIM             none              fg
+# Vim
+vimCommentTitle      white             none
+vimMapModKey         white             none
+vimMapMod            white             none
+vimBracket           white             none
+vimNotation          white             none
+vimUserFunc       -> Function
+#  Git
+gitcommitComment     fg                none

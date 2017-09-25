@@ -19,9 +19,9 @@ endif
 let g:colors_name = 'gruvbox_dark'
 
 if !has('gui_running') && get(g:, 'gruvbox_dark_transp_bg', 0)
-hi Normal ctermfg=235 ctermbg=NONE guifg=#282828 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Normal ctermfg=NONE ctermbg=235 guifg=NONE guibg=#282828 guisp=NONE cterm=NONE gui=NONE
 else
-hi Normal ctermfg=235 ctermbg=223 guifg=#282828 guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
+hi Normal ctermfg=223 ctermbg=235 guifg=#ebdbb2 guibg=#282828 guisp=NONE cterm=NONE gui=NONE
 endif
 hi ColorColumn ctermfg=NONE ctermbg=237 guifg=NONE guibg=#3c3836 guisp=NONE cterm=NONE gui=NONE
 hi Conceal ctermfg=109 ctermbg=NONE guifg=#83a598 guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -122,7 +122,7 @@ hi! link gitcommitComment Comment
 " Color: purple            rgb(211, 134, 155)    175  LightMagenta
 " Color: aqua              rgb(142, 192, 124)    108     LightCyan
 " Color: light1            rgb(235, 219, 178)    223         White
-" Normal dark0 light1/none
+" Normal light1/none dark0
 " ColorColumn none dark1
 " Conceal blue none
 " Cursor none none inverse

@@ -1,0 +1,115 @@
+# vim: ft=colortemplate
+
+# Mandatory information
+Full name: Gruvbox Dark
+Short name: gruvbox_dark
+Author: morhetz <morhetz@gmail.com>
+Maintainer: Lifepillar <lifepillar@lifepillar.me>
+
+# Optional information
+Background: dark
+Website: https://github.com/morhetz/gruvbox/
+Description: Retro groove color scheme
+
+Color: dark0             rgb(40,  40,  40)     235         Black
+Color: dark1             rgb(60,  56,  54)     237       DarkRed
+Color: dark2             rgb(80,  73,  69)     239     DarkGreen
+Color: dark3             rgb(102, 92,  84)     241    DarkYellow
+Color: dark4             rgb(124, 111, 100)    243      DarkBlue
+Color: orange            rgb(254, 128, 25)     208   DarkMagenta
+Color: light3            rgb(189, 174, 147)    248      DarkCyan
+Color: light4            rgb(168, 153, 132)    246     LightGrey
+Color: grey              rgb(146, 131, 116)    245      DarkGrey
+Color: red               rgb(251, 73,  52)     167      LightRed
+Color: green             rgb(184, 187, 38)     142    LightGreen
+Color: yellow            rgb(250, 189, 47)     214   LightYellow
+Color: blue              rgb(131, 165, 152)    109     LightBlue
+Color: purple            rgb(211, 134, 155)    175  LightMagenta
+Color: aqua              rgb(142, 192, 124)    108     LightCyan
+Color: light1            rgb(235, 219, 178)    223         White
+
+Normal dark0 light1/none
+ColorColumn none dark1
+Conceal blue none
+Cursor none none inverse
+CursorColumn -> CursorLine
+CursorLine none dark1
+CursorLineNr yellow dark1
+DiffAdd green bg inverse
+DiffChange aqua bg inverse
+DiffDelete red bg inverse
+DiffText yellow bg inverse
+Directory green none bold
+EndOfBuffer dark0 none
+Error red bg bold,reverse
+ErrorMsg dark0 red bold
+FoldColumn grey dark1
+Folded grey dark1 italic
+IncSearch orange bg inverse
+LineNr dark4 none
+MatchParen none dark3 bold
+ModeMsg yellow none bold
+MoreMsg yellow none bold
+NonText dark2 none
+Pmenu light1 dark2
+PmenuSbar none dark2
+PmenuSel dark2 blue bold
+PmenuThumb none dark4
+Question orange none bold
+QuickFixLine -> Search
+Search yellow bg inverse
+SignColumn none dark1
+SpecialKey dark2 none
+SpellBad none none t=underline g=undercurl s=blue
+SpellCap none none t=underline g=undercurl s=red
+SpellLocal none none t=underline g=undercurl s=aqua
+SpellRare none none t=underline g=undercurl s=magenta
+StatusLine dark2 light1 inverse
+StatusLineNC dark1 light4 inverse
+StatusLineTerm -> StatusLine
+StatusLineTermNC -> StatusLineNC
+TabLine -> TabLineFill
+TabLineFill dark4 dark1
+TabLineSel green dark1
+Title green none bold
+VertSplit dark3 dark0
+Visual none dark3
+VisualNOS -> Visual
+WarningMsg red none bold
+WildMenu blue dark2 bold
+Boolean purple none
+Character purple none
+Comment grey none italic
+Constant purple none
+Debug red none
+Delimiter orange none
+Float purple none
+Function green none bold
+Identifier blue none
+Ignore fg none
+Include aqua none
+Keyword red none
+Label red none
+Number purple none
+Operator -> Normal
+PreProc aqua none
+Special orange dark1 italic
+SpecialChar red none
+SpecialComment red none
+Statement red none
+StorageClass orange none
+String green none
+Structure aqua none
+Todo fg bg bold,italic
+Type yellow none
+Underlined blue none underline
+lCursor -> Cursor
+CursorIM none none inverse
+
+vimCommentTitle light4 none bold
+vimMapModKey orange none
+vimMapMod -> vimMapModKey
+vimBracket orange none
+vimNotation orange none
+
+gitcommitComment -> Comment

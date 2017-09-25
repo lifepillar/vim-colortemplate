@@ -28,7 +28,7 @@ Color: purple            rgb(211, 134, 155)    175  LightMagenta
 Color: aqua              rgb(142, 192, 124)    108     LightCyan
 Color: light1            rgb(235, 219, 178)    223         White
 
-Normal light1/none dark0
+Normal light1 dark0/none
 ColorColumn none dark1
 Conceal blue none
 Cursor none none inverse

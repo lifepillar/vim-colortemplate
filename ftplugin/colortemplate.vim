@@ -8,7 +8,7 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-" Variables {{{
+" Initialization {{{
 fun! s:init()
   let s:template = []
   let s:full_name = ''
@@ -26,6 +26,7 @@ fun! s:init()
   let s:transp_hi_group = [] " hi group definitions for transparent background
   let s:opaque_hi_group = [] " hi group definitions for opaque background
   let s:hi_group        = [] " hi group definitions that do not depend on transparency
+  call setloclist(0, [], 'r') " Used for errors
 endf
 " }}}
 
@@ -43,20 +44,12 @@ fun! s:rgb2hex(r,g,b)
   return '#' . printf('%02x', a:r) . printf('%02x', a:g) . printf('%02x', a:b)
 endf
 
-fun! s:msg(mode, message)
-  redraw
-  echo "\r"
-  execute 'echohl' a:mode
-  echomsg a:message . '.'
-  echohl None
+fun! s:add_warning(msg, ...)
+  call setloclist(0, [{'bufnr': bufnr('%'), 'lnum': (a:0 > 0 ? a:1 + 1, 1), 'text': a:msg, 'type': 'W'}], 'a')
 endf
 
-fun! s:warn_msg(m)
-  call s:msg('WarningMsg', a:m)
-endf
-
-fun! s:err_msg(m)
-  call s:msg('Error', a:m)
+fun! s:add_error(msg, ...)
+  call setloclist(0, [{'bufnr': bufnr('%'), 'lnum': a:0 > 0 ? a:1+1 : 1, 'text': a:msg, 'type': 'E'}], 'a')
 endf
 
 " Append a String to the end of the current buffer.
@@ -129,19 +122,19 @@ endf
 
 " Parser {{{
 " Parse a color definition and store it internally.
-fun! s:set_color(line)
+fun! s:set_color(line, linenr)
   let l:match  = matchlist(a:line,
         \   '^\(\w\+\)\s\+'
-        \ . '\(#[a-f0-9]\{6\}\|rgb(\s*\d\{1,3}\s*,\s*\d\{1,3}\s*,\s*\d\{1,3})\)\s\+'
+        \ . '\(#[a-f0-9]\{6\}\|rgb\s*(\s*\d\{1,3}\s*,\s*\d\{1,3}\s*,\s*\d\{1,3}\s*)\)\s\+'
         \ . '\(\d\{1,3}\)\s*'
         \ . '\(\w*\)$')
   if empty(l:match)
-    call s:err_msg('Syntax error: ' . a:line)
+    call s:add_error('Syntax error: ' . a:line, a:linenr)
     return
   endif
   let [l:name, l:gui, l:base256, l:base16] = [l:match[1], l:match[2], l:match[3], l:match[4]]
   if l:name =~ '^fg\|bg\|none$'
-    call s:err_msg('You cannot use ' . l:name . 'to define a color name')
+    call s:add_error('You cannot use ' . l:name . 'to define a color name', a:linenr)
   endif
   if l:gui =~ 'rgb'
     let [l:r, l:g, l:b] = map(split(matchstr(l:gui, '(\zs.\+\ze)'), ','), 'str2nr(v:val)')
@@ -151,9 +144,13 @@ fun! s:set_color(line)
 endf
 
 " Parse a hi group definition and store it internally.
-fun! s:set_highlight_group(line)
+fun! s:set_highlight_group(line, linenr)
   if a:line =~ '->' " Linked group
-    let [l:src, l:tgt] = split(a:line, '\s*->\s*')
+    let l:match = matchlist(a:line, '^\s*\(\w\+\)\s*->\s*\(\w\+\)\s*\%(#.*\)\?$')
+    if empty(l:match)
+      call s:add_error('Syntax error: '.a:line, a:linenr)
+    endif
+    let [l:src, l:tgt] = l:match[1:2]
     call add(s:hi_group, 'hi! link ' . l:src . ' ' . l:tgt)
     return
   endif
@@ -163,7 +160,7 @@ fun! s:set_highlight_group(line)
         \ . '\(\w\+\)/\?\(\w*\)\s*'
         \ . '\(.*\)$')
   if empty(l:match)
-    call s:err_msg('Syntax error: ' . a:line)
+    call s:add_error('Syntax error: '.a:line, a:linenr)
     return
   endif
   let [l:group, l:fg, l:tfg, l:bg, l:tbg, l:attrs] = l:match[1:6]
@@ -183,6 +180,8 @@ fun! s:set_highlight_group(line)
         if l:sp =~ '/'
           let [l:sp, l:tsp] = split(l:sp, '/')
         endif
+      else
+        call s:add_error('Syntax error: '.l:attr, a:linenr)
       endif
     else
       let l:term = l:attr
@@ -209,19 +208,20 @@ endf
 
 fun! s:check_requirements()
   if empty(s:full_name)
-    call s:err_msg('Please specify the full name of your color scheme')
+    call s:add_error('Please specify the full name of your color scheme')
   endif
   if empty(s:author)
-    call s:err_msg('Please specify an author and the corresponding email')
+    call s:add_error('Please specify an author and the corresponding email')
   endif
   if empty(s:maintainer)
-    call s:err_msg('Please specify a maintainer and the corresponding email')
+    call s:add_error('Please specify a maintainer and the corresponding email')
   endif
 endf
 
 fun! s:parse_template(filename)
   let s:template = readfile(fnameescape(a:filename))
-  for l:line in s:template
+  for l:i in range(len(s:template))
+    let l:line = s:template[l:i]
     if l:line =~ '^\s*#' " Skip comment
       continue
     endif
@@ -230,11 +230,11 @@ fun! s:parse_template(filename)
     endif
     let l:match = matchlist(l:line, '^\s*\(\w[^:]*\):\s*\(.*\)') " Split on colon
     if empty(l:match)
-      call s:set_highlight_group(l:line)
+      call s:set_highlight_group(l:line, l:i)
     else
       let [l:key, l:val] = [l:match[1], l:match[2]]
       if l:key =~ '^\s*color'
-        call s:set_color(l:val)
+        call s:set_color(l:val, l:i)
       elseif l:key =~ '^\s*full\s*name'
         let s:full_name = l:val
       elseif l:key =~ '^\s*short\s*name'
@@ -250,18 +250,27 @@ fun! s:parse_template(filename)
       elseif l:key =~ '^\s*background'
         let s:background = l:val
       else
-        call s:warn_msg('Unknown field: ' . l:key)
+        call s:add_warning('Unknown field: ' . l:key)
       endif
     endif
   endfor
   call s:check_requirements()
+  if !empty(getloclist(0))
+    throw 'Parse error'
+  endif
+  lclose
 endf
 " }}}
 
 " Colorscheme builder {{{
 fun! s:make_colorscheme(...)
   call s:init()
-  call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
+  try
+    call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
+  catch /.*/
+    lopen
+    return
+  endtry
   call s:new_buffer()
   call s:print_header()
   call s:put('')
@@ -289,7 +298,6 @@ fun! s:make_colorscheme(...)
         \    ))
 endf
 
-" FIXME: make it global?
 command! -buffer -nargs=? -complete=file Colortemplate call <sid>make_colorscheme(<q-args>)
 " }}}
 

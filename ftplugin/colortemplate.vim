@@ -154,6 +154,7 @@ fun! s:set_highlight_group(line, linenr)
     call add(s:hi_group, 'hi! link ' . l:src . ' ' . l:tgt)
     return
   endif
+  " Regular highlight group definition
   let l:match = matchlist(a:line,
         \   '^\s*\(\w\+\)\s\+'
         \ . '\(\w\+\)/\?\(\w*\)\s\+'

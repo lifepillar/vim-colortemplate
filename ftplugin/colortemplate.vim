@@ -26,6 +26,7 @@ fun! s:init()
   let s:transp_hi_group = [] " hi group definitions for transparent background
   let s:opaque_hi_group = [] " hi group definitions for opaque background
   let s:hi_group        = [] " hi group definitions that do not depend on transparency
+  let s:use16colors     = get(g:, 'base16template', 0)
   call setloclist(0, [], 'r') " Used for errors
 endf
 " }}}
@@ -76,8 +77,8 @@ endf
 fun! s:hlstring(group, fg, bg, attrs)
   return join([
         \ 'hi', a:group,
-        \ 'ctermfg=' . s:palette[a:fg][get(g:, 'base16template', 0) ? 2 : 1],
-        \ 'ctermbg=' . s:palette[a:bg][get(g:, 'base16template', 0) ? 2 : 1],
+        \ 'ctermfg=' . s:palette[a:fg][s:use16colors ? 2 : 1],
+        \ 'ctermbg=' . s:palette[a:bg][s:use16colors ? 2 : 1],
         \ 'guifg='   . s:palette[a:fg][0],
         \ 'guibg='   . s:palette[a:bg][0],
         \ 'guisp='   . get(s:palette, get(a:attrs, 'guisp', ''), ['NONE'])[0],
@@ -88,7 +89,7 @@ endf
 
 fun! s:new_buffer()
   silent tabnew +setlocal\ ft=vim
-  " execute 'file' s:short_name.(get(g:, 'base16template', 0) ? '_16' : '').'.vim'
+  " execute 'file' s:short_name.(s:use16colors ? '_16' : '').'.vim'
 endf
 
 fun! s:print_header()
@@ -116,7 +117,7 @@ fun! s:print_header()
   call s:put  (   '  syntax reset'                                                                    )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
-  call s:put  (   "let g:colors_name = '".s:short_name.(get(g:, 'base16template', 0) ? '_16' : '')."'")
+  call s:put  (   "let g:colors_name = '" . s:short_name . (s:use16colors ? '_16' : '') . "'"         )
 endf
 " }}}
 

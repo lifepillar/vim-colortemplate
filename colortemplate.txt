@@ -35,7 +35,7 @@ Color: brightwhite          #ffffff              206        White
 # Default highlight groups {{{
 # Group              Foreground        Background        Attributes
 Normal               white             black/none
-ColorColumn          fg                bg
+ColorColumn          fg                bg/none
 Conceal              none              none
 Cursor               white             black
 CursorColumn         white             black

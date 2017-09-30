@@ -31,8 +31,16 @@ syn keyword colortemplateHiGroup  Normal Number Operator Pmenu PmenuSbar PmenuSe
 syn keyword colortemplateHiGroup  QuickFixLine Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup  SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
 syn keyword colortemplateHiGroup  Structure TabLine TabLineFill TabLineSel Title Todo Type Underlined VertSplit
-syn keyword colortemplateHiGroup  Visual VisualNOS WarningMsg WildMenu gitcommitComment lCursor vimBracket vimCommentTitle vimMapMod
-syn keyword colortemplateHiGroup  vimMapModKey vimNotation vimUserFunc
+syn keyword colortemplateHiGroup  Visual VisualNOS WarningMsg WildMenu lCursor
+syn keyword colortemplateHiGroup  vimAuSyntax vimAugroup vimAutoCmdSfxList vimAutoCmdSpace vimAutoEventList vimBracket vimClusterName vimCmdSep
+syn keyword colortemplateHiGroup  vimCollClass vimCollection vimCommentTitle vimCommentTitleLeader vimEcho vimEscapeBrace vimExecute vimExtCmd
+syn keyword colortemplateHiGroup  vimFiletype vimFilter vimFuncBlank vimFuncBody vimFunction vimGlobal vimGroupList vimHiBang
+syn keyword colortemplateHiGroup  vimHiCtermColor vimHiFontname vimHiGuiFontname vimHiKeyList vimHiLink vimHiTermcap vimIf vimIsCommand
+syn keyword colortemplateHiGroup  vimIskList vimMapLhs vimMapMod vimMapModKey vimMapRhs vimMapRhsExtend vimMenuBang vimMenuMap
+syn keyword colortemplateHiGroup  vimMenuPriority vimMenuRhs vimNormCmds vimNotation vimOperParen vimPatRegion vimRegion vimSet
+syn keyword colortemplateHiGroup  vimSetEqual vimStdPlugin vimSubstPat vimSubstRange vimSubstRep vimSubstRep4 vimSynKeyRegion vimSynLine
+syn keyword colortemplateHiGroup  vimSynMatchRegion vimSynMtchCchar vimSynMtchGroup vimSynPatMod vimSynRegion vimSyncLinebreak vimSyncLinecont vimSyncLines
+syn keyword colortemplateHiGroup  vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
 syn keyword colortemplateAttr     bold underline undercurl strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial  fg bg none
 

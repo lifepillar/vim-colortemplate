@@ -115,12 +115,4 @@ Underlined           white             none
 lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
-# Vim
-vimCommentTitle      white             none
-vimMapModKey         white             none
-vimMapMod            white             none
-vimBracket           white             none
-vimNotation          white             none
-vimUserFunc       -> Function
-#  Git
-gitcommitComment     fg                none
+# Add additional highlight groups here if you want:

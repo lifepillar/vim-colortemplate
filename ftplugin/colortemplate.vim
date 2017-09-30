@@ -143,6 +143,14 @@ fun! s:set_color(line, linenr)
   let s:palette[l:name] = [l:gui, l:base256, empty(l:base16) ? 'Black' : l:base16]
 endf
 
+fun! s:check_valid_color(col, linenr)
+  if !empty(a:col) && !has_key(s:palette, a:col)
+    call s:add_error('Invalid color name: ' . a:col, a:linenr)
+    return 0
+  endif
+  return 1
+endf
+
 " Parse a hi group definition and store it internally.
 fun! s:set_highlight_group(line, linenr)
   if a:line =~ '->' " Linked group
@@ -165,6 +173,10 @@ fun! s:set_highlight_group(line, linenr)
     return
   endif
   let [l:group, l:fg, l:tfg, l:bg, l:tbg, l:attrs] = l:match[1:6]
+  if !(s:check_valid_color(l:fg, a:linenr) && s:check_valid_color(l:tfg, a:linenr)
+        \ && s:check_valid_color(l:bg, a:linenr) && s:check_valid_color(l:tbg, a:linenr))
+    return
+  endif
   let l:term = ''
   let l:gui = ''
   let l:sp = ''
@@ -180,6 +192,9 @@ fun! s:set_highlight_group(line, linenr)
         let l:sp = l:value
         if l:sp =~ '/'
           let [l:sp, l:tsp] = split(l:sp, '/')
+          if !(s:check_valid_color(l:sp, a:linenr) && s:check_valid_color(l:tsp, a:linenr))
+            return
+          endif
         endif
       else
         call s:add_error('Syntax error: '.l:attr, a:linenr)
@@ -268,8 +283,11 @@ fun! s:make_colorscheme(...)
   call s:init()
   try
     call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
-  catch /.*/
+  catch /Parse error/
     lopen
+    return
+  catch /.*/
+    echomsg 'Unexpected error: ' v:exception
     return
   endtry
   call s:new_buffer()

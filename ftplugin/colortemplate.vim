@@ -180,20 +180,6 @@ fun! s:set_highlight_group(line, linenr)
     return
   endif
   let [l:group, l:fg, l:tfg, l:bg, l:tbg, l:attrs] = l:match[1:6]
-  " Normal highlight group needs special treatment
-  if l:group ==# 'Normal'
-    let s:normal_group_defined = 1
-    if !empty(s:opaque_hi_group)
-      call s:add_error('The Normal highlight group must be the first defined group', a:linenr)
-    endif
-    if empty(l:tbg)
-      let l:tbg = 'none' " Transparent background
-    else
-      if l:tbg !=# 'none'
-        call s:add_error("Alternate background for Normal group can only be 'none'", a:linenr)
-      endif
-    endif
-  endif
   " Verify that colors have been defined
   if !(s:check_valid_color(l:fg, a:linenr) && s:check_valid_color(l:tfg, a:linenr)
         \ && s:check_valid_color(l:bg, a:linenr) && s:check_valid_color(l:tbg, a:linenr))
@@ -226,6 +212,26 @@ fun! s:set_highlight_group(line, linenr)
       let l:gui = l:attr
     endif
   endfor
+  " Normal highlight group needs special treatment
+  if l:group ==# 'Normal'
+    let s:normal_group_defined = 1
+    if !empty(s:opaque_hi_group)
+      call s:add_error('The Normal highlight group must be the first defined group', a:linenr)
+    endif
+    if empty(l:tbg)
+      let l:tbg = 'none' " Transparent background
+    else
+      if l:tbg !=# 'none'
+        call s:add_error("Alternate background for Normal group can only be 'none'", a:linenr)
+      endif
+    endif
+    if l:fg == 'none'
+      call s:add_error("The foreground color for Normal cannot be 'none'", a:linenr)
+    endif
+    if l:term =~ '\%(inv\|rev\)erse' || l:gui =~ '\%(inv\|rev\)erse'
+      call s:add_error("Do not use reverse mode for the Normal group", a:linenr)
+    endif
+  endif
   " Build highlight group definition
   if !(empty(l:tfg) && empty(l:tbg) && empty(l:tsp))
         \ || l:fg == 'bg' || l:bg == 'bg' || l:sp == 'bg'

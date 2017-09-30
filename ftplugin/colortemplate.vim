@@ -27,6 +27,7 @@ fun! s:init()
   let s:opaque_hi_group = [] " hi group definitions for opaque background
   let s:hi_group        = [] " hi group definitions that do not depend on transparency
   let s:use16colors     = get(g:, 'base16template', 0)
+  let s:normal_group_defined = 0
   call setloclist(0, [], 'r') " Used for errors
 endf
 " }}}
@@ -179,6 +180,9 @@ fun! s:set_highlight_group(line, linenr)
     return
   endif
   let [l:group, l:fg, l:tfg, l:bg, l:tbg, l:attrs] = l:match[1:6]
+  if l:group ==# 'Normal'
+    let s:normal_group_defined = 1
+  endif
   if !(s:check_valid_color(l:fg, a:linenr) && s:check_valid_color(l:tfg, a:linenr)
         \ && s:check_valid_color(l:bg, a:linenr) && s:check_valid_color(l:tbg, a:linenr))
     return
@@ -237,6 +241,9 @@ fun! s:check_requirements()
   endif
   if empty(s:maintainer)
     call s:add_error('Please specify a maintainer and the corresponding email')
+  endif
+  if !s:normal_group_defined
+    call s:add_error('Please define mandatory Normal highlight group')
   endif
 endf
 

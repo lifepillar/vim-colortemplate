@@ -1,19 +1,18 @@
-# vim: ft=colortemplate
+# vim: ft=colortemplate fdm=marker
 
-# Mandatory information
+# Information {{{
+# Mandatory
 Full name: My Wonderful Colors
 Short name: my_wonder
 Author: Myself <myself@somewhere.org>
 Maintainer: Myself <myself@somewhere.org>
-
-# Optional information
+# Optional
 Background: dark
 Website:
 Description: Example of color template
+# }}}
 
-
-### Color palette
-
+# Color palette {{{
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb( 41,  44,  54)   191        Black
 Color: red                  rgb(220,  60,  60)   192        DarkRed
@@ -31,9 +30,9 @@ Color: brightblue           rgb( 82, 131, 255)   203        LightBlue
 Color: brightmagenta        rgb(132, 133, 206)   204        LightMagenta
 Color: brightcyan           rgb(  0, 171, 165)   205        LightCyan
 Color: brightwhite          #ffffff              206        White
+# }}}
 
-### Highlight groups
-
+# Default highlight groups {{{
 # Group              Foreground        Background        Attributes
 Normal               white             black/none
 ColorColumn          fg                bg
@@ -123,4 +122,16 @@ Underlined           white             none
 lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
-# Add additional highlight groups here if you want:
+# }}}
+
+# Additional highlight groups {{{
+# Add additional highlight groups here if you want
+# }}}
+
+# Plugin specific highlight groups {{{
+# Add plugin specific highlight groups here if you want
+# }}}
+
+# Filetype specific highlight groups {{{
+# Add filetype specific highlight groups here if you want
+# }}}

@@ -3,10 +3,15 @@
 " Author:       morhetz <morhetz@gmail.com>
 " Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " Website:      https://github.com/morhetz/gruvbox/
-" License:      Vim License  (see `:help license`)
+" License:      Vim License (see `:help license`)
+" Last Updated: Sat Sep 30 17:23:27 2017
 
-if !exists('&t_Co')
-" FIXME: Do something?
+if !(has('termguicolors') && &termguicolors) && !has('gui_running')
+      \ && (!exists('&t_Co') || &t_Co < 256)
+  echohl Error
+  echomsg 'Gruvbox Light: There are not enough colors.'
+  echohl None
+  finish
 endif
 
 set background=light
@@ -20,8 +25,46 @@ let g:colors_name = 'gruvbox_light'
 
 if !has('gui_running') && get(g:, 'gruvbox_light_transp_bg', 0)
 hi Normal ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi DiffAdd ctermfg=100 ctermbg=NONE guifg=#79740e guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi DiffChange ctermfg=66 ctermbg=NONE guifg=#427b58 guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi DiffDelete ctermfg=88 ctermbg=NONE guifg=#9e0006 guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi DiffText ctermfg=136 ctermbg=NONE guifg=#b57614 guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi Error ctermfg=88 ctermbg=NONE guifg=#9e0006 guibg=NONE guisp=NONE cterm=NONE,bold,reverse gui=NONE,bold,reverse
+hi FoldColumn ctermfg=244 ctermbg=NONE guifg=#928374 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi IncSearch ctermfg=130 ctermbg=NONE guifg=#af3a03 guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi Search ctermfg=136 ctermbg=NONE guifg=#b57614 guibg=NONE guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi SignColumn ctermfg=NONE ctermbg=NONE guifg=NONE guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi VertSplit ctermfg=248 ctermbg=NONE guifg=#bdae93 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Error ctermfg=88 ctermbg=NONE guifg=#9e0006 guibg=NONE guisp=NONE cterm=NONE,bold,inverse gui=NONE,bold,inverse
+hi Todo ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,bold,italic gui=NONE,bold,italic
+hi htmlBold ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
+hi htmlBoldUnderline ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,bold,underline gui=NONE,bold,underline
+hi htmlBoldItalic ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,bold,italic gui=NONE,bold,italic
+hi htmlBoldUnderlineItalic ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,bold,underline,italic gui=NONE,bold,underline,italic
+hi htmlUnderline ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
+hi htmlUnderlineItalic ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,underline,italic gui=NONE,underline,italic
+hi htmlItalic ctermfg=fg ctermbg=NONE guifg=fg guibg=NONE guisp=NONE cterm=NONE,italic gui=NONE,italic
 else
 hi Normal ctermfg=237 ctermbg=229 guifg=#3c3836 guibg=#fdf4c1 guisp=NONE cterm=NONE gui=NONE
+hi DiffAdd ctermfg=100 ctermbg=bg guifg=#79740e guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi DiffChange ctermfg=66 ctermbg=bg guifg=#427b58 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi DiffDelete ctermfg=88 ctermbg=bg guifg=#9e0006 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi DiffText ctermfg=136 ctermbg=bg guifg=#b57614 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi Error ctermfg=88 ctermbg=bg guifg=#9e0006 guibg=bg guisp=NONE cterm=NONE,bold,reverse gui=NONE,bold,reverse
+hi FoldColumn ctermfg=244 ctermbg=223 guifg=#928374 guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
+hi IncSearch ctermfg=130 ctermbg=bg guifg=#af3a03 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi Search ctermfg=136 ctermbg=bg guifg=#b57614 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
+hi SignColumn ctermfg=NONE ctermbg=223 guifg=NONE guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
+hi VertSplit ctermfg=248 ctermbg=229 guifg=#bdae93 guibg=#fdf4c1 guisp=NONE cterm=NONE gui=NONE
+hi Error ctermfg=88 ctermbg=bg guifg=#9e0006 guibg=bg guisp=NONE cterm=NONE,bold,inverse gui=NONE,bold,inverse
+hi Todo ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,italic gui=NONE,bold,italic
+hi htmlBold ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold gui=NONE,bold
+hi htmlBoldUnderline ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,underline gui=NONE,bold,underline
+hi htmlBoldItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,italic gui=NONE,bold,italic
+hi htmlBoldUnderlineItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,underline,italic gui=NONE,bold,underline,italic
+hi htmlUnderline ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,underline gui=NONE,underline
+hi htmlUnderlineItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,underline,italic gui=NONE,underline,italic
+hi htmlItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,italic gui=NONE,italic
 endif
 hi ColorColumn ctermfg=NONE ctermbg=223 guifg=NONE guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
 hi Conceal ctermfg=24 ctermbg=NONE guifg=#076678 guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -29,17 +72,10 @@ hi Cursor ctermfg=NONE ctermbg=NONE guifg=NONE guibg=NONE guisp=NONE cterm=NONE,
 hi! link CursorColumn CursorLine
 hi CursorLine ctermfg=NONE ctermbg=223 guifg=NONE guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
 hi CursorLineNr ctermfg=136 ctermbg=223 guifg=#b57614 guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
-hi DiffAdd ctermfg=100 ctermbg=bg guifg=#79740e guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
-hi DiffChange ctermfg=66 ctermbg=bg guifg=#427b58 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
-hi DiffDelete ctermfg=88 ctermbg=bg guifg=#9e0006 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
-hi DiffText ctermfg=136 ctermbg=bg guifg=#b57614 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
 hi Directory ctermfg=100 ctermbg=NONE guifg=#79740e guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi EndOfBuffer ctermfg=229 ctermbg=NONE guifg=#fdf4c1 guibg=NONE guisp=NONE cterm=NONE gui=NONE
-hi Error ctermfg=88 ctermbg=bg guifg=#9e0006 guibg=bg guisp=NONE cterm=NONE,bold,reverse gui=NONE,bold,reverse
 hi ErrorMsg ctermfg=229 ctermbg=88 guifg=#fdf4c1 guibg=#9e0006 guisp=NONE cterm=NONE,bold gui=NONE,bold
-hi FoldColumn ctermfg=244 ctermbg=223 guifg=#928374 guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
 hi Folded ctermfg=244 ctermbg=223 guifg=#928374 guibg=#ebdbb2 guisp=NONE cterm=NONE,italic gui=NONE,italic
-hi IncSearch ctermfg=130 ctermbg=bg guifg=#af3a03 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
 hi LineNr ctermfg=246 ctermbg=NONE guifg=#a89984 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi MatchParen ctermfg=NONE ctermbg=248 guifg=NONE guibg=#bdae93 guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi ModeMsg ctermfg=136 ctermbg=NONE guifg=#b57614 guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
@@ -51,8 +87,6 @@ hi PmenuSel ctermfg=250 ctermbg=24 guifg=#d5c4a1 guibg=#076678 guisp=NONE cterm=
 hi PmenuThumb ctermfg=NONE ctermbg=246 guifg=NONE guibg=#a89984 guisp=NONE cterm=NONE gui=NONE
 hi Question ctermfg=130 ctermbg=NONE guifg=#af3a03 guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi! link QuickFixLine Search
-hi Search ctermfg=136 ctermbg=bg guifg=#b57614 guibg=bg guisp=NONE cterm=NONE,inverse gui=NONE,inverse
-hi SignColumn ctermfg=NONE ctermbg=223 guifg=NONE guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
 hi SpecialKey ctermfg=250 ctermbg=NONE guifg=#d5c4a1 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi SpellBad ctermfg=NONE ctermbg=NONE guifg=NONE guibg=NONE guisp=#076678 cterm=NONE,underline gui=NONE,undercurl
 hi SpellCap ctermfg=NONE ctermbg=NONE guifg=NONE guibg=NONE guisp=#9e0006 cterm=NONE,underline gui=NONE,undercurl
@@ -66,7 +100,6 @@ hi! link TabLine TabLineFill
 hi TabLineFill ctermfg=246 ctermbg=223 guifg=#a89984 guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
 hi TabLineSel ctermfg=100 ctermbg=223 guifg=#79740e guibg=#ebdbb2 guisp=NONE cterm=NONE gui=NONE
 hi Title ctermfg=100 ctermbg=NONE guifg=#79740e guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
-hi VertSplit ctermfg=248 ctermbg=229 guifg=#bdae93 guibg=#fdf4c1 guisp=NONE cterm=NONE gui=NONE
 hi Visual ctermfg=NONE ctermbg=248 guifg=NONE guibg=#bdae93 guisp=NONE cterm=NONE gui=NONE
 hi! link VisualNOS Visual
 hi WarningMsg ctermfg=88 ctermbg=NONE guifg=#9e0006 guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
@@ -79,7 +112,6 @@ hi Constant ctermfg=96 ctermbg=NONE guifg=#8f3f71 guibg=NONE guisp=NONE cterm=NO
 hi Define ctermfg=66 ctermbg=NONE guifg=#427b58 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Debug ctermfg=88 ctermbg=NONE guifg=#9e0006 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Delimiter ctermfg=130 ctermbg=NONE guifg=#af3a03 guibg=NONE guisp=NONE cterm=NONE gui=NONE
-hi Error ctermfg=88 ctermbg=bg guifg=#9e0006 guibg=bg guisp=NONE cterm=NONE,bold,inverse gui=NONE,bold,inverse
 hi Exception ctermfg=88 ctermbg=NONE guifg=#9e0006 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Float ctermfg=96 ctermbg=NONE guifg=#8f3f71 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Function ctermfg=100 ctermbg=NONE guifg=#79740e guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
@@ -102,7 +134,6 @@ hi StorageClass ctermfg=130 ctermbg=NONE guifg=#af3a03 guibg=NONE guisp=NONE cte
 hi String ctermfg=100 ctermbg=NONE guifg=#79740e guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Structure ctermfg=66 ctermbg=NONE guifg=#427b58 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Tag Special
-hi Todo ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,italic gui=NONE,bold,italic
 hi Type ctermfg=136 ctermbg=NONE guifg=#b57614 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Typedef ctermfg=136 ctermbg=NONE guifg=#b57614 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Underlined ctermfg=24 ctermbg=NONE guifg=#076678 guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
@@ -204,13 +235,6 @@ hi htmlTagN ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm=N
 hi htmlSpecialTagName ctermfg=66 ctermbg=NONE guifg=#427b58 guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi htmlLink ctermfg=243 ctermbg=NONE guifg=#7c6f64 guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
 hi htmlSpecialChar ctermfg=130 ctermbg=NONE guifg=#af3a03 guibg=NONE guisp=NONE cterm=NONE gui=NONE
-hi htmlBold ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold gui=NONE,bold
-hi htmlBoldUnderline ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,underline gui=NONE,bold,underline
-hi htmlBoldItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,italic gui=NONE,bold,italic
-hi htmlBoldUnderlineItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,bold,underline,italic gui=NONE,bold,underline,italic
-hi htmlUnderline ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,underline gui=NONE,underline
-hi htmlUnderlineItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,underline,italic gui=NONE,underline,italic
-hi htmlItalic ctermfg=fg ctermbg=bg guifg=fg guibg=bg guisp=NONE cterm=NONE,italic gui=NONE,italic
 hi xmlTag ctermfg=24 ctermbg=NONE guifg=#076678 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi xmlEndTag ctermfg=24 ctermbg=NONE guifg=#076678 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi xmlTagName ctermfg=24 ctermbg=NONE guifg=#076678 guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -532,64 +556,64 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " Normal                           dark1  light0/none
 " ColorColumn                      none   light1
 " Conceal                          blue   none
-" Cursor                           none   none   inverse
+" Cursor                           none   none    inverse
 " CursorColumn                  -> CursorLine
 " CursorLine                       none   light1
 " CursorLineNr                     yellow light1
-" DiffAdd                          green  bg     inverse
-" DiffChange                       aqua   bg     inverse
-" DiffDelete                       red    bg     inverse
-" DiffText                         yellow bg     inverse
-" Directory                        green  none   bold
+" DiffAdd                          green  bg/none inverse
+" DiffChange                       aqua   bg/none inverse
+" DiffDelete                       red    bg/none inverse
+" DiffText                         yellow bg/none inverse
+" Directory                        green  none    bold
 " EndOfBuffer                      light0 none
-" Error                            red    bg     bold,reverse
-" ErrorMsg                         light0 red    bold
-" FoldColumn                       grey   light1
-" Folded                           grey   light1 italic
-" IncSearch                        orange bg     inverse
+" Error                            red    bg/none bold,reverse
+" ErrorMsg                         light0 red     bold
+" FoldColumn                       grey   light1/none
+" Folded                           grey   light1  italic
+" IncSearch                        orange bg/none inverse
 " LineNr                           light4 none
-" MatchParen                       none   light3 bold
-" ModeMsg                          yellow none   bold
-" MoreMsg                          yellow none   bold
+" MatchParen                       none   light3  bold
+" ModeMsg                          yellow none    bold
+" MoreMsg                          yellow none    bold
 " NonText                          light2 none
 " Pmenu                            dark1  light2
 " PmenuSbar                        none   light2
-" PmenuSel                         light2 blue   bold
+" PmenuSel                         light2 blue    bold
 " PmenuThumb                       none   light4
-" Question                         orange none   bold
+" Question                         orange none    bold
 " QuickFixLine                  -> Search
-" Search                           yellow bg     inverse
-" SignColumn                       none   light1
+" Search                           yellow bg/none inverse
+" SignColumn                       none   light1/none
 " SpecialKey                       light2 none
-" SpellBad                         none   none   t=underline g=undercurl s=blue
-" SpellCap                         none   none   t=underline g=undercurl s=red
-" SpellLocal                       none   none   t=underline g=undercurl s=aqua
-" SpellRare                        none   none   t=underline g=undercurl s=magenta
-" StatusLine                       light2 dark1  inverse
-" StatusLineNC                     light1 dark4  inverse
+" SpellBad                         none   none    t=underline g=undercurl s=blue
+" SpellCap                         none   none    t=underline g=undercurl s=red
+" SpellLocal                       none   none    t=underline g=undercurl s=aqua
+" SpellRare                        none   none    t=underline g=undercurl s=magenta
+" StatusLine                       light2 dark1   inverse
+" StatusLineNC                     light1 dark4   inverse
 " StatusLineTerm                -> StatusLine
 " StatusLineTermNC              -> StatusLineNC
 " TabLine                       -> TabLineFill
 " TabLineFill                      light4 light1
 " TabLineSel                       green  light1
-" Title                            green  none   bold
-" VertSplit                        light3 light0
+" Title                            green  none    bold
+" VertSplit                        light3 light0/none
 " Visual                           none   light3
 " VisualNOS                     -> Visual
-" WarningMsg                       red    none   bold
-" WildMenu                         blue   light2 bold
+" WarningMsg                       red    none    bold
+" WildMenu                         blue   light2  bold
 " Boolean                          purple none
 " Character                        purple none
-" Comment                          grey   none   italic
+" Comment                          grey   none    italic
 " Conditional                      red    none
 " Constant                         purple none
 " Define                           aqua   none
 " Debug                            red    none
 " Delimiter                        orange none
-" Error                            red    bg     bold,inverse
+" Error                            red    bg/none bold,inverse
 " Exception                        red    none
 " Float                            purple none
-" Function                         green  none   bold
+" Function                         green  none    bold
 " Identifier                       blue   none
 " Ignore                           fg     none
 " Include                          aqua   none
@@ -601,7 +625,7 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " PreCondit                        aqua   none
 " PreProc                          aqua   none
 " Repeat                           red    none
-" Special                          orange none   italic
+" Special                          orange none    italic
 " SpecialChar                      red    none
 " SpecialComment                   red    none
 " Statement                        red    none
@@ -609,20 +633,20 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " String                           green  none
 " Structure                        aqua   none
 " Tag                           -> Special
-" Todo                             fg     bg     bold,italic
+" Todo                             fg     bg/none bold,italic
 " Type                             yellow none
 " Typedef                          yellow none
-" Underlined                       blue   none   underline
+" Underlined                       blue   none    underline
 " lCursor                       -> Cursor
-" CursorIM                         none   none   inverse
+" CursorIM                         none   none    inverse
 " iCursor                       -> Cursor
 " vCursor                       -> Cursor
-" NormalMode                       dark4  light0 inverse
-" InsertMode                       blue   light0 inverse
-" ReplaceMode                      aqua   light0 inverse
-" VisualMode                       orange light0 inverse
-" CommandMode                      purple light0 inverse
-" Warnings                         orange light0 inverse
+" NormalMode                       dark4  light0  inverse
+" InsertMode                       blue   light0  inverse
+" ReplaceMode                      aqua   light0  inverse
+" VisualMode                       orange light0  inverse
+" CommandMode                      purple light0  inverse
+" Warnings                         orange light0  inverse
 " EasyMotionTarget              -> Search
 " EasyMotionShade               -> Comment
 " GitGutterAdd                     green  light1
@@ -634,8 +658,8 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " SignifySignAdd                   green  none
 " SignifySignChange                aqua   none
 " SignifySignDelete                red    none
-" SyntasticError                   none   none   t=underline g=undercurl s=red
-" SyntasticWarning                 none   none   t=underline g=undercurl s=yellow
+" SyntasticError                   none   none    t=underline g=undercurl s=red
+" SyntasticWarning                 none   none    t=underline g=undercurl s=yellow
 " SyntasticErrorSign               red    light1
 " SyntasticWarningSign             yellow light1
 " SignatureMarkText                blue   light1
@@ -649,9 +673,9 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " CtrlPPrtBase                     light2 none
 " CtrlPPrtCursor                   blue   none
 " CtrlPLinePre                     light2 none
-" CtrlPMode1                       blue   light2 bold
-" CtrlPMode2                       light0 blue   bold
-" CtrlPStats                       dark4  light2 bold
+" CtrlPMode1                       blue   light2  bold
+" CtrlPMode2                       light0 blue    bold
+" CtrlPStats                       dark4  light2  bold
 " StartifyBracket                  dark3  none
 " StartifyFile                     dark1  none
 " StartifyNumber                   blue   none
@@ -665,9 +689,9 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " BufTabLineActive                 dark4  light2
 " BufTabLineHidden                 light4 light1
 " BufTabLineFill                   light0 light0
-" ALEError                         none   none   t=underline g=undercurl s=red
-" ALEWarning                       none   none   t=underline g=undercurl s=red
-" ALEInfo                          none   none   t=underline g=undercurl s=blue
+" ALEError                         none   none    t=underline g=undercurl s=red
+" ALEWarning                       none   none    t=underline g=undercurl s=red
+" ALEInfo                          none   none    t=underline g=undercurl s=blue
 " ALEErrorSign                     red    light1
 " ALEWarningSign                   yellow light1
 " ALEInfoSign                      blue   light1
@@ -694,7 +718,7 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " NERDTreeHelp                     dark1  none
 " NERDTreeToggleOn                 green  none
 " NERDTreeToggleOff                red    none
-" multiple_cursors_cursor          none   none   inverse
+" multiple_cursors_cursor          none   none    inverse
 " multiple_cursors_visual          none   light2
 " diffAdded                        green  none
 " diffRemoved                      red    none
@@ -704,25 +728,25 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " diffLine                         blue   none
 " htmlTag                          blue   none
 " htmlEndTag                       blue   none
-" htmlTagName                      aqua   none   bold
+" htmlTagName                      aqua   none    bold
 " htmlArg                          aqua   none
 " htmlScriptTag                    purple none
 " htmlTagN                         dark1  none
-" htmlSpecialTagName               aqua   none   bold
-" htmlLink                         dark4  none   underline
+" htmlSpecialTagName               aqua   none    bold
+" htmlLink                         dark4  none    underline
 " htmlSpecialChar                  orange none
-" htmlBold                         fg     bg     bold
-" htmlBoldUnderline                fg     bg     bold,underline
-" htmlBoldItalic                   fg     bg     bold,italic
-" htmlBoldUnderlineItalic          fg     bg     bold,underline,italic
-" htmlUnderline                    fg     bg     underline
-" htmlUnderlineItalic              fg     bg     underline,italic
-" htmlItalic                       fg     bg     italic
+" htmlBold                         fg     bg/none bold
+" htmlBoldUnderline                fg     bg/none bold,underline
+" htmlBoldItalic                   fg     bg/none bold,italic
+" htmlBoldUnderlineItalic          fg     bg/none bold,underline,italic
+" htmlUnderline                    fg     bg/none underline
+" htmlUnderlineItalic              fg     bg/none underline,italic
+" htmlItalic                       fg     bg/none italic
 " xmlTag                           blue   none
 " xmlEndTag                        blue   none
 " xmlTagName                       blue   none
 " xmlEqual                         blue   none
-" docbkKeyword                     aqua   none   bold
+" docbkKeyword                     aqua   none    bold
 " xmlDocTypeDecl                   grey   none
 " xmlDocTypeKeyword                purple none
 " xmlCdataStart                    grey   none
@@ -736,7 +760,7 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " xmlAttribPunct                   grey   none
 " xmlEntity                        orange none
 " xmlEntityPunct                   orange none
-" vimCommentTitle                  dark4  none   bold
+" vimCommentTitle                  dark4  none    bold
 " vimNotation                      orange none
 " vimBracket                       orange none
 " vimMapModKey                     orange none
@@ -755,7 +779,7 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " clojureException                 red    none
 " clojureRegexp                    aqua   none
 " clojureRegexpEscape              aqua   none
-" clojureRegexpCharClass           dark3  none   bold
+" clojureRegexpCharClass           dark3  none    bold
 " clojureRegexpMod              -> clojureRegexpCharClass
 " clojureRegexpQuantifier       -> clojureRegexpCharClass
 " clojureParen                     dark3  none
@@ -784,7 +808,7 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " pythonDot                        dark3  none
 " pythonConditional                red    none
 " pythonRepeat                     red    none
-" pythonDottedName                 green  none   bold
+" pythonDottedName                 green  none    bold
 " cssBraces                        blue   none
 " cssFunctionName                  yellow none
 " cssIdentifier                    orange none
@@ -971,11 +995,11 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " scalaTypeTypePostDeclaration     yellow none
 " scalaInstanceDeclaration         dark1  none
 " scalaInterpolation               aqua   none
-" markdownItalic                   dark3  none   italic
-" markdownH1                       green  none   bold
-" markdownH2                       green  none   bold
-" markdownH3                       yellow none   bold
-" markdownH4                       yellow none   bold
+" markdownItalic                   dark3  none    italic
+" markdownH1                       green  none    bold
+" markdownH2                       green  none    bold
+" markdownH3                       yellow none    bold
+" markdownH4                       yellow none    bold
 " markdownH5                       yellow none
 " markdownH6                       yellow none
 " markdownCode                     aqua   none
@@ -992,7 +1016,7 @@ hi jsonString ctermfg=237 ctermbg=NONE guifg=#3c3836 guibg=NONE guisp=NONE cterm
 " markdownHeadingDelimiter         orange none
 " markdownUrl                      purple none
 " markdownUrlTitleDelimiter        green  none
-" markdownLinkText                 grey   none   underline
+" markdownLinkText                 grey   none    underline
 " markdownIdDeclaration         -> markdownLinkText
 " haskellType                      dark1  none
 " haskellIdentifier                dark1  none

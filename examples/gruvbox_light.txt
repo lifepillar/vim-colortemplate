@@ -35,65 +35,65 @@ Color: light0            rgb(253, 244, 193)    229         White
 Normal                           dark1  light0/none
 ColorColumn                      none   light1
 Conceal                          blue   none
-Cursor                           none   none   inverse
+Cursor                           none   none    inverse
 CursorColumn                  -> CursorLine
 CursorLine                       none   light1
 CursorLineNr                     yellow light1
-DiffAdd                          green  bg     inverse
-DiffChange                       aqua   bg     inverse
-DiffDelete                       red    bg     inverse
-DiffText                         yellow bg     inverse
-Directory                        green  none   bold
+DiffAdd                          green  bg/none inverse
+DiffChange                       aqua   bg/none inverse
+DiffDelete                       red    bg/none inverse
+DiffText                         yellow bg/none inverse
+Directory                        green  none    bold
 EndOfBuffer                      light0 none
-Error                            red    bg     bold,reverse
-ErrorMsg                         light0 red    bold
-FoldColumn                       grey   light1
-Folded                           grey   light1 italic
-IncSearch                        orange bg     inverse
+Error                            red    bg/none bold,reverse
+ErrorMsg                         light0 red     bold
+FoldColumn                       grey   light1/none
+Folded                           grey   light1  italic
+IncSearch                        orange bg/none inverse
 LineNr                           light4 none
-MatchParen                       none   light3 bold
-ModeMsg                          yellow none   bold
-MoreMsg                          yellow none   bold
+MatchParen                       none   light3  bold
+ModeMsg                          yellow none    bold
+MoreMsg                          yellow none    bold
 NonText                          light2 none
 Pmenu                            dark1  light2
 PmenuSbar                        none   light2
-PmenuSel                         light2 blue   bold
+PmenuSel                         light2 blue    bold
 PmenuThumb                       none   light4
-Question                         orange none   bold
+Question                         orange none    bold
 QuickFixLine                  -> Search
-Search                           yellow bg     inverse
-SignColumn                       none   light1
+Search                           yellow bg/none inverse
+SignColumn                       none   light1/none
 SpecialKey                       light2 none
-SpellBad                         none   none   t=underline g=undercurl s=blue
-SpellCap                         none   none   t=underline g=undercurl s=red
-SpellLocal                       none   none   t=underline g=undercurl s=aqua
-SpellRare                        none   none   t=underline g=undercurl s=magenta
-StatusLine                       light2 dark1  inverse
-StatusLineNC                     light1 dark4  inverse
+SpellBad                         none   none    t=underline g=undercurl s=blue
+SpellCap                         none   none    t=underline g=undercurl s=red
+SpellLocal                       none   none    t=underline g=undercurl s=aqua
+SpellRare                        none   none    t=underline g=undercurl s=magenta
+StatusLine                       light2 dark1   inverse
+StatusLineNC                     light1 dark4   inverse
 StatusLineTerm                -> StatusLine
 StatusLineTermNC              -> StatusLineNC
 TabLine                       -> TabLineFill
 TabLineFill                      light4 light1
 TabLineSel                       green  light1
-Title                            green  none   bold
-VertSplit                        light3 light0
+Title                            green  none    bold
+VertSplit                        light3 light0/none
 Visual                           none   light3
 VisualNOS                     -> Visual
-WarningMsg                       red    none   bold
-WildMenu                         blue   light2 bold
+WarningMsg                       red    none    bold
+WildMenu                         blue   light2  bold
 # Other conventional group names (see `:help group-name`)
 Boolean                          purple none
 Character                        purple none
-Comment                          grey   none   italic
+Comment                          grey   none    italic
 Conditional                      red    none
 Constant                         purple none
 Define                           aqua   none
 Debug                            red    none
 Delimiter                        orange none
-Error                            red    bg     bold,inverse
+Error                            red    bg/none bold,inverse
 Exception                        red    none
 Float                            purple none
-Function                         green  none   bold
+Function                         green  none    bold
 Identifier                       blue   none
 Ignore                           fg     none
 Include                          aqua   none
@@ -105,7 +105,7 @@ Operator                      -> Normal
 PreCondit                        aqua   none
 PreProc                          aqua   none
 Repeat                           red    none
-Special                          orange none   italic
+Special                          orange none    italic
 SpecialChar                      red    none
 SpecialComment                   red    none
 Statement                        red    none
@@ -113,14 +113,14 @@ StorageClass                     orange none
 String                           green  none
 Structure                        aqua   none
 Tag                           -> Special
-Todo                             fg     bg     bold,italic
+Todo                             fg     bg/none bold,italic
 Type                             yellow none
 Typedef                          yellow none
-Underlined                       blue   none   underline
+Underlined                       blue   none    underline
 # Language mapping cursor
 lCursor                       -> Cursor
 # See `:help CursorIM`
-CursorIM                         none   none   inverse
+CursorIM                         none   none    inverse
 # }}}
 
 # Additional highlight groups {{{
@@ -130,12 +130,12 @@ iCursor                       -> Cursor
 vCursor                       -> Cursor
 
 # Additional highlight groups, useful for custom status lines
-NormalMode                       dark4  light0 inverse
-InsertMode                       blue   light0 inverse
-ReplaceMode                      aqua   light0 inverse
-VisualMode                       orange light0 inverse
-CommandMode                      purple light0 inverse
-Warnings                         orange light0 inverse
+NormalMode                       dark4  light0  inverse
+InsertMode                       blue   light0  inverse
+ReplaceMode                      aqua   light0  inverse
+VisualMode                       orange light0  inverse
+CommandMode                      purple light0  inverse
+Warnings                         orange light0  inverse
 # }}}
 
 # Plugin specific groups {{{
@@ -159,8 +159,8 @@ SignifySignChange                aqua   none
 SignifySignDelete                red    none
 # }}}
 # Syntastic {{{
-SyntasticError                   none   none   t=underline g=undercurl s=red
-SyntasticWarning                 none   none   t=underline g=undercurl s=yellow
+SyntasticError                   none   none    t=underline g=undercurl s=red
+SyntasticWarning                 none   none    t=underline g=undercurl s=yellow
 SyntasticErrorSign               red    light1
 SyntasticWarningSign             yellow light1
 # }}}
@@ -180,9 +180,9 @@ CtrlPNoEntries                   red    none
 CtrlPPrtBase                     light2 none
 CtrlPPrtCursor                   blue   none
 CtrlPLinePre                     light2 none
-CtrlPMode1                       blue   light2 bold
-CtrlPMode2                       light0 blue   bold
-CtrlPStats                       dark4  light2 bold
+CtrlPMode1                       blue   light2  bold
+CtrlPMode2                       light0 blue    bold
+CtrlPStats                       dark4  light2  bold
 # }}}
 # Startify {{{
 StartifyBracket                  dark3  none
@@ -202,9 +202,9 @@ BufTabLineHidden                 light4 light1
 BufTabLineFill                   light0 light0
 # }}}
 # Asynchronous Lint Engine {{{
-ALEError                         none   none   t=underline g=undercurl s=red
-ALEWarning                       none   none   t=underline g=undercurl s=red
-ALEInfo                          none   none   t=underline g=undercurl s=blue
+ALEError                         none   none    t=underline g=undercurl s=red
+ALEWarning                       none   none    t=underline g=undercurl s=red
+ALEInfo                          none   none    t=underline g=undercurl s=blue
 ALEErrorSign                     red    light1
 ALEWarningSign                   yellow light1
 ALEInfoSign                      blue   light1
@@ -243,7 +243,7 @@ NERDTreeToggleOn                 green  none
 NERDTreeToggleOff                red    none
 # }}}
 # Vim Multiple Cursors {{{
-multiple_cursors_cursor          none   none   inverse
+multiple_cursors_cursor          none   none    inverse
 multiple_cursors_visual          none   light2
 # }}}
 # }}}
@@ -263,32 +263,32 @@ diffLine                         blue   none
 htmlTag                          blue   none
 htmlEndTag                       blue   none
 
-htmlTagName                      aqua   none   bold
+htmlTagName                      aqua   none    bold
 htmlArg                          aqua   none
 
 htmlScriptTag                    purple none
 htmlTagN                         dark1  none
-htmlSpecialTagName               aqua   none   bold
+htmlSpecialTagName               aqua   none    bold
 
-htmlLink                         dark4  none   underline
+htmlLink                         dark4  none    underline
 
 htmlSpecialChar                  orange none
 
-htmlBold                         fg     bg     bold
-htmlBoldUnderline                fg     bg     bold,underline
-htmlBoldItalic                   fg     bg     bold,italic
-htmlBoldUnderlineItalic          fg     bg     bold,underline,italic
+htmlBold                         fg     bg/none bold
+htmlBoldUnderline                fg     bg/none bold,underline
+htmlBoldItalic                   fg     bg/none bold,italic
+htmlBoldUnderlineItalic          fg     bg/none bold,underline,italic
 
-htmlUnderline                    fg     bg     underline
-htmlUnderlineItalic              fg     bg     underline,italic
-htmlItalic                       fg     bg     italic
+htmlUnderline                    fg     bg/none underline
+htmlUnderlineItalic              fg     bg/none underline,italic
+htmlItalic                       fg     bg/none italic
 # }}}
 # XML {{{
 xmlTag                           blue   none
 xmlEndTag                        blue   none
 xmlTagName                       blue   none
 xmlEqual                         blue   none
-docbkKeyword                     aqua   none   bold
+docbkKeyword                     aqua   none    bold
 
 xmlDocTypeDecl                   grey   none
 xmlDocTypeKeyword                purple none
@@ -307,7 +307,7 @@ xmlEntity                        orange none
 xmlEntityPunct                   orange none
 # }}}
 # Vim {{{
-vimCommentTitle                  dark4  none   bold
+vimCommentTitle                  dark4  none    bold
 vimNotation                      orange none
 vimBracket                       orange none
 vimMapModKey                     orange none
@@ -330,7 +330,7 @@ clojureException                 red    none
 
 clojureRegexp                    aqua   none
 clojureRegexpEscape              aqua   none
-clojureRegexpCharClass           dark3  none   bold
+clojureRegexpCharClass           dark3  none    bold
 clojureRegexpMod              -> clojureRegexpCharClass
 clojureRegexpQuantifier       -> clojureRegexpCharClass
 
@@ -365,7 +365,7 @@ pythonBoolean                    purple none
 pythonDot                        dark3  none
 pythonConditional                red    none
 pythonRepeat                     red    none
-pythonDottedName                 green  none   bold
+pythonDottedName                 green  none    bold
 # }}}
 # CSS {{{
 cssBraces                        blue   none
@@ -605,12 +605,12 @@ scalaInstanceDeclaration         dark1  none
 scalaInterpolation               aqua   none
 # }}}
 # Markdown {{{
-markdownItalic                   dark3  none   italic
+markdownItalic                   dark3  none    italic
 
-markdownH1                       green  none   bold
-markdownH2                       green  none   bold
-markdownH3                       yellow none   bold
-markdownH4                       yellow none   bold
+markdownH1                       green  none    bold
+markdownH2                       green  none    bold
+markdownH3                       yellow none    bold
+markdownH4                       yellow none    bold
 markdownH5                       yellow none
 markdownH6                       yellow none
 
@@ -632,7 +632,7 @@ markdownHeadingDelimiter         orange none
 markdownUrl                      purple none
 markdownUrlTitleDelimiter        green  none
 
-markdownLinkText                 grey   none   underline
+markdownLinkText                 grey   none    underline
 markdownIdDeclaration         -> markdownLinkText
 # }}}
 # Haskell {{{

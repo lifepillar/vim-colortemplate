@@ -48,7 +48,6 @@ DiffDelete           white             black             reverse
 DiffText             white             black             bold,reverse
 Directory            white             black
 EndOfBuffer          white             black
-Error                white             black             reverse
 ErrorMsg             white             black             reverse
 FoldColumn           white             black
 Folded               white             black             italic
@@ -85,31 +84,40 @@ VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
 # Other conventional group names (see `:help group-name`)
-Boolean              white             none
-Character            white             none
+Boolean           -> Constant
+Character         -> Constant
 Comment              white             none
+Conditional       -> Statement
 Constant             white             none
-Debug                white             none
-Delimiter            white             none
-Float                white             none
-Function             white             none
+Define            -> PreProc
+Debug             -> Special
+Delimiter         -> Special
+Error                white             black             reverse
+Exception         -> Statement
+Float             -> Constant
+Function          -> Identifier
 Identifier           white             none
 Ignore               white             none
-Include              white             none
-Keyword              white             none
-Label                white             none
-Number               white             none
-Operator             white             none
+Include           -> PreProc
+Keyword           -> Statement
+Label             -> Statement
+Macro             -> PreProc
+Number            -> Constant
+Operator          -> Statement
+PreCondit         -> PreProc
 PreProc              white             none
+Repeat            -> Statement
 Special              white             none
-SpecialChar          white             none
-SpecialComment       white             none
+SpecialChar       -> Special
+SpecialComment    -> Special
 Statement            white             none
-StorageClass         white             none
-String               white             none
-Structure            white             none
+StorageClass      -> Type
+String            -> Constant
+Structure         -> Type
+Tag               -> Special
 Todo                 white             none
 Type                 white             none
+Typedef           -> Type
 Underlined           white             none
 # See `:help lCursor`
 lCursor           -> Cursor

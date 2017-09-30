@@ -102,7 +102,7 @@ fun! s:print_header()
   if !empty(s:website)
     call s:put(   '" Website:      ' . s:website                                                      )
   endif
-  call s:put  (   '" License:      Vim License  (see `:help license`)'                                )
+  call s:put  (   '" License:      Vim License (see `:help license`)'                                 )
   call s:put  (   ''                                                                                  )
   call s:put  (   "if !exists('&t_Co')"                                                               )
   call s:put  (   '" FIXME: Do something?'                                                            )

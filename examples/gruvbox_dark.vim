@@ -4,7 +4,7 @@
 " Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " Website:      https://github.com/morhetz/gruvbox/
 " License:      Vim License (see `:help license`)
-" Last Updated: Sat Sep 30 17:23:15 2017
+" Last Updated: Sat Sep 30 18:50:11 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < 256)
@@ -554,24 +554,24 @@ hi jsonString ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm
 " Color: purple            rgb(211, 134, 155)    175  LightMagenta
 " Color: aqua              rgb(142, 192, 124)    108     LightCyan
 " Color: light1            rgb(235, 219, 178)    223         White
-" Normal                           light1 dark0/none
+" Normal                           light1 dark0
 " ColorColumn                      none   dark1
 " Conceal                          blue   none
 " Cursor                           none   none    inverse
 " CursorColumn                  -> CursorLine
 " CursorLine                       none   dark1
 " CursorLineNr                     yellow dark1/none
-" DiffAdd                          green  bg/none inverse
-" DiffChange                       aqua   bg/none inverse
-" DiffDelete                       red    bg/none inverse
-" DiffText                         yellow bg/none inverse
+" DiffAdd                          green  bg      inverse
+" DiffChange                       aqua   bg      inverse
+" DiffDelete                       red    bg      inverse
+" DiffText                         yellow bg      inverse
 " Directory                        green  none    bold
 " EndOfBuffer                      dark0  none
-" Error                            red    bg/none bold,reverse
+" Error                            red    bg      bold,reverse
 " ErrorMsg                         dark0  red     bold
 " FoldColumn                       grey   dark1/none
 " Folded                           grey   dark1   italic
-" IncSearch                        orange bg/none inverse
+" IncSearch                        orange bg      inverse
 " LineNr                           dark4  none
 " MatchParen                       none   dark3   bold
 " ModeMsg                          yellow none    bold
@@ -583,7 +583,7 @@ hi jsonString ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm
 " PmenuThumb                       none   dark4
 " Question                         orange none    bold
 " QuickFixLine                  -> Search
-" Search                           yellow bg/none inverse
+" Search                           yellow bg      inverse
 " SignColumn                       none   dark1/none
 " SpecialKey                       dark2  none
 " SpellBad                         none   none    t=underline g=undercurl s=blue
@@ -611,7 +611,7 @@ hi jsonString ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm
 " Define                           aqua   none
 " Debug                            red    none
 " Delimiter                        orange none
-" Error                            red    bg/none bold,inverse
+" Error                            red    bg      bold,inverse
 " Exception                        red    none
 " Float                            purple none
 " Function                         green  none    bold
@@ -634,7 +634,7 @@ hi jsonString ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm
 " String                           green  none
 " Structure                        aqua   none
 " Tag                           -> Special
-" Todo                             fg     bg/none bold,italic
+" Todo                             fg     bg      bold,italic
 " Type                             yellow none
 " Typedef                          yellow none
 " Underlined                       blue   none    underline
@@ -736,13 +736,13 @@ hi jsonString ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm
 " htmlSpecialTagName               aqua   none    bold
 " htmlLink                         light4 none    underline
 " htmlSpecialChar                  orange none
-" htmlBold                         fg     bg/none bold
-" htmlBoldUnderline                fg     bg/none bold,underline
-" htmlBoldItalic                   fg     bg/none bold,italic
-" htmlBoldUnderlineItalic          fg     bg/none bold,underline,italic
-" htmlUnderline                    fg     bg/none underline
-" htmlUnderlineItalic              fg     bg/none underline,italic
-" htmlItalic                       fg     bg/none italic
+" htmlBold                         fg     bg      bold
+" htmlBoldUnderline                fg     bg      bold,underline
+" htmlBoldItalic                   fg     bg      bold,italic
+" htmlBoldUnderlineItalic          fg     bg      bold,underline,italic
+" htmlUnderline                    fg     bg      underline
+" htmlUnderlineItalic              fg     bg      underline,italic
+" htmlItalic                       fg     bg      italic
 " xmlTag                           blue   none
 " xmlEndTag                        blue   none
 " xmlTagName                       blue   none

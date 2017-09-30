@@ -180,9 +180,18 @@ fun! s:set_highlight_group(line, linenr)
     return
   endif
   let [l:group, l:fg, l:tfg, l:bg, l:tbg, l:attrs] = l:match[1:6]
+  " Normal highlight group needs special treatment
   if l:group ==# 'Normal'
     let s:normal_group_defined = 1
+    if empty(l:tbg)
+      let l:tbg = 'none' " Transparent background
+    else
+      if l:tbg !=# 'none'
+        call s:add_error("Alternate background for Normal group can only be 'none'", a:linenr)
+      endif
+    endif
   endif
+  " Verify that colors have been defined
   if !(s:check_valid_color(l:fg, a:linenr) && s:check_valid_color(l:tfg, a:linenr)
         \ && s:check_valid_color(l:bg, a:linenr) && s:check_valid_color(l:tbg, a:linenr))
     return
@@ -214,15 +223,25 @@ fun! s:set_highlight_group(line, linenr)
       let l:gui = l:attr
     endif
   endfor
-  if !(empty(l:tfg) && empty(l:tbg) && empty(l:tsp)) " Different definitions according to transparency
+  " Build highlight group definition
+  if !(empty(l:tfg) && empty(l:tbg) && empty(l:tsp))
+        \ || l:fg == 'bg' || l:bg == 'bg' || l:sp == 'bg'
+        \ || l:group == 'Normal'
+    " Different definitions according to transparency
     call add(s:opaque_hi_group,
-          \ s:hlstring(l:group, l:fg, l:bg, {'cterm': l:term, 'gui': l:gui, 'guisp': l:sp})
+          \ s:hlstring(l:group,
+          \            l:fg,
+          \            l:bg,
+          \            {'cterm': l:term, 'gui': l:gui, 'guisp': l:sp})
           \ )
     call add(s:transp_hi_group,
           \ s:hlstring(l:group,
-          \            empty(l:tfg) ? l:fg : l:tfg,
-          \            empty(l:tbg) ? l:bg : l:tbg,
-          \            {'cterm': l:term, 'gui': l:gui, 'guisp': empty(l:tsp) ? l:sp : l:tsp }
+          \            empty(l:tfg) ? (l:fg == 'bg' ? 'none' : l:fg) : (l:tfg == 'bg' ? 'none' : l:tfg),
+          \            empty(l:tbg) ? (l:bg == 'bg' ? 'none' : l:bg) : (l:tbg == 'bg' ? 'none' : l:tbg),
+          \            {'cterm': l:term,
+          \             'gui': l:gui,
+          \             'guisp': empty(l:tsp) ? (l:sp == 'bg' ? 'none' : l:sp) : (l:tsp == 'bg' ? 'none' : l:tsp)
+          \            }
           \           )
           \ )
   else

@@ -225,8 +225,8 @@ fun! s:set_highlight_group(line, linenr)
         call s:add_error("Alternate background for Normal group can only be 'none'", a:linenr)
       endif
     endif
-    if l:fg =~ '^\%(none\|fg\|bg\)$'
-      call s:add_error("The foreground color for Normal cannot be 'none', 'fg', or 'bg'", a:linenr)
+    if l:fg =~ '^\%(none\|fg\|bg\)$' || l:bg =~ '^\%(none\|fg\|bg\)$'
+      call s:add_error("The colors for Normal cannot be 'none', 'fg', or 'bg'", a:linenr)
     endif
     if l:term =~ '\%(inv\|rev\)erse' || l:gui =~ '\%(inv\|rev\)erse'
       call s:add_error("Do not use reverse mode for the Normal group", a:linenr)

@@ -183,6 +183,9 @@ fun! s:set_highlight_group(line, linenr)
   " Normal highlight group needs special treatment
   if l:group ==# 'Normal'
     let s:normal_group_defined = 1
+    if !empty(s:opaque_hi_group)
+      call s:add_error('The Normal highlight group must be the first defined group', a:linenr)
+    endif
     if empty(l:tbg)
       let l:tbg = 'none' " Transparent background
     else

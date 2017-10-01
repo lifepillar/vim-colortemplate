@@ -165,6 +165,7 @@ Color: brightwhite          #ffffff              255        White
 # }}}
 
 # Default highlight groups {{{
+# Comment out (do not delete) the definitions that you do not need.
 # Group              Foreground        Background        Attributes
 Normal               black             white
 ColorColumn          fg                bg

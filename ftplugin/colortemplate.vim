@@ -97,7 +97,6 @@ endf
 
 fun! s:new_buffer()
   silent tabnew +setlocal\ ft=vim
-  " execute 'file' s:short_name.(s:use16colors ? '_16' : '').'.vim'
 endf
 
 fun! s:has_dark_and_light()
@@ -134,7 +133,7 @@ fun! s:print_header()
   call s:put  (   '  syntax reset'                                                                    )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
-  call s:put  (   "let g:colors_name = '" . s:short_name . (s:use16colors ? '_16' : '') . "'"         )
+  call s:put  (   "let g:colors_name = '" . s:short_name . "'"                                        )
 endf
 " }}}
 

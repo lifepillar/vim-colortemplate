@@ -8,12 +8,13 @@ following features:
 
 - they support 256-color terminals, true color terminals and GUI Vim;
 - they allow the user to set a transparent background;
-- they are not over-engineered (almost no options), they load efficiently and
-  they have a consistent structure;
+- they are not over-engineered (very few options) and they load efficiently;
+- they have a consistent structure and they are guaranteed to follow best
+  practices;
 - they can be easily customised by the user;
 - they are automatically licensed under the Vim license.
 
-To get started quickly, open `colortemplate_dark.txt`, which is located in
+To get started quickly, |:edit| `colortemplate_dark.txt`, which is located in
 colortemplate's plugin folder, and type:
 >
   :Colortemplate ~/.vim/colors/colortemplate_dark.vim
@@ -24,7 +25,7 @@ with:
 >
   colorscheme colortemplate_dark
 <
-(The template uses only black and white, so this is not an outstanding theme.)
+(The template uses only black and white, so it is not an outstanding theme.)
 
 You may use `colortemplate_dark.txt`, `colortemplate_light.txt` or
 `colortemplate_dark_light.txt` as starting points for creating your own
@@ -70,7 +71,7 @@ which case base-256 numbers are ignored and base-16 colors are used instead.
 You should not set |g:base16template|, unless you are working with a legacy
 colorscheme. You may define as many or as few colors as you like.
 
-Color name definitions may be overridden later in the file by another `Color:`
+Color name definitions may be overridden later in the file by another `Color`
 directive using the same color name.
 
 Highlight group definitions consist of lines with the following form:
@@ -81,7 +82,7 @@ For example:
 >
   SpellRare  white  black  bold,reverse  guisp=cyan
 <
-Colors must be specified using the color names defined in the `Color:`
+Colors must be specified using the color names defined in the `Color`
 directives. You may also define alternative colors to be used with
 a transparent background. For example, the following definition:
 >
@@ -127,10 +128,38 @@ For example:
 >
   QuickFixLine  ->  Search
 <
-Code between `verbatim` and `endverbatim` is copied (almost) verbatim into the
-output. The exception is that you may still use your color names by prepending
-an @ sign. Such names will be interpolated and replaced by suitable color
-values. For example:
+You must specify whether your highlight group definitions apply to a dark or
+a light background. You do so with a `Background` directive, e.g.:
+>
+  Background: dark
+<
+This must appear before the first highlight group is defined. All the
+highlight groups defined after a `Background` directive until the end of the
+file or until another `Background` directive are assumed to refer to the
+specified background. The only allowed values are `dark` and `light` (all
+lowercase).
+
+If there is only one `Background` directive in the template, the generated
+colorscheme will have a command to set the background accordingly, e.g.:
+>
+  set background=dark
+<
+If there are two directives (or more), with dark and light values
+respectively, the generated colorscheme will adapt to the current background,
+e.g., the generated code will be:
+>
+  if &background ==# 'dark'
+    " Dark variant of the colorscheme
+  endif
+  if &background ==# 'light'
+    " Light variant of the colorscheme
+  endif
+<
+Colortemplate also offers the possibility to add custom code to the
+colorscheme. Code between `verbatim` and `endverbatim` is copied (almost)
+verbatim into the output. The exception is that you may still use your color
+names by prepending an @ sign. Such names will be interpolated and replaced by
+suitable color values. For example:
 >
   verbatim
   if get(g:, 'fancyflag', 0)
@@ -147,7 +176,7 @@ might be translated into something like:
 This allows you to get fancy. If you plan to submit your colorscheme for
 inclusion in Vim, do not get fancy.
 
-Finally, line starting with `#` are interpreted as comments.
+Finally, lines starting with `#` are interpreted as comments.
 
 ==============================================================================
 Colortemplate options		       	*colortemplate-options*
@@ -160,9 +189,11 @@ colors, set this variable to 1, then generate the colorscheme with
 ==============================================================================
 Colortemplate command		       	*:Colortemplate*
 
-Use this command to create a Vim colorscheme from a colortemplate file. The
-command takes an optional argument, which is the path where the generated
-colorscheme should be saved. If the file already exists, you will get an
-error. Use `:Colortemplate!` to override an existing file.
+Use this command to create a Vim colorscheme from a colortemplate file. If you
+use the command without any argument, the colorscheme is created in a new
+buffer, but it is not saved. The command takes an optional argument, which is
+the path where the generated colorscheme should be saved. If the file already
+exists, you will get an error. Use `:Colortemplate!` to override an existing
+file.
 
 vim:tw=78:ts=8:ft=help:norl:

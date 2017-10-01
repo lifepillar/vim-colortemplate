@@ -2,12 +2,12 @@
 " Author:       Ron Aaron <ron@ronware.org>
 " Maintainer:   Ron Aaron <ron@ronware.org>
 " License:      Vim License (see `:help license`)
-" Last Updated: Sun Oct  1 12:49:58 2017
+" Last Updated: Sun Oct  1 20:17:19 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < 256)
   echohl Error
-  echomsg 'Pablo: There are not enough colors.'
+  echomsg '[Pablo] There are not enough colors.'
   echohl None
   finish
 endif

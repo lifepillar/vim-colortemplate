@@ -4,12 +4,12 @@
 " Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " Website:      https://github.com/morhetz/gruvbox/
 " License:      Vim License (see `:help license`)
-" Last Updated: Sun Oct  1 10:51:41 2017
+" Last Updated: Sun Oct  1 20:17:18 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < 256)
   echohl Error
-  echomsg 'Gruvbox Dark: There are not enough colors.'
+  echomsg '[Gruvbox Dark] There are not enough colors.'
   echohl None
   finish
 endif

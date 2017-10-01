@@ -2,13 +2,13 @@
 
 # Information {{{
 # Mandatory
-Full name:   My Dark Colorscheme
-Short name:  my_dark_colors
+Full name:   My Light Colorscheme
+Short name:  my_light_colors
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
 # Optional
 Website:
-Description: Template for dark colorscheme
+Description: Template for a light colorscheme
 # }}}
 
 # Color palette {{{
@@ -32,73 +32,73 @@ Color: brightcyan           rgb(100, 255, 255)   116        LightCyan
 Color: brightwhite          #ffffff              255        White
 # }}}
 
-Background: dark
+Background: light
 
 # Default highlight groups {{{
 # Group              Foreground        Background        Attributes
-Normal               white             black
+Normal               black             white
 ColorColumn          fg                bg
 Conceal              none              none
-Cursor               white             black
-CursorColumn         white             black
-CursorLine           white             black
-CursorLineNr         white             black
-DiffAdd              white             black             reverse
-DiffChange           white             black             reverse
-DiffDelete           white             black             reverse
-DiffText             white             black             bold,reverse
-Directory            white             black
-EndOfBuffer          white             black
-ErrorMsg             white             black             reverse
-FoldColumn           white             black
-Folded               white             black             italic
-IncSearch            white             black             t=reverse g=standout
-LineNr               white             black
-MatchParen           white             black
-ModeMsg              white             black
-MoreMsg              white             black
-NonText              white             black
-Pmenu                white             black
-PmenuSbar            white             black
-PmenuSel             white             black
-PmenuThumb           white             black
-Question             white             black
+Cursor               black             white
+CursorColumn         black             white
+CursorLine           black             white
+CursorLineNr         black             white
+DiffAdd              black             white             reverse
+DiffChange           black             white             reverse
+DiffDelete           black             white             reverse
+DiffText             black             white             bold,reverse
+Directory            black             white
+EndOfBuffer          black             white
+ErrorMsg             black             white             reverse
+FoldColumn           black             white
+Folded               black             white             italic
+IncSearch            black             white             t=reverse g=standout
+LineNr               black             white
+MatchParen           black             white
+ModeMsg              black             white
+MoreMsg              black             white
+NonText              black             white
+Pmenu                black             white
+PmenuSbar            black             white
+PmenuSel             black             white
+PmenuThumb           black             white
+Question             black             white
 QuickFixLine     ->  Search
-Search               white             black
-SignColumn           white             black
-SpecialKey           white             black
-SpellBad             white             black             s=red
-SpellCap             white             black             s=blue
-SpellLocal           white             black             s=magenta
-SpellRare            white             black             s=cyan reverse
-StatusLine           white             black
-StatusLineNC         white             black
+Search               black             white
+SignColumn           black             white
+SpecialKey           black             white
+SpellBad             black             white             s=red
+SpellCap             black             white             s=blue
+SpellLocal           black             white             s=magenta
+SpellRare            black             white             s=cyan reverse
+StatusLine           black             white
+StatusLineNC         black             white
 StatusLineTerm    -> StatusLine
 StatusLineTermNC  -> StatusLineNC
-TabLine              white             black
-TabLineFill          white             black
-TabLineSel           white             black
-Title                white             black
-VertSplit            white             black
-Visual               white             black
-VisualNOS            white             black
-WarningMsg           white             black
-WildMenu             white             black
+TabLine              black             white
+TabLineFill          black             white
+TabLineSel           black             white
+Title                black             white
+VertSplit            black             white
+Visual               black             white
+VisualNOS            black             white
+WarningMsg           black             white
+WildMenu             black             white
 # Other conventional group names (see `:help group-name`)
 Boolean           -> Constant
 Character         -> Constant
-Comment              white             none
+Comment              black             none
 Conditional       -> Statement
-Constant             white             none
+Constant             black             none
 Define            -> PreProc
 Debug             -> Special
 Delimiter         -> Special
-Error                white             black             reverse
+Error                black             white             reverse
 Exception         -> Statement
 Float             -> Constant
 Function          -> Identifier
-Identifier           white             none
-Ignore               white             none
+Identifier           black             none
+Ignore               black             none
 Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement
@@ -106,20 +106,20 @@ Macro             -> PreProc
 Number            -> Constant
 Operator          -> Statement
 PreCondit         -> PreProc
-PreProc              white             none
+PreProc              black             none
 Repeat            -> Statement
-Special              white             none
+Special              black             none
 SpecialChar       -> Special
 SpecialComment    -> Special
-Statement            white             none
+Statement            black             none
 StorageClass      -> Type
 String            -> Constant
 Structure         -> Type
 Tag               -> Special
-Todo                 white             none
-Type                 white             none
+Todo                 black             none
+Type                 black             none
 Typedef           -> Type
-Underlined           white             none
+Underlined           black             none
 # See `:help lCursor`
 lCursor           -> Cursor
 # See `:help CursorIM`

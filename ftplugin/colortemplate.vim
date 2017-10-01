@@ -55,7 +55,7 @@ fun! s:rgb2hex(r,g,b)
 endf
 
 fun! s:add_warning(msg, ...)
-  call setloclist(0, [{'bufnr': bufnr('%'), 'lnum': (a:0 > 0 ? a:1 + 1 : 1), 'text': a:msg, 'type': 'W'}], 'a')
+  call setloclist(0, [{'bufnr': bufnr('%'), 'lnum': a:0 > 0 ? a:1+1 : 1, 'text': a:msg, 'type': 'W'}], 'a')
 endf
 
 fun! s:add_error(msg, ...)
@@ -227,6 +227,9 @@ fun! s:set_highlight_group(line, linenr)
   " Normal highlight group needs special treatment
   if l:group ==# 'Normal'
     let s:normal_group_defined[s:background] = 1
+    if !empty(s:hi_group[s:background]['opaque'])
+      call s:add_warning('The Normal highlight group for ' .s:background. ' background must be the first defined group', a:linenr)
+    endif
     if empty(l:tbg)
       let l:tbg = 'none' " Transparent background
     else
@@ -279,22 +282,10 @@ fun! s:check_requirements()
   if empty(s:maintainer)
     call s:add_error('Please specify a maintainer and the corresponding email')
   endif
-  if s:has_dark_and_light()
-    if !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
-      call s:add_error('Please define the Normal highlight group for both dark and light background')
-    else
-      for l:bg in ['dark', 'light']
-        if s:hi_group[l:bg]['opaque'][0] !~ '^\s*hi Normal'
-          call s:add_error('The Normal highlight group for ' .l:bg. 'background must be the first defined group')
-        endif
-      endfor
-    endif
-  else
-    if !s:normal_group_defined[s:background]
-      call s:add_error('Please define the Normal highlight group')
-    elseif s:hi_group[s:background]['opaque'][0] !~ '^\s*hi Normal'
-      call s:add_error('The Normal highlight group must be the first defined group')
-    endif
+  if s:has_dark_and_light() && !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
+    call s:add_error('Please define the Normal highlight group for both dark and light background')
+  elseif !s:normal_group_defined[s:background]
+    call s:add_error('Please define the Normal highlight group')
   endif
 endf
 
@@ -315,7 +306,7 @@ fun! s:parse_template(filename)
         let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
         let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
       catch /.*/
-        call s:add_error('Undefined color', a:linenr)
+        call s:add_error('Undefined color', l:i)
       endtry
       call add(s:hi_group[s:background]['any'], l:line)
       continue
@@ -329,7 +320,7 @@ fun! s:parse_template(filename)
     let l:match = matchlist(l:line, '^\s*\(\w[^:]*\):\s*\(.*\)') " Split on colon
     if empty(l:match)
       if empty(s:background)
-        call s:add_error('Please add `Background: {dark/light}` before the first hi group definition')
+        call s:add_error('Please add `Background: {dark/light}` before the first hi group definition', l:i)
         throw 'Parse error'
       endif
       call s:set_highlight_group(l:line, l:i)
@@ -339,7 +330,7 @@ fun! s:parse_template(filename)
         call s:set_color(l:val, l:i)
       elseif l:key =~ '^\s*background'
         if l:val !~# 'dark\|light'
-          call s:add_error("Background can only be 'dark' or 'light'")
+          call s:add_error("Background can only be 'dark' or 'light'", l:i)
           return
         endif
         let s:background = l:val
@@ -359,7 +350,7 @@ fun! s:parse_template(filename)
       elseif l:key =~ '^\s*background'
         let s:background = l:val
       else
-        call s:add_warning('Unknown field: ' . l:key)
+        call s:add_warning('Unknown field: ' . l:key, l:i)
       endif
     endif
   endfor

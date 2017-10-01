@@ -361,7 +361,9 @@ fun! s:make_colorscheme(...)
     lopen
     return
   catch /.*/
-    echomsg 'Unexpected error: ' v:exception
+    echohl Error
+    echomsg '[Colortemplate] Unexpected error: ' v:exception
+    echohl None
     let g:colortemplate_exit_status = 1
     return
   endtry

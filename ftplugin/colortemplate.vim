@@ -15,6 +15,7 @@ setlocal commentstring=#%s
 
 " Initialization {{{
 fun! s:init()
+  let g:colortemplate_exit_status = 0
   let s:template = []
   let s:full_name = ''
   let s:short_name = ''
@@ -357,10 +358,12 @@ fun! s:make_colorscheme(...)
   try
     call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
   catch /Parse error/
+    let g:colortemplate_exit_status = 1
     lopen
     return
   catch /.*/
     echomsg 'Unexpected error: ' v:exception
+    let g:colortemplate_exit_status = 1
     return
   endtry
   call s:new_buffer()

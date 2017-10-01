@@ -8,10 +8,8 @@ let s:errors = 0
 for s:template in glob(s:curdir . '/templates/*.txt', 1, 1)
   let s:template_name = fnamemodify(s:template, ':t:r')
   execute "edit" s:template
-  Colortemplate
-  if g:colortemplate_exit_status == 0
-    execute "write!" s:curdir . '/colors/' . s:template_name . '.vim'
-  else
+  execute "Colortemplate!" s:curdir . '/colors/' . s:template_name . '.vim'
+  if g:colortemplate_exit_status != 0
     echohl Error
     echomsg 'ERROR:' s:template_name 'could not be built'
     echohl None
@@ -20,6 +18,8 @@ for s:template in glob(s:curdir . '/templates/*.txt', 1, 1)
 endfor
 
 if s:errors > 0
+  redraw
+  echo "\r"
   echohl Error
   echomsg "There were errors: see messages"
   echohl None

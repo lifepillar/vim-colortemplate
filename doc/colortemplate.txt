@@ -1,15 +1,16 @@
 ==============================================================================
 Color templates				*color-templates* *ft-colortemplate*
 
-A colortemplate file is designed to help vimmers create their own colorschemes
+A colortemplate file is designed to help users create their own colorschemes
 without much effort. It can also be used to create colorschemes suitable for
 distribution with Vim. Colorschemes created using a colortemplate have the
 following features:
 
-- support for 256-color terminals, for true color terminals and for GUI Vim;
-- support for transparent background;
-- no over-engineering, efficient loading and consistent structure;
-- automatically licensed under the Vim license.
+- they support 256-color terminals, true color terminals and GUI Vim;
+- they allow setting a transparent background;
+- they are not over-engineered, they load efficiently and have a  consistent
+  structure;
+- they are automatically licensed under the Vim license.
 
 To get started quickly, open `colortemplate.txt` and type:
 >
@@ -34,7 +35,6 @@ optional fields:
   Maintainer: Myself <myself@somewhere.org>
   
   # Optional information
-  Background: dark or light
   Website: http://mysite.org
   Description: A one line description
 <
@@ -52,23 +52,20 @@ given as hexadecimal values, as in the example above, or as RGB values:
 >
   Color: white  rgb(255,255,255)  206  White
 <
-Base-256 specifications are used in terminals supporting 256 colors, but
-without support for true colors or when |termguicolors| is not set. Base-16
-colors should be given as color constants (see |cterm-colors|). They are
-normally not used (but see |g:base16template|). You may define as many or as
-few colors as you like.
+Base-256 specifications are used in terminals supporting 256 colors but not
+true colors, or when |termguicolors| is not set. Base-16 colors should be
+given as color constants (see |cterm-colors|). They are normally not used (but
+see |g:base16template|). You may define as many or as few colors as you like.
 
 You may also define alternative colors to be used with a transparent
-background. Transparent background is enabled by setting
-|g:<colorscheme>_transp_bg| to 1 (where `<colorscheme>` is the short name of
-your colorscheme). For example, the following definition:
+background. To use a transparent background, set |g:<colorscheme>_transp_bg|
+to 1 (where `<colorscheme>` is the short name of your colorscheme). For
+example, the following definition:
 >
-  Normal white black/none
+  LineNr white black/none
 <
 instructs Vim to use a transparent background instead of a black background
-when |g:<colorscheme>_transp_bg| is set. The Normal highlight group should
-always be the first defined highlight group and it should always be defined
-with an alternative transparent background, as above.
+when |g:<colorscheme>_transp_bg| is set.
 
 Highlight group definitions consist of lines with the following form:
 >
@@ -118,7 +115,8 @@ Colortemplate options		       	*colortemplate-options*
 						*g:base16template*
 If you want to use the shell's 16 color palette instead of the standard 256
 colors, set this variable to 1, and generate the colorscheme with
-|:Colortemplate|.
+|:Colortemplate|. By default, `_16` is appended to the short name of the
+generated colorscheme.
 
 ==============================================================================
 Colortemplate command		       	*:Colortemplate*

@@ -7,7 +7,6 @@ Short name: my_wonder
 Author: Myself <myself@somewhere.org>
 Maintainer: Myself <myself@somewhere.org>
 # Optional
-Background: dark
 Website:
 Description: Example of color template
 # }}}
@@ -31,6 +30,8 @@ Color: brightmagenta        rgb(132, 133, 206)   204        LightMagenta
 Color: brightcyan           rgb(  0, 171, 165)   205        LightCyan
 Color: brightwhite          #ffffff              206        White
 # }}}
+
+Background: dark
 
 # Default highlight groups {{{
 # Group              Foreground        Background        Attributes

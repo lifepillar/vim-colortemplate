@@ -12,12 +12,16 @@ following features:
   structure;
 - they are automatically licensed under the Vim license.
 
-To get started quickly, open `colortemplate.txt` and type:
+To get started quickly, open `colortemplate_dark.txt`,
+`colortemplate_light.txt` or `colortemplate_dark_light.txt` and type:
 >
   :Colortemplate
 <
 This will open a new tab with the colorscheme generated from the template
-file. You may use `colorscheme.txt` as a starting point for creating your own
+file. Save it into a `colors` folder using the same name as in `g:colors_name`
+(plus a `.vim` suffix). Finally, load it as usual with |:colorscheme|.
+
+You may use the files above as starting points for creating your own
 colorscheme. The process is divided in four steps:
 
 1. start by editing your colorscheme's information;
@@ -57,15 +61,8 @@ true colors, or when |termguicolors| is not set. Base-16 colors should be
 given as color constants (see |cterm-colors|). They are normally not used (but
 see |g:base16template|). You may define as many or as few colors as you like.
 
-You may also define alternative colors to be used with a transparent
-background. To use a transparent background, set |g:<colorscheme>_transp_bg|
-to 1 (where `<colorscheme>` is the short name of your colorscheme). For
-example, the following definition:
->
-  LineNr white black/none
-<
-instructs Vim to use a transparent background instead of a black background
-when |g:<colorscheme>_transp_bg| is set.
+Color name definitions may be overridden later in the file by another `Color:`
+directive using the same color name.
 
 Highlight group definitions consist of lines with the following form:
 >
@@ -76,9 +73,22 @@ For example:
   SpellRare  white  black  bold,reverse  guisp=cyan
 <
 Colors must be specified using the color names defined in the `Color:` fields.
-The <style> part is used to specify comma-separated lists of attributes (see
-|attr-list|) and the special color to use in the GUI. Both parts are optional,
-so these are also valid highlight group specifications:
+You may also define alternative colors to be used with a transparent
+background. For example, the following definition:
+>
+  LineNr white black/none
+<
+generates two highlight groups commands: one is used when the background is opaque
+and the other when the user sets a transparent background.
+
+To use a transparent background, set |g:<colorscheme>_transp_bg|
+to 1, where `<colorscheme>` is the short name of your colorscheme, before
+loading the colorscheme.
+
+The <style> part of a highlight group definition is used to specify
+comma-separated lists of attributes (see |attr-list|) and the special color to
+use in the GUI. Both parts are optional, so these are also valid highlight
+group specifications:
 >
   Normal    white   black
   DiffAdd   orange  blue   reverse
@@ -114,9 +124,8 @@ Colortemplate options		       	*colortemplate-options*
 
 						*g:base16template*
 If you want to use the shell's 16 color palette instead of the standard 256
-colors, set this variable to 1, and generate the colorscheme with
-|:Colortemplate|. By default, `_16` is appended to the short name of the
-generated colorscheme.
+colors, set this variable to 1, then generate the colorscheme with
+|:Colortemplate|.
 
 ==============================================================================
 Colortemplate command		       	*:Colortemplate*

@@ -5,10 +5,11 @@ Full name: Gruvbox Dark
 Short name: gruvbox_dark
 Author: morhetz <morhetz@gmail.com>
 Maintainer: Lifepillar <lifepillar@lifepillar.me>
-Background: dark
 Website: https://github.com/morhetz/gruvbox/
 Description: Retro groove color scheme
 # }}}
+
+Background: dark
 
 # Color palette {{{
 Color: dark0             rgb(40,  40,  40)     235         Black

@@ -4,7 +4,7 @@
 " Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " Website:      https://github.com/morhetz/gruvbox/
 " License:      Vim License (see `:help license`)
-" Last Updated: Sat Sep 30 18:50:11 2017
+" Last Updated: Sun Oct  1 10:51:41 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < 256)
@@ -538,6 +538,7 @@ hi jsonQuote ctermfg=142 ctermbg=NONE guifg=#b8bb26 guibg=NONE guisp=NONE cterm=
 hi jsonBraces ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi jsonString ctermfg=223 ctermbg=NONE guifg=#ebdbb2 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 
+" Background: dark
 " Color: dark0             rgb(40,  40,  40)     235         Black
 " Color: dark1             rgb(60,  56,  54)     237       DarkRed
 " Color: dark2             rgb(80,  73,  69)     239     DarkGreen

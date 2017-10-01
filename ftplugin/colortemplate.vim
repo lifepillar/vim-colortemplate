@@ -404,7 +404,7 @@ fun! s:make_colorscheme(...)
         \                    ),
         \              { _,l -> '" ' . l }
         \    ))
-  if a:0 > 0
+  if !empty(a:1)
     execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
     if fnamemodify(a:1, ':t:r') != s:short_name
       redraw

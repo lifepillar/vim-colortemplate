@@ -34,6 +34,7 @@ fun! s:init()
   let s:hi_group['dark'] = { 'opaque': [], 'transp': [], 'any': [] }
   let s:hi_group['light'] = { 'opaque': [], 'transp': [], 'any': [] }
   let s:normal_group_defined = { 'dark': 0, 'light': 0 }
+  let s:verbatim = 0 " When set to 1, source is copied (almost) verbatim
   let s:use16colors     = get(g:, 'base16template', 0)
   call setloclist(0, [], 'r') " Used for errors
 endf
@@ -300,6 +301,24 @@ fun! s:parse_template(filename)
   let s:template = readfile(fnameescape(a:filename))
   for l:i in range(len(s:template))
     let l:line = s:template[l:i]
+    if l:line =~ '^\s*verbatim\s*$'
+      let s:verbatim = 1
+      continue
+    endif
+    if l:line =~ '^\s*endverbatim\s*$'
+      let s:verbatim = 0
+      continue
+    endif
+    if s:verbatim
+      try " to interpolate color names
+        let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
+        let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
+      catch /.*/
+        call s:add_error('Undefined color', a:linenr)
+      endtry
+      call add(s:hi_group[s:background]['any'], l:line)
+      continue
+    endif
     if l:line =~ '^\s*#' " Skip comment
       continue
     endif

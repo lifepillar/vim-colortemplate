@@ -151,6 +151,10 @@ syn match   colortemplateCompoundName contained "white smoke"
 syn match   colortemplateCompoundName contained "x11 \(gray\|green\|grey\|maroon\|purple\)"
 syn match   colortemplateCompoundName contained "yellow green"
 
+syn include @colortemplatevim syntax/vim.vim
+unlet b:current_syntax
+syn region colortemplatevim matchgroup=colortemplateKeyword start=/verbatim/ end=/endverbatim/ keepend contains=@colortemplatevim
+
 hi def link colortemplateArrow        Delimiter
 hi def link colortemplateAttr         Label
 hi def link colortemplateAttrs        String
@@ -163,6 +167,7 @@ hi def link colortemplateHexColor     Constant
 hi def link colortemplateHiGroup      Identifier
 hi def link colortemplateNumber       Number
 hi def link colortemplateKey          Special
+hi def link colortemplateKeyword      Keyword
 hi def link colortemplateSpecial      Boolean
 
 let b:current_syntax = "colortemplate"

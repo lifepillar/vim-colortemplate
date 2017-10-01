@@ -22,17 +22,18 @@ fun! s:init()
   let s:maintainer = ''
   let s:website = ''
   let s:description = ''
-  let s:background = ''
+  let s:background = '' " Current background
+  let s:uses_background = { 'dark': 0, 'light': 0 }
   let s:palette = {
         \ 'none': ['NONE', 'NONE', 'NONE'],
         \ 'fg':   ['fg',   'fg',   'fg'  ],
         \ 'bg':   ['bg',   'bg',   'bg'  ]
         \ }
-  let s:transp_hi_group = [] " hi group definitions for transparent background
-  let s:opaque_hi_group = [] " hi group definitions for opaque background
-  let s:hi_group        = [] " hi group definitions that do not depend on transparency
+  let s:hi_group  = {}
+  let s:hi_group['dark'] = { 'opaque': [], 'transp': [], 'any': [] }
+  let s:hi_group['light'] = { 'opaque': [], 'transp': [], 'any': [] }
+  let s:normal_group_defined = { 'dark': 0, 'light': 0 }
   let s:use16colors     = get(g:, 'base16template', 0)
-  let s:normal_group_defined = 0
   call setloclist(0, [], 'r') " Used for errors
 endf
 " }}}
@@ -98,6 +99,10 @@ fun! s:new_buffer()
   " execute 'file' s:short_name.(s:use16colors ? '_16' : '').'.vim'
 endf
 
+fun! s:has_dark_and_light()
+  return s:uses_background['dark'] && s:uses_background['light']
+endf
+
 fun! s:print_header()
   call setline(1, '" Name:         ' . s:full_name                                                    )
   if !empty(s:description)
@@ -119,10 +124,10 @@ fun! s:print_header()
   call s:put  (   '  finish'                                                                          )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
-  if !empty(s:background)
+  if !s:has_dark_and_light()
     call s:put(   'set background=' . s:background                                                    )
+    call s:put(   ''                                                                                  )
   endif
-  call s:put  (   ''                                                                                  )
   call s:put  (   'hi clear'                                                                          )
   call s:put  (   "if exists('syntax_on')"                                                            )
   call s:put  (   '  syntax reset'                                                                    )
@@ -157,13 +162,13 @@ endf
 
 fun! s:check_valid_color(col, linenr)
   if !empty(a:col) && !has_key(s:palette, a:col)
-    call s:add_error('Invalid color name: ' . a:col, a:linenr)
+    call s:add_error('Undefined color name: ' . a:col, a:linenr)
     return 0
   endif
   return 1
 endf
 
-" Parse a hi group definition and store it internally.
+" Parse a highlight group definition and store it internally.
 fun! s:set_highlight_group(line, linenr)
   if a:line =~ '->' " Linked group
     let l:match = matchlist(a:line, '^\s*\(\w\+\)\s*->\s*\(\w\+\)\s*\%(#.*\)\?$')
@@ -171,7 +176,7 @@ fun! s:set_highlight_group(line, linenr)
       call s:add_error('Syntax error: '.a:line, a:linenr)
     endif
     let [l:src, l:tgt] = l:match[1:2]
-    call add(s:hi_group, 'hi! link ' . l:src . ' ' . l:tgt)
+    call add(s:hi_group[s:background]['any'], 'hi! link ' . l:src . ' ' . l:tgt)
     return
   endif
   " Regular highlight group definition
@@ -219,10 +224,7 @@ fun! s:set_highlight_group(line, linenr)
   endfor
   " Normal highlight group needs special treatment
   if l:group ==# 'Normal'
-    let s:normal_group_defined = 1
-    if !empty(s:opaque_hi_group)
-      call s:add_error('The Normal highlight group must be the first defined group', a:linenr)
-    endif
+    let s:normal_group_defined[s:background] = 1
     if empty(l:tbg)
       let l:tbg = 'none' " Transparent background
     else
@@ -242,13 +244,13 @@ fun! s:set_highlight_group(line, linenr)
         \ || l:fg == 'bg' || l:bg == 'bg' || l:sp == 'bg'
         \ || l:group == 'Normal'
     " Different definitions according to transparency
-    call add(s:opaque_hi_group,
+    call add(s:hi_group[s:background]['opaque'],
           \ s:hlstring(l:group,
           \            l:fg,
           \            l:bg,
           \            {'cterm': l:term, 'gui': l:gui, 'guisp': l:sp})
           \ )
-    call add(s:transp_hi_group,
+    call add(s:hi_group[s:background]['transp'],
           \ s:hlstring(l:group,
           \            empty(l:tfg) ? (l:fg == 'bg' ? 'none' : l:fg) : (l:tfg == 'bg' ? 'none' : l:tfg),
           \            empty(l:tbg) ? (l:bg == 'bg' ? 'none' : l:bg) : (l:tbg == 'bg' ? 'none' : l:tbg),
@@ -259,7 +261,7 @@ fun! s:set_highlight_group(line, linenr)
           \           )
           \ )
   else
-    call add(s:hi_group,
+    call add(s:hi_group[s:background]['any'],
           \ s:hlstring(l:group, l:fg, l:bg, {'cterm': l:term, 'gui': l:gui, 'guisp': l:sp})
           \ )
   endif
@@ -275,8 +277,22 @@ fun! s:check_requirements()
   if empty(s:maintainer)
     call s:add_error('Please specify a maintainer and the corresponding email')
   endif
-  if !s:normal_group_defined
-    call s:add_error('Please define mandatory Normal highlight group')
+  if s:has_dark_and_light()
+    if !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
+      call s:add_error('Please define the Normal highlight group for both dark and light background')
+    else
+      for l:bg in ['dark', 'light']
+        if s:hi_group[l:bg]['opaque'][0] !~ '^\s*hi Normal'
+          call s:add_error('The Normal highlight group for ' .l:bg. 'background must be the first defined group')
+        endif
+      endfor
+    endif
+  else
+    if !s:normal_group_defined[s:background]
+      call s:add_error('Please define the Normal highlight group')
+    elseif s:hi_group[s:background]['opaque'][0] !~ '^\s*hi Normal'
+      call s:add_error('The Normal highlight group must be the first defined group')
+    endif
   endif
 endf
 
@@ -292,11 +308,22 @@ fun! s:parse_template(filename)
     endif
     let l:match = matchlist(l:line, '^\s*\(\w[^:]*\):\s*\(.*\)') " Split on colon
     if empty(l:match)
+      if empty(s:background)
+        call s:add_error('Please add `Background: {dark/light}` before the first hi group definition')
+        throw 'Parse error'
+      endif
       call s:set_highlight_group(l:line, l:i)
     else
       let [l:key, l:val] = [l:match[1], l:match[2]]
       if l:key =~ '^\s*color'
         call s:set_color(l:val, l:i)
+      elseif l:key =~ '^\s*background'
+        if l:val !~# 'dark\|light'
+          call s:add_error("Background can only be 'dark' or 'light'")
+          return
+        endif
+        let s:background = l:val
+        let s:uses_background[l:val] = 1
       elseif l:key =~ '^\s*full\s*name'
         let s:full_name = l:val
       elseif l:key =~ '^\s*short\s*name'
@@ -339,20 +366,34 @@ fun! s:make_colorscheme(...)
   call s:new_buffer()
   call s:print_header()
   call s:put('')
-  call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
-  call append('$', s:transp_hi_group)
-  call s:put("else")
-  call append('$', s:opaque_hi_group)
-  call s:put("endif")
-  call append('$', s:hi_group)
+  if s:has_dark_and_light()
+    for l:bg in ['dark', 'light']
+      call s:put("if &background ==# '" .l:bg. "'")
+      call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+      call append('$', s:hi_group[l:bg]['transp'])
+      call s:put("else")
+      call append('$', s:hi_group[l:bg]['opaque'])
+      call s:put("endif")
+      call append('$', s:hi_group[l:bg]['any'])
+      call s:put("endif")
+    endfor
+  else
+    call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+    call append('$', s:hi_group[s:background]['transp'])
+    call s:put("else")
+    call append('$', s:hi_group[s:background]['opaque'])
+    call s:put("endif")
+    call append('$', s:hi_group[s:background]['any'])
+  end
   call s:put('')
   " Add template as a comment (only colors and hi group definitions)
   " to make the color scheme reproducible.
   call append('$', map(
         \              filter(s:template,
-        \                     { _,l -> l =~ '^\s*color\s*:' ||
-        \                            !(l =~ '^\s*$'         ||
-        \                              l =~ '^\s*#'         ||
+        \                     { _,l -> l =~ '^\s*color\s*:'      ||
+        \                              l =~ '^\s*background\s*:' ||
+        \                            !(l =~ '^\s*$'              ||
+        \                              l =~ '^\s*#'              ||
         \                              l =~ '^\s*\%(\w[^:]*\):'
         \                             )
         \                     }

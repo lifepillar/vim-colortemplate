@@ -8,6 +8,11 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
+let s:undo_ftplugin = "setlocal commentstring<"
+let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
+
+setlocal commentstring=#%s
+
 " Initialization {{{
 fun! s:init()
   let s:template = []

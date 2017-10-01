@@ -36,7 +36,7 @@ Color: brightwhite          #ffffff              255        White
 Background: dark
 
 # Default highlight groups {{{
-# Comment out (do not delete) the definitions that you do not need.
+# Comment out (do not delete) the definitions that you want to keep at their default.
 # Group              Foreground        Background        Attributes
 Normal               white             black
 ColorColumn          fg                bg
@@ -143,7 +143,7 @@ CursorIM             none              fg
 Background: light
 
 # Color palette for light variant {{{
-# Here you may redefine some or all of the colors if you want.
+# Comment out (do not delete) the definitions that you want to keep at their default.
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb(  0,   0,   0)     0        Black
 Color: red                  rgb(255,   0,   0)    88        DarkRed

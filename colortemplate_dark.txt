@@ -35,7 +35,7 @@ Color: brightwhite          #ffffff              255        White
 Background: dark
 
 # Default highlight groups {{{
-# Comment out (do not delete) the definitions that you do not need.
+# Comment out (do not delete) the definitions that you want to keep at their default.
 # Group              Foreground        Background        Attributes
 Normal               white             black
 ColorColumn          fg                bg

@@ -1,0 +1,130 @@
+# vim: ft=colortemplate fdm=marker
+
+# Information {{{
+Full name: Pablo
+Short name: pablo
+Author: Ron Aaron <ron@ronware.org>
+Maintainer: Ron Aaron <ron@ronware.org>
+# }}}
+
+# Color palette {{{
+# Color name                GUI                  Base256    Base16 (optional)
+Color: black                #000000                0        Black
+Color: green                #00c000               44        DarkGreen
+Color: yellow               #c0c000              184        DarkYellow
+Color: blue                 #000080               19        DarkBlue
+Color: cyan                 #00c0c0               51        DarkCyan
+Color: brightblack          #808080              244        DarkGrey
+Color: brightred            #ff0000              196        LightRed
+Color: brightgreen          #00ff00               46        LightGreen
+Color: brightyellow         #ffff00              226        LightYellow
+Color: brightblue           #0000ff               21        LightBlue
+Color: brightcyan           #00ffff               51        LightCyan
+Color: brightwhite          #ffffff              255        White
+# }}}
+
+Background: dark
+
+# Default highlight groups {{{
+# Group              Foreground        Background        Attributes
+Normal               brightwhite       black
+# ColorColumn          fg                bg
+# Conceal              none              none
+# Cursor               white             black
+# CursorColumn         white             black
+# CursorLine           white             black
+# CursorLineNr         white             black
+# DiffAdd              white             black             reverse
+# DiffChange           white             black             reverse
+# DiffDelete           white             black             reverse
+# DiffText             white             black             bold,reverse
+Directory            green             none
+# EndOfBuffer          white             black
+# ErrorMsg             white             black             reverse
+# FoldColumn           white             black
+# Folded               white             black             italic
+# IncSearch            white             black             t=reverse g=standout
+# LineNr               white             black
+# MatchParen           white             black
+# ModeMsg              white             black
+# MoreMsg              white             black
+# NonText              white             black
+# Pmenu                white             black
+# PmenuSbar            white             black
+# PmenuSel             white             black
+# PmenuThumb           white             black
+# Question             white             black
+# QuickFixLine     ->  Search
+Search               none              yellow
+# SignColumn           white             black
+# SpecialKey           white             black
+# SpellBad             white             black             s=red
+# SpellCap             white             black             s=blue
+# SpellLocal           white             black             s=magenta
+# SpellRare            white             black             s=cyan reverse
+StatusLine           brightyellow      brightblue
+# StatusLineNC         white             black
+# StatusLineTerm    -> StatusLine
+# StatusLineTermNC  -> StatusLineNC
+# TabLine              white             black
+# TabLineFill          white             black
+# TabLineSel           white             black
+# Title                white             black
+# VertSplit            white             black
+# Visual               white             black
+# VisualNOS            white             black
+# WarningMsg           white             black
+# WildMenu             white             black
+# Other conventional group names (see `:help group-name`)
+# Boolean           -> Constant
+# Character         -> Constant
+Comment              brightblack       none
+# Conditional       -> Statement
+Constant             brightcyan        none
+# Define            -> PreProc
+# Debug             -> Special
+# Delimiter         -> Special
+Error                none              brightred
+# Exception         -> Statement
+# Float             -> Constant
+# Function          -> Identifier
+Identifier           cyan              none
+# Ignore               white             none
+# Include           -> PreProc
+# Keyword           -> Statement
+# Label             -> Statement
+# Macro             -> PreProc
+# Number            -> Constant
+# Operator          -> Statement
+# PreCondit         -> PreProc
+PreProc              brightgreen       none
+# Repeat            -> Statement
+Special              brightblue        none
+# SpecialChar       -> Special
+# SpecialComment    -> Special
+Statement            yellow            none                 bold
+# StorageClass      -> Type
+# String            -> Constant
+# Structure         -> Type
+# Tag               -> Special
+Todo                 blue              yellow
+Type                 green             none                 bold
+# Typedef           -> Type
+# Underlined           white             none
+# See `:help lCursor`
+# lCursor           -> Cursor
+# See `:help CursorIM`
+# CursorIM             none              fg
+# }}}
+
+# Additional highlight groups {{{
+# Add additional highlight groups here if you want
+# }}}
+
+# Plugin specific highlight groups {{{
+# Add plugin specific highlight groups here if you want
+# }}}
+
+# Filetype specific highlight groups {{{
+# Add filetype specific highlight groups here if you want
+# }}}

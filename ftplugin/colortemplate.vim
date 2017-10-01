@@ -175,6 +175,7 @@ fun! s:set_highlight_group(line, linenr)
     let l:match = matchlist(a:line, '^\s*\(\w\+\)\s*->\s*\(\w\+\)\s*\%(#.*\)\?$')
     if empty(l:match)
       call s:add_error('Syntax error: '.a:line, a:linenr)
+      return
     endif
     let [l:src, l:tgt] = l:match[1:2]
     call add(s:hi_group[s:background]['any'], 'hi! link ' . l:src . ' ' . l:tgt)

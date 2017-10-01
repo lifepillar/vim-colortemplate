@@ -55,7 +55,7 @@ fun! s:rgb2hex(r,g,b)
 endf
 
 fun! s:add_warning(msg, ...)
-  call setloclist(0, [{'bufnr': bufnr('%'), 'lnum': (a:0 > 0 ? a:1 + 1, 1), 'text': a:msg, 'type': 'W'}], 'a')
+  call setloclist(0, [{'bufnr': bufnr('%'), 'lnum': (a:0 > 0 ? a:1 + 1 : 1), 'text': a:msg, 'type': 'W'}], 'a')
 endf
 
 fun! s:add_error(msg, ...)

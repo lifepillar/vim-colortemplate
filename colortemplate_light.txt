@@ -3,7 +3,7 @@
 # Information {{{
 # Mandatory
 Full name:   My Light Colorscheme
-Short name:  my_light_colors
+Short name:  colortemplate_light
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
 # Optional
@@ -35,6 +35,7 @@ Color: brightwhite          #ffffff              255        White
 Background: light
 
 # Default highlight groups {{{
+# Comment out (do not delete) the definitions that you do not need.
 # Group              Foreground        Background        Attributes
 Normal               black             white
 ColorColumn          fg                bg

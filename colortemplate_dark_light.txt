@@ -1,9 +1,10 @@
 # vim: ft=colortemplate fdm=marker
 
+
 # Information {{{
 # Mandatory
 Full name:   My Colorscheme
-Short name:  my_colors
+Short name:  colortemplate_dark_light
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
 # Optional
@@ -35,6 +36,7 @@ Color: brightwhite          #ffffff              255        White
 Background: dark
 
 # Default highlight groups {{{
+# Comment out (do not delete) the definitions that you do not need.
 # Group              Foreground        Background        Attributes
 Normal               white             black
 ColorColumn          fg                bg

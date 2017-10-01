@@ -355,7 +355,7 @@ endf
 fun! s:make_colorscheme(...)
   call s:init()
   try
-    call s:parse_template(empty(get(a:000, 0, '')) ? expand('%') : a:1)
+    call s:parse_template(expand('%'))
   catch /Parse error/
     let g:colortemplate_exit_status = 1
     lopen
@@ -402,9 +402,19 @@ fun! s:make_colorscheme(...)
         \                    ),
         \              { _,l -> '" ' . l }
         \    ))
+  if a:0 > 0
+    execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
+    if fnamemodify(a:1, ':t:r') != s:short_name
+      redraw
+      echo "\r"
+      echohl WarningMsg
+      echomsg '[Colortemplate] Filename is different from the value of g:colors_name'
+      echohl None
+    endif
+  endif
 endf
 
-command! -buffer -nargs=? -complete=file Colortemplate call <sid>make_colorscheme(<q-args>)
+command! -buffer -nargs=? -bang -complete=file Colortemplate call <sid>make_colorscheme(<q-args>, "<bang>")
 " }}}
 
 " vim: foldmethod=marker nowrap

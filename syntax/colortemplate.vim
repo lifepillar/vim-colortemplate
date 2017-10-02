@@ -169,5 +169,6 @@ hi def link colortemplateNumber       Number
 hi def link colortemplateKey          Special
 hi def link colortemplateKeyword      Keyword
 hi def link colortemplateSpecial      Boolean
+hi def link colortemplateTodo         PreProc
 
 let b:current_syntax = "colortemplate"

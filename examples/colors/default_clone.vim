@@ -4,7 +4,7 @@
 " Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " Website:      https://github.com/vim/vim/blob/master/src/syntax.c
 " License:      Vim License (see `:help license`)
-" Last Updated: Tue Oct  3 16:29:12 2017
+" Last Updated: Tue Oct  3 18:23:30 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < 256)
@@ -86,7 +86,7 @@ hi Error ctermfg=15 ctermbg=9 guifg=#ffffff guibg=#ff0000 guisp=NONE cterm=NONE 
 hi! link Exception Statement
 hi! link Float Constant
 hi! link Function Identifier
-hi Identifier ctermfg=14 ctermbg=NONE guifg=#40ffff guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
+hi Identifier ctermfg=14 ctermbg=NONE guifg=#40ffff guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE
 hi Ignore ctermfg=0 ctermbg=NONE guifg=#000000 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Include PreProc
 hi! link Keyword Statement
@@ -106,7 +106,7 @@ hi! link String Constant
 hi! link Structure Type
 hi! link Tag Special
 hi Todo ctermfg=0 ctermbg=11 guifg=#0000ff guibg=#ffff00
-hi Type ctermfg=121 ctermbg=NONE guifg=#2e8b57 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Type ctermfg=121 ctermbg=NONE guifg=#60ff60 guibg=NONE guisp=NONE cterm=NONE gui=NONE,bold
 hi! link Typedef Type
 hi Underlined ctermfg=81 ctermbg=NONE guifg=#80a0ff guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
 hi! link lCursor Cursor
@@ -167,7 +167,7 @@ hi WarningMsg ctermfg=1 ctermbg=NONE guifg=#ff0000 guibg=NONE guisp=NONE cterm=N
 hi WildMenu ctermfg=0 ctermbg=11 guifg=#000000 guibg=#ffff00 guisp=NONE cterm=NONE gui=NONE
 hi! link Boolean Constant
 hi! link Character Constant
-hi Comment ctermfg=12 ctermbg=NONE guifg=#0000ff guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Comment ctermfg=4 ctermbg=NONE guifg=#0000ff guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Conditional Statement
 hi Constant ctermfg=1 ctermbg=NONE guifg=#8b0000 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Define PreProc
@@ -197,7 +197,7 @@ hi! link String Constant
 hi! link Structure Type
 hi! link Tag Special
 hi Todo ctermfg=0 ctermbg=11 guifg=#0000ff guibg=#ffff00
-hi Type ctermfg=2 ctermbg=NONE guifg=#2e8b57 guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Type ctermfg=2 ctermbg=NONE guifg=#2e8b57 guibg=NONE guisp=NONE cterm=NONE gui=NONE,bold
 hi! link Typedef Type
 hi Underlined ctermfg=5 ctermbg=NONE guifg=#6a5acd guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
 hi! link lCursor Cursor
@@ -231,7 +231,7 @@ endif
 " Color: lightgreen           rgb(144, 238, 144)   121        LightGreen
 " Color: greenlightgreen      rgb(  0, 255,   0)   121        LightGreen
 " Color: lightseagreen        rgb( 46, 139,  87)   121        LightGreen
-" Color: lightseagreentype    rgb( 46, 139,  87)   121        LightGreen
+" Color: lightseagreentype    rgb( 96, 255,  96)   121        LightGreen
 " Color: cyan                 rgb(  0, 255, 255)    14        Cyan
 " Color: cyancomment          rgb(128, 160, 255)    14        Cyan
 " Color: cyanidentifier       rgb( 64, 255, 255)    14        Cyan
@@ -313,7 +313,7 @@ endif
 " WildMenu             black             yellow
 " Boolean           -> Constant
 " Character         -> Constant
-" Comment              blue              none
+" Comment              bluedarkblue      none
 " Conditional       -> Statement
 " Constant             darkred           none
 " Define            -> PreProc
@@ -345,7 +345,7 @@ endif
 " verbatim
 " hi Todo ctermfg=@black ctermbg=@yellow guifg=@blue guibg=@yellow
 " endverbatim
-" Type                 seagreen          none
+" Type                 seagreen          none              g=bold
 " Typedef           -> Type
 " Underlined           slateblue         none              underline
 " lCursor           -> Cursor
@@ -421,7 +421,7 @@ endif
 " Exception         -> Statement
 " Float             -> Constant
 " Function          -> Identifier
-" Identifier           cyanidentifier    none              bold
+" Identifier           cyanidentifier    none              t=bold
 " Ignore               black             none
 " Include           -> PreProc
 " Keyword           -> Statement
@@ -443,7 +443,7 @@ endif
 " verbatim
 " hi Todo ctermfg=@black ctermbg=@yellow guifg=@blue guibg=@yellow
 " endverbatim
-" Type                 lightseagreentype none
+" Type                 lightseagreentype none              g=bold
 " Typedef           -> Type
 " Underlined           lightblueunderlined none            underline
 " lCursor           -> Cursor

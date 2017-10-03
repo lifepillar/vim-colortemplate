@@ -41,7 +41,7 @@ Color: green                rgb(  0, 255,   0)    10        Green
 Color: lightgreen           rgb(144, 238, 144)   121        LightGreen
 Color: greenlightgreen      rgb(  0, 255,   0)   121        LightGreen
 Color: lightseagreen        rgb( 46, 139,  87)   121        LightGreen
-Color: lightseagreentype    rgb( 46, 139,  87)   121        LightGreen
+Color: lightseagreentype    rgb( 96, 255,  96)   121        LightGreen
 Color: cyan                 rgb(  0, 255, 255)    14        Cyan
 Color: cyancomment          rgb(128, 160, 255)    14        Cyan
 Color: cyanidentifier       rgb( 64, 255, 255)    14        Cyan
@@ -129,7 +129,7 @@ WildMenu             black             yellow
 # Other conventional group names (see `:help group-name`)
 Boolean           -> Constant
 Character         -> Constant
-Comment              blue              none
+Comment              bluedarkblue      none
 Conditional       -> Statement
 Constant             darkred           none
 Define            -> PreProc
@@ -161,7 +161,7 @@ Tag               -> Special
 verbatim
 hi Todo ctermfg=@black ctermbg=@yellow guifg=@blue guibg=@yellow
 endverbatim
-Type                 seagreen          none
+Type                 seagreen          none              g=bold
 Typedef           -> Type
 Underlined           slateblue         none              underline
 # See `:help lCursor`
@@ -245,7 +245,7 @@ Error                white             red
 Exception         -> Statement
 Float             -> Constant
 Function          -> Identifier
-Identifier           cyanidentifier    none              bold
+Identifier           cyanidentifier    none              t=bold
 Ignore               black             none
 Include           -> PreProc
 Keyword           -> Statement
@@ -267,7 +267,7 @@ Tag               -> Special
 verbatim
 hi Todo ctermfg=@black ctermbg=@yellow guifg=@blue guibg=@yellow
 endverbatim
-Type                 lightseagreentype none
+Type                 lightseagreentype none              g=bold
 Typedef           -> Type
 Underlined           lightblueunderlined none            underline
 # See `:help lCursor`

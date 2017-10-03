@@ -1,10 +1,10 @@
 " Name:         Default Clone
-" Description:  A template replicating Vim's default colorscheme nearly exactly
+" Description:  A nearly exact clone of Vim's default colorscheme
 " Author:       Bram Moolenaar <Bram@vim.org>
 " Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 " Website:      https://github.com/vim/vim/blob/master/src/syntax.c
 " License:      Vim License (see `:help license`)
-" Last Updated: Mon Oct  2 09:50:21 2017
+" Last Updated: Tue Oct  3 16:29:12 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < 256)
@@ -86,7 +86,7 @@ hi Error ctermfg=15 ctermbg=9 guifg=#ffffff guibg=#ff0000 guisp=NONE cterm=NONE 
 hi! link Exception Statement
 hi! link Float Constant
 hi! link Function Identifier
-hi Identifier ctermfg=14 ctermbg=NONE guifg=#40ffff guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Identifier ctermfg=14 ctermbg=NONE guifg=#40ffff guibg=NONE guisp=NONE cterm=NONE,bold gui=NONE,bold
 hi Ignore ctermfg=0 ctermbg=NONE guifg=#000000 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Include PreProc
 hi! link Keyword Statement
@@ -169,7 +169,7 @@ hi! link Boolean Constant
 hi! link Character Constant
 hi Comment ctermfg=12 ctermbg=NONE guifg=#0000ff guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Conditional Statement
-hi Constant ctermfg=13 ctermbg=NONE guifg=#ff00ff guibg=NONE guisp=NONE cterm=NONE gui=NONE
+hi Constant ctermfg=1 ctermbg=NONE guifg=#8b0000 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi! link Define PreProc
 hi! link Debug Special
 hi! link Delimiter Special
@@ -315,7 +315,7 @@ endif
 " Character         -> Constant
 " Comment              blue              none
 " Conditional       -> Statement
-" Constant             magenta           none
+" Constant             darkred           none
 " Define            -> PreProc
 " Debug             -> Special
 " Delimiter         -> Special
@@ -421,7 +421,7 @@ endif
 " Exception         -> Statement
 " Float             -> Constant
 " Function          -> Identifier
-" Identifier           cyanidentifier    none
+" Identifier           cyanidentifier    none              bold
 " Ignore               black             none
 " Include           -> PreProc
 " Keyword           -> Statement

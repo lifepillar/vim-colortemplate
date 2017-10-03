@@ -8,7 +8,7 @@ Author:      Bram Moolenaar <Bram@vim.org>
 Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # Optional
 Website: https://github.com/vim/vim/blob/master/src/syntax.c
-Description: A template replicating Vim's default colorscheme nearly exactly
+Description: A nearly exact clone of Vim's default colorscheme
 # Note: let g:default_transp_bg=1 to be more faithful to Vim's default colorscheme
 # }}}
 
@@ -131,7 +131,7 @@ Boolean           -> Constant
 Character         -> Constant
 Comment              blue              none
 Conditional       -> Statement
-Constant             magenta           none
+Constant             darkred           none
 Define            -> PreProc
 Debug             -> Special
 Delimiter         -> Special
@@ -245,7 +245,7 @@ Error                white             red
 Exception         -> Statement
 Float             -> Constant
 Function          -> Identifier
-Identifier           cyanidentifier    none
+Identifier           cyanidentifier    none              bold
 Ignore               black             none
 Include           -> PreProc
 Keyword           -> Statement

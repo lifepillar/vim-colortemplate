@@ -151,10 +151,10 @@ fun! s:set_color(line, linenr)
     return
   endif
   let [l:name, l:gui, l:base256, l:base16] = [l:match[1], l:match[2], l:match[3], l:match[4]]
-  if l:name =~ '^fg\|bg\|none$'
+  if l:name =~# '^fg\|bg\|none$'
     call s:add_error('You cannot use ' . l:name . 'to define a color name', a:linenr)
   endif
-  if l:gui =~ 'rgb'
+  if l:gui =~? 'rgb'
     let [l:r, l:g, l:b] = map(split(matchstr(l:gui, '(\zs.\+\ze)'), ','), 'str2nr(v:val)')
     let l:gui = s:rgb2hex(l:r, l:g, l:b)
   endif
@@ -171,7 +171,7 @@ endf
 
 " Parse a highlight group definition and store it internally.
 fun! s:set_highlight_group(line, linenr)
-  if a:line =~ '->' " Linked group
+  if a:line =~# '->' " Linked group
     let l:match = matchlist(a:line, '^\s*\(\w\+\)\s*->\s*\(\w\+\)\s*\%(#.*\)\?$')
     if empty(l:match)
       call s:add_error('Syntax error: '.a:line, a:linenr)
@@ -202,15 +202,15 @@ fun! s:set_highlight_group(line, linenr)
   let l:sp = ''
   let l:tsp = ''
   for l:attr in split(l:attrs, '\s\+')
-    if l:attr =~ '='
+    if l:attr =~# '='
       let [l:key, l:value] = split(l:attr, '=')
-      if l:key =~ '^te\?r\?m\?'
+      if l:key =~? '^te\?r\?m\?'
         let l:term = l:value
-      elseif l:key =~ '^gu\?i\?'
+      elseif l:key =~? '^gu\?i\?'
         let l:gui = l:value
-      elseif l:key =~ '^guisp\|^sp\?'
+      elseif l:key =~? '^guisp\|^sp\?'
         let l:sp = l:value
-        if l:sp =~ '/'
+        if l:sp =~# '/'
           let [l:sp, l:tsp] = split(l:sp, '/')
           if !(s:check_valid_color(l:sp, a:linenr) && s:check_valid_color(l:tsp, a:linenr))
             return
@@ -237,10 +237,10 @@ fun! s:set_highlight_group(line, linenr)
         call s:add_error("Alternate background for Normal group can only be 'none'", a:linenr)
       endif
     endif
-    if l:fg =~ '^\%(none\|fg\|bg\)$' || l:bg =~ '^\%(none\|fg\|bg\)$'
+    if l:fg =~# '^\%(none\|fg\|bg\)$' || l:bg =~# '^\%(none\|fg\|bg\)$'
       call s:add_error("The colors for Normal cannot be 'none', 'fg', or 'bg'", a:linenr)
     endif
-    if l:term =~ '\%(inv\|rev\)erse' || l:gui =~ '\%(inv\|rev\)erse'
+    if l:term =~# '\%(inv\|rev\)erse' || l:gui =~# '\%(inv\|rev\)erse'
       call s:add_error("Do not use reverse mode for the Normal group", a:linenr)
     endif
   endif
@@ -293,11 +293,11 @@ fun! s:parse_template(filename)
   let s:template = readfile(fnameescape(a:filename))
   for l:i in range(len(s:template))
     let l:line = s:template[l:i]
-    if l:line =~ '^\s*verbatim\s*$'
+    if l:line =~# '^\s*verbatim\s*$'
       let s:verbatim = 1
       continue
     endif
-    if l:line =~ '^\s*endverbatim\s*$'
+    if l:line =~# '^\s*endverbatim\s*$'
       let s:verbatim = 0
       continue
     endif
@@ -311,10 +311,10 @@ fun! s:parse_template(filename)
       call add(s:hi_group[s:background]['any'], l:line)
       continue
     endif
-    if l:line =~ '^\s*#' " Skip comment
+    if l:line =~# '^\s*#' " Skip comment
       continue
     endif
-    if l:line =~ '^\s*$' " Skip empty line
+    if l:line =~# '^\s*$' " Skip empty line
       continue
     endif
     let l:match = matchlist(l:line, '^\s*\(\w[^:]*\):\s*\(.*\)') " Split on colon
@@ -326,28 +326,28 @@ fun! s:parse_template(filename)
       call s:set_highlight_group(l:line, l:i)
     else
       let [l:key, l:val] = [l:match[1], l:match[2]]
-      if l:key =~ '^\s*color'
+      if l:key =~? '^\s*color'
         call s:set_color(l:val, l:i)
-      elseif l:key =~ '^\s*background'
+      elseif l:key =~? '^\s*background'
         if l:val !~# 'dark\|light'
           call s:add_error("Background can only be 'dark' or 'light'", l:i)
           return
         endif
         let s:background = l:val
         let s:uses_background[l:val] = 1
-      elseif l:key =~ '^\s*full\s*name'
+      elseif l:key =~? '^\s*full\s*name'
         let s:full_name = l:val
-      elseif l:key =~ '^\s*short\s*name'
+      elseif l:key =~? '^\s*short\s*name'
         let s:short_name = l:val
-      elseif l:key =~ '^\s*author'
+      elseif l:key =~? '^\s*author'
         let s:author = l:val
-      elseif l:key =~ '^\s*maintainer'
+      elseif l:key =~? '^\s*maintainer'
         let s:maintainer = l:val
-      elseif l:key =~ '^\s*website'
+      elseif l:key =~? '^\s*website'
         let s:website = l:val
-      elseif l:key =~ '^\s*description'
+      elseif l:key =~? '^\s*description'
         let s:description = l:val
-      elseif l:key =~ '^\s*background'
+      elseif l:key =~? '^\s*background'
         let s:background = l:val
       else
         call s:add_warning('Unknown field: ' . l:key, l:i)
@@ -405,11 +405,11 @@ fun! s:make_colorscheme(...)
   " to make the color scheme reproducible.
   call append('$', map(
         \              filter(s:template,
-        \                     { _,l -> l =~ '^\s*color\s*:'      ||
-        \                              l =~ '^\s*background\s*:' ||
-        \                            !(l =~ '^\s*$'              ||
-        \                              l =~ '^\s*#'              ||
-        \                              l =~ '^\s*\%(\w[^:]*\):'
+        \                     { _,l -> l =~? '^\s*color\s*:'      ||
+        \                              l =~? '^\s*background\s*:' ||
+        \                            !(l =~? '^\s*$'              ||
+        \                              l =~? '^\s*#'              ||
+        \                              l =~? '^\s*\%(\w[^:]*\):'
         \                             )
         \                     }
         \                    ),
@@ -417,7 +417,7 @@ fun! s:make_colorscheme(...)
         \    ))
   if !empty(a:1)
     execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
-    if fnamemodify(a:1, ':t:r') != s:short_name
+    if fnamemodify(a:1, ':t:r') !=# s:short_name
       redraw
       echo "\r"
       echohl WarningMsg

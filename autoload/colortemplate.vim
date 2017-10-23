@@ -79,6 +79,7 @@ fun! s:token.next() dict
   let [l:char, self.spos, self.pos] = matchstrpos(s:template.getl(), '\s*\zs.', self.pos) " Get first non-white character starting at pos
   if empty(l:char)
     let self.kind = 'EOL'
+    let self.spos = len(s:template.getl()) - 1 " For correct error location
   elseif l:char =~? '\a'
     let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\w\+', self.pos - 1)
     let self.kind = 'WORD'
@@ -116,7 +117,7 @@ fun! s:init()
   let s:maintainer = ''
   let s:website = ''
   let s:description = ''
-  let s:background                = ''        " Current background
+  let s:background                = 'dark' " Current background
   let s:uses_background           = { 'dark': 0, 'light': 0 }
   let s:verbatim                  = 0 " When set to 1, source is copied (almost) verbatim
 
@@ -190,7 +191,7 @@ endf
 " The Normal highlight group needs special treatment.
 fun! s:check_normal_group(hi_group)
   let l:hi_group = a:hi_group
-  if !empty(s:hi_group[s:background]['opaque'])
+  if !empty(s:hi_group[s:background]['opaque']) || !empty(s:hi_group[s:background]['any'])
     throw 'The Normal highlight group for ' .s:background. ' background must be the first defined group'
   endif
   if !has_key(l:hi_group, 'tbg')
@@ -201,7 +202,7 @@ fun! s:check_normal_group(hi_group)
   if l:hi_group['fg'] =~# '^\%(none\|fg\|bg\)$' || l:hi_group['bg'] =~# '^\%(none\|fg\|bg\)$'
     throw "The colors for Normal cannot be 'none', 'fg', or 'bg'"
   endif
-  if match(l:hi_group['cterm'], '\%(inv\|rev\)verse') > -1 || match(l:hi_group['gui'], '\%(inv\|rev\)verse') > -1
+  if match(l:hi_group['cterm'], '\%(inv\|rev\)erse') > -1 || match(l:hi_group['gui'], '\%(inv\|rev\)erse') > -1
     throw "Do not use reverse mode for the Normal group"
   endif
   let s:normal_group_defined[s:background] = 1
@@ -426,7 +427,7 @@ fun! s:parse_gui_value()
   elseif s:token.value ==? 'rgb'
     return s:parse_rgb_value()
   else
-    throw 'Invalid GUI color value'
+    throw 'Only hex and RGB values are allowed'
   endif
 endf
 
@@ -601,6 +602,9 @@ fun! s:parse_attributes()
 endf
 
 fun! s:parse_attr_list()
+  if s:token.kind !=# 'WORD'
+    throw 'Invalid attribute'
+  endif
   let l:attrlist = [s:token.value]
   while s:token.peek().kind ==# ','
     if s:token.next().next().kind !=# 'WORD'

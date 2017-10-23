@@ -1,0 +1,10 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Color:black rgb(0,0,0) 0 Black
+Color:white #ffffff 255 White
+Background:dark
+Normal white black
+ColorColumn fg none standout underline,nocombine t=bold,italic term=inverse gui=bold,italic g=undercurl guisp=bg s=white

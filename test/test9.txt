@@ -1,0 +1,17 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Color:black rgb(0,0,0) 0 Black
+Color:white #ffffff 255 White
+Background:dark
+Normal white black
+verbatim
+hi Foo ctermfg=@xyz
+hi Bar ctermbg=@x
+hi Foo guifg=@bblack
+hi Bar guibg=@wwhite
+endverbatim
+
+

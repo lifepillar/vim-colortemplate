@@ -58,49 +58,36 @@ fun! s:template.next_line() dict
 endf
 
 fun! s:template.add_error(msg)
-  call setloclist(0, [{'filename': self.path,
-        \              'lnum'    : self.linenr + 1,
-        \              'col'     : s:token.pos + 1,
-        \              'text'    : a:msg,
-        \              'type'    : 'E'
-        \            }], 'a')
+  call setloclist(0, [{'filename': self.path, 'lnum' : self.linenr + 1, 'col': s:token.spos + 1, 'text' : a:msg, 'type' : 'E'}], 'a')
 endf
 
 fun! s:template.add_warning(msg)
-  call setloclist(0, [{'filename': self.path,
-        \              'lnum'    : self.linenr + 1,
-        \              'col'     : s:token.pos + 1,
-        \              'text'    : a:msg,
-        \              'type'    : 'W'
-        \            }], 'a')
+  call setloclist(0, [{'filename': self.path, 'lnum' : self.linenr + 1, 'col': s:token.spos + 1, 'text' : a:msg, 'type' : 'W'}], 'a')
 endf
 
 " Current token in the currently parsed line
-let s:token = {
-      \ 'pos'  :  0,
-      \ 'value': '',
-      \ 'kind' : ''
-      \ }
+let s:token = { 'spos' :  0, 'pos'  :  0, 'value': '', 'kind' : '' }
 
 fun! s:token.reset() dict
-  let self.pos = 0
+  let self.spos  = 0
+  let self.pos   = 0
   let self.value = ''
-  let self.kind = ''
+  let self.kind  = ''
 endf
 
 fun! s:token.next() dict
-  let [l:char, _, self.pos] = matchstrpos(s:template.getl(), '\s*\zs.', self.pos) " Get first non-white character starting at pos
+  let [l:char, self.spos, self.pos] = matchstrpos(s:template.getl(), '\s*\zs.', self.pos) " Get first non-white character starting at pos
   if empty(l:char)
     let self.kind = 'EOL'
   elseif l:char =~? '\a'
-    let [self.value, _, self.pos] = matchstrpos(s:template.getl(), '\w\+', self.pos - 1)
+    let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\w\+', self.pos - 1)
     let self.kind = 'WORD'
   elseif l:char =~# '[0-9]'
-    let [self.value, _, self.pos] = matchstrpos(s:template.getl(), '\d\+', self.pos - 1)
+    let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\d\+', self.pos - 1)
     let self.kind = 'NUM'
   elseif l:char ==# '#'
     if match(s:template.getl(), '[0-9a-f]\{6}', self.pos) > -1
-      let [self.value, _, self.pos] = matchstrpos(s:template.getl(), '#[0-9a-f]\{6}', self.pos - 1)
+      let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
     else
       let self.value = '#'
@@ -123,7 +110,12 @@ endf
 fun! s:init()
   let g:colortemplate_exit_status = 0
   let s:use16colors               = get(g:, 'base16template', 0)
-  let s:info                      = {}        " General information
+  let s:full_name = ''
+  let s:short_name = ''
+  let s:author = ''
+  let s:maintainer = ''
+  let s:website = ''
+  let s:description = ''
   let s:background                = ''        " Current background
   let s:uses_background           = { 'dark': 0, 'light': 0 }
   let s:verbatim                  = 0 " When set to 1, source is copied (almost) verbatim
@@ -172,11 +164,6 @@ fun! s:add_line(scope, definition)
   call add(s:hi_group[s:background][a:scope], a:definition)
 endf
 
-" Store a generic key-value pair
-fun! s:add_info(key, value)
-  let s:info[a:key] = a:value
-endf
-
 " Return a highlight group definition as a String.
 "
 " group: the name of the highlight group
@@ -200,39 +187,133 @@ fun! s:hlstring(group, fg, bg, guisp, cterm, gui)
         \ ])
 endf
 
+" The Normal highlight group needs special treatment.
+fun! s:check_normal_group(hi_group)
+  let l:hi_group = a:hi_group
+  if !empty(s:hi_group[s:background]['opaque'])
+    throw 'The Normal highlight group for ' .s:background. ' background must be the first defined group'
+  endif
+  if !has_key(l:hi_group, 'tbg')
+    let l:hi_group['tbg'] = 'none' " Transparent background
+  elseif l:hi_group['tbg'] !=# 'none'
+    throw "Alternate background for Normal group can only be 'none'"
+  endif
+  if l:hi_group['fg'] =~# '^\%(none\|fg\|bg\)$' || l:hi_group['bg'] =~# '^\%(none\|fg\|bg\)$'
+    throw "The colors for Normal cannot be 'none', 'fg', or 'bg'"
+  endif
+  if match(l:hi_group['cterm'], '\%(inv\|rev\)verse') > -1 || match(l:hi_group['gui'], '\%(inv\|rev\)verse') > -1
+    throw "Do not use reverse mode for the Normal group"
+  endif
+  let s:normal_group_defined[s:background] = 1
+  return l:hi_group
+endf
+
 " Returns a string containing a highlight group definition.
 fun! s:build_hi_group_def(hi_group)
-  if has_key(a:hi_group, 'tfg') || has_key(a:hi_group, 'tbg') || has_key(a:hi_group, 'tsp')
+  if a:hi_group['name'] ==# 'Normal'
+    let l:hi_group = s:check_normal_group(a:hi_group)
+  else
+    let l:hi_group = a:hi_group
+  endif
+  if has_key(l:hi_group, 'tfg') || has_key(l:hi_group, 'tbg') || has_key(l:hi_group, 'tsp')
     call s:add_line('opaque', s:hlstring(
-          \                           a:hi_group['name'],
-          \                           a:hi_group['fg'],
-          \                           a:hi_group['bg'],
-          \                           a:hi_group['sp'],
-          \                           a:hi_group['cterm'],
-          \                           a:hi_group['gui']
+          \                           l:hi_group['name'],
+          \                           l:hi_group['fg'],
+          \                           l:hi_group['bg'],
+          \                           l:hi_group['sp'],
+          \                           l:hi_group['cterm'],
+          \                           l:hi_group['gui']
           \ ))
     call s:add_line('transp', s:hlstring(
-          \                           a:hi_group['name'],
-          \                           get(a:hi_group, 'tfg', a:hi_group['fg']),
-          \                           get(a:hi_group, 'tbg', a:hi_group['bg']),
-          \                           get(a:hi_group, 'tsp', a:hi_group['sp']),
-          \                           a:hi_group['cterm'],
-          \                           a:hi_group['gui']
+          \                           l:hi_group['name'],
+          \                           get(l:hi_group, 'tfg', l:hi_group['fg']),
+          \                           get(l:hi_group, 'tbg', l:hi_group['bg']),
+          \                           get(l:hi_group, 'tsp', l:hi_group['sp']),
+          \                           l:hi_group['cterm'],
+          \                           l:hi_group['gui']
           \ ))
   else
     call s:add_line('any', s:hlstring(
-          \                           a:hi_group['name'],
-          \                           a:hi_group['fg'],
-          \                           a:hi_group['bg'],
-          \                           a:hi_group['sp'],
-          \                           a:hi_group['cterm'],
-          \                           a:hi_group['gui']
+          \                           l:hi_group['name'],
+          \                           l:hi_group['fg'],
+          \                           l:hi_group['bg'],
+          \                           l:hi_group['sp'],
+          \                           l:hi_group['cterm'],
+          \                           l:hi_group['gui']
           \ ))
   endif
 endf
 
 fun! s:add_linked_group_def(src, tgt)
   call add(s:hi_group[s:background]['any'], 'hi! link ' . a:src . ' ' . a:tgt)
+endf
+
+fun! s:has_dark_and_light()
+  return s:uses_background['dark'] && s:uses_background['light']
+endf
+
+fun! s:add_warning(msg)
+  call setloclist(0, [{'filename': s:template.path, 'lnum': 1, 'text': a:msg, 'type': 'W'}], 'a')
+endf
+
+fun! s:add_error(msg)
+  call setloclist(0, [{'filename': s:template.path, 'lnum': 1, 'text': a:msg, 'type': 'E'}], 'a')
+endf
+
+fun! s:check_requirements()
+  if empty(s:full_name)
+    call s:add_error('Please specify the full name of your color scheme')
+  endif
+  if empty(s:author)
+    call s:add_error('Please specify an author and the corresponding email')
+  endif
+  if empty(s:maintainer)
+    call s:add_error('Please specify a maintainer and the corresponding email')
+  endif
+  if s:has_dark_and_light() && !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
+    call s:add_error('Please define the Normal highlight group for both dark and light background')
+  elseif !s:normal_group_defined[s:background]
+    call s:add_error('Please define the Normal highlight group')
+  endif
+endf
+fun! s:new_buffer()
+  silent tabnew +setlocal\ ft=vim
+endf
+
+" Append a String to the end of the current buffer.
+fun! s:put(line)
+  call append(line('$'), a:line)
+endf
+
+fun! s:print_header()
+  call setline(1, '" Name:         ' . s:full_name                                                    )
+  if !empty(s:description)
+    call s:put(   '" Description:  ' . s:description                                                  )
+  endif
+  call s:put  (   '" Author:       ' . s:author                                                       )
+  call s:put  (   '" Maintainer:   ' . s:maintainer                                                   )
+  if !empty(s:website)
+    call s:put(   '" Website:      ' . s:website                                                      )
+  endif
+  call s:put  (   '" License:      Vim License (see `:help license`)'                                 )
+  call s:put  (   '" Last Updated: ' . strftime("%c")                                                 )
+  call s:put  (   ''                                                                                  )
+  call s:put  (   "if !(has('termguicolors') && &termguicolors) && !has('gui_running')"               )
+  call s:put  (   "      \\ && (!exists('&t_Co') || &t_Co < " . (s:use16colors ? '16)' : '256)')      )
+  call s:put  (   "  echoerr '[" . s:full_name . "] There are not enough colors.'"                    )
+  call s:put  (   '  finish'                                                                          )
+  call s:put  (   'endif'                                                                             )
+  call s:put  (   ''                                                                                  )
+  if !s:has_dark_and_light()
+    call s:put(   'set background=' . s:background                                                    )
+    call s:put(   ''                                                                                  )
+  endif
+  call s:put  (   'hi clear'                                                                          )
+  call s:put  (   "if exists('syntax_on')"                                                            )
+  call s:put  (   '  syntax reset'                                                                    )
+  call s:put  (   'endif'                                                                             )
+  call s:put  (   ''                                                                                  )
+  call s:put  (   "let g:colors_name = '" . s:short_name . "'"                                        )
 endf
 " }}} Helper functions
 
@@ -280,7 +361,7 @@ fun! s:parse_comment()
 endf
 
 fun! s:parse_key_value_pair()
-  if s:token.value ==? 'Color'
+  if s:token.value ==? 'color'
     call s:parse_color_def()
   else " Generic key-value pair
     let l:key_tokens = [s:token.value]
@@ -291,17 +372,30 @@ fun! s:parse_key_value_pair()
       call add(l:key_tokens, s:token.value)
     endwhile
     let l:key = tolower(join(l:key_tokens))
-    let l:value = matchstr(s:template.getl(), '\s*\zs.*$', s:token.pos)
+    let l:val = matchstr(s:template.getl(), '\s*\zs.*$', s:token.pos)
     if l:key ==# 'background'
-      if l:value =~? '^dark\s*$'
+      if l:val =~? '^dark\s*$'
         let s:background = 'dark'
-      elseif l:value =~? '^light\s*$'
+      elseif l:val =~? '^light\s*$'
         let s:background = 'light'
       else
         throw 'Background can only be dark or light.'
       endif
+      let s:uses_background[s:background] = 1
+    elseif l:key ==# 'full name'
+      let s:full_name = l:val
+    elseif l:key ==# 'short name'
+      let s:short_name = l:val
+    elseif l:key ==# 'author'
+      let s:author = l:val
+    elseif l:key ==# 'maintainer'
+      let s:maintainer = l:val
+    elseif l:key ==# 'website'
+      let s:website = l:val
+    elseif l:key ==# 'description'
+      let s:description = l:val
     else
-      call s:add_info(l:key, l:value)
+      throw 'Unknown key: ' . l:key
     endif
   endif
 endf
@@ -421,7 +515,6 @@ fun! s:parse_hi_group_def()
   let l:hi_group = {}
   " Base highlight group definition
   let l:hi_group['name'] = s:token.value " Name of highlight group
-
   " Foreground color
   if s:token.next().kind !=# 'WORD'
     throw 'Foreground color name missing'
@@ -528,35 +621,9 @@ fun! s:parse_linked_group_def()
   endif
   call s:add_linked_group_def(l:source_group, s:token.value)
 endf
-
-fun! s:add_warning(msg)
-  call setloclist(0, [{'filename': s:template.path, 'lnum': 1, 'text': a:msg, 'type': 'W'}], 'a')
-endf
-
-fun! s:add_error(msg)
-  call setloclist(0, [{'filename': s:template.path, 'lnum': 1, 'text': a:msg, 'type': 'E'}], 'a')
-endf
-
-fun! s:check_requirements()
-  if !has_key(s:info, 'full name')
-    call s:add_error('Please specify the full name of your color scheme')
-  endif
-  if !has_key(s:info, 'author')
-    call s:add_error('Please specify an author and the corresponding email')
-  endif
-  if !has_key(s:info, 'maintainer')
-    call s:add_error('Please specify a maintainer and the corresponding email')
-  endif
-  " if s:has_dark_and_light() && !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
-  "   call s:add_error('Please define the Normal highlight group for both dark and light background')
-  " elseif !s:normal_group_defined[s:background]
-  "   call s:add_error('Please define the Normal highlight group')
-  " endif
-endf
 " }}} Parser
 
 " Public interface {{{
-
 fun! colortemplate#parse(filename) abort
   call s:init()
   call s:template.load(a:filename)
@@ -580,5 +647,66 @@ fun! colortemplate#parse(filename) abort
   endif
 
   lclose
+endf
+
+fun! colortemplate#make(...)
+  try
+    call colortemplate#parse(expand('%'))
+  catch /Parse error/
+    let g:colortemplate_exit_status = 1
+    lopen
+    return
+  catch /.*/
+    echoerr '[Colortemplate] Unexpected error: ' v:exception
+    let g:colortemplate_exit_status = 1
+    return
+  endtry
+  call s:new_buffer()
+  call s:print_header()
+  call s:put('')
+  if s:has_dark_and_light()
+    for l:bg in ['dark', 'light']
+      call s:put("if &background ==# '" .l:bg. "'")
+      call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+      call append('$', s:hi_group[l:bg]['transp'])
+      call s:put("else")
+      call append('$', s:hi_group[l:bg]['opaque'])
+      call s:put("endif")
+      call append('$', s:hi_group[l:bg]['any'])
+      call s:put("endif")
+    endfor
+  else
+    call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+    call append('$', s:hi_group[s:background]['transp'])
+    call s:put("else")
+    call append('$', s:hi_group[s:background]['opaque'])
+    call s:put("endif")
+    call append('$', s:hi_group[s:background]['any'])
+  end
+  call s:put('')
+  " Add template as a comment (only colors and hi group definitions)
+  " to make the color scheme reproducible.
+  call append('$', map(
+        \              filter(s:template.data,
+        \                     { _,l -> l =~? '^\s*color\s*:'      ||
+        \                              l =~? '^\s*background\s*:' ||
+        \                            !(l =~? '^\s*$'              ||
+        \                              l =~? '^\s*#'              ||
+        \                              l =~? '^\s*\%(\w[^:]*\):'
+        \                             )
+        \                     }
+        \                    ),
+        \              { _,l -> '" ' . l }
+        \    ))
+  if !empty(a:1)
+    execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
+    if fnamemodify(a:1, ':t:r') !=# s:short_name
+      redraw
+      echo "\r"
+      echohl WarningMsg
+      echomsg '[Colortemplate] Filename is different from the value of g:colors_name'
+      echohl None
+    endif
+  endif
 endf
 " }}} Public interface

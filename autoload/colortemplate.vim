@@ -230,7 +230,7 @@ endf
 
 " Parser {{{
 fun! s:parse_verbatim_line()
-  if s:token.next().kind ==? 'endverbatim'
+  if s:token.next().kind ==# 'WORD' && s:token.value ==? 'endverbatim'
     let s:verbatim = 0
     if s:token.next().kind !=# 'EOL' && s:token.kind !=# '#'
       throw "Extra characters after 'endverbatim'"

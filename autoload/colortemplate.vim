@@ -98,7 +98,15 @@ fun! s:token.next() dict
   elseif l:char =~# '[0-9]'
     let [self.value, _, self.pos] = matchstrpos(s:template.getl(), '\d\+', self.pos - 1)
     let self.kind = 'NUM'
-  elseif l:char =~# "[:=().#,'->/]"
+  elseif l:char ==# '#'
+    if match(s:template.getl(), '[0-9a-f]\{6}', self.pos) > -1
+      let [self.value, _, self.pos] = matchstrpos(s:template.getl(), '#[0-9a-f]\{6}', self.pos - 1)
+      let self.kind = 'HEX'
+    else
+      let self.value = '#'
+      let self.kind = 'COMMENT'
+    endif
+  elseif l:char =~# "[:=().,'->/]"
     let self.value = l:char
     let self.kind = l:char
   else
@@ -232,7 +240,7 @@ endf
 fun! s:parse_verbatim_line()
   if s:token.next().kind ==# 'WORD' && s:token.value ==? 'endverbatim'
     let s:verbatim = 0
-    if s:token.next().kind !=# 'EOL' && s:token.kind !=# '#'
+    if s:token.next().kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
       throw "Extra characters after 'endverbatim'"
     endif
   else
@@ -249,12 +257,12 @@ endf
 fun! s:parse_line()
   if s:token.next().kind ==# 'EOL' " Empty line
     return
-  elseif s:token.kind ==# '#'
+  elseif s:token.kind ==# 'COMMENT'
     return s:parse_comment()
   elseif s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
       let s:verbatim = 1
-      if s:token.next().kind !=# 'EOL' && s:token.kind !=# '#'
+      if s:token.next().kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
         throw "Extra characters after 'verbatim'"
       endif
     elseif s:template.getl() =~? ':' " Look ahead
@@ -317,8 +325,8 @@ fun! s:parse_color_name()
 endf
 
 fun! s:parse_gui_value()
-  if s:token.next().kind ==# '#'
-    return s:parse_hex_value()
+  if s:token.next().kind ==# 'HEX'
+    return s:token.value
   elseif s:token.kind !=# 'WORD'
     throw 'Invalid GUI color value'
   elseif s:token.value ==? 'rgb'
@@ -326,13 +334,6 @@ fun! s:parse_gui_value()
   else
     throw 'Invalid GUI color value'
   endif
-endf
-
-fun! s:parse_hex_value()
-  if s:token.next().kind !=# 'WORD' || s:token.value !~? '[a-f0-9]\{6\}'
-    throw 'Invalid hex color value'
-  endif
-  return '#' . s:token.value
 endf
 
 fun! s:parse_rgb_value()

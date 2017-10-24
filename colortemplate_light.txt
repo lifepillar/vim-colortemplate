@@ -13,23 +13,23 @@ Description: Template for a light colorscheme
 
 # Color palette {{{
 # Color name                GUI                  Base256    Base16 (optional)
-Color: black                rgb(  0,   0,   0)     0        Black
-Color: red                  rgb(255,   0,   0)    88        DarkRed
-Color: green                rgb(  0, 255,   0)    22        DarkGreen
-Color: yellow               rgb(255, 255,   0)   166        DarkYellow
-Color: blue                 rgb(  0,   0, 255)    19        DarkBlue
-Color: magenta              rgb(255,   0, 255)    90        DarkMagenta
-Color: cyan                 rgb(  0, 255, 255)    69        DarkCyan
-Color: white                rgb(235, 235, 235)   250        LightGrey
-Color: brightblack          rgb(210, 210, 210)   238        DarkGrey
-Color: brightred            rgb(255, 100,   0)   160        LightRed
-Color: brightgreen          rgb(100, 255,   0)   106        LightGreen
-Color: brightyellow         rgb(255, 255, 100)   148        LightYellow
-Color: brightblue           rgb(  0, 100, 255)    92        LightBlue
-Color: brightmagenta        rgb(255, 100, 255)   105        LightMagenta
-Color: brightcyan           rgb(100, 255, 255)   116        LightCyan
-# You may use hexadecimal values, too:
-Color: brightwhite          #ffffff              255        White
+Color: black                rgb(  0,   0,   0)     ~        Black
+Color: red                  rgb(255,   0,   0)     ~        DarkRed
+Color: green                rgb(  0, 255,   0)     ~        DarkGreen
+Color: yellow               rgb(255, 255,   0)     ~        DarkYellow
+Color: blue                 rgb(  0,   0, 255)     ~        DarkBlue
+Color: magenta              rgb(255,   0, 255)     ~        DarkMagenta
+Color: cyan                 rgb(  0, 255, 255)     ~        DarkCyan
+Color: white                rgb(235, 235, 235)     ~        LightGrey
+Color: brightblack          rgb(210, 210, 210)     ~        DarkGrey
+Color: brightred            rgb(255, 100,   0)     ~        LightRed
+Color: brightgreen          rgb(100, 255,   0)     ~        LightGreen
+Color: brightyellow         rgb(255, 255, 100)     ~        LightYellow
+Color: brightblue           rgb(  0, 100, 255)     ~        LightBlue
+Color: brightmagenta        rgb(255, 100, 255)     ~        LightMagenta
+Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
+# You may use hexadecimal values, too, and you may provide an explicit base-256 color:
+Color: brightwhite          #ffffff                231      White
 # }}}
 
 Background: light

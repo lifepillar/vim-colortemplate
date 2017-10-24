@@ -12,7 +12,7 @@
 " <GUIValue>                  ::= <HexValue> | <RGBValue>
 " <HexValue>                  ::= #[a-f0-9]{6}
 " <RGBValue>                  ::= rgb ( <8BitNumber> , <8BitNumber> , <8BitNumber> )
-" <Base256Value>              ::= <8BitNumber> | <StandardColorName> | ' <StandardCompoundColorName> '
+" <Base256Value>              ::= ~ | <8BitNumber> | <StandardColorName> | ' <StandardCompoundColorName> '
 " <8BitNumber>                ::= 0 | 1 | ... | 255
 " <StandardColorName>         ::= AliceBlue | AntiqueWhite | ...
 " <StandardCompoundColorName> ::= alice blue | antique white | ...
@@ -94,7 +94,7 @@ fun! s:token.next() dict
       let self.value = '#'
       let self.kind = 'COMMENT'
     endif
-  elseif l:char =~# "[:=().,'->/]"
+  elseif l:char =~# "[:=().,'->/~]"
     let self.value = l:char
     let self.kind = l:char
   else
@@ -121,14 +121,15 @@ fun! s:init()
   let s:uses_background           = { 'dark': 0, 'light': 0 }
   let s:verbatim                  = 0 " When set to 1, source is copied (almost) verbatim
 
-  " A palette is a dictionary of color names and their definitions.
-  " Each definition consists of a GUI color value, a base-256 color value and
-  " a base-16 color value (in this order). Base-16 color values are used
-  " instead of base-256 values when g:colortemplate_use16 is set to 1.
+  " A palette is a dictionary of color names and their definitions. Each
+  " definition consists of a GUI color value, a base-256 color value,
+  " a base-16 color value, and a distance between the GUI value and the
+  " base-256 value (in this order). Base-16 color values are used instead of
+  " base-256 values when g:colortemplate_use16 is set to 1.
   let s:palette                  = {
-        \                           'none': ['NONE', 'NONE', 'NONE'],
-        \                           'fg':   ['fg',   'fg',   'fg'  ],
-        \                           'bg':   ['bg',   'bg',   'bg'  ]
+        \                           'none': ['NONE', 'NONE', 'NONE', 0.0],
+        \                           'fg':   ['fg',   'fg',   'fg',   0.0],
+        \                           'bg':   ['bg',   'bg',   'bg',   0.0]
         \ }
 
   " Dictionary to store highlight group definitions. Definitions for dark and
@@ -151,11 +152,11 @@ fun! s:is_undefined_color(color)
 endf
 
 " Add or override a color definition
-fun! s:add_color(name, gui, base256, base16)
+fun! s:add_color(name, gui, base256, base16, delta)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
     throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
   endif
-  let s:palette[a:name] = [a:gui, a:base256, a:base16]
+  let s:palette[a:name] = [a:gui, a:base256, a:base16, a:delta]
 endf
 
 " Store a line to send to the output.
@@ -405,11 +406,11 @@ fun! s:parse_color_def()
   if s:token.next().kind !=# ':'
     throw 'Expected colon after Color keyword'
   endif
-  let l:colorname = s:parse_color_name()
-  let l:col_gui   = s:parse_gui_value()
-  let l:col_256   = s:parse_base_256_value()
-  let l:col_16    = s:parse_base_16_value()
-  call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16)
+  let l:colorname          = s:parse_color_name()
+  let l:col_gui            = s:parse_gui_value()
+  let [l:col_256, l:delta] = s:parse_base_256_value(l:col_gui)
+  let l:col_16             = s:parse_base_16_value()
+  call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16, l:delta)
 endf
 
 fun! s:parse_color_name()
@@ -468,15 +469,23 @@ fun! s:parse_rgb_value()
   return colortemplate#colorspace#rgb2hex(l:red, l:green, l:blue)
 endf
 
-fun! s:parse_base_256_value()
-  if s:token.next().kind ==# 'NUM'
+fun! s:parse_base_256_value(guicolor)
+  if s:token.next().kind ==# '~' " Find best approximation automatically
+    let l:color256 = colortemplate#colorspace#approx(a:guicolor)
+    return [l:color256['index'], l:color256['delta']]
+  elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
     if l:val > 255 || l:val < 0
       throw "Base-256 color value is out of range"
     endif
-    return l:val
+    if l:val >= 16
+      let l:delta = colortemplate#colorspace#hex_delta_e(a:guicolor, g:colortemplate#colorspace#xterm256[l:val - 16])
+    else
+      let l:delta = 0.0 / 0.0
+    endif
+    return [l:val, l:delta]
   elseif s:token.kind ==# 'WORD'
-    return s:token.value
+    return [s:token.value, 0.0 / 0.0]
   elseif s:token.kind ==# "'"    " Compound color name (e.g., 'alice blue')
     let l:colorname = []
     while s:token.next().kind ==# 'WORD'
@@ -488,7 +497,7 @@ fun! s:parse_base_256_value()
     if empty(l:colorname)
       throw 'Empty quoted color name'
     endif
-    return "'" . join(l:colorname, ' ') . "'"
+    return ["'" . join(l:colorname, ' ') . "'", 0.0/0.0]
   else
     throw 'Expected base-256 number or color name'
   endif

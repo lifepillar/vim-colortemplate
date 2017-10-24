@@ -2,7 +2,7 @@ let s:testdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 execute 'lcd' s:testdir
 execute 'source' s:testdir.'/test.vim'
 
-fun! Test_fine()
+fun! Test_CT_fine()
   edit test1.txt
   let l:src = bufnr('%')
   Colortemplate
@@ -13,7 +13,7 @@ fun! Test_fine()
   bwipe
 endf
 
-fun! Test_color_typo()
+fun! Test_CT_color_typo()
   edit test2.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -23,7 +23,7 @@ fun! Test_color_typo()
   bwipe
 endf
 
-fun! Test_invalid_token()
+fun! Test_CT_invalid_token()
   edit test3.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -33,7 +33,7 @@ fun! Test_invalid_token()
   bwipe
 endf
 
-fun! Test_fg_bg_none_colors()
+fun! Test_CT_fg_bg_none_colors()
   edit test4.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -47,7 +47,7 @@ fun! Test_fg_bg_none_colors()
   bwipe
 endf
 
-fun! Test_Normal_must_be_first()
+fun! Test_CT_Normal_must_be_first()
   edit test5.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -56,7 +56,7 @@ fun! Test_Normal_must_be_first()
   call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
 endf
 
-fun! Test_Normal_alt_background()
+fun! Test_CT_Normal_alt_background()
   edit test6.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -65,7 +65,7 @@ fun! Test_Normal_alt_background()
   call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
 endf
 
-fun! Test_Normal_reverse()
+fun! Test_CT_Normal_reverse()
   edit test7.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -74,7 +74,7 @@ fun! Test_Normal_reverse()
   call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
 endf
 
-fun! Test_extra_chars_after_verbatim()
+fun! Test_CT_extra_chars_after_verbatim()
   edit test8.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -85,7 +85,7 @@ fun! Test_extra_chars_after_verbatim()
   call assert_equal(11, l:loclist[1]['lnum'])
 endf
 
-fun! Test_undefined_color_in_verbatim_block()
+fun! Test_CT_undefined_color_in_verbatim_block()
   edit test9.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -100,7 +100,7 @@ fun! Test_undefined_color_in_verbatim_block()
   call assert_equal(14, l:loclist[3]['lnum'])
 endf
 
-fun! Test_unexpected_token_at_start_of_line()
+fun! Test_CT_unexpected_token_at_start_of_line()
   edit test10.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -111,7 +111,7 @@ fun! Test_unexpected_token_at_start_of_line()
   bwipe
 endf
 
-fun! Test_invalid_chars_in_key()
+fun! Test_CT_invalid_chars_in_key()
   edit test11.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -122,7 +122,7 @@ fun! Test_invalid_chars_in_key()
   bwipe
 endf
 
-fun! Test_invalid_background()
+fun! Test_CT_invalid_background()
   edit test12.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -133,7 +133,7 @@ fun! Test_invalid_background()
   bwipe
 endf
 
-fun! Test_unknown_key()
+fun! Test_CT_unknown_key()
   edit test13.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -148,7 +148,7 @@ fun! Test_unknown_key()
   bwipe
 endf
 
-fun! Test_colon_after_color_key()
+fun! Test_CT_colon_after_color_key()
   edit test14.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -162,7 +162,7 @@ fun! Test_colon_after_color_key()
   bwipe
 endf
 
-fun! Test_invalid_color_name()
+fun! Test_CT_invalid_color_name()
   edit test15.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -177,7 +177,7 @@ fun! Test_invalid_color_name()
   bwipe
 endf
 
-fun! Test_invalid_gui_value()
+fun! Test_CT_invalid_gui_value()
   edit test16.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -192,7 +192,7 @@ fun! Test_invalid_gui_value()
   bwipe
 endf
 
-fun! Test_invalid_gui_value_bis()
+fun! Test_CT_invalid_gui_value_bis()
   edit test17.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -207,7 +207,7 @@ fun! Test_invalid_gui_value_bis()
   bwipe
 endf
 
-fun! Test_invalid_rgb_values()
+fun! Test_CT_invalid_rgb_values()
   edit test18.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -249,7 +249,7 @@ fun! Test_invalid_rgb_values()
   bwipe
 endf
 
-fun! Test_base_256_value()
+fun! Test_CT_base_256_value()
   edit test19.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -274,7 +274,7 @@ fun! Test_base_256_value()
   bwipe
 endf
 
-fun! Test_base_16_value()
+fun! Test_CT_base_16_value()
   edit test20.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -289,7 +289,7 @@ fun! Test_base_16_value()
   bwipe
 endf
 
-fun! Test_parse_hi_group_def()
+fun! Test_CT_parse_hi_group_def()
   edit test21.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -310,7 +310,7 @@ fun! Test_parse_hi_group_def()
   bwipe
 endf
 
-fun! Test_attributes_ok()
+fun! Test_CT_attributes_ok()
   edit test22.txt
   let l:src = bufnr('%')
   Colortemplate
@@ -321,7 +321,7 @@ fun! Test_attributes_ok()
   bwipe
 endf
 
-fun! Test_attributes_errors()
+fun! Test_CT_attributes_errors()
   edit test23.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -351,7 +351,7 @@ fun! Test_attributes_errors()
   bwipe
 endf
 
-fun! Test_parse_linked_group_ok()
+fun! Test_CT_parse_linked_group_ok()
   edit test24.txt
   let l:src = bufnr('%')
   Colortemplate
@@ -362,7 +362,7 @@ fun! Test_parse_linked_group_ok()
   bwipe
 endf
 
-fun! Test_parse_linked_group_errors()
+fun! Test_CT_parse_linked_group_errors()
   edit test25.txt
   Colortemplate
   let l:loclist = getloclist(0)
@@ -380,4 +380,4 @@ fun! Test_parse_linked_group_errors()
   bwipe
 endf
 
-call RunBabyRun()
+call RunBabyRun('CT')

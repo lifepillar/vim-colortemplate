@@ -314,10 +314,46 @@ fun! s:print_header()
   call s:put  (   ''                                                                                  )
   call s:put  (   "let g:colors_name = '" . s:short_name . "'"                                        )
 endf
+
+" Print details about the color palette as comments
+fun! s:print_color_details()
+  if s:use16colors
+    return
+  endif
+  call s:put('" Color similarity table')
+  " Find maximum length of color names (used for formatting)
+  let l:len = max(map(copy(s:palette), { k,_ -> len(k)}))
+  " Sort colors by increasing delta
+  let l:color_names = keys(s:palette)
+  call sort(l:color_names, { c1,c2 -> s:palette[c1][3] < s:palette[c2][3] ? -1 : (s:palette[c1][3] > s:palette[c2][3] ? 1 : 0) })
+  for l:color in l:color_names
+    if l:color =~? '^\%(fg\|bg\|none\)$'
+      continue
+    endif
+    let l:colgui = s:palette[l:color][0]
+    let l:col256 = s:palette[l:color][1]
+    let l:delta  = s:palette[l:color][3]
+    let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
+    if l:col256 > 15 && l:col256 < 256
+      let l:hex256 = g:colortemplate#colorspace#xterm256[l:col256 - 16]
+      let l:rgb256 = colortemplate#colorspace#hex2rgb(l:hex256)
+    else
+      let l:hex256 = '#NNNNNN'
+      let l:rgb256 = [-1, -1, -1]
+    endif
+    let l:fmt = '" %'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s/rgb(%3d,%3d,%3d)  [delta=%f]'
+    call s:put(printf(l:fmt, l:color,  l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2],
+          \                  l:col256, l:hex256, l:rgb256[0], l:rgb256[1], l:rgb256[2], l:delta
+          \   ))
+  endfor
+  call s:put('')
+endf
+
 fun! s:generate_colorscheme()
   silent tabnew +setlocal\ ft=vim
   call s:print_header()
   call s:put('')
+  call s:print_color_details()
   if s:has_dark_and_light()
     for l:bg in ['dark', 'light']
       call s:put("if &background ==# '" .l:bg. "'")

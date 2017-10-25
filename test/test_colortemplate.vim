@@ -380,4 +380,16 @@ fun! Test_CT_parse_linked_group_errors()
   bwipe
 endf
 
+fun! Test_CT_transparent_color_is_bg()
+  edit test26.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("Transparent color cannot be 'bg'", l:loclist[0]['text'])
+  call assert_equal(10, l:loclist[0]['lnum'])
+  call assert_equal(25, l:loclist[0]['col'])
+  lclose
+  bwipe
+endf
+
 call RunBabyRun('CT')

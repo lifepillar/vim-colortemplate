@@ -641,8 +641,13 @@ fun! s:parse_color_value()
       throw 'Undefined color name: ' . l:transp
     endif
   endif
-  if l:transp ==? 'bg'
+  if l:transp ==# 'bg'
     throw "Transparent color cannot be 'bg'"
+  endif
+  " Set transparent color to 'none' when the color is 'bg' and no transparent
+  " color has been specified by the user
+  if l:color ==# 'bg' && empty(l:transp)
+    let l:transp = 'none'
   endif
   return [l:color, l:transp]
 endf

@@ -7,7 +7,7 @@
 " <KeyValuePair>              ::= <ColorDef> | <Key> : <Value>
 " <Key>                       ::= Full name | Short name | Author | Background | ...
 " <Value>                     ::= .*
-" <ColorDef>                  ::= Color : <ColorName> <GUIValue> <Base256Value> <Base16Value>
+" <ColorDef>                  ::= Color : <ColorName> <GUIValue> <Base256Value> [ <Base16Value> ]
 " <ColorName>                 ::= [a-z1-9_]+
 " <GUIValue>                  ::= <HexValue> | <RGBValue>
 " <HexValue>                  ::= #[a-f0-9]{6}
@@ -580,7 +580,9 @@ fun! s:parse_base_256_value(guicolor)
 endf
 
 fun! s:parse_base_16_value()
-  if s:token.next().kind ==# 'NUM'
+  if s:token.next().kind ==# 'EOL'
+    return 'Black'
+  elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
     if l:val > 15 || l:val < 0
       throw 'Base-16 color value is out of range'

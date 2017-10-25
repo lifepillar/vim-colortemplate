@@ -260,12 +260,9 @@ fun! colortemplate#colorspace#xterm256_rgbvalue(number)
   return colortemplate#colorspace#hex2rgb(colortemplate#xterm256#color(a:number))
 endf
 
-" Returns a dictionary  with four keys:
-" color: the color passed as argument
-" index: the base-256 color number that best approximates the given color
-" approx: the hex value of the approximate color
-" delta: the CIEDE2000 difference between the two colors
-fun! colortemplate#colorspace#approx(color)
+" Converts a hex or RGB color into CIELAB colorspace.
+" Returns a list [L,a,b].
+fun! colortemplate#colorspace#to_cielab(color)
   if type(a:color) == v:t_string " Assume hex value
     let [L1, a1, b1] = colortemplate#colorspace#hex2cielab(a:color)
   elseif type(a:color) == v:t_list " Assume RGB
@@ -273,6 +270,16 @@ fun! colortemplate#colorspace#approx(color)
   else
     throw 'Invalid color type'
   endif
+  return [L1, a1, b1]
+endf
+
+" Returns a dictionary with four keys:
+" color: the color passed as argument
+" index: the base-256 color number that best approximates the given color
+" approx: the hex value of the approximate color
+" delta: the CIEDE2000 difference between the two colors
+fun! colortemplate#colorspace#approx(color)
+  let [L1, a1, b1] = colortemplate#colorspace#to_cielab(a:color)
   let l:delta = 1.0 / 0.0
   let l:color_index = -1
   for l:i in range(240)
@@ -285,4 +292,70 @@ fun! colortemplate#colorspace#approx(color)
     endif
   endfor
   return { 'color': a:color, 'index': l:color_index, 'approx': g:colortemplate#colorspace#xterm256[l:color_index - 16], 'delta': l:delta }
+endf
+
+" Returns a list of colors at distance less than the specified threshold from
+" the given color.
+" threshold: a float number.
+" color: a hexdecimal (e.g., '#ffffff') or RGB color (e.g., [255, 255, 255])
+" ...: an optional list of hex or RGB colors
+fun! colortemplate#colorspace#colors_within(threshold, color, ...)
+  let [L1, a1, b1] = colortemplate#colorspace#to_cielab(a:color)
+  let l:color_list = a:0 > 0 ? a:1 : g:colortemplate#colorspace#xterm256
+  let l:result = []
+  let l:N = len(l:color_list)
+  for l:i in range(l:N)
+    let l:xterm_color = l:color_list[l:i]
+    let [L2, a2, b2] = colortemplate#colorspace#to_cielab(l:xterm_color)
+    let l:delta = colortemplate#colorspace#delta_e(L1, a1, b1, L2, a2, b2)
+    if l:delta <= a:threshold
+      call add(l:result, l:i + 16)
+    endif
+  endfor
+  return l:result
+endf
+
+" Returns the list of the k colors nearest to the given color.
+" k: a number between 1 and 240 (or between 1 and the number of colors in the
+" list passed as the third argument).
+" color: a hex or RGB color.
+"
+" Return value: a list of dictionaries with two keys:
+" index: a color index
+" delta: the distance from the given color
+" ...: an optional list of hex or RGB colors
+"
+" NOTE: this is a highly inefficient implementation!
+fun! colortemplate#colorspace#k_neighbours(color, k, ...)
+  let [L1, a1, b1] = colortemplate#colorspace#to_cielab(a:color)
+  let l:color_list = a:0 > 0 ? a:1 : g:colortemplate#colorspace#xterm256
+  let l:result = []
+  let l:j = 0
+  let l:N = len(l:color_list)
+  if a:k < 1 || a:k > l:N
+    throw 'Number out of range'
+  endif
+  for l:j in range(a:k)
+    let l:delta = 1.0 / 0.0
+    let l:color_index = -1
+    for l:i in range(l:N)
+      if match(l:result, l:i + 16) > -1
+        continue
+      endif
+      let l:xterm_color = l:color_list[l:i]
+      let [L2, a2, b2] = colortemplate#colorspace#to_cielab(l:xterm_color)
+      let l:new_delta = colortemplate#colorspace#delta_e(L1, a1, b1, L2, a2, b2)
+      if l:new_delta < l:delta
+        let l:delta = l:new_delta
+        let l:color_index = l:i
+      endif
+    endfor
+    call add(l:result, l:color_index + 16)
+    let l:j += 1
+  endfor
+  return l:result
+endf
+
+fun! colortemplate#colorspace#k_neighbors(color, k)
+  return colortemplate#colorspace#k_neighbours(a:color, a:k)
 endf

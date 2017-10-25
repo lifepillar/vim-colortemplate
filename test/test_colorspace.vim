@@ -33,4 +33,18 @@ fun! Test_CS_hex_delta_e()
   call assert_true(7.889685 - s:eps < l:delta && l:delta < 7.889685 + s:eps)
 endf
 
+fun! Test_CS_colors_within()
+  let l:list = colortemplate#colorspace#colors_within(4.5, '#9e0006')
+  call assert_equal(2, len(l:list))
+  call assert_equal(88, l:list[0])
+  call assert_equal(124, l:list[1])
+endf
+
+fun! Test_CS_2_neighbours()
+  let l:list = colortemplate#colorspace#k_neighbours('#9e0006', 2)
+  call assert_equal(2, len(l:list))
+  call assert_equal(124, l:list[0])
+  call assert_equal(88, l:list[1])
+endf
+
 call RunBabyRun('CS')

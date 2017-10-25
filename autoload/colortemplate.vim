@@ -156,6 +156,10 @@ fun! s:add_color(name, gui, base256, base16, delta)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
     throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
   endif
+  " Do not overwrite existing color, but rename it (keep older version for color similarity table)
+  if has_key(s:palette, a:name) && (s:palette[a:name][0] !=# a:gui || s:palette[a:name][1] !=# a:base256)
+    let s:palette[a:name . ' (' .(s:background ==# 'light' ? 'dark' : 'light') .')'] = s:palette[a:name]
+  endif
   let s:palette[a:name] = [a:gui, a:base256, a:base16, a:delta]
 endf
 

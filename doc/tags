@@ -2,4 +2,4 @@
 color-templates	colortemplate.txt	/*color-templates*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
-g:base16template	colortemplate.txt	/*g:base16template*
+g:colortemplate_use16	colortemplate.txt	/*g:colortemplate_use16*

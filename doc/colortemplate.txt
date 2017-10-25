@@ -66,10 +66,11 @@ given as hexadecimal values, as in the example above, or as RGB values:
 Base-256 specifications are used in terminals supporting 256 colors but not
 true colors, or when |termguicolors| is not set. Base-16 colors should be
 given as color constants (see |cterm-colors|). They are not used unless you
-set |g:base16template| to 1 before executing the |Colortemplate| command, in
-which case base-256 numbers are ignored and base-16 colors are used instead.
-You should not set |g:base16template|, unless you are working with a legacy
-colorscheme. You may define as many or as few colors as you like.
+set |g:colortemplate_use16| to 1 before executing the |Colortemplate| command,
+in which case base-256 numbers are ignored and base-16 colors are used
+instead. You should not set |g:colortemplate_use16|, unless you are working
+with a legacy colorscheme. You may define as many or as few colors as you
+like.
 
 Color name definitions may be overridden later in the file by another `Color`
 directive using the same color name.
@@ -181,7 +182,7 @@ Finally, lines starting with `#` are interpreted as comments.
 ==============================================================================
 Colortemplate options		       	*colortemplate-options*
 
-						*g:base16template*
+						*g:colortemplate_use16*
 If you want to use the shell's 16 color palette instead of the standard 256
 colors, set this variable to 1, then generate the colorscheme with
 |:Colortemplate| as usual.

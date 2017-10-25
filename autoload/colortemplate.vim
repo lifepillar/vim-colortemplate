@@ -110,7 +110,7 @@ endf
 
 fun! s:init()
   let g:colortemplate_exit_status = 0
-  let s:use16colors               = get(g:, 'base16template', 0)
+  let s:use16colors               = get(g:, 'colortemplate_use16', 0)
   let s:full_name = ''
   let s:short_name = ''
   let s:author = ''

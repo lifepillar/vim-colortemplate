@@ -1,5 +1,9 @@
 :Colortemplate	colortemplate.txt	/*:Colortemplate*
 color-templates	colortemplate.txt	/*color-templates*
+colortemplate#colorspace#approx()	colortemplate.txt	/*colortemplate#colorspace#approx()*
+colortemplate#colorspace#colors_within()	colortemplate.txt	/*colortemplate#colorspace#colors_within()*
+colortemplate#colorspace#k_neighbours()	colortemplate.txt	/*colortemplate#colorspace#k_neighbours()*
+colortemplate-functions	colortemplate.txt	/*colortemplate-functions*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:colortemplate_use16	colortemplate.txt	/*g:colortemplate_use16*

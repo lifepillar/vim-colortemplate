@@ -14,21 +14,22 @@ following features:
 - they can be easily customised by the user;
 - they are automatically licensed under the Vim license.
 
-To get started quickly, |:edit| `colortemplate_dark.txt`, which is located in
-colortemplate's plugin folder, and type:
+To get started quickly, |:edit| `templates/dark_template.txt`, which is
+located in colortemplate's plugin folder, and type:
 >
-  :Colortemplate ~/.vim/colors/colortemplate_dark.vim
+  :Colortemplate ~/.vim/colors/dark_template.vim
 <
+(You must create the `~/.vim/colors` directory if it does not exists yet.)
 This will open a new tab with the colorscheme derived from the template and
 will save it into the specified path. After that, you may load the colorscheme
 with:
 >
-  colorscheme colortemplate_dark
+  colorscheme dark_template
 <
 (The template uses only black and white, so it is not an outstanding theme.)
 
-You may use `colortemplate_dark.txt`, `colortemplate_light.txt` or
-`colortemplate_dark_light.txt` as starting points for creating your own
+You may use `dark_template.txt`, `light_template.txt` or
+`dark_and_light_template.txt` as starting points for creating your own
 colorscheme. The process is divided in four steps:
 
 1. start by editing your colorscheme's information;
@@ -40,13 +41,13 @@ Information about the colorscheme consists of the following mandatory and
 optional fields:
 >
   # Mandatory information
-  Full name: A unique and attractive name
-  Short name: all_lowercase_with_no_spaces
-  Author: Myself <myself@somewhere.org>
-  Maintainer: Myself <myself@somewhere.org>
+  Full name:   A unique and attractive name
+  Short name:  all_lowercase_with_no_spaces
+  Author:      Myself <myself@somewhere.org>
+  Maintainer:  Myself <myself@somewhere.org>
   
   # Optional information
-  Website: http://mysite.org
+  Website:     http://mysite.org
   Description: A one line description
 <
 Color definitions consist of lines with the following form:
@@ -57,6 +58,9 @@ For example:
 >
   Color: white  #ffffff  206  White
 <
+Color name definitions may be overridden later in the file by another `Color`
+directive using the same color name.
+
 The color name is an arbitrary string (only letters, numbers and underscore
 allowed). Give each color a distinctive name. GUI color specifications may be
 given as hexadecimal values, as in the example above, or as RGB values:
@@ -72,8 +76,26 @@ instead. You should not set |g:colortemplate_use16|, unless you are working
 with a legacy colorscheme. You may define as many or as few colors as you
 like.
 
-Color name definitions may be overridden later in the file by another `Color`
-directive using the same color name.
+In general, only the GUI value is mandatory. Base-256 values may be replaced
+by a `~` symbol, which means that the color should be computed automatically
+based on the GUI value. So, a minimal color definition might look as follows:
+>
+  Color: black #000000 ~
+<
+It is recommended that you let Colortemplate compute the best color
+approximations, and override the automatically generated values only if
+necessary. Colortemplate includes a "color similarity table" in the output,
+which contains a detailed summary of the generated values, i.e., comments like
+the following:
+>
+ " red: GUI=#9e0006/rgb(158,0,6) Term=88 #870000/rgb(135,0,0) [delta=4.473285]
+<
+Here, the delta value is the distance between the GUI value (`#9e0006`) and
+the corresponding terminal color (`88`). The used distance is a sophisticated
+variant of the CIELAB ΔE* metric, which takes into the account the perceptual
+characteristics of the human eye. Besides, Colortemplate provides a few
+utility functions to help you find other good (but not optimal in the sense of
+ΔE*) approximations: see |colortemplate-functions|.
 
 Highlight group definitions consist of lines with the following form:
 >
@@ -196,5 +218,42 @@ buffer, but it is not saved. The command takes an optional argument, which is
 the path where the generated colorscheme should be saved. If the file already
 exists, you will get an error. Use `:Colortemplate!` to override an existing
 file.
+
+==============================================================================
+Colortemplate functions			*colortemplate-functions*
+
+					  *colortemplate#colorspace#approx()*
+Finds the base-256 terminal color that best approximates a given color. For
+example:
+>
+  echo colortemplate#colorspace#approx('#9e0006')
+<
+produces the following output:
+>
+  {'index': 124, 'delta': 3.751569, 'approx': '#af0000', 'color': '#9e0006'}
+<
+The keys of the output have the following interpretation:
+
+- `color`: the input color;
+- `approx`: the hex value of the terminal color that best approximates `color`;
+- `index`: the terminal color index (a number between 16 and 255);
+- `delta`: the ΔE* distance between the input color and its approximation.
+
+
+					  *colortemplate#colorspace#colors_within()*
+Returns a list of colors at distance less than the specified threshold from
+the given color. For example:
+>
+  echo colortemplate#colorspace#colors_within(4.5, '#9e0006')
+<
+returns the list `[88,124]`.
+
+					  *colortemplate#colorspace#k_neighbours()*
+Returns the list of the k colors nearest to the specified color, for a given
+k. For example:
+>
+  echo colortemplate#colorspace#k_neighbours('#9e0006', 4)
+<
+returns the list `[124,88,160,52]`.
 
 vim:tw=78:ts=8:ft=help:norl:

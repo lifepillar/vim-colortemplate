@@ -278,9 +278,6 @@ fun! s:check_requirements()
     call s:add_error('Please define the Normal highlight group')
   endif
 endf
-fun! s:new_buffer()
-  silent tabnew +setlocal\ ft=vim
-endf
 
 " Append a String to the end of the current buffer.
 fun! s:put(line)
@@ -316,6 +313,45 @@ fun! s:print_header()
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
   call s:put  (   "let g:colors_name = '" . s:short_name . "'"                                        )
+endf
+fun! s:generate_colorscheme()
+  silent tabnew +setlocal\ ft=vim
+  call s:print_header()
+  call s:put('')
+  if s:has_dark_and_light()
+    for l:bg in ['dark', 'light']
+      call s:put("if &background ==# '" .l:bg. "'")
+      call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+      call append('$', s:hi_group[l:bg]['transp'])
+      call s:put("else")
+      call append('$', s:hi_group[l:bg]['opaque'])
+      call s:put("endif")
+      call append('$', s:hi_group[l:bg]['any'])
+      call s:put("endif")
+    endfor
+  else
+    call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+    call append('$', s:hi_group[s:background]['transp'])
+    call s:put("else")
+    call append('$', s:hi_group[s:background]['opaque'])
+    call s:put("endif")
+    call append('$', s:hi_group[s:background]['any'])
+  end
+  call s:put('')
+  " Add template as a comment (only colors and hi group definitions)
+  " to make the color scheme reproducible.
+  call append('$', map(
+        \              filter(s:template.data,
+        \                     { _,l -> l =~? '^\s*color\s*:'      ||
+        \                              l =~? '^\s*background\s*:' ||
+        \                            !(l =~? '^\s*$'              ||
+        \                              l =~? '^\s*#'              ||
+        \                              l =~? '^\s*\%(\w[^:]*\):'
+        \                             )
+        \                     }
+        \                    ),
+        \              { _,l -> '" ' . l }
+        \    ))
 endf
 " }}} Helper functions
 
@@ -674,43 +710,7 @@ fun! colortemplate#make(...)
     let g:colortemplate_exit_status = 1
     return
   endtry
-  call s:new_buffer()
-  call s:print_header()
-  call s:put('')
-  if s:has_dark_and_light()
-    for l:bg in ['dark', 'light']
-      call s:put("if &background ==# '" .l:bg. "'")
-      call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
-      call append('$', s:hi_group[l:bg]['transp'])
-      call s:put("else")
-      call append('$', s:hi_group[l:bg]['opaque'])
-      call s:put("endif")
-      call append('$', s:hi_group[l:bg]['any'])
-      call s:put("endif")
-    endfor
-  else
-    call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
-    call append('$', s:hi_group[s:background]['transp'])
-    call s:put("else")
-    call append('$', s:hi_group[s:background]['opaque'])
-    call s:put("endif")
-    call append('$', s:hi_group[s:background]['any'])
-  end
-  call s:put('')
-  " Add template as a comment (only colors and hi group definitions)
-  " to make the color scheme reproducible.
-  call append('$', map(
-        \              filter(s:template.data,
-        \                     { _,l -> l =~? '^\s*color\s*:'      ||
-        \                              l =~? '^\s*background\s*:' ||
-        \                            !(l =~? '^\s*$'              ||
-        \                              l =~? '^\s*#'              ||
-        \                              l =~? '^\s*\%(\w[^:]*\):'
-        \                             )
-        \                     }
-        \                    ),
-        \              { _,l -> '" ' . l }
-        \    ))
+  call s:generate_colorscheme()
   if !empty(a:1)
     execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
     if fnamemodify(a:1, ':t:r') !=# s:short_name

@@ -68,7 +68,7 @@ SpecialKey                       dark2  none
 SpellBad                         none   none    t=underline g=undercurl s=blue
 SpellCap                         none   none    t=underline g=undercurl s=red
 SpellLocal                       none   none    t=underline g=undercurl s=aqua
-SpellRare                        none   none    t=underline g=undercurl s=magenta
+SpellRare                        none   none    t=underline g=undercurl s=purple
 StatusLine                       dark2  light1  inverse
 StatusLineNC                     dark1  light4  inverse
 StatusLineTerm                -> StatusLine
@@ -730,7 +730,7 @@ SpecialKey                       light2 none
 SpellBad                         none   none    t=underline g=undercurl s=blue
 SpellCap                         none   none    t=underline g=undercurl s=red
 SpellLocal                       none   none    t=underline g=undercurl s=aqua
-SpellRare                        none   none    t=underline g=undercurl s=magenta
+SpellRare                        none   none    t=underline g=undercurl s=purple
 StatusLine                       light2 dark1   inverse
 StatusLineNC                     light1 dark4   inverse
 StatusLineTerm                -> StatusLine

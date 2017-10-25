@@ -4,7 +4,7 @@
 # Information {{{
 # Mandatory
 Full name:   My Colorscheme
-Short name:  colortemplate_dark_light
+Short name:  dark_and_light_template
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
 # Optional

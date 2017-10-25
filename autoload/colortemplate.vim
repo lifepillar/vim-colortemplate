@@ -641,6 +641,9 @@ fun! s:parse_color_value()
       throw 'Undefined color name: ' . l:transp
     endif
   endif
+  if l:transp ==? 'bg'
+    throw "Transparent color cannot be 'bg'"
+  endif
   return [l:color, l:transp]
 endf
 

@@ -398,9 +398,9 @@ endf
 
 " Parser {{{
 fun! s:parse_verbatim_line()
-  if s:token.next().kind ==# 'WORD' && s:token.value ==? 'endverbatim'
+  if s:template.getl() =~? '^\s*endverbatim'
     let s:verbatim = 0
-    if s:token.next().kind !=# 'EOL'
+    if s:template.getl() !~? '^\s*endverbatim\s*$'
       throw "Extra characters after 'endverbatim'"
     endif
   else

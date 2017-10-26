@@ -474,7 +474,9 @@ fun! s:parse_key_value_pair()
     elseif l:key ==# 'description'
       let s:description = l:val
     elseif l:key ==# 'license'
-      let s:license = l:val
+      if !empty(l:val)
+        let s:license = l:val
+      endif
     else
       throw 'Unknown key: ' . l:key
     endif

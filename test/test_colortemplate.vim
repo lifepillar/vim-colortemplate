@@ -9,8 +9,6 @@ fun! Test_CT_fine()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
-  bwipe!
-  bwipe
 endf
 
 fun! Test_CT_color_typo()
@@ -317,8 +315,6 @@ fun! Test_CT_attributes_ok()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
-  bwipe!
-  bwipe
 endf
 
 fun! Test_CT_attributes_errors()
@@ -358,8 +354,6 @@ fun! Test_CT_parse_linked_group_ok()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
-  bwipe!
-  bwipe
 endf
 
 fun! Test_CT_parse_linked_group_errors()
@@ -399,8 +393,6 @@ fun! Test_CT_minimal()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
-  bwipe!
-  bwipe
 endf
 
 fun! Test_CT_verbatim_interpolation()
@@ -410,8 +402,6 @@ fun! Test_CT_verbatim_interpolation()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
-  bwipe!
-  bwipe
 endf
 
 fun! Test_CT_wrong_keyword_in_doc()

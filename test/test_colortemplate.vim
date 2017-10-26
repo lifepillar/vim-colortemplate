@@ -137,13 +137,13 @@ fun! Test_CT_unknown_key()
   edit test13.txt
   Colortemplate
   let l:loclist = getloclist(0)
-  call assert_equal(3, len(l:loclist))
-  call assert_equal('Unknown key: shortname', l:loclist[0]['text'])
-  call assert_equal(3, l:loclist[0]['lnum'])
-  call assert_equal('Unknown key: xyz', l:loclist[1]['text'])
-  call assert_equal(5, l:loclist[1]['lnum'])
-  call assert_equal('Unknown key: abc def', l:loclist[2]['text'])
-  call assert_equal(6, l:loclist[2]['lnum'])
+  call assert_equal(2, len(l:loclist))
+  call assert_equal('Unknown key: xyz', l:loclist[0]['text'])
+  call assert_equal(5, l:loclist[0]['lnum'])
+  call assert_equal(4, l:loclist[0]['col'])
+  call assert_equal('Unknown key: abcdef', l:loclist[1]['text'])
+  call assert_equal(6, l:loclist[1]['lnum'])
+  call assert_equal(8, l:loclist[1]['col'])
   lclose
   bwipe
 endf

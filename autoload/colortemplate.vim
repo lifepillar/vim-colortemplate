@@ -111,13 +111,15 @@ endf
 fun! s:init()
   let g:colortemplate_exit_status = 0
   let s:use16colors               = get(g:, 'colortemplate_use16', 0)
-  let s:full_name = ''
-  let s:short_name = ''
-  let s:author = ''
-  let s:maintainer = ''
-  let s:website = ''
-  let s:description = ''
-  let s:license = 'Vim License (see `:help license`)'
+  let s:info = {
+        \ 'fullname': '',
+        \ 'shortname': '',
+        \ 'author': '',
+        \ 'maintainer': '',
+        \ 'website': '',
+        \ 'description': '',
+        \ 'license': ''
+        \ }
   let s:background                = 'dark' " Current background
   let s:uses_background           = { 'dark': 0, 'light': 0 }
   let s:verbatim                  = 0 " When set to 1, source is copied (almost) verbatim
@@ -268,14 +270,17 @@ fun! s:add_error(msg)
 endf
 
 fun! s:check_requirements()
-  if empty(s:full_name)
+  if empty(s:info['fullname'])
     call s:add_error('Please specify the full name of your color scheme')
   endif
-  if empty(s:author)
+  if empty(s:info['author'])
     call s:add_error('Please specify an author and the corresponding email')
   endif
-  if empty(s:maintainer)
+  if empty(s:info['maintainer'])
     call s:add_error('Please specify a maintainer and the corresponding email')
+  endif
+  if empty(s:info['license'])
+    let s:info['license'] = 'Vim License (see `:help license`)'
   endif
   if s:has_dark_and_light() && !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
     call s:add_error('Please define the Normal highlight group for both dark and light background')
@@ -290,21 +295,21 @@ fun! s:put(line)
 endf
 
 fun! s:print_header()
-  call setline(1, '" Name:         ' . s:full_name                                                    )
-  if !empty(s:description)
-    call s:put(   '" Description:  ' . s:description                                                  )
+  call setline(1, '" Name:         ' . s:info['fullname']                                             )
+  if !empty(s:info['description'])
+    call s:put(   '" Description:  ' . s:info['description']                                          )
   endif
-  call s:put  (   '" Author:       ' . s:author                                                       )
-  call s:put  (   '" Maintainer:   ' . s:maintainer                                                   )
-  if !empty(s:website)
-    call s:put(   '" Website:      ' . s:website                                                      )
+  call s:put  (   '" Author:       ' . s:info['author']                                               )
+  call s:put  (   '" Maintainer:   ' . s:info['maintainer']                                           )
+  if !empty(s:info['website'])
+    call s:put(   '" Website:      ' . s:info['website']                                              )
   endif
-  call s:put  (   '" License:      ' . s:license                                                      )
+  call s:put  (   '" License:      ' . s:info['license']                                              )
   call s:put  (   '" Last Updated: ' . strftime("%c")                                                 )
   call s:put  (   ''                                                                                  )
   call s:put  (   "if !(has('termguicolors') && &termguicolors) && !has('gui_running')"               )
   call s:put  (   "      \\ && (!exists('&t_Co') || &t_Co < " . (s:use16colors ? '16)' : '256)')      )
-  call s:put  (   "  echoerr '[" . s:full_name . "] There are not enough colors.'"                    )
+  call s:put  (   "  echoerr '[" . s:info['fullname'] . "] There are not enough colors.'"             )
   call s:put  (   '  finish'                                                                          )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
@@ -317,7 +322,7 @@ fun! s:print_header()
   call s:put  (   '  syntax reset'                                                                    )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
-  call s:put  (   "let g:colors_name = '" . s:short_name . "'"                                        )
+  call s:put  (   "let g:colors_name = '" . s:info['shortname'] . "'"                                 )
 endf
 
 " Print details about the color palette as comments
@@ -362,7 +367,7 @@ fun! s:generate_colorscheme()
   if s:has_dark_and_light()
     for l:bg in ['dark', 'light']
       call s:put("if &background ==# '" .l:bg. "'")
-      call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+      call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
       call append('$', s:hi_group[l:bg]['transp'])
       call s:put("else")
       call append('$', s:hi_group[l:bg]['opaque'])
@@ -371,7 +376,7 @@ fun! s:generate_colorscheme()
       call s:put("endif")
     endfor
   else
-    call s:put("if !has('gui_running') && get(g:, '".s:short_name."_transp_bg', 0)")
+    call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
     call append('$', s:hi_group[s:background]['transp'])
     call s:put("else")
     call append('$', s:hi_group[s:background]['opaque'])
@@ -452,7 +457,7 @@ fun! s:parse_key_value_pair()
       endif
       call add(l:key_tokens, s:token.value)
     endwhile
-    let l:key = tolower(join(l:key_tokens))
+    let l:key = tolower(join(l:key_tokens, ''))
     let l:val = matchstr(s:template.getl(), '\s*\zs.*$', s:token.pos)
     if l:key ==# 'background'
       if l:val =~? '^dark\s*$'
@@ -463,24 +468,10 @@ fun! s:parse_key_value_pair()
         throw 'Background can only be dark or light.'
       endif
       let s:uses_background[s:background] = 1
-    elseif l:key ==# 'full name'
-      let s:full_name = l:val
-    elseif l:key ==# 'short name'
-      let s:short_name = l:val
-    elseif l:key ==# 'author'
-      let s:author = l:val
-    elseif l:key ==# 'maintainer'
-      let s:maintainer = l:val
-    elseif l:key ==# 'website'
-      let s:website = l:val
-    elseif l:key ==# 'description'
-      let s:description = l:val
-    elseif l:key ==# 'license'
-      if !empty(l:val)
-        let s:license = l:val
-      endif
-    else
+    elseif !has_key(s:info, l:key)
       throw 'Unknown key: ' . l:key
+    else
+      let s:info[l:key] = l:val
     endif
   endif
 endf
@@ -770,7 +761,7 @@ fun! colortemplate#make(...)
   call s:generate_colorscheme()
   if !empty(a:1)
     execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
-    if fnamemodify(a:1, ':t:r') !=# s:short_name
+    if fnamemodify(a:1, ':t:r') !=# s:info['shortname']
       redraw
       echo "\r"
       echohl WarningMsg

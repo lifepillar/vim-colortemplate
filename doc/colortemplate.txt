@@ -222,7 +222,7 @@ file.
 ==============================================================================
 Colortemplate functions			*colortemplate-functions*
 
-					  *colortemplate#colorspace#approx()*
+				  *colortemplate#colorspace#approx()*
 Finds the base-256 terminal color that best approximates a given color. For
 example:
 >
@@ -240,7 +240,7 @@ The keys of the output have the following interpretation:
 - `delta`: the ΔE* distance between the input color and its approximation.
 
 
-					  *colortemplate#colorspace#colors_within()*
+				  *colortemplate#colorspace#colors_within()*
 Returns a list of colors at distance less than the specified threshold from
 the given color. For example:
 >
@@ -248,7 +248,7 @@ the given color. For example:
 <
 returns the list `[88,124]`.
 
-					  *colortemplate#colorspace#k_neighbours()*
+				  *colortemplate#colorspace#k_neighbours()*
 Returns the list of the k colors nearest to the specified color, for a given
 k. For example:
 >

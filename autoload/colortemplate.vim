@@ -409,6 +409,17 @@ fun! s:generate_colorscheme()
         \              { _,l -> '" ' . l }
         \    ))
 endf
+
+fun! s:generate_documentation()
+  if get(g:, 'colortemplate_no_doc', 0)
+    return
+  endif
+  split +setlocal\ ft=help new
+  for l:line in s:doc
+    call s:put(l:line)
+  endfor
+endf
+
 " }}} Helper functions
 
 " Parser {{{
@@ -792,6 +803,7 @@ fun! colortemplate#make(...)
     return
   endtry
   call s:generate_colorscheme()
+  call s:generate_documentation()
   if !empty(a:1)
     execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
     if fnamemodify(a:1, ':t:r') !=# s:info['shortname']

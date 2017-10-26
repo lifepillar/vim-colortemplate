@@ -1,7 +1,7 @@
 # Vim Colorscheme Template
 
-This is a proposal for an “official” colorscheme template that might be used to
-create colorschemes suitable for inclusion in Vim distribution.
+This is a proposal for an “official” hackable colorscheme template that might be
+used to create colorschemes suitable for inclusion in Vim distribution.
 
 To get started, see `:help ft-colortemplate`.
 

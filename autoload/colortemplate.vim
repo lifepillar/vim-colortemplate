@@ -439,7 +439,7 @@ fun! s:parse_documentation_line()
     endif
   else
     try " to interpolate keywords
-      let l:line = substitute(s:template.getl(), '@\(\w\+\)', '\=s:info[submatch(1)]', 'g')
+      let l:line = substitute(s:template.getl(), '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
     catch /.*/
       throw 'Undefined keyword'
     endtry
@@ -483,8 +483,8 @@ fun! s:parse_key_value_pair()
   else " Generic key-value pair
     let l:key_tokens = [s:token.value]
     while s:token.next().kind !=# ':'
-      if s:token.kind !=# 'WORD'
-        throw 'Only alphanumeric characters are allowed in keys'
+      if s:token.kind !=# 'WORD' || s:token.value !~? '^\a\+$'
+        throw 'Only letters from a to z are allowed in keys'
       endif
       call add(l:key_tokens, s:token.value)
     endwhile

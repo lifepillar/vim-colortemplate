@@ -114,7 +114,7 @@ fun! Test_CT_invalid_chars_in_key()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(1, len(l:loclist))
-  call assert_equal('Only alphanumeric characters are allowed in keys', l:loclist[0]['text'])
+  call assert_equal('Only letters from a to z are allowed in keys', l:loclist[0]['text'])
   call assert_equal(5, l:loclist[0]['lnum'])
   lclose
   bwipe
@@ -414,6 +414,15 @@ fun! Test_CT_wrong_keyword_in_doc()
   call assert_equal(1, l:loclist[0]['col'])
   lclose
   bwipe
+endf
+
+fun! Test_CT_keyword_followed_by_underscore_in_doc()
+  edit test30.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
 endf
 
 call RunBabyRun('CT')

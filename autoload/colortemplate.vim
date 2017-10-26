@@ -427,6 +427,9 @@ fun! s:generate_documentation()
 endf
 
 fun! s:save_buffer(path, filename, overwrite)
+  if empty(a:path)
+    return
+  endif
   " Create output directory if it does not exist
   if !isdirectory(a:path)
     try
@@ -839,9 +842,9 @@ fun! colortemplate#make(...)
     return
   endtry
 
-  let l:doc_dir = a:1 . s:slash() . 'doc'
-  let l:col_dir = a:1 . s:slash() . 'colors'
-  let l:overwrite = (a:0 > 1 ? 1 : 0)
+  let l:doc_dir = (a:0 > 0 && !empty(a:1) ? a:1 . s:slash() . 'doc'    : '')
+  let l:col_dir = (a:0 > 0 && !empty(a:1) ? a:1 . s:slash() . 'colors' : '')
+  let l:overwrite = (a:0 > 1)
   call s:generate_colorscheme()
   call s:save_buffer(l:col_dir, s:info['shortname'].'.vim', l:overwrite)
   if !get(g:, 'colortemplate_no_doc', 0)

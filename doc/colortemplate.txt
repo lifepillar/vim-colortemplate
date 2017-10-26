@@ -256,4 +256,8 @@ k. For example:
 <
 returns the list `[124,88,160,52]`.
 
+				  *colortemplate#syn#toggle()*
+Toggle the display of highlight group information for the highlight group
+under the cursor.
+
 vim:tw=78:ts=8:ft=help:norl:

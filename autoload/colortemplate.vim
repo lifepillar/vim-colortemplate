@@ -2,7 +2,10 @@
 "
 " Grammar {{{
 " <Template>                  ::= <Line>*
-" <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> | <VerbatimText>
+" <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> |
+"                                 <VerbatimText>  | <Documentation>
+" <VerbatimText>              ::= verbatim <Anything> endverbatim
+" <Documentation>             ::= documentation <Anything> enddocumentation
 " <Comment>                   ::= # .*
 " <KeyValuePair>              ::= <ColorDef> | <Key> : <Value>
 " <Key>                       ::= Full name | Short name | Author | Background | ...
@@ -122,7 +125,8 @@ fun! s:init()
         \ }
   let s:background                = 'dark' " Current background
   let s:uses_background           = { 'dark': 0, 'light': 0 }
-  let s:verbatim                  = 0 " When set to 1, source is copied (almost) verbatim
+  let s:is_verbatim               = 0 " When set to 1, source is copied (almost) verbatim
+  let s:is_documentation          = 0 " Set to 1 when inside a help block
 
   " A palette is a dictionary of color names and their definitions. Each
   " definition consists of a GUI color value, a base-256 color value,
@@ -144,7 +148,8 @@ fun! s:init()
   let s:hi_group['dark']         = { 'opaque': [], 'transp': [], 'any': [] }
   let s:hi_group['light']        = { 'opaque': [], 'transp': [], 'any': [] }
 
-  let s:normal_group_defined = { 'dark': 0, 'light': 0 }
+  let s:normal_group_defined     = { 'dark': 0, 'light': 0 }
+  let s:doc                      = [] " For help file
 endf
 " }}} Internal state
 
@@ -171,6 +176,11 @@ endf
 " definition is the line as it should appear in the output.
 fun! s:add_line(scope, definition)
   call add(s:hi_group[s:background][a:scope], a:definition)
+endf
+
+" Store a line to send to the help file.
+fun! s:add_help(line)
+  call add(s:doc, a:line)
 endf
 
 " Return a highlight group definition as a String.
@@ -404,7 +414,7 @@ endf
 " Parser {{{
 fun! s:parse_verbatim_line()
   if s:template.getl() =~? '^\s*endverbatim'
-    let s:verbatim = 0
+    let s:is_verbatim = 0
     if s:template.getl() !~? '^\s*endverbatim\s*$'
       throw "Extra characters after 'endverbatim'"
     endif
@@ -421,6 +431,22 @@ fun! s:parse_verbatim_line()
   endif
 endf
 
+fun! s:parse_documentation_line()
+  if s:template.getl() =~? '^\s*enddocumentation'
+    let s:is_documentation = 0
+    if s:template.getl() !~? '^\s*enddocumentation\s*$'
+      throw "Extra characters after 'enddocumentation'"
+    endif
+  else
+    try " to interpolate keywords
+      let l:line = substitute(s:template.getl(), '@\(\w\+\)', '\=s:info[submatch(1)]', 'g')
+    catch /.*/
+      throw 'Undefined keyword'
+    endtry
+    call s:add_help(l:line)
+  endif
+endf
+
 fun! s:parse_line()
   if s:token.next().kind ==# 'EOL' " Empty line
     return
@@ -428,9 +454,14 @@ fun! s:parse_line()
     return s:parse_comment()
   elseif s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
-      let s:verbatim = 1
+      let s:is_verbatim = 1
       if s:token.next().kind !=# 'EOL'
         throw "Extra characters after 'verbatim'"
+      endif
+    elseif s:token.value ==? 'documentation'
+      let s:is_documentation = 1
+      if s:token.next().kind !=# 'EOL'
+        throw "Extra characters after 'documentation'"
       endif
     elseif s:template.getl() =~? ':' " Look ahead
       call s:parse_key_value_pair()
@@ -726,8 +757,10 @@ fun! colortemplate#parse(filename) abort
   call s:template.load(a:filename)
   while s:template.next_line()
     try
-      if s:verbatim
+      if s:is_verbatim
         call s:parse_verbatim_line()
+      elseif s:is_documentation
+        call s:parse_documentation_line()
       else
         call s:parse_line()
       endif

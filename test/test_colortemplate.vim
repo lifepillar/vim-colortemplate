@@ -414,4 +414,16 @@ fun! Test_CT_verbatim_interpolation()
   bwipe
 endf
 
+fun! Test_CT_wrong_keyword_in_doc()
+  edit test29.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("Undefined keyword", l:loclist[0]['text'])
+  call assert_equal(7, l:loclist[0]['lnum'])
+  call assert_equal(1, l:loclist[0]['col'])
+  lclose
+  bwipe
+endf
+
 call RunBabyRun('CT')

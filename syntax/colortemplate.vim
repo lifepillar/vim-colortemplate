@@ -155,6 +155,10 @@ syn include @colortemplatevim syntax/vim.vim
 unlet b:current_syntax
 syn region colortemplatevim matchgroup=colortemplateKeyword start=/verbatim/ end=/endverbatim/ keepend contains=@colortemplatevim
 
+syn include @colortemplatehelp syntax/help.vim
+unlet b:current_syntax
+syn region colortemplatehelp matchgroup=colortemplateKeyword start=/documentation/ end=/enddocumentation/ keepend contains=@colortemplatehelp
+
 hi def link colortemplateArrow        Delimiter
 hi def link colortemplateAttr         Label
 hi def link colortemplateAttrs        String

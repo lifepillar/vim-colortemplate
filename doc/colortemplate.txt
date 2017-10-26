@@ -247,6 +247,11 @@ Finally, lines starting with `#` are interpreted as comments.
 ==============================================================================
 Colortemplate options		       	*colortemplate-options*
 
+						*g:colortemplate_no_doc*
+Set to 1 if you do not want to generate the documentation.
+>
+  let g:colortemplate_no_doc = 0
+<
 						*g:colortemplate_use16*
 If you want to use the shell's 16 color palette instead of the standard 256
 colors, set this variable to 1, then generate the colorscheme with

@@ -12,22 +12,22 @@ Description: Retro groove color scheme
 Background: dark
 
 # Color palette for dark background {{{
-Color: dark0             rgb(40,  40,  40)     235         Black
-Color: dark1             rgb(60,  56,  54)     237       DarkRed
-Color: dark2             rgb(80,  73,  69)     239     DarkGreen
-Color: dark3             rgb(102, 92,  84)     241    DarkYellow
-Color: dark4             rgb(124, 111, 100)    243      DarkBlue
-Color: orange            rgb(254, 128, 25)     208   DarkMagenta
-Color: light3            rgb(189, 174, 147)    248      DarkCyan
-Color: light4            rgb(168, 153, 132)    246     LightGrey
-Color: grey              rgb(146, 131, 116)    245      DarkGrey
-Color: red               rgb(251, 73,  52)     167      LightRed
-Color: green             rgb(184, 187, 38)     142    LightGreen
-Color: yellow            rgb(250, 189, 47)     214   LightYellow
-Color: blue              rgb(131, 165, 152)    109     LightBlue
-Color: purple            rgb(211, 134, 155)    175  LightMagenta
-Color: aqua              rgb(142, 192, 124)    108     LightCyan
-Color: light1            rgb(235, 219, 178)    223         White
+Color: dark0             rgb(40,  40,  40)     ~           Black
+Color: dark1             rgb(60,  56,  54)     ~         DarkRed
+Color: dark2             rgb(80,  73,  69)     ~       DarkGreen
+Color: dark3             rgb(102, 92,  84)     ~      DarkYellow
+Color: dark4             rgb(124, 111, 100)    ~        DarkBlue
+Color: orange            rgb(254, 128, 25)     ~     DarkMagenta
+Color: light3            rgb(189, 174, 147)    ~        DarkCyan
+Color: light4            rgb(168, 153, 132)    ~       LightGrey
+Color: grey              rgb(146, 131, 116)    ~        DarkGrey
+Color: red               rgb(251, 73,  52)     203      LightRed
+Color: green             rgb(184, 187, 38)     ~      LightGreen
+Color: yellow            rgb(250, 189, 47)     ~     LightYellow
+Color: blue              rgb(131, 165, 152)    ~       LightBlue
+Color: purple            rgb(211, 134, 155)    ~    LightMagenta
+Color: aqua              rgb(142, 192, 124)    ~       LightCyan
+Color: light1            rgb(235, 219, 178)    ~           White
 # }}}
 
 # Default highlight groups {{{
@@ -674,22 +674,22 @@ jsonString                       light1 none
 Background: light
 
 # Color palette for light background {{{
-Color: dark1             rgb( 60,  56,  54)    237         Black
-Color: red               rgb(158,   0,   6)     88       DarkRed
-Color: green             rgb(121, 116,  14)    100     DarkGreen
-Color: yellow            rgb(181, 118,  20)    136    DarkYellow
-Color: blue              rgb(  7, 102, 120)     24      DarkBlue
-Color: purple            rgb(143,  63, 113)     96   DarkMagenta
-Color: aqua              rgb( 66, 123,  88)     66      DarkCyan
-Color: grey              rgb(146, 131, 116)    244     LightGrey
-Color: dark4             rgb(124, 111, 100)    243      DarkGrey
-Color: dark3             rgb(102,  92,  84)    241      LightRed
-Color: orange            rgb(175,  58,   3)    130    LightGreen
-Color: light4            rgb(168, 153, 132)    246   LightYellow
-Color: light3            rgb(189, 174, 147)    248     LightBlue
-Color: light2            rgb(213, 196, 161)    250  LightMagenta
-Color: light1            rgb(235, 219, 178)    223     LightCyan
-Color: light0            rgb(253, 244, 193)    229         White
+Color: dark1             rgb( 60,  56,  54)    ~           Black
+Color: red               rgb(158,   0,   6)    ~         DarkRed
+Color: green             rgb(121, 116,  14)    ~       DarkGreen
+Color: yellow            rgb(181, 118,  20)    ~      DarkYellow
+Color: blue              rgb(  7, 102, 120)    ~        DarkBlue
+Color: purple            rgb(143,  63, 113)    ~     DarkMagenta
+Color: aqua              rgb( 66, 123,  88)    ~        DarkCyan
+Color: grey              rgb(146, 131, 116)    ~       LightGrey
+Color: dark4             rgb(124, 111, 100)    ~        DarkGrey
+Color: dark3             rgb(102,  92,  84)    ~        LightRed
+Color: orange            rgb(175,  58,   3)    ~      LightGreen
+Color: light4            rgb(168, 153, 132)    ~     LightYellow
+Color: light3            rgb(189, 174, 147)    ~       LightBlue
+Color: light2            rgb(213, 196, 161)    ~    LightMagenta
+Color: light1            rgb(235, 219, 178)    ~       LightCyan
+Color: light0            rgb(253, 244, 193)    ~           White
 # }}}
 
 # Default highlight groups {{{

@@ -197,8 +197,19 @@ might be translated into something like:
     hi! Normal ctermfg=88 guifg=#ff6400 gui=NONE,undercurl guisp=#ffff00
   endif
 <
-This allows you to get fancy. If you plan to submit your colorscheme for
-inclusion in Vim, do not get fancy.
+If you need to interpolate a color that does not occur in a highlight group
+definition, you must specify whether you want to interpolate a GUI value or
+a terminal value by using `@gui<color>` or `@term<color>`, respectively, where
+`<color>` is a color name. For example:
+>
+  let g:terminal_color_0 = '@guiblack'
+<
+will be replaced by something like:
+>
+  let g:terminal_color_0 = '#000000'
+<
+Verbatim blocks allow you to get fancy. If you plan to submit your colorscheme
+for inclusion in Vim, do not get fancy.
 
 Finally, lines starting with `#` are interpreted as comments.
 

@@ -117,6 +117,7 @@ fun! s:init()
   let s:maintainer = ''
   let s:website = ''
   let s:description = ''
+  let s:license = 'Vim License (see `:help license`)'
   let s:background                = 'dark' " Current background
   let s:uses_background           = { 'dark': 0, 'light': 0 }
   let s:verbatim                  = 0 " When set to 1, source is copied (almost) verbatim
@@ -298,7 +299,7 @@ fun! s:print_header()
   if !empty(s:website)
     call s:put(   '" Website:      ' . s:website                                                      )
   endif
-  call s:put  (   '" License:      Vim License (see `:help license`)'                                 )
+  call s:put  (   '" License:      ' . s:license                                                      )
   call s:put  (   '" Last Updated: ' . strftime("%c")                                                 )
   call s:put  (   ''                                                                                  )
   call s:put  (   "if !(has('termguicolors') && &termguicolors) && !has('gui_running')"               )
@@ -472,6 +473,8 @@ fun! s:parse_key_value_pair()
       let s:website = l:val
     elseif l:key ==# 'description'
       let s:description = l:val
+    elseif l:key ==# 'license'
+      let s:license = l:val
     else
       throw 'Unknown key: ' . l:key
     endif

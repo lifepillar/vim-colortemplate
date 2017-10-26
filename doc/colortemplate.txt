@@ -17,14 +17,14 @@ following features:
 To get started quickly, |:edit| `templates/dark.colortemplate`, which is
 located in colortemplate's plugin folder, and type:
 >
-  :Colortemplate ~/.vim/colors/dark_template.vim
+  :Colortemplate ~/.vim/colors/dark.vim
 <
 (You must create the `~/.vim/colors` directory if it does not exists yet.)
 This will open a new tab with the colorscheme derived from the template and
 will save it into the specified path. After that, you may load the colorscheme
 with:
 >
-  colorscheme dark_template
+  colorscheme dark
 <
 (The template uses only black and white, so it is not an outstanding theme.)
 

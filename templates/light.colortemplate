@@ -2,14 +2,14 @@
 
 # Information {{{
 # Mandatory
+License:
 Full name:   My Light Colorscheme
-Short name:  light_template
+Short name:  light
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
 # Optional
 Website:
 Description: Template for a light colorscheme
-License:
 # }}}
 
 # Color palette {{{

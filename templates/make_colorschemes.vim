@@ -11,7 +11,7 @@ if !(isdirectory(s:parent . '/colors'))
   call mkdir(s:parent . '/colors')
 endif
 
-for s:template in glob(s:curdir . '/*.txt', 1, 1)
+for s:template in glob(s:curdir . '/*.colortemplate', 1, 1)
   let s:template_name = fnamemodify(s:template, ':t:r')
   execute "edit" s:template
   execute "Colortemplate!" s:parent . '/colors/' . s:template_name . '.vim'

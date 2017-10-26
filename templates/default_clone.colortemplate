@@ -12,6 +12,20 @@ Description: A nearly exact clone of Vim's default colorscheme
 # Note: let g:default_transp_bg=1 to be more faithful to Vim's default colorscheme
 # }}}
 
+# Documentation {{{
+documentation
+==============================================================================
+@fullname Options                    *@shortname-options*
+
+                                                    *g:@shortname_transp_bg*
+Set to 1 if you want a transparent background. Takes effect only in the
+terminal.
+>
+  let g:@shortname_transp_bg = 0
+<
+enddocumentation
+# }}}
+
 # Color palette {{{
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb(  0,   0,   0)     0        Black

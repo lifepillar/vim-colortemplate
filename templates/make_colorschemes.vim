@@ -4,17 +4,12 @@
 " Note: existing files in the colors folder are overridden.
 
 let s:curdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
-let s:parent = fnamemodify(s:curdir, ':h')
 let s:errors = 0
-
-if !(isdirectory(s:parent . '/colors'))
-  call mkdir(s:parent . '/colors')
-endif
 
 for s:template in glob(s:curdir . '/*.colortemplate', 1, 1)
   let s:template_name = fnamemodify(s:template, ':t:r')
   execute "edit" s:template
-  execute "Colortemplate!" s:parent . '/colors/' . s:template_name . '.vim'
+  execute "Colortemplate!" fnameescape(s:curdir)
   if g:colortemplate_exit_status != 0
     echoerr 'ERROR:' s:template_name 'could not be built'
     let s:errors = 1
@@ -24,7 +19,5 @@ endfor
 if s:errors > 0
   redraw
   echo "\r"
-  echohl Error
-  echomsg "There were errors: see messages"
-  echohl None
+  echoerr "There were errors: see messages"
 endif

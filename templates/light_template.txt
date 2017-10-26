@@ -9,6 +9,7 @@ Maintainer:  Myself <myself@somewhere.org>
 # Optional
 Website:
 Description: Template for a light colorscheme
+License:
 # }}}
 
 # Color palette {{{

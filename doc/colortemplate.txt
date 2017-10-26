@@ -49,6 +49,7 @@ optional fields:
   # Optional information
   Website:     http://mysite.org
   Description: A one line description
+  License:     Public domain
 <
 Color definitions consist of lines with the following form:
 >

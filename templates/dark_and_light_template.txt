@@ -10,6 +10,7 @@ Maintainer:  Myself <myself@somewhere.org>
 # Optional
 Website:
 Description: Template for a colorscheme with dark and light variants
+License:
 # }}}
 
 # Color palette for dark variant {{{

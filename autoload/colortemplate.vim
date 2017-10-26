@@ -420,13 +420,31 @@ fun! s:generate_colorscheme()
 endf
 
 fun! s:generate_documentation()
-  if get(g:, 'colortemplate_no_doc', 0)
-    return
-  endif
-  split +setlocal\ ft=help new
+  new +setlocal\ ft=help
   for l:line in s:doc
     call s:put(l:line)
   endfor
+endf
+
+fun! s:save_buffer(path, filename, overwrite)
+  " Create output directory if it does not exist
+  if !isdirectory(a:path)
+    try
+      call mkdir(a:path)
+    catch /.*/
+      echoerr '[Colortemplate] Could not create directory: ' . a:path
+      let g:colortemplate_exit_status = 1
+      return
+    endtry
+  endif
+  " Write file
+  try
+    execute "write".(a:overwrite ? '!' : '') fnameescape(a:path . s:slash() . a:filename)
+  catch /.*/
+    echoerr '[Colortemplate] Error while writing ' . a:filename . ': ' . v:exception
+    let g:colortemplate_exit_status = 1
+    return
+  endtry
 endf
 
 " }}} Helper functions
@@ -802,6 +820,13 @@ endf
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
+  if !empty(a:1)
+    if !isdirectory(a:1)
+      echoerr "[Colortemplate] Path is not a directory:" a:1
+      return
+    endif
+  endif
+
   try
     call colortemplate#parse(expand('%'))
   catch /Parse error/
@@ -813,43 +838,22 @@ fun! colortemplate#make(...)
     let g:colortemplate_exit_status = 1
     return
   endtry
+
+  let l:doc_dir = a:1 . s:slash() . 'doc'
+  let l:col_dir = a:1 . s:slash() . 'colors'
+  let l:overwrite = (a:0 > 1 ? 1 : 0)
   call s:generate_colorscheme()
-  call s:generate_documentation()
-  " Write output
-  if !empty(a:1)
-    if !isdirectory(a:1)
-      echoerr "[Colortemplate] Path is not a directory:" a:1
-      return
-    endif
-    " Create output directories if they do not exist
-    let l:doc_dir = a:1 . s:slash() . 'doc' . s:slash()
-    let l:col_dir = a:1 . s:slash() . 'colors' . s:slash()
-    for l:dir in [l:doc_dir, l:col_dir]
-      if !isdirectory(l:dir)
-        try
-          call mkdir(l:dir)
-        catch /.*/
-          echoerr "[Colortemplate] Could not create directory:" l:dir
-          return
-        endtry
-      endif
-    endfor
-    " Write help file
-    try
-      execute "write".(a:0 > 1 ? a:2 : '')
-            \ fnameescape(l:doc_dir . s:info['shortname'] . '.txt')
-      " Write colorscheme
-      wincmd p
-      execute "write".(a:0 > 1 ? a:2 : '')
-            \ fnameescape(l:col_dir . s:info['shortname'] . '.vim')
-      redraw
-      echo "\r"
-      echomsg '[Colortemplate] Colorscheme written successfully!'
-    catch /.*/
-      echoerr '[Colortemplate] Error while writing the colorscheme: ' v:exception
-      let g:colortemplate_exit_status = 1
-      return
-    endtry
+  call s:save_buffer(l:col_dir, s:info['shortname'].'.vim', l:overwrite)
+  if !get(g:, 'colortemplate_no_doc', 0)
+    call s:generate_documentation()
+    call s:save_buffer(l:doc_dir, s:info['shortname'].'.txt', l:overwrite)
+  endif
+  redraw
+  echo "\r"
+  if g:colortemplate_exit_status == 0
+    echomsg '[Colortemplate] Colorscheme written successfully!'
+  else
+    echoerr '[Colortemplate] Colorscheme was not written'
   endif
 endf
-  " }}} Public interface
+" }}} Public interface

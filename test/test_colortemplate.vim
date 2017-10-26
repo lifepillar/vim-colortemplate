@@ -425,4 +425,23 @@ fun! Test_CT_keyword_followed_by_underscore_in_doc()
   call assert_notequal(l:src, l:tgt)
 endf
 
+fun! Test_CT_empty_short_name()
+  edit test31.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("Please specify a short name for your colorscheme", l:loclist[0]['text'])
+  lclose
+  bwipe
+endf
+
+fun! Test_CT_invalid_short_name()
+  edit test32.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("The short name may contain only letters, numbers and underscore.", l:loclist[0]['text'])
+  lclose
+  bwipe
+endf
 call RunBabyRun('CT')

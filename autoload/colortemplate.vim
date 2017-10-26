@@ -283,6 +283,11 @@ fun! s:check_requirements()
   if empty(s:info['fullname'])
     call s:add_error('Please specify the full name of your color scheme')
   endif
+  if empty(s:info['shortname'])
+    call s:add_error('Please specify a short name for your colorscheme')
+  elseif s:info['shortname'] !~? '^\w\+$'
+    call s:add_error('The short name may contain only letters, numbers and underscore.')
+  endif
   if empty(s:info['author'])
     call s:add_error('Please specify an author and the corresponding email')
   endif

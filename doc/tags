@@ -1,4 +1,5 @@
 :Colortemplate	colortemplate.txt	/*:Colortemplate*
+@shortname-options	colortemplate.txt	/*@shortname-options*
 color-templates	colortemplate.txt	/*color-templates*
 colortemplate#colorspace#approx()	colortemplate.txt	/*colortemplate#colorspace#approx()*
 colortemplate#colorspace#colors_within()	colortemplate.txt	/*colortemplate#colorspace#colors_within()*
@@ -7,4 +8,5 @@ colortemplate#syn#toggle()	colortemplate.txt	/*colortemplate#syn#toggle()*
 colortemplate-functions	colortemplate.txt	/*colortemplate-functions*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
+g:@shortname_italic	colortemplate.txt	/*g:@shortname_italic*
 g:colortemplate_use16	colortemplate.txt	/*g:colortemplate_use16*

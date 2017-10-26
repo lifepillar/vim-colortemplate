@@ -154,6 +154,10 @@ endf
 " }}} Internal state
 
 " Helper functions {{{
+fun! s:slash() abort
+  return !exists("+shellslash") || &shellslash ? '/' : '\'
+endf
+
 " Verify that a color name has been defined before it is used.
 fun! s:is_undefined_color(color)
   return !has_key(s:palette, a:color)
@@ -795,6 +799,8 @@ fun! colortemplate#parse(filename) abort
   lclose
 endf
 
+" a:1 is the optional path to an output directory
+" a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
   try
     call colortemplate#parse(expand('%'))
@@ -809,15 +815,41 @@ fun! colortemplate#make(...)
   endtry
   call s:generate_colorscheme()
   call s:generate_documentation()
+  " Write output
   if !empty(a:1)
-    execute "write".(a:0 > 1 ? a:2 : '') fnameescape(a:1)
-    if fnamemodify(a:1, ':t:r') !=# s:info['shortname']
+    if !isdirectory(a:1)
+      echoerr "[Colortemplate] Path is not a directory:" a:1
+      return
+    endif
+    " Create output directories if they do not exist
+    let l:doc_dir = a:1 . s:slash() . 'doc' . s:slash()
+    let l:col_dir = a:1 . s:slash() . 'colors' . s:slash()
+    for l:dir in [l:doc_dir, l:col_dir]
+      if !isdirectory(l:dir)
+        try
+          call mkdir(l:dir)
+        catch /.*/
+          echoerr "[Colortemplate] Could not create directory:" l:dir
+          return
+        endtry
+      endif
+    endfor
+    " Write help file
+    try
+      execute "write".(a:0 > 1 ? a:2 : '')
+            \ fnameescape(l:doc_dir . s:info['shortname'] . '.txt')
+      " Write colorscheme
+      wincmd p
+      execute "write".(a:0 > 1 ? a:2 : '')
+            \ fnameescape(l:col_dir . s:info['shortname'] . '.vim')
       redraw
       echo "\r"
-      echohl WarningMsg
-      echomsg '[Colortemplate] Filename is different from the value of g:colors_name'
-      echohl None
-    endif
+      echomsg '[Colortemplate] Colorscheme written successfully!'
+    catch /.*/
+      echoerr '[Colortemplate] Error while writing the colorscheme: ' v:exception
+      let g:colortemplate_exit_status = 1
+      return
+    endtry
   endif
 endf
-" }}} Public interface
+  " }}} Public interface

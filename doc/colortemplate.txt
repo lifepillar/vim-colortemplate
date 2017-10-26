@@ -14,7 +14,7 @@ following features:
 - they can be easily customised by the user;
 - they are automatically licensed under the Vim license.
 
-To get started quickly, |:edit| `templates/dark_template.txt`, which is
+To get started quickly, |:edit| `templates/dark.colortemplate`, which is
 located in colortemplate's plugin folder, and type:
 >
   :Colortemplate ~/.vim/colors/dark_template.vim
@@ -28,8 +28,8 @@ with:
 <
 (The template uses only black and white, so it is not an outstanding theme.)
 
-You may use `dark_template.txt`, `light_template.txt` or
-`dark_and_light_template.txt` as starting points for creating your own
+You may use `dark.colortemplate`, `light.colortemplate` or
+`dark_and_light.colortemplate` as starting points for creating your own
 colorscheme. The process is divided in four steps:
 
 1. start by editing your colorscheme's information;

@@ -403,20 +403,24 @@ fun! s:generate_colorscheme()
     call append('$', s:hi_group[s:background]['any'])
   end
   call s:put('')
-  " Add template as a comment (only colors and hi group definitions)
-  " to make the color scheme reproducible.
-  call append('$', map(
-        \              filter(s:template.data,
-        \                     { _,l -> l =~? '^\s*color\s*:'      ||
-        \                              l =~? '^\s*background\s*:' ||
-        \                            !(l =~? '^\s*$'              ||
-        \                              l =~? '^\s*#'              ||
-        \                              l =~? '^\s*\%(\w[^:]*\):'
-        \                             )
-        \                     }
-        \                    ),
-        \              { _,l -> '" ' . l }
-        \    ))
+  " Add template as a comment to make the color scheme reproducible.
+  let l:skip = 0
+  for l:line in s:template.data
+    if l:line =~? '^\s*documentation'
+      let l:skip = 1
+    elseif l:line =~? '^\s*enddocumentation'
+      let l:skip = 0
+      continue
+    endif
+    if l:skip
+      continue
+    endif
+    if l:line =~? '^\s*color\s*:'
+          \ || l:line =~? '^\s*background\s*:'
+          \ || !(l:line =~? '^\s*$' || l:line =~? '^\s*#' || l:line =~? '^\s*\%(\w[^:]*\):')
+      call append('$', '" ' . l:line)
+    endif
+  endfor
 endf
 
 fun! s:generate_documentation()

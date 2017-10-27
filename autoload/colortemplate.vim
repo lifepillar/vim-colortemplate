@@ -577,7 +577,7 @@ fun! s:parse_key_value_pair()
       endif
       let s:uses_background[s:background] = 1
     elseif l:key ==# 'terminalcolors'
-      let l:numcol = map(split(l:val, '\s*,\s*'), { _,v -> str2nr(v) })
+      let l:numcol = uniq(map(split(l:val, '\s*,\s*'), { _,v -> str2nr(v) }))
       if !empty(l:numcol)
         if len(l:numcol) > 2 || (l:numcol[0] != 16 && l:numcol[0] != 256) ||
               \ (len(l:numcol) == 2 && l:numcol[1] != 16 && l:numcol[1] != 256)

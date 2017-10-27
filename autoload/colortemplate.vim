@@ -417,11 +417,12 @@ fun! s:generate_colorscheme()
   call s:print_header()
   call s:put('')
   call s:print_color_details()
+  let l:prefer16colors = (get(s:info['terminalcolors'], 0, 256) == 16)
   for l:numcol in s:info['terminalcolors']
     let s:use16colors = (l:numcol == 16)
-    if len(s:info['terminalcolors']) > 1
+    if len(s:info['terminalcolors']) > 1 " == 2
       let l:not = s:use16colors ? '' : '!'
-      call s:put("if " .l:not."get(g:, 'colortemplate_use16', 0)")
+      call s:put("if " .l:not."get(g:, 'colortemplate_use16', " . l:prefer16colors .")")
     endif
     if s:has_dark_and_light()
       for l:bg in ['dark', 'light']

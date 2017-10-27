@@ -458,8 +458,30 @@ fun! s:generate_colorscheme()
   endfor
 endf
 
+fun! s:predefined_options()
+  call s:add_help('')
+  call s:add_help('=============================================================================='              )
+  call s:add_help('@fullname predefined options              *@shortname-predefined-options*'                   )
+  call s:add_help(''                                                                                            )
+  call s:add_help('                                          *g:@shortname_transp_bg*'                          )
+  call s:add_help('Set to 1 if you want a transparent background. Takes effect only in the'                     )
+  call s:add_help('terminal.'                                                                                   )
+  call s:add_help('>'                                                                                           )
+  call s:add_help('  let g:@shortname_transp_bg = 0'                                                            )
+  call s:add_help('<'                                                                                           )
+  if len(s:info['terminalcolors']) > 1
+    let l:default = (s:info['terminalcolors'][0] == 16                                                          )
+    call s:add_help('                                          *g:@shortname_use16*'                            )
+    call s:add_help('Set to ' . (1-l:default) . ' if you want to use ' .s:info['terminalcolors'][1] . ' colors.')
+    call s:add_help('>'                                                                                         )
+    call s:add_help('  let g:@shortname_use16 = ' . l:default                                                   )
+    call s:add_help('<'                                                                                         )
+  endif
+endf
+
 fun! s:generate_documentation()
   new +setlocal\ ft=help
+  call s:predefined_options()
   for l:line in s:doc
     call s:put(s:interpolate_keywords(l:line))
   endfor

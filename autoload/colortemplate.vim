@@ -133,7 +133,7 @@ fun! s:init()
   " definition consists of a GUI color value, a base-256 color value,
   " a base-16 color value, and a distance between the GUI value and the
   " base-256 value (in this order). Base-16 color values are used instead of
-  " base-256 values when g:colortemplate_use16 is set to 1.
+  " base-256 values when g:<colorscheme>_use16 is set to 1.
   let s:palette                  = {
         \                           'none': ['NONE', 'NONE', 'NONE', 0.0],
         \                           'fg':   ['fg',   'fg',   'fg',   0.0],
@@ -316,7 +316,7 @@ endf
 
 fun! s:print_header()
   if len(s:info['terminalcolors']) > 1
-    let l:limit = "(get(g:, 'colortemplate_use16', 0) ? 16 : 256)"
+    let l:limit = "(get(g:, '" . s:info['shortname'] . "_use16', 0) ? 16 : 256)"
   else
     let l:limit = s:info['terminalcolors'][0]
   endif
@@ -422,7 +422,7 @@ fun! s:generate_colorscheme()
     let s:use16colors = (l:numcol == 16)
     if len(s:info['terminalcolors']) > 1 " == 2
       let l:not = s:use16colors ? '' : '!'
-      call s:put("if " .l:not."get(g:, 'colortemplate_use16', " . l:prefer16colors .")")
+      call s:put("if " .l:not."get(g:, '" . s:info['shortname'] . "_use16', " . l:prefer16colors .")")
     endif
     if s:has_dark_and_light()
       for l:bg in ['dark', 'light']

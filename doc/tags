@@ -10,4 +10,3 @@ colortemplate-options	colortemplate.txt	/*colortemplate-options*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_italic	colortemplate.txt	/*g:@shortname_italic*
 g:colortemplate_no_doc	colortemplate.txt	/*g:colortemplate_no_doc*
-g:colortemplate_use16	colortemplate.txt	/*g:colortemplate_use16*

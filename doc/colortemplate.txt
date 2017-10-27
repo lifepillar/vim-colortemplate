@@ -12,25 +12,25 @@ following features:
 - they have a consistent structure and they are guaranteed to follow best
   practices;
 - they can be easily customised by the user;
-- they are automatically licensed under the Vim license (but a different
-  license may be chosen).
+- they are licensed under the Vim license by default (but the default may be
+  overridden).
 
 To get started quickly, |:edit| `templates/dark.colortemplate`, which is
 located in colortemplate's plugin folder, and type:
 >
   :Colortemplate ~/.vim
 <
-This will open a new tab with two windows: the top window will contain the
-colorscheme derived from the template and the bottom window the colorscheme's
-documentation. Besides, both files will be saved into the specified directory
-(`~/.vim`), under the `colors` and `doc` directories respectively (the
-directories will be created by Colortemplate if they do not exist).
+This command opens a new tab with two windows: one window contains the
+colorscheme derived from the template and the other window displays the
+colorscheme's documentation. Besides, both files are saved into the specified
+directory (`~/.vim`), under the `colors` and `doc` directories respectively
+(the directories are created by Colortemplate if they do not exist).
 
 After generating the colorscheme with the command above, you may load it with:
 >
   colorscheme dark
 <
-(The template uses only black and white, so it is not an outstanding theme.)
+(That template uses only black and white, so it is not an outstanding theme.)
 
 You may use `dark.colortemplate`, `light.colortemplate` or
 `dark_and_light.colortemplate` as starting points for creating your own
@@ -46,16 +46,20 @@ Information about the colorscheme consists of the following mandatory and
 optional fields:
 >
   # Mandatory information
-  Full name:   A unique and attractive name
-  Short name:  all_lowercase_with_no_spaces
-  Author:      Myself <myself@somewhere.org>
-  Maintainer:  Myself <myself@somewhere.org>
+  Full name:       A unique and attractive name
+  Short name:      all_lowercase_with_no_spaces
+  Author:          Myself <myself@somewhere.org>
+  Maintainer:      Myself <myself@somewhere.org>
   
   # Optional information
-  Website:     http://mysite.org
-  Description: A one line description
-  License:     Public domain
+  Website:         http://mysite.org
+  Description:     A one line description
+  License:         Public domain
+  Terminal Colors: 256
 <
+All the fields should be self-descriptive, The `Terminal Colors` field is
+discussed further below.
+
 Color definitions consist of lines with the following form:
 >
   Color: <name> <GUI spec> <base-256 spec> <base-16 spec>
@@ -73,18 +77,28 @@ given as hexadecimal values, as in the example above, or as RGB values:
 >
   Color: white  rgb(255,255,255)  206  White
 <
-Base-256 specifications are used in terminals supporting 256 colors but not
-true colors, or when |termguicolors| is not set. Base-16 colors should be
-given as color constants (see |cterm-colors|). They are not used unless you
-set |g:colortemplate_use16| to 1 before executing the |Colortemplate| command,
-in which case base-256 numbers are ignored and base-16 colors are used
-instead. You should not set |g:colortemplate_use16|, unless you are working
-with a legacy colorscheme. You may define as many or as few colors as you
-like.
+Base-256 or base-16 specifications are used in terminals that support 256
+colors or 16 colors, respectively, but do not support true colors, or when
+|termguicolors| is not set. Whether your colorscheme supports a 256 color
+palette, a 16 color palette, or both, depends on the value of the `Terminal`
+`Colors` field. The possible values are as follows:
+
+- `256`: the colorscheme uses a 256 color palette. In general, this should be
+  the preferred setting for new colorschemes and for colorschemes to be
+  distributed with Vim;
+- `16`: the colorscheme uses a 16 color palette (see |cterm-colors|);
+- `256,16`: the colorscheme falls back to a 256 color palette by default, but
+  a 16 color palette may be enabled by setting `g:<colorscheme>_use16` to `1`,
+  where `<colorscheme>` is the name of your colorscheme;
+- `16,256`: the colorscheme falls back to a 16 color palette by default, but
+  a 256 color palette may be enabled by setting `g:<colorscheme>_use16` to
+  `0`.
 
 In general, only the GUI value is mandatory. Base-256 values may be replaced
-by a `~` symbol, which means that the color should be computed automatically
-based on the GUI value. So, a minimal color definition might look as follows:
+by a `~` symbol, which means that the color should be inferred automatically
+from the GUI value. Base-16 values may be omitted entirely, unless you plan to
+support the use of a 16 color palette. So, a minimal color definition might
+look as follows:
 >
   Color: black #000000 ~
 <
@@ -98,10 +112,17 @@ the following:
 <
 Here, the delta value is the distance between the GUI value (`#9e0006`) and
 the corresponding terminal color (`88`). The used distance is a sophisticated
-variant of the CIELAB ΔE* metric, which takes into the account the perceptual
-characteristics of the human eye. Besides, Colortemplate provides a few
-utility functions to help you find other good (but not optimal in the sense of
-ΔE*) approximations: see |colortemplate-functions|.
+variant of the CIELAB ΔE* metric, which takes into account the perceptual
+characteristics of the human eye. Roughly speaking, colors at distance less
+than 2.3 correspond to "just noticeable differences". The greater the
+distance, the greater the discrepancy between GUI colors and their base-256
+approximations.
+
+In general, the "most similar" terminal color may not be the "best looking"
+color, because the overall look&feel of a colorscheme ultimately depends on
+the interactions among all the colors. Colortemplate provides a few utility
+functions to help you experiment and find other good (but not optimal in the
+sense of ΔE*) approximations: see |colortemplate-functions|.
 
 Highlight group definitions consist of lines with the following form:
 >
@@ -252,11 +273,6 @@ Set to 1 if you do not want to generate the documentation.
 >
   let g:colortemplate_no_doc = 0
 <
-						*g:colortemplate_use16*
-If you want to use the shell's 16 color palette instead of the standard 256
-colors, set this variable to 1, then generate the colorscheme with
-|:Colortemplate| as usual.
-
 ==============================================================================
 Colortemplate command		       	*:Colortemplate*
 

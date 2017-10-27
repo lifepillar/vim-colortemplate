@@ -461,7 +461,7 @@ endf
 fun! s:predefined_options()
   call s:add_help('')
   call s:add_help('=============================================================================='              )
-  call s:add_help('@fullname predefined options              *@shortname-predefined-options*'                   )
+  call s:add_help('@fullname other options                   *@shortname-other-options*'                        )
   call s:add_help(''                                                                                            )
   call s:add_help('                                          *g:@shortname_transp_bg*'                          )
   call s:add_help('Set to 1 if you want a transparent background. Takes effect only in the'                     )

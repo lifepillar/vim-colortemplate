@@ -113,7 +113,6 @@ endf
 
 fun! s:init()
   let g:colortemplate_exit_status = 0
-  let s:use16colors               = get(g:, 'colortemplate_use16', 0)
   let s:info = {
         \ 'fullname': '',
         \ 'shortname': '',
@@ -121,8 +120,10 @@ fun! s:init()
         \ 'maintainer': '',
         \ 'website': '',
         \ 'description': '',
-        \ 'license': ''
+        \ 'license': '',
+        \ 'terminalcolors': [256]
         \ }
+  let s:use16colors = 0
   let s:background                = 'dark' " Current background
   let s:uses_background           = { 'dark': 0, 'light': 0 }
   let s:is_verbatim               = 0 " When set to 1, source is copied (almost) verbatim
@@ -168,7 +169,7 @@ fun! s:add_color(name, gui, base256, base16, delta)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
     throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
   endif
-  " Do not overwrite existing color, but rename it (keep older version for color similarity table)
+  " Do not overwrite existing color, but rename it (keep older version for the color similarity table)
   if has_key(s:palette, a:name) && (s:palette[a:name][0] !=# a:gui || s:palette[a:name][1] !=# a:base256)
     let s:palette[a:name . ' (' .(s:background ==# 'light' ? 'dark' : 'light') .')'] = s:palette[a:name]
   endif
@@ -200,11 +201,11 @@ endf
 fun! s:hlstring(group, fg, bg, guisp, cterm, gui)
   return join([
         \ 'hi', a:group,
-        \ 'ctermfg='   . s:palette[a:fg][s:use16colors ? 2 : 1],
-        \ 'ctermbg='   . s:palette[a:bg][s:use16colors ? 2 : 1],
-        \ 'guifg='     . s:palette[a:fg][0],
-        \ 'guibg='     . s:palette[a:bg][0],
-        \ 'guisp='     . get(s:palette, a:guisp, ['NONE'])[0],
+        \ 'ctermfg=@'   . a:fg,
+        \ 'ctermbg=@'   . a:bg,
+        \ 'guifg=@'     . a:fg,
+        \ 'guibg=@'     . a:bg,
+        \ 'guisp=@'     . empty(a:guisp) ? 'none' : a:guisp,
         \ 'cterm=NONE' . (empty(a:cterm) ? '' : ',' . join(a:cterm, ',')),
         \ 'gui=NONE'   . (empty(a:gui)   ? '' : ',' . join(a:gui,   ','))
         \ ])
@@ -314,6 +315,11 @@ fun! s:put(line)
 endf
 
 fun! s:print_header()
+  if len(s:info['terminalcolors']) > 1
+    let l:limit = "(get(g:, 'colortemplate_use16', 0) ? 16 : 256)"
+  else
+    let l:limit = s:info['terminalcolors'][0]
+  endif
   call setline(1, '" Name:         ' . s:info['fullname']                                             )
   if !empty(s:info['description'])
     call s:put(   '" Description:  ' . s:info['description']                                          )
@@ -327,7 +333,7 @@ fun! s:print_header()
   call s:put  (   '" Last Updated: ' . strftime("%c")                                                 )
   call s:put  (   ''                                                                                  )
   call s:put  (   "if !(has('termguicolors') && &termguicolors) && !has('gui_running')"               )
-  call s:put  (   "      \\ && (!exists('&t_Co') || &t_Co < " . (s:use16colors ? '16)' : '256)')      )
+  call s:put  (   "      \\ && (!exists('&t_Co') || &t_Co < " . l:limit . ')'                         )
   call s:put  (   "  echoerr '[" . s:info['fullname'] . "] There are not enough colors.'"             )
   call s:put  (   '  finish'                                                                          )
   call s:put  (   'endif'                                                                             )
@@ -346,7 +352,7 @@ endf
 
 " Print details about the color palette as comments
 fun! s:print_color_details()
-  if s:use16colors
+  if s:info['terminalcolors'] == [16]
     return
   endif
   call s:put('" Color similarity table')
@@ -378,30 +384,58 @@ fun! s:print_color_details()
   call s:put('')
 endf
 
+fun! s:interpolate_keywords(line)
+  let l:line = substitute(a:line, '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
+  return l:line
+endf
+
+fun! s:interpolate_colors(line)
+  let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[submatch(1)][s:use16colors ? 2 : 1]', 'g')
+  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
+  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
+  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
+  return l:line
+endf
+
+fun! s:print_hi_groups(bg)
+  call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
+  for l:line in s:hi_group[a:bg]['transp']
+    call append('$', s:interpolate_colors(l:line))
+  endfor
+  call s:put("else")
+  for l:line in s:hi_group[a:bg]['opaque']
+    call append('$', s:interpolate_colors(l:line))
+  endfor
+  call s:put("endif")
+  for l:line in s:hi_group[a:bg]['any']
+    call append('$', s:interpolate_colors(l:line))
+  endfor
+endf
+
 fun! s:generate_colorscheme()
   silent tabnew +setlocal\ ft=vim
   call s:print_header()
   call s:put('')
   call s:print_color_details()
-  if s:has_dark_and_light()
-    for l:bg in ['dark', 'light']
-      call s:put("if &background ==# '" .l:bg. "'")
-      call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
-      call append('$', s:hi_group[l:bg]['transp'])
-      call s:put("else")
-      call append('$', s:hi_group[l:bg]['opaque'])
+  for l:numcol in s:info['terminalcolors']
+    let s:use16colors = (l:numcol == 16)
+    if len(s:info['terminalcolors']) > 1
+      let l:not = s:use16colors ? '' : '!'
+      call s:put("if " .l:not."get(g:, 'colortemplate_use16', 0)")
+    endif
+    if s:has_dark_and_light()
+      for l:bg in ['dark', 'light']
+        call s:put("if &background ==# '" .l:bg. "'")
+        call s:print_hi_groups(l:bg)
+        call s:put("endif")
+      endfor
+    else
+      call s:print_hi_groups(s:background)
+    end
+    if len(s:info['terminalcolors']) > 1
       call s:put("endif")
-      call append('$', s:hi_group[l:bg]['any'])
-      call s:put("endif")
-    endfor
-  else
-    call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
-    call append('$', s:hi_group[s:background]['transp'])
-    call s:put("else")
-    call append('$', s:hi_group[s:background]['opaque'])
-    call s:put("endif")
-    call append('$', s:hi_group[s:background]['any'])
-  end
+    endif
+  endfor
   call s:put('')
   " Add template as a comment to make the color scheme reproducible.
   let l:skip = 0
@@ -426,7 +460,7 @@ endf
 fun! s:generate_documentation()
   new +setlocal\ ft=help
   for l:line in s:doc
-    call s:put(l:line)
+    call s:put(s:interpolate_keywords(l:line))
   endfor
 endf
 
@@ -464,15 +498,13 @@ fun! s:parse_verbatim_line()
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    try " to interpolate colors
-      let l:line = substitute(s:template.getl(), '@term\(\w\+\)', '\=s:palette[submatch(1)][s:use16colors ? 2 : 1]', 'g')
-      let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
-      let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
-      let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
+    try " Check that the colors to be interpolated have been defined by attempting a dry substitution
+      call substitute(s:template.getl(), '@\%(term\|gui\)\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
+      call substitute(s:template.getl(), '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
     catch /.*/
       throw 'Undefined color'
     endtry
-    call s:add_line('any', l:line)
+    call s:add_line('any', s:template.getl())
   endif
 endf
 
@@ -483,12 +515,12 @@ fun! s:parse_documentation_line()
       throw "Extra characters after 'enddocumentation'"
     endif
   else
-    try " to interpolate keywords
-      let l:line = substitute(s:template.getl(), '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
+    try " Check that the keywords to be interpolated have been defined by attempting a dry substitution
+      call substitute(s:template.getl(), '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
     catch /.*/
       throw 'Undefined keyword'
     endtry
-    call s:add_help(l:line)
+    call s:add_help(s:template.getl())
   endif
 endf
 
@@ -544,6 +576,16 @@ fun! s:parse_key_value_pair()
         throw 'Background can only be dark or light.'
       endif
       let s:uses_background[s:background] = 1
+    elseif l:key ==# 'terminalcolors'
+      let l:numcol = map(split(l:val, '\s*,\s*'), { _,v -> str2nr(v) })
+      if !empty(l:numcol)
+        if len(l:numcol) > 2 || (l:numcol[0] != 16 && l:numcol[0] != 256) ||
+              \ (len(l:numcol) == 2 && l:numcol[1] != 16 && l:numcol[1] != 256)
+          throw 'Only 16 and/or 256 colors can be specified.'
+        else
+          let s:info['terminalcolors'] = l:numcol
+        endif
+      endif
     elseif !has_key(s:info, l:key)
       throw 'Unknown key: ' . l:key
     else
@@ -830,6 +872,9 @@ fun! colortemplate#make(...)
   if !empty(a:1)
     if !isdirectory(a:1)
       echoerr "[Colortemplate] Path is not a directory:" a:1
+      return
+    elseif filewritable(a:1) != 2
+      echoerr "[Colortemplate] Directory is not writable:" a:1
       return
     endif
   endif

@@ -2,7 +2,7 @@
 
 # Information {{{
 # Mandatory
-Full name:   My Dark Colorscheme
+Full name:   Dark
 Short name:  dark
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
@@ -10,19 +10,16 @@ Maintainer:  Myself <myself@somewhere.org>
 Website:
 Description: Template for dark colorscheme
 License:
+Terminal Colors: 256
 # }}}
 
 # Documentation {{{
 documentation
 ==============================================================================
-@fullname Options                    *@shortname-options*
+@fullname colorscheme                     *@shortname*
 
-                                                    *g:@shortname_transp_bg*
-Set to 1 if you want a transparent background. Takes effect only in the
-terminal.
->
-  let g:@shortname_transp_bg = 0
-<
+DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY, OTHERWISE REMOVE THIS BLOCK.
+
 enddocumentation
 # }}}
 

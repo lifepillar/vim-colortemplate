@@ -5,20 +5,7 @@ Full name: Pablo
 Short name: pablo
 Author: Ron Aaron <ron@ronware.org>
 Maintainer: Lifepillar <lifepillar@lifepillar.me>
-# }}}
-
-# Documentation {{{
-documentation
-==============================================================================
-@fullname Options                    *@shortname-options*
-
-                                                    *g:@shortname_transp_bg*
-Set to 1 if you want a transparent background. Takes effect only in the
-terminal.
->
-  let g:@shortname_transp_bg = 0
-<
-enddocumentation
+Terminal Colors: 16
 # }}}
 
 # Color palette {{{

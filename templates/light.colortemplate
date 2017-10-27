@@ -3,7 +3,7 @@
 # Information {{{
 # Mandatory
 License:
-Full name:   My Light Colorscheme
+Full name:   Light
 Short name:  light
 Author:      Myself <myself@somewhere.org>
 Maintainer:  Myself <myself@somewhere.org>
@@ -15,14 +15,10 @@ Description: Template for a light colorscheme
 # Documentation {{{
 documentation
 ==============================================================================
-@fullname Options                    *@shortname-options*
+@fullname colorscheme                     *@shortname*
 
-                                                    *g:@shortname_transp_bg*
-Set to 1 if you want a transparent background. Takes effect only in the
-terminal.
->
-  let g:@shortname_transp_bg = 0
-<
+DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY, OTHERWISE REMOVE THIS BLOCK.
+
 enddocumentation
 # }}}
 

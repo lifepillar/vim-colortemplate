@@ -7,20 +7,7 @@ Author: morhetz <morhetz@gmail.com>
 Maintainer: Lifepillar <lifepillar@lifepillar.me>
 Website: https://github.com/morhetz/gruvbox/
 Description: Retro groove color scheme
-# }}}
-
-# Documentation {{{
-documentation
-==============================================================================
-@fullname Options                    *@shortname-options*
-
-                                                    *g:@shortname_transp_bg*
-Set to 1 if you want a transparent background. Takes effect only in the
-terminal.
->
-  let g:@shortname_transp_bg = 0
-<
-enddocumentation
+Terminal Colors: 256, 16
 # }}}
 
 Background: dark

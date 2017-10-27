@@ -205,9 +205,9 @@ fun! s:hlstring(group, fg, bg, guisp, cterm, gui)
         \ 'ctermbg=@'   . a:bg,
         \ 'guifg=@'     . a:fg,
         \ 'guibg=@'     . a:bg,
-        \ 'guisp=@'     . empty(a:guisp) ? 'none' : a:guisp,
-        \ 'cterm=NONE' . (empty(a:cterm) ? '' : ',' . join(a:cterm, ',')),
-        \ 'gui=NONE'   . (empty(a:gui)   ? '' : ',' . join(a:gui,   ','))
+        \ 'guisp=@'     . (empty(a:guisp) ? 'none' : a:guisp),
+        \ 'cterm=NONE'  . (empty(a:cterm) ? '' : ',' . join(a:cterm, ',')),
+        \ 'gui=NONE'    . (empty(a:gui)   ? '' : ',' . join(a:gui,   ','))
         \ ])
 endf
 
@@ -818,6 +818,7 @@ fun! s:parse_attributes()
       endif
       call s:token.next()
       let [l:attributes['sp'], l:tsp] = s:parse_color_value()
+      " FIXME
       if !empty(l:tsp)
         let l:attrlist['tsp'] = l:tsp
       endif

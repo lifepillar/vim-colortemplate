@@ -459,7 +459,6 @@ fun! s:generate_colorscheme()
 endf
 
 fun! s:predefined_options()
-  call s:add_help('')
   call s:add_help('=============================================================================='              )
   call s:add_help('@fullname other options                   *@shortname-other-options*'                        )
   call s:add_help(''                                                                                            )

@@ -12,6 +12,7 @@ Website:
 Description: Template for a colorscheme with dark and light variants
 License:
 Terminal Colors: 256
+Option Prefix: dark_and_light
 # }}}
 
 # Documentation {{{

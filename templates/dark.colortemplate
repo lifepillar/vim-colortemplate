@@ -11,6 +11,7 @@ Website:
 Description: Template for dark colorscheme
 License:
 Terminal Colors: 256
+Option Prefix: dark
 # }}}
 
 # Documentation {{{

@@ -10,6 +10,7 @@ Maintainer:  Myself <myself@somewhere.org>
 # Optional
 Website:
 Description: Template for a light colorscheme
+Option Prefix: light
 # }}}
 
 # Documentation {{{

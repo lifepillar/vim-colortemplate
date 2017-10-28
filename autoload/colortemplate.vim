@@ -394,6 +394,7 @@ fun! s:interpolate_colors(line)
   let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
   let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
   let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
+  let l:line = substitute(l:line, '@shortname', s:info['shortname'], 'g')
   return l:line
 endf
 

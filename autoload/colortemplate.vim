@@ -405,7 +405,7 @@ fun! s:interpolate_values(line)
 endf
 
 fun! s:print_hi_groups(bg)
-  call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
+  call s:put("if !has('gui_running') && get(g:, '".s:info['optionprefix']."_transp_bg', 0)")
   for l:line in s:hi_group[a:bg]['transp']
     call append('$', s:interpolate_values(l:line))
   endfor

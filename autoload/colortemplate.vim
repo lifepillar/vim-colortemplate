@@ -618,7 +618,7 @@ fun! s:parse_key_value_pair()
     else
       let s:info[l:key] = l:val
       if l:key ==# 'shortname' && empty(s:info['optionprefix'])
-        let s:info['optionprefix'] = 'shortname'
+        let s:info['optionprefix'] = s:info['shortname']
       endif
     endif
   endif

@@ -1,0 +1,12 @@
+# vim: ft=colortemplate fdm=marker
+# Information {{{
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Color:black rgb(0,0,0) 0 Black
+Color:white #ffffff 255 White
+#Color:green #719e07 ~
+Background: dark
+Normal black white
+

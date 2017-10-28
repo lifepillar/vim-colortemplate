@@ -121,7 +121,8 @@ fun! s:init()
         \ 'website': '',
         \ 'description': '',
         \ 'license': '',
-        \ 'terminalcolors': [256]
+        \ 'terminalcolors': [256],
+        \ 'optionprefix': ''
         \ }
   let s:use16colors = 0
   let s:background                = 'dark' " Current background
@@ -292,6 +293,8 @@ fun! s:check_requirements()
     call s:add_error('Please specify a short name for your colorscheme')
   elseif s:info['shortname'] !~? '^\w\+$'
     call s:add_error('The short name may contain only letters, numbers and underscore.')
+  elseif s:info['optionprefix'] !~? '\w\+$'
+    call s:add_error('The option prefix may contain only letters, numbers and underscore.')
   endif
   if empty(s:info['author'])
     call s:add_error('Please specify an author and the corresponding email')
@@ -316,7 +319,7 @@ endf
 
 fun! s:print_header()
   if len(s:info['terminalcolors']) > 1
-    let l:limit = "(get(g:, '" . s:info['shortname'] . "_use16', 0) ? 16 : 256)"
+    let l:limit = "(get(g:, '" . s:info['optionprefix'] . "_use16', 0) ? 16 : 256)"
   else
     let l:limit = s:info['terminalcolors'][0]
   endif
@@ -389,27 +392,28 @@ fun! s:interpolate_keywords(line)
   return l:line
 endf
 
-fun! s:interpolate_colors(line)
+fun! s:interpolate_values(line)
   let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[submatch(1)][s:use16colors ? 2 : 1]', 'g')
   let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
   let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
   let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
-  let l:line = substitute(l:line, '@shortname', s:info['shortname'], 'g')
+  let l:line = substitute(l:line, '@optionprefix', s:info['optionprefix'], 'g')
+  let l:line = substitute(l:line, '@shortname',    s:info['shortname'], 'g')
   return l:line
 endf
 
 fun! s:print_hi_groups(bg)
   call s:put("if !has('gui_running') && get(g:, '".s:info['shortname']."_transp_bg', 0)")
   for l:line in s:hi_group[a:bg]['transp']
-    call append('$', s:interpolate_colors(l:line))
+    call append('$', s:interpolate_values(l:line))
   endfor
   call s:put("else")
   for l:line in s:hi_group[a:bg]['opaque']
-    call append('$', s:interpolate_colors(l:line))
+    call append('$', s:interpolate_values(l:line))
   endfor
   call s:put("endif")
   for l:line in s:hi_group[a:bg]['any']
-    call append('$', s:interpolate_colors(l:line))
+    call append('$', s:interpolate_values(l:line))
   endfor
 endf
 
@@ -423,7 +427,7 @@ fun! s:generate_colorscheme()
     let s:use16colors = (l:numcol == 16)
     if len(s:info['terminalcolors']) > 1 " == 2
       let l:not = s:use16colors ? '' : '!'
-      call s:put("if " .l:not."get(g:, '" . s:info['shortname'] . "_use16', " . l:prefer16colors .")")
+      call s:put("if " .l:not."get(g:, '" . s:info['optionprefix'] . "_use16', " . l:prefer16colors .")")
     endif
     if s:has_dark_and_light()
       for l:bg in ['dark', 'light']
@@ -463,18 +467,18 @@ fun! s:predefined_options()
   call s:add_help('=============================================================================='              )
   call s:add_help('@fullname other options                   *@shortname-other-options*'                        )
   call s:add_help(''                                                                                            )
-  call s:add_help('                                          *g:@shortname_transp_bg*'                          )
+  call s:add_help('                                          *g:@optionprefix_transp_bg*'                       )
   call s:add_help('Set to 1 if you want a transparent background. Takes effect only in the'                     )
   call s:add_help('terminal.'                                                                                   )
   call s:add_help('>'                                                                                           )
-  call s:add_help('  let g:@shortname_transp_bg = 0'                                                            )
+  call s:add_help('  let g:@optionprefix_transp_bg = 0'                                                         )
   call s:add_help('<'                                                                                           )
   if len(s:info['terminalcolors']) > 1
     let l:default = (s:info['terminalcolors'][0] == 16                                                          )
-    call s:add_help('                                          *g:@shortname_use16*'                            )
+    call s:add_help('                                          *g:@optionprefix_use16*'                         )
     call s:add_help('Set to ' . (1-l:default) . ' if you want to use ' .s:info['terminalcolors'][1] . ' colors.')
     call s:add_help('>'                                                                                         )
-    call s:add_help('  let g:@shortname_use16 = ' . l:default                                                   )
+    call s:add_help('  let g:@optionprefix_use16 = ' . l:default                                                )
     call s:add_help('<'                                                                                         )
   endif
 endf
@@ -613,6 +617,9 @@ fun! s:parse_key_value_pair()
       throw 'Unknown key: ' . l:key
     else
       let s:info[l:key] = l:val
+      if l:key ==# 'shortname' && empty(s:info['optionprefix'])
+        let s:info['optionprefix'] = 'shortname'
+      endif
     endif
   endif
 endf

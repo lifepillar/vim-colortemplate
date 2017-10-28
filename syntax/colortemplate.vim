@@ -11,7 +11,7 @@ syn case    ignore
 syn match   colortemplateComment      "#.*$" contains=colortemplateTodo,@Spell
 syn match   colortemplateKey          "^\s*\(\w[^:]*\):"
 syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortemplateKey nextgroup=colortemplateColorDef
-syn match   colortemplateColorDef     ".\+$" contained contains=colortemplateNumber,colortemplateHexColor,colortemplateFunction,colortemplateConstant,colortemplateCompound
+syn match   colortemplateColorDef     ".\+$" contained contains=colortemplateNumber,colortemplateHexColor,colortemplateFunction,colortemplateConstant,colortemplateCompound,colortemplateComment
 syn match   colortemplateNumber       "\d\+" contained
 syn match   colortemplateArrow        "->"
 syn match   colortemplateHexColor     "#[a-f0-9]\{6\}" contained

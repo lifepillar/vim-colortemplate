@@ -454,4 +454,13 @@ fun! Test_CT_commented_hex_color()
   call assert_notequal(l:src, l:tgt)
 endf
 
+fun! Test_CT_comments_after_hi_group_defs()
+  edit test34.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
 call RunBabyRun('CT')

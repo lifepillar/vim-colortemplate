@@ -796,7 +796,7 @@ endf
 fun! s:parse_attributes()
   let l:attributes = { 'cterm': [], 'gui': [], 'sp': '' }
 
-  while s:token.next().kind !=# 'EOL'
+  while s:token.next().kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
     if s:token.kind !=# 'WORD'
       throw 'Invalid attributes'
     endif

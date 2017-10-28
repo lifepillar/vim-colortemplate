@@ -444,4 +444,14 @@ fun! Test_CT_invalid_short_name()
   lclose
   bwipe
 endf
+
+fun! Test_CT_commented_hex_color()
+  edit test33.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
 call RunBabyRun('CT')

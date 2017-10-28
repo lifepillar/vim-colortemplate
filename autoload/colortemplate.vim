@@ -90,7 +90,7 @@ fun! s:token.next() dict
     let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\d\+', self.pos - 1)
     let self.kind = 'NUM'
   elseif l:char ==# '#'
-    if match(s:template.getl(), '[0-9a-f]\{6}', self.pos) > -1
+    if match(s:template.getl(), '^[0-9a-f]\{6}', self.pos) > -1
       let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
     else

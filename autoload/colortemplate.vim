@@ -293,6 +293,8 @@ fun! s:check_requirements()
     call s:add_error('Please specify a short name for your colorscheme')
   elseif s:info['shortname'] !~? '^\w\+$'
     call s:add_error('The short name may contain only letters, numbers and underscore.')
+  elseif empty(s:info['optionprefix'])
+    let s:info['optionprefix'] = s:info['shortname']
   elseif s:info['optionprefix'] !~? '\w\+$'
     call s:add_error('The option prefix may contain only letters, numbers and underscore.')
   endif

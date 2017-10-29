@@ -83,10 +83,10 @@ fun! s:token.next() dict
   if empty(l:char)
     let self.kind = 'EOL'
     let self.spos = len(s:template.getl()) - 1 " For correct error location
-  elseif l:char =~? '\a'
+  elseif l:char =~? '\m\a'
     let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\w\+', self.pos - 1)
     let self.kind = 'WORD'
-  elseif l:char =~# '[0-9]'
+  elseif l:char =~# '\m[0-9]'
     let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\d\+', self.pos - 1)
     let self.kind = 'NUM'
   elseif l:char ==# '#'
@@ -215,7 +215,7 @@ endf
 " The Normal highlight group needs special treatment.
 fun! s:check_normal_group(hi_group)
   let l:hi_group = a:hi_group
-  if l:hi_group['fg'] =~# '^\%(fg\|bg\)$' || l:hi_group['bg'] =~# '^\%(fg\|bg\)$'
+  if l:hi_group['fg'] =~# '\m^\%(fg\|bg\)$' || l:hi_group['bg'] =~# '\m^\%(fg\|bg\)$'
     throw "The colors for Normal cannot be 'fg' or 'bg'"
   endif
   if match(l:hi_group['cterm'], '\%(inv\|rev\)erse') > -1 || match(l:hi_group['gui'], '\%(inv\|rev\)erse') > -1
@@ -257,11 +257,11 @@ fun! s:check_requirements()
   endif
   if empty(s:info['shortname'])
     call s:add_error('Please specify a short name for your colorscheme')
-  elseif s:info['shortname'] !~? '^\w\+$'
+  elseif s:info['shortname'] !~? '\m^\w\+$'
     call s:add_error('The short name may contain only letters, numbers and underscore.')
   elseif empty(s:info['optionprefix'])
     let s:info['optionprefix'] = s:info['shortname']
-  elseif s:info['optionprefix'] !~? '\w\+$'
+  elseif s:info['optionprefix'] !~? '\m\w\+$'
     call s:add_error('The option prefix may contain only letters, numbers and underscore.')
   endif
   if empty(s:info['author'])
@@ -337,7 +337,7 @@ fun! s:print_color_details()
         \      : (isnan(s:palette[c2][3]) ? -1 : (s:palette[c1][3] < s:palette[c2][3] ? -1 : (s:palette[c1][3] > s:palette[c2][3] ? 1 : 0)))
         \ })
   for l:color in l:color_names
-    if l:color =~? '^\%(fg\|bg\|none\)$'
+    if l:color =~? '\m^\%(fg\|bg\|none\)$'
       continue
     endif
     let l:colgui = s:palette[l:color][0]
@@ -407,18 +407,18 @@ fun! s:generate_colorscheme()
   " Add template as a comment to make the color scheme reproducible.
   let l:skip = 0
   for l:line in s:template.data
-    if l:line =~? '^\s*documentation'
+    if l:line =~? '\m^\s*documentation'
       let l:skip = 1
-    elseif l:line =~? '^\s*enddocumentation'
+    elseif l:line =~? '\m^\s*enddocumentation'
       let l:skip = 0
       continue
     endif
     if l:skip
       continue
     endif
-    if l:line =~? '^\s*color\s*:'
-          \ || l:line =~? '^\s*background\s*:'
-          \ || !(l:line =~? '^\s*$' || l:line =~? '^\s*#' || l:line =~? '^\s*\%(\w[^:]*\):')
+    if l:line =~? '\m^\s*color\s*:'
+          \ || l:line =~? '\m^\s*background\s*:'
+          \ || !(l:line =~? '\m^\s*$' || l:line =~? '\m^\s*#' || l:line =~? '\m^\s*\%(\w[^:]*\):')
       call append('$', '" ' . l:line)
     endif
   endfor
@@ -473,9 +473,9 @@ endf
 
 " Parser {{{
 fun! s:parse_verbatim_line()
-  if s:template.getl() =~? '^\s*endverbatim'
+  if s:template.getl() =~? '\m^\s*endverbatim'
     let s:is_verbatim = 0
-    if s:template.getl() !~? '^\s*endverbatim\s*$'
+    if s:template.getl() !~? '\m^\s*endverbatim\s*$'
       throw "Extra characters after 'endverbatim'"
     endif
   else
@@ -491,9 +491,9 @@ fun! s:parse_verbatim_line()
 endf
 
 fun! s:parse_documentation_line()
-  if s:template.getl() =~? '^\s*enddocumentation'
+  if s:template.getl() =~? '\m^\s*enddocumentation'
     let s:is_documentation = 0
-    if s:template.getl() !~? '^\s*enddocumentation\s*$'
+    if s:template.getl() !~? '\m^\s*enddocumentation\s*$'
       throw "Extra characters after 'enddocumentation'"
     endif
   else
@@ -522,7 +522,7 @@ fun! s:parse_line()
       if s:token.next().kind !=# 'EOL'
         throw "Extra characters after 'documentation'"
       endif
-    elseif s:template.getl() =~? ':' " Look ahead
+    elseif s:template.getl() =~? '\m:' " Look ahead
       call s:parse_key_value_pair()
     else
       call s:parse_hi_group_def()
@@ -542,7 +542,7 @@ fun! s:parse_key_value_pair()
   else " Generic key-value pair
     let l:key_tokens = [s:token.value]
     while s:token.next().kind !=# ':'
-      if s:token.kind !=# 'WORD' || s:token.value !~? '^\a\+$'
+      if s:token.kind !=# 'WORD' || s:token.value !~? '\m^\a\+$'
         throw 'Only letters from a to z are allowed in keys'
       endif
       call add(l:key_tokens, s:token.value)
@@ -550,9 +550,9 @@ fun! s:parse_key_value_pair()
     let l:key = tolower(join(l:key_tokens, ''))
     let l:val = matchstr(s:template.getl(), '\s*\zs.*$', s:token.pos)
     if l:key ==# 'background'
-      if l:val =~? '^dark\s*$'
+      if l:val =~? '\m^dark\s*$'
         let s:background = 'dark'
-      elseif l:val =~? '^light\s*$'
+      elseif l:val =~? '\m^light\s*$'
         let s:background = 'light'
       else
         throw 'Background can only be dark or light.'
@@ -697,7 +697,7 @@ fun! s:parse_base_16_value()
 endf
 
 fun! s:parse_hi_group_def()
-  if s:template.getl() =~# '->' " Look ahead
+  if s:template.getl() =~# '\m->' " Look ahead
     return s:parse_linked_group_def()
   endif
 

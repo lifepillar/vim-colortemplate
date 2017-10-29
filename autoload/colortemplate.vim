@@ -23,8 +23,8 @@
 " <HiGroupDef>                ::= <LinkedGroup> | <BaseGroup>
 " <LinkedGroup>               ::= <HiGroupName> -> <HiGroupName>
 " <BaseGroup>                 ::= <HiGroupName> <FgColor> <BgColor> <Attributes>
-" <FgColor>                   ::= <ColorName> | <ColorName> / <ColorName>
-" <BgColor>                   ::= <ColorName> | <ColorName> / <ColorName>
+" <FgColor>                   ::= <ColorName>
+" <BgColor>                   ::= <ColorName>
 " <Attributes>                ::= <StyleDef>*
 " <StyleDef>                  ::= t[term] = <AttrList> | g[ui] = <AttrList> | guisp = <ColorName> | s = <ColorName> | <AttrList>
 " <AttrList>                  ::= <Attr> [, <AttrList]
@@ -97,7 +97,7 @@ fun! s:token.next() dict
       let self.value = '#'
       let self.kind = 'COMMENT'
     endif
-  elseif l:char =~# "[:=().,'->/~]"
+  elseif l:char =~# "[:=().,'->~]"
     let self.value = l:char
     let self.kind = l:char
   else
@@ -142,16 +142,16 @@ fun! s:init()
         \ }
 
   " Dictionary to store highlight group definitions. Definitions for dark and
-  " light background are kept distinct. Besides, for each background type, we
-  " distinguish among (a) definitions that must be applied only when the
-  " background is opaque, (b) definitions that must be applied only when the
-  " background is transparent, and (c) definitions that apply unconditionally.
-  let s:hi_group                 = {}
-  let s:hi_group['dark']         = { 'opaque': [], 'transp': [], 'any': [] }
-  let s:hi_group['light']        = { 'opaque': [], 'transp': [], 'any': [] }
+  " light background are kept distinct. Each element in each list is a line of
+  " the output.
+  let s:hi_group                 = { 'dark': [], 'light': [] }
 
-  let s:normal_group_defined     = { 'dark': 0, 'light': 0 }
+  " List to store the lines of the help file.
   let s:doc                      = [] " For help file
+
+  " Flags to tell whether the Normal group has been defined for a given
+  " backround.
+  let s:normal_group_defined     = { 'dark': 0, 'light': 0 }
 endf
 " }}} Internal state
 
@@ -180,8 +180,8 @@ endf
 " Store a line to send to the output.
 " scope must be 'opaque', 'transp', or 'any'.
 " definition is the line as it should appear in the output.
-fun! s:add_line(scope, definition)
-  call add(s:hi_group[s:background][a:scope], a:definition)
+fun! s:add_line(definition)
+  call add(s:hi_group[s:background], a:definition)
 endf
 
 " Store a line to send to the help file.
@@ -215,16 +215,8 @@ endf
 " The Normal highlight group needs special treatment.
 fun! s:check_normal_group(hi_group)
   let l:hi_group = a:hi_group
-  if !empty(s:hi_group[s:background]['opaque']) || !empty(s:hi_group[s:background]['any'])
-    throw 'The Normal highlight group for ' .s:background. ' background must be the first defined group'
-  endif
-  if !has_key(l:hi_group, 'tbg')
-    let l:hi_group['tbg'] = 'none' " Transparent background
-  elseif l:hi_group['tbg'] !=# 'none'
-    throw "Alternate background for Normal group can only be 'none'"
-  endif
-  if l:hi_group['fg'] =~# '^\%(none\|fg\|bg\)$' || l:hi_group['bg'] =~# '^\%(none\|fg\|bg\)$'
-    throw "The colors for Normal cannot be 'none', 'fg', or 'bg'"
+  if l:hi_group['fg'] =~# '^\%(fg\|bg\)$' || l:hi_group['bg'] =~# '^\%(fg\|bg\)$'
+    throw "The colors for Normal cannot be 'fg' or 'bg'"
   endif
   if match(l:hi_group['cterm'], '\%(inv\|rev\)erse') > -1 || match(l:hi_group['gui'], '\%(inv\|rev\)erse') > -1
     throw "Do not use reverse mode for the Normal group"
@@ -233,44 +225,18 @@ fun! s:check_normal_group(hi_group)
   return l:hi_group
 endf
 
-" Returns a string containing a highlight group definition.
+" Adds a string containing a highlight group definition.
 fun! s:build_hi_group_def(hi_group)
   if a:hi_group['name'] ==# 'Normal'
-    let l:hi_group = s:check_normal_group(a:hi_group)
+    let l:hg = s:check_normal_group(a:hi_group)
   else
-    let l:hi_group = a:hi_group
+    let l:hg = a:hi_group
   endif
-  if has_key(l:hi_group, 'tfg') || has_key(l:hi_group, 'tbg') || has_key(l:hi_group, 'tsp')
-    call s:add_line('opaque', s:hlstring(
-          \                           l:hi_group['name'],
-          \                           l:hi_group['fg'],
-          \                           l:hi_group['bg'],
-          \                           l:hi_group['sp'],
-          \                           l:hi_group['cterm'],
-          \                           l:hi_group['gui']
-          \ ))
-    call s:add_line('transp', s:hlstring(
-          \                           l:hi_group['name'],
-          \                           get(l:hi_group, 'tfg', l:hi_group['fg']),
-          \                           get(l:hi_group, 'tbg', l:hi_group['bg']),
-          \                           get(l:hi_group, 'tsp', l:hi_group['sp']),
-          \                           l:hi_group['cterm'],
-          \                           l:hi_group['gui']
-          \ ))
-  else
-    call s:add_line('any', s:hlstring(
-          \                           l:hi_group['name'],
-          \                           l:hi_group['fg'],
-          \                           l:hi_group['bg'],
-          \                           l:hi_group['sp'],
-          \                           l:hi_group['cterm'],
-          \                           l:hi_group['gui']
-          \ ))
-  endif
+  call s:add_line(s:hlstring(l:hg['name'], l:hg['fg'], l:hg['bg'], l:hg['sp'], l:hg['cterm'], l:hg['gui']))
 endf
 
 fun! s:add_linked_group_def(src, tgt)
-  call add(s:hi_group[s:background]['any'], 'hi! link ' . a:src . ' ' . a:tgt)
+  call add(s:hi_group[s:background], 'hi! link ' . a:src . ' ' . a:tgt)
 endf
 
 fun! s:has_dark_and_light()
@@ -405,16 +371,7 @@ fun! s:interpolate_values(line)
 endf
 
 fun! s:print_hi_groups(bg)
-  call s:put("if !has('gui_running') && get(g:, '".s:info['optionprefix']."_transp_bg', 0)")
-  for l:line in s:hi_group[a:bg]['transp']
-    call append('$', s:interpolate_values(l:line))
-  endfor
-  call s:put("else")
-  for l:line in s:hi_group[a:bg]['opaque']
-    call append('$', s:interpolate_values(l:line))
-  endfor
-  call s:put("endif")
-  for l:line in s:hi_group[a:bg]['any']
+  for l:line in s:hi_group[a:bg]
     call append('$', s:interpolate_values(l:line))
   endfor
 endf
@@ -466,18 +423,12 @@ fun! s:generate_colorscheme()
 endf
 
 fun! s:predefined_options()
-  call s:add_help('=============================================================================='              )
-  call s:add_help('@fullname other options                   *@shortname-other-options*'                        )
-  call s:add_help(''                                                                                            )
-  call s:add_help('                                          *g:@optionprefix_transp_bg*'                       )
-  call s:add_help('Set to 1 if you want a transparent background. Takes effect only in the'                     )
-  call s:add_help('terminal.'                                                                                   )
-  call s:add_help('>'                                                                                           )
-  call s:add_help('  let g:@optionprefix_transp_bg = 0'                                                         )
-  call s:add_help('<'                                                                                           )
   if len(s:info['terminalcolors']) > 1
-    let l:default = (s:info['terminalcolors'][0] == 16                                                          )
+    let l:default = (s:info['terminalcolors'][0] == 16)
+    call s:add_help('=============================================================================='            )
+    call s:add_help('@fullname other options                   *@shortname-other-options*'                      )
     call s:add_help('                                          *g:@optionprefix_use16*'                         )
+    call s:add_help(''                                                                                          )
     call s:add_help('Set to ' . (1-l:default) . ' if you want to use ' .s:info['terminalcolors'][1] . ' colors.')
     call s:add_help('>'                                                                                         )
     call s:add_help('  let g:@optionprefix_use16 = ' . l:default                                                )
@@ -516,7 +467,6 @@ fun! s:save_buffer(path, filename, overwrite)
     return
   endtry
 endf
-
 " }}} Helper functions
 
 " Parser {{{
@@ -527,13 +477,14 @@ fun! s:parse_verbatim_line()
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    try " Check that the colors to be interpolated have been defined by attempting a dry substitution
-      call substitute(s:template.getl(), '@\%(term\|gui\)\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
-      call substitute(s:template.getl(), '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
+    try " Check that the colors and keywords to be interpolated have been defined by attempting a dry substitution
+      let l:line = substitute(s:template.getl(), '@\%(term\|gui\)\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
+      let l:line = substitute(l:line, '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
+      call substitute(l:line, '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
     catch /.*/
-      throw 'Undefined color'
+      throw 'Undefined color or keyword'
     endtry
-    call s:add_line('any', s:template.getl())
+    call s:add_line(s:template.getl())
   endif
 endf
 
@@ -755,18 +706,12 @@ fun! s:parse_hi_group_def()
   if s:token.next().kind !=# 'WORD'
     throw 'Foreground color name missing'
   endif
-  let [l:hi_group['fg'], l:tfg] = s:parse_color_value()
-  if !empty(l:tfg)
-    let l:hi_group['tfg'] = l:tfg
-  endif
+  let l:hi_group['fg'] = s:parse_color_value()
   " Background color
   if s:token.next().kind !=# 'WORD'
     throw 'Background color name missing'
   endif
-  let [l:hi_group['bg'], l:tbg] = s:parse_color_value()
-  if !empty(l:tbg)
-    let l:hi_group['tbg'] = l:tbg
-  endif
+  let l:hi_group['bg'] = s:parse_color_value()
 
   call extend(l:hi_group, s:parse_attributes())
 
@@ -774,32 +719,12 @@ fun! s:parse_hi_group_def()
   call s:build_hi_group_def(l:hi_group)
 endf
 
-" A color value has the form <name> or <name>/<name>, where <name> are
-" user-defined color names.
 fun! s:parse_color_value()
   let l:color = s:token.value
   if s:is_undefined_color(l:color)
     throw 'Undefined color name: ' . l:color
   endif
-  let l:transp = ''
-  if s:token.peek().kind ==# '/'
-    if s:token.next().next().kind !=# 'WORD'
-      throw 'Missing transparent color name'
-    endif
-    let l:transp = s:token.value
-    if s:is_undefined_color(l:transp)
-      throw 'Undefined color name: ' . l:transp
-    endif
-  endif
-  if l:transp ==# 'bg'
-    throw "Transparent color cannot be 'bg'"
-  endif
-  " Set transparent color to 'none' when the color is 'bg' and no transparent
-  " color has been specified by the user
-  if l:color ==# 'bg' && empty(l:transp)
-    let l:transp = 'none'
-  endif
-  return [l:color, l:transp]
+  return l:color
 endf
 
 fun! s:parse_attributes()
@@ -827,11 +752,7 @@ fun! s:parse_attributes()
         throw "Expected = symbol after 'guisp'"
       endif
       call s:token.next()
-      let [l:attributes['sp'], l:tsp] = s:parse_color_value()
-      " FIXME
-      if !empty(l:tsp)
-        let l:attrlist['tsp'] = l:tsp
-      endif
+      let l:attributes['sp'] = s:parse_color_value()
     else
       let l:attrlist = s:parse_attr_list()
       let l:attributes['cterm'] += l:attrlist

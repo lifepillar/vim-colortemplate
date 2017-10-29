@@ -97,7 +97,7 @@ fun! s:token.next() dict
       let self.value = '#'
       let self.kind = 'COMMENT'
     endif
-  elseif l:char =~# "[:=().,'->~]"
+  elseif match(l:char, "[:=.,'>~)(-]") > -1
     let self.value = l:char
     let self.kind = l:char
   else

@@ -484,7 +484,7 @@ fun! s:parse_verbatim_line()
       let l:line = substitute(l:line, '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
       call substitute(l:line, '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
     catch /.*/
-      throw 'Undefined color or keyword'
+      throw 'Undefined @ value'
     endtry
     call s:add_line(s:template.getl())
   endif

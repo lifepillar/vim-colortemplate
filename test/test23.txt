@@ -11,6 +11,6 @@ ColorColumn fg bg #ffffff
 ColorColumn fg bg ,reverse
 ColorColumn fg bg bold,,italic
 ColorColumn fg bg bold,12
-ColorColumn fg bg t/bold
+ColorColumn fg bg t.bold
 ColorColumn fg bg t==bold
-ColorColumn fg bg g/bold
+ColorColumn fg bg g(bold

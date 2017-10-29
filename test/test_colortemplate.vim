@@ -39,7 +39,7 @@ fun! Test_CT_fg_bg_none_colors()
   call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:loclist[0]['text'])
   call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:loclist[1]['text'])
   call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:loclist[2]['text'])
-  call assert_equal("The colors for Normal cannot be 'none', 'fg', or 'bg'", l:loclist[3]['text'])
+  call assert_equal("The colors for Normal cannot be 'fg' or 'bg'", l:loclist[3]['text'])
   call assert_equal("Please define the Normal highlight group", l:loclist[4]['text'])
   lclose
   bwipe
@@ -47,11 +47,11 @@ endf
 
 fun! Test_CT_Normal_must_be_first()
   edit test5.txt
+  let l:src = bufnr('%')
   Colortemplate
-  let l:loclist = getloclist(0)
-  call assert_equal(2, len(l:loclist))
-  call assert_equal("The Normal highlight group for dark background must be the first defined group", l:loclist[0]['text'])
-  call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
 endf
 
 fun! Test_CT_Normal_alt_background()
@@ -59,7 +59,9 @@ fun! Test_CT_Normal_alt_background()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(2, len(l:loclist))
-  call assert_equal("Alternate background for Normal group can only be 'none'", l:loclist[0]['text'])
+  call assert_equal("Invalid token", l:loclist[0]['text'])
+  call assert_equal(9, l:loclist[0]['lnum'])
+  call assert_equal(19, l:loclist[0]['col'])
   call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
 endf
 
@@ -88,13 +90,13 @@ fun! Test_CT_undefined_color_in_verbatim_block()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(4, len(l:loclist))
-  call assert_equal("Undefined color", l:loclist[0]['text'])
+  call assert_equal("Undefined @ value", l:loclist[0]['text'])
   call assert_equal(11, l:loclist[0]['lnum'])
-  call assert_equal("Undefined color", l:loclist[1]['text'])
+  call assert_equal("Undefined @ value", l:loclist[1]['text'])
   call assert_equal(12, l:loclist[1]['lnum'])
-  call assert_equal("Undefined color", l:loclist[2]['text'])
+  call assert_equal("Undefined @ value", l:loclist[2]['text'])
   call assert_equal(13, l:loclist[2]['lnum'])
-  call assert_equal("Undefined color", l:loclist[3]['text'])
+  call assert_equal("Undefined @ value", l:loclist[3]['text'])
   call assert_equal(14, l:loclist[3]['lnum'])
 endf
 
@@ -298,12 +300,12 @@ fun! Test_CT_parse_hi_group_def()
   call assert_equal('Background color name missing', l:loclist[1]['text'])
   call assert_equal(11, l:loclist[1]['lnum'])
   call assert_equal(14, l:loclist[1]['col'])
-  call assert_equal('Missing transparent color name', l:loclist[2]['text'])
+  call assert_equal('Invalid token', l:loclist[2]['text'])
   call assert_equal(12, l:loclist[2]['lnum'])
   call assert_equal(18, l:loclist[2]['col'])
-  call assert_equal('Undefined color name: reverse', l:loclist[3]['text'])
+  call assert_equal('Invalid token', l:loclist[3]['text'])
   call assert_equal(13, l:loclist[3]['lnum'])
-  call assert_equal(20, l:loclist[3]['col'])
+  call assert_equal(18, l:loclist[3]['col'])
   lclose
   bwipe
 endf
@@ -370,18 +372,6 @@ fun! Test_CT_parse_linked_group_errors()
   call assert_equal('Expected highlight group name', l:loclist[2]['text'])
   call assert_equal(12, l:loclist[2]['lnum'])
   call assert_equal(17, l:loclist[2]['col'])
-  lclose
-  bwipe
-endf
-
-fun! Test_CT_transparent_color_is_bg()
-  edit test26.txt
-  Colortemplate
-  let l:loclist = getloclist(0)
-  call assert_equal(1, len(l:loclist))
-  call assert_equal("Transparent color cannot be 'bg'", l:loclist[0]['text'])
-  call assert_equal(10, l:loclist[0]['lnum'])
-  call assert_equal(25, l:loclist[0]['col'])
   lclose
   bwipe
 endf

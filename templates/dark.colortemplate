@@ -19,8 +19,14 @@ documentation
 ==============================================================================
 @fullname colorscheme                     *@shortname*
 
-DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY, OTHERWISE REMOVE THIS BLOCK.
+DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY.
 
+                                          *g:@optionprefix_transp_bg*
+Set to 1 if you want a transparent background. Takes effect only in the
+terminal.
+>
+  let g:@optionprefix_transp_bg = 0
+<
 enddocumentation
 # }}}
 
@@ -48,9 +54,21 @@ Color: brightwhite          #ffffff                231      White
 Background: dark
 
 # Default highlight groups {{{
-# Comment out (do not delete) the definitions that you want to keep at their default.
+verbatim
+if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+endverbatim
+    # Transparent background
+    Normal white none
+verbatim
+else
+endverbatim
+    # Opaque background
+    Normal white black
+verbatim
+endif
+endverbatim
+
 # Group              Foreground        Background        Attributes
-Normal               white             black
 ColorColumn          fg                bg
 Conceal              none              none
 Cursor               white             black

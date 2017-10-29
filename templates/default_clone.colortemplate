@@ -9,7 +9,20 @@ Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # Optional
 Website: https://github.com/vim/vim/blob/master/src/syntax.c
 Description: A nearly exact clone of Vim's default colorscheme
-# Note: let g:default_transp_bg=1 to be more faithful to Vim's default colorscheme
+# }}}
+
+# Documentation {{{
+documentation
+==============================================================================
+@fullname colorscheme                     *@shortname*
+
+                                          *g:@optionprefix_transp_bg*
+Set to 0 if you want an opaque background. Takes effect only in the
+terminal.
+>
+  let g:@optionprefix_transp_bg = 1
+<
+enddocumentation
 # }}}
 
 # Color palette {{{
@@ -67,8 +80,21 @@ Color: white                rgb(255, 255, 255)    15        White
 Background: light
 
 # Default highlight groups for light variant {{{
+verbatim
+if has('gui_running') || get(g:, '@optionprefix_transp_bg', 1)
+endverbatim
+    # Opaque background
+    Normal black white
+verbatim
+else
+endif
+endverbatim
+    # Transparent background
+    Normal white none
+verbatim
+endverbatim
+
 # Group              Foreground        Background        Attributes
-Normal               black/white       white/none
 ColorColumn          none              lightred
 Conceal              lightgrey         darkgrey
 Cursor               white             black
@@ -173,8 +199,21 @@ CursorIM             none              fg
 Background: dark
 
 # Default highlight groups for dark variant {{{
+verbatim
+if has('gui_running') || get(g:, '@optionprefix_transp_bg', 1)
+endverbatim
+    # Opaque background
+    Normal white black
+verbatim
+else
+endif
+endverbatim
+    # Transparent background
+    Normal white none
+verbatim
+endverbatim
+
 # Group              Foreground        Background        Attributes
-Normal               white/white       black/none
 ColorColumn          none              darkred
 Conceal              lightgrey         darkgrey
 Cursor               white             black

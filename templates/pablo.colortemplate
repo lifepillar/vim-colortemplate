@@ -8,6 +8,20 @@ Maintainer: Lifepillar <lifepillar@lifepillar.me>
 Terminal Colors: 16
 # }}}
 
+# Documentation {{{
+documentation
+==============================================================================
+@fullname colorscheme                     *@shortname*
+
+                                          *g:@optionprefix_transp_bg*
+Set to 1 if you want a transparent background. Takes effect only in the
+terminal.
+>
+  let g:@optionprefix_transp_bg = 0
+<
+enddocumentation
+# }}}
+
 # Color palette {{{
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                #000000                0        0
@@ -27,8 +41,21 @@ Color: brightwhite          #ffffff              255        15
 Background: dark
 
 # Default highlight groups {{{
+verbatim
+if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+endverbatim
+    # Transparent background
+    Normal none none
+verbatim
+else
+endverbatim
+    # Opaque background
+    Normal brightwhite black
+verbatim
+endif
+endverbatim
+
 # Group              Foreground        Background        Attributes
-Normal               brightwhite/none  black/none
 # ColorColumn          fg                bg
 # Conceal              none              none
 # Cursor               white             black

@@ -10,6 +10,20 @@ Description: Retro groove color scheme
 Terminal Colors: 256, 16
 # }}}
 
+# Documentation {{{
+documentation
+==============================================================================
+@fullname colorscheme                     *@shortname*
+
+                                          *g:@optionprefix_transp_bg*
+Set to 1 if you want a transparent background. Takes effect only in the
+terminal.
+>
+  let g:@optionprefix_transp_bg = 0
+<
+enddocumentation
+# }}}
+
 Background: dark
 
 # Color palette for dark background {{{
@@ -32,15 +46,34 @@ Color: light1            rgb(235, 219, 178)    ~           White
 # }}}
 
 # Default highlight groups {{{
+verbatim
+if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+endverbatim
+    # Transparent background
+    Normal       light1 none
+    CursorLineNr yellow none
+    FoldColumn   grey   none
+    SignColumn   none   none
+    VertSplit    dark3  none
+verbatim
+else
+endverbatim
+    # Opaque background
+    Normal       light1 dark0
+    CursorLineNr yellow dark1
+    FoldColumn   grey   dark1
+    SignColumn   none   dark1
+    VertSplit    dark3  dark0
+verbatim
+endif
+endverbatim
 
-# Group                          Foreground Background Attributes
-Normal                           light1 dark0
+# Group              Foreground        Background        Attributes
 ColorColumn                      none   dark1
 Conceal                          blue   none
 Cursor                           none   none    inverse
 CursorColumn                  -> CursorLine
 CursorLine                       none   dark1
-CursorLineNr                     yellow dark1/none
 DiffAdd                          green  bg      inverse
 DiffChange                       aqua   bg      inverse
 DiffDelete                       red    bg      inverse
@@ -49,7 +82,6 @@ Directory                        green  none    bold
 EndOfBuffer                      dark0  none
 Error                            red    bg      bold,reverse
 ErrorMsg                         dark0  red     bold
-FoldColumn                       grey   dark1/none
 Folded                           grey   dark1   italic
 IncSearch                        orange bg      inverse
 LineNr                           dark4  none
@@ -64,7 +96,6 @@ PmenuThumb                       none   dark4
 Question                         orange none    bold
 QuickFixLine                  -> Search
 Search                           yellow bg      inverse
-SignColumn                       none   dark1/none
 SpecialKey                       dark2  none
 SpellBad                         none   none    t=underline g=undercurl s=blue
 SpellCap                         none   none    t=underline g=undercurl s=red
@@ -78,7 +109,6 @@ TabLine                       -> TabLineFill
 TabLineFill                      dark4  dark1
 TabLineSel                       green  dark1
 Title                            green  none    bold
-VertSplit                        dark3  dark0/none
 Visual                           none   dark3
 VisualNOS                     -> Visual
 WarningMsg                       red    none    bold
@@ -694,15 +724,34 @@ Color: light0            rgb(253, 244, 193)    ~           White
 # }}}
 
 # Default highlight groups {{{
+verbatim
+if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+endverbatim
+    # Transparent background
+    Normal       dark1  none
+    CursorLineNr yellow none
+    FoldColumn   grey   none
+    SignColumn   none   none
+    VertSplit    light3 none
+verbatim
+else
+endverbatim
+    # Opaque background
+    Normal       dark1  light0
+    CursorLineNr yellow light1
+    FoldColumn   grey   light1
+    SignColumn   none   light1
+    VertSplit    light3 light0
+verbatim
+endif
+endverbatim
 
-# Group                          Foreground Background Attributes
-Normal                           dark1  light0
+# Group              Foreground        Background        Attributes
 ColorColumn                      none   light1
 Conceal                          blue   none
 Cursor                           none   none    inverse
 CursorColumn                  -> CursorLine
 CursorLine                       none   light1
-CursorLineNr                     yellow light1
 DiffAdd                          green  bg      inverse
 DiffChange                       aqua   bg      inverse
 DiffDelete                       red    bg      inverse
@@ -711,7 +760,6 @@ Directory                        green  none    bold
 EndOfBuffer                      light0 none
 Error                            red    bg      bold,reverse
 ErrorMsg                         light0 red     bold
-FoldColumn                       grey   light1/none
 Folded                           grey   light1  italic
 IncSearch                        orange bg      inverse
 LineNr                           light4 none
@@ -726,7 +774,6 @@ PmenuThumb                       none   light4
 Question                         orange none    bold
 QuickFixLine                  -> Search
 Search                           yellow bg      inverse
-SignColumn                       none   light1/none
 SpecialKey                       light2 none
 SpellBad                         none   none    t=underline g=undercurl s=blue
 SpellCap                         none   none    t=underline g=undercurl s=red
@@ -740,7 +787,6 @@ TabLine                       -> TabLineFill
 TabLineFill                      light4 light1
 TabLineSel                       green  light1
 Title                            green  none    bold
-VertSplit                        light3 light0/none
 Visual                           none   light3
 VisualNOS                     -> Visual
 WarningMsg                       red    none    bold

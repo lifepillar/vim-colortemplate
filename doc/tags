@@ -1,4 +1,4 @@
-:Colortemplate	colortemplate.txt	/*:Colortemplate*
+:Colortemplate[!]	colortemplate.txt	/*:Colortemplate[!]*
 @shortname-options	colortemplate.txt	/*@shortname-options*
 color-templates	colortemplate.txt	/*color-templates*
 colortemplate#colorspace#approx()	colortemplate.txt	/*colortemplate#colorspace#approx()*

@@ -331,7 +331,11 @@ fun! s:print_color_details()
   let l:len = max(map(copy(s:palette), { k,_ -> len(k)}))
   " Sort colors by increasing delta
   let l:color_names = keys(s:palette)
-  call sort(l:color_names, { c1,c2 -> s:palette[c1][3] < s:palette[c2][3] ? -1 : (s:palette[c1][3] > s:palette[c2][3] ? 1 : 0) })
+  call sort(l:color_names, { c1,c2 ->
+        \ isnan(s:palette[c1][3])
+        \      ? (isnan(s:palette[c2][3]) ? 0 : 1)
+        \      : (isnan(s:palette[c2][3]) ? -1 : (s:palette[c1][3] < s:palette[c2][3] ? -1 : (s:palette[c1][3] > s:palette[c2][3] ? 1 : 0)))
+        \ })
   for l:color in l:color_names
     if l:color =~? '^\%(fg\|bg\|none\)$'
       continue
@@ -343,14 +347,12 @@ fun! s:print_color_details()
     if l:col256 > 15 && l:col256 < 256
       let l:hex256 = g:colortemplate#colorspace#xterm256[l:col256 - 16]
       let l:rgb256 = colortemplate#colorspace#hex2rgb(l:hex256)
+      let l:def256 = l:hex256 . printf('/rgb(%3d,%3d,%3d)', l:rgb256[0], l:rgb256[1], l:rgb256[2])
     else
-      let l:hex256 = '#NNNNNN'
-      let l:rgb256 = [-1, -1, -1]
+      let l:def256 = repeat(' ', 24)
     endif
-    let l:fmt = '" %'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s/rgb(%3d,%3d,%3d)  [delta=%f]'
-    call s:put(printf(l:fmt, l:color,  l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2],
-          \                  l:col256, l:hex256, l:rgb256[0], l:rgb256[1], l:rgb256[2], l:delta
-          \   ))
+    let l:fmt = '" %'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
+    call s:put(printf(l:fmt, l:color, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:delta))
   endfor
   call s:put('')
 endf

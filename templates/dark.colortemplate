@@ -30,6 +30,8 @@ terminal.
 enddocumentation
 # }}}
 
+Background: dark
+
 # Color palette {{{
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb(  0,   0,   0)     ~        Black
@@ -50,8 +52,6 @@ Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
 # You may use hexadecimal values, too, and you may provide an explicit base-256 color:
 Color: brightwhite          #ffffff                231      White
 # }}}
-
-Background: dark
 
 # Default highlight groups {{{
 verbatim

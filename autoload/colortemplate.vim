@@ -135,10 +135,16 @@ fun! s:init()
   " a base-16 color value, and a distance between the GUI value and the
   " base-256 value (in this order). Base-16 color values are used instead of
   " base-256 values when g:<colorscheme>_use16 is set to 1.
+  " Each background (dark, light) has its own palette.
   let s:palette                  = {
-        \                           'none': ['NONE', 'NONE', 'NONE', 0.0],
-        \                           'fg':   ['fg',   'fg',   'fg',   0.0],
-        \                           'bg':   ['bg',   'bg',   'bg',   0.0]
+        \ 'dark':  { 'none': ['NONE', 'NONE', 'NONE', 0.0],
+        \            'fg':   ['fg',   'fg',   'fg',   0.0],
+        \            'bg':   ['bg',   'bg',   'bg',   0.0]
+        \          },
+        \ 'light': { 'none': ['NONE', 'NONE', 'NONE', 0.0],
+        \            'fg':   ['fg',   'fg',   'fg',   0.0],
+        \            'bg':   ['bg',   'bg',   'bg',   0.0]
+        \          }
         \ }
 
   " Dictionary to store highlight group definitions. Definitions for dark and
@@ -162,19 +168,22 @@ endf
 
 " Verify that a color name has been defined before it is used.
 fun! s:is_undefined_color(color)
-  return !has_key(s:palette, a:color)
+  return !has_key(s:palette[s:background], a:color)
+endf
+
+fun! s:check_valid_color_name(name)
+  if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
+    throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
+  endif
+  if has_key(s:palette[s:background], a:name)
+    throw "Color already defined for " . s:background . " background"
+  endif
+  return a:name
 endf
 
 " Add or override a color definition
 fun! s:add_color(name, gui, base256, base16, delta)
-  if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
-    throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
-  endif
-  " Do not overwrite existing color, but rename it (keep older version for the color similarity table)
-  if has_key(s:palette, a:name) && (s:palette[a:name][0] !=# a:gui || s:palette[a:name][1] !=# a:base256)
-    let s:palette[a:name . ' (' .(s:background ==# 'light' ? 'dark' : 'light') .')'] = s:palette[a:name]
-  endif
-  let s:palette[a:name] = [a:gui, a:base256, a:base16, a:delta]
+  let s:palette[s:background][a:name] = [a:gui, a:base256, a:base16, a:delta]
 endf
 
 " Store a line to send to the output.
@@ -322,27 +331,28 @@ fun! s:print_header()
 endf
 
 " Print details about the color palette as comments
-fun! s:print_color_details()
+fun! s:print_color_details(bg)
   if s:info['terminalcolors'] == [16]
     return
   endif
-  call s:put('" Color similarity table')
+  call s:put('" Color similarity table (' . a:bg . ' background)')
+  let l:palette = s:palette[a:bg]
   " Find maximum length of color names (used for formatting)
-  let l:len = max(map(copy(s:palette), { k,_ -> len(k)}))
+  let l:len = max(map(copy(l:palette), { k,_ -> len(k)}))
   " Sort colors by increasing delta
-  let l:color_names = keys(s:palette)
+  let l:color_names = keys(l:palette)
   call sort(l:color_names, { c1,c2 ->
-        \ isnan(s:palette[c1][3])
-        \      ? (isnan(s:palette[c2][3]) ? 0 : 1)
-        \      : (isnan(s:palette[c2][3]) ? -1 : (s:palette[c1][3] < s:palette[c2][3] ? -1 : (s:palette[c1][3] > s:palette[c2][3] ? 1 : 0)))
+        \ isnan(l:palette[c1][3])
+        \      ? (isnan(l:palette[c2][3]) ? 0 : 1)
+        \      : (isnan(l:palette[c2][3]) ? -1 : (l:palette[c1][3] < l:palette[c2][3] ? -1 : (l:palette[c1][3] > l:palette[c2][3] ? 1 : 0)))
         \ })
   for l:color in l:color_names
     if l:color =~? '\m^\%(fg\|bg\|none\)$'
       continue
     endif
-    let l:colgui = s:palette[l:color][0]
-    let l:col256 = s:palette[l:color][1]
-    let l:delta  = s:palette[l:color][3]
+    let l:colgui = l:palette[l:color][0]
+    let l:col256 = l:palette[l:color][1]
+    let l:delta  = l:palette[l:color][3]
     let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
     if l:col256 > 15 && l:col256 < 256
       let l:hex256 = g:colortemplate#colorspace#xterm256[l:col256 - 16]
@@ -363,10 +373,10 @@ fun! s:interpolate_keywords(line)
 endf
 
 fun! s:interpolate_values(line)
-  let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[submatch(1)][s:use16colors ? 2 : 1]', 'g')
-  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
-  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][s:use16colors ? 2 : 1]', 'g')
-  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[submatch(2)][0]', 'g')
+  let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[s:background][submatch(1)][s:use16colors ? 2 : 1]', 'g')
+  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[s:background][submatch(1)][0]', 'g')
+  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[s:background][submatch(2)][s:use16colors ? 2 : 1]', 'g')
+  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[s:background][submatch(2)][0]', 'g')
   let l:line = substitute(l:line, '@optionprefix', s:info['optionprefix'], 'g')
   let l:line = substitute(l:line, '@shortname',    s:info['shortname'], 'g')
   return l:line
@@ -382,7 +392,6 @@ fun! s:generate_colorscheme()
   silent tabnew +setlocal\ ft=vim
   call s:print_header()
   call s:put('')
-  call s:print_color_details()
   let l:prefer16colors = (get(s:info['terminalcolors'], 0, 256) == 16)
   for l:numcol in s:info['terminalcolors']
     let s:use16colors = (l:numcol == 16)
@@ -392,11 +401,13 @@ fun! s:generate_colorscheme()
     endif
     if s:has_dark_and_light()
       for l:bg in ['dark', 'light']
+        call s:print_color_details(l:bg)
         call s:put("if &background ==# '" .l:bg. "'")
         call s:print_hi_groups(l:bg)
         call s:put("endif")
       endfor
     else
+      call s:print_color_details(s:background)
       call s:print_hi_groups(s:background)
     end
     if len(s:info['terminalcolors']) > 1
@@ -480,8 +491,8 @@ fun! s:parse_verbatim_line()
     endif
   else
     try " Check that the colors and keywords to be interpolated have been defined by attempting a dry substitution
-      let l:line = substitute(s:template.getl(), '@\%(term\|gui\)\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
-      let l:line = substitute(l:line, '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[submatch(1)][0]', 'g')
+      let l:line = substitute(s:template.getl(), '@\%(term\|gui\)\(\w\+\)',  '\=s:palette[s:background][submatch(1)][0]', 'g')
+      let l:line = substitute(l:line, '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[s:background][submatch(1)][0]', 'g')
       call substitute(l:line, '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
     catch /.*/
       throw 'Undefined @ value'
@@ -594,7 +605,7 @@ fun! s:parse_color_name()
   if s:token.next().kind !=# 'WORD'
     throw 'Invalid color name'
   endif
-  return s:token.value
+  return s:check_valid_color_name(s:token.value)
 endf
 
 fun! s:parse_gui_value()

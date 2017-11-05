@@ -37,8 +37,14 @@ fun! Test_CT_fg_bg_none_colors()
   let l:loclist = getloclist(0)
   call assert_equal(5, len(l:loclist))
   call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:loclist[0]['text'])
+  call assert_equal(6, l:loclist[0]['lnum'])
+  call assert_equal(8, l:loclist[0]['col'])
   call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:loclist[1]['text'])
+  call assert_equal(7, l:loclist[1]['lnum'])
+  call assert_equal(9, l:loclist[1]['col'])
   call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:loclist[2]['text'])
+  call assert_equal(8, l:loclist[2]['lnum'])
+  call assert_equal(7, l:loclist[2]['col'])
   call assert_equal("The colors for Normal cannot be 'fg' or 'bg'", l:loclist[3]['text'])
   call assert_equal("Please define the Normal highlight group", l:loclist[4]['text'])
   lclose
@@ -451,6 +457,18 @@ fun! Test_CT_comments_after_hi_group_defs()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+endf
+
+fun! Test_CT_color_already_defined()
+  edit test35.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("Color already defined for dark background", l:loclist[0]['text'])
+  call assert_equal(8, l:loclist[0]['lnum'])
+  call assert_equal(7, l:loclist[0]['col'])
+  lclose
+  bwipe
 endf
 
 call RunBabyRun('CT')

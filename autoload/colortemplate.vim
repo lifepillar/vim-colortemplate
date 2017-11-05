@@ -379,11 +379,11 @@ fun! s:interpolate_keywords(line)
   return l:line
 endf
 
-fun! s:interpolate_values(line)
-  let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[s:background][submatch(1)][s:use16colors ? 2 : 1]', 'g')
-  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[s:background][submatch(1)][0]', 'g')
-  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[s:background][submatch(2)][s:use16colors ? 2 : 1]', 'g')
-  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[s:background][submatch(2)][0]', 'g')
+fun! s:interpolate_values(line, bg)
+  let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[a:bg][submatch(1)][s:use16colors ? 2 : 1]', 'g')
+  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[a:bg][submatch(1)][0]', 'g')
+  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[a:bg][submatch(2)][s:use16colors ? 2 : 1]', 'g')
+  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[a:bg][submatch(2)][0]', 'g')
   let l:line = substitute(l:line, '@optionprefix', s:info['optionprefix'], 'g')
   let l:line = substitute(l:line, '@shortname',    s:info['shortname'], 'g')
   return l:line
@@ -391,7 +391,7 @@ endf
 
 fun! s:print_hi_groups(bg)
   for l:line in s:hi_group[a:bg]
-    call append('$', s:interpolate_values(l:line))
+    call append('$', s:interpolate_values(l:line, a:bg))
   endfor
 endf
 

@@ -49,6 +49,13 @@ fun! s:template.load(path) dict
   call setloclist(0, [], 'r')
 endf
 
+fun! s:template.include(path) dict
+  " Rather inefficient, but simple
+  let l:new_data = self.data[:self.linenr] + readfile(fnameescape(a:path)) + self.data[self.linenr + 1:]
+  let self.data = l:new_data
+  let self.numlines = len(self.data)
+endf
+
 " Get current line
 fun! s:template.getl() dict
   return self.data[self.linenr]
@@ -590,6 +597,8 @@ fun! s:parse_key_value_pair()
           let s:info['terminalcolors'] = l:numcol
         endif
       endif
+    elseif l:key ==# 'include'
+      call s:template.include(l:val)
     elseif !has_key(s:info, l:key)
       throw 'Unknown key: ' . l:key
     else

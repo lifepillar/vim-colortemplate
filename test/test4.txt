@@ -3,8 +3,8 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
+Background:dark
 Color: none rgb(0,0,0) 0 Black
 Color:  fg rgb(0,0,0) 0 Black
 Color:bg rgb(0,0,0) 0 Black
-Background:dark
 Normal fg  bg

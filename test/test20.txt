@@ -3,10 +3,10 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
+Background:dark
 Color:black rgb(0,0,0) 0 Black
 Color:white #ffffff 255 White
 Color:red #ffffff 255 ,White
 Color:red #ffffff 255 16
-Background:dark
 Normal white black
 

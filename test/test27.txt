@@ -3,6 +3,6 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
-Color:black rgb(0,0,0) ~
 Background:dark
+Color:black rgb(0,0,0) ~
 Normal black black

@@ -3,8 +3,8 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
+Background:dark
 Color:black rgb(0,0,0) 0 Black # Comment
 Color:white #ffffff 255 White  # Comment
-Background:dark
 Normal white black
 

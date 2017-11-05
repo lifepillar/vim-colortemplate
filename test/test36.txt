@@ -3,8 +3,11 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
+Color:red rgb(255,0,0) 0 Red " ERROR: background directive must occur first
 Background:dark
-Color: #000000 0 Black
 Color:white #ffffff 255 White
+Color:black rgb(0,0,0) 0 Black
 Normal white black
+
+
 

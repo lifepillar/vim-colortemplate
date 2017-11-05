@@ -568,6 +568,9 @@ fun! s:parse_key_value_pair()
       else
         throw 'Background can only be dark or light.'
       endif
+      if s:uses_background[s:background]
+        throw 'Cannot select ' . s:background . ' background more than once'
+      endif
       let s:uses_background[s:background] = 1
     elseif l:key ==# 'terminalcolors'
       let l:numcol = uniq(map(split(l:val, '\s*,\s*'), { _,v -> str2nr(v) }))
@@ -593,6 +596,9 @@ endf
 fun! s:parse_color_def()
   if s:token.next().kind !=# ':'
     throw 'Expected colon after Color keyword'
+  endif
+  if !s:uses_background[s:background]
+    throw 'Missing Background directive before color definition'
   endif
   let l:colorname          = s:parse_color_name()
   let l:col_gui            = s:parse_gui_value()

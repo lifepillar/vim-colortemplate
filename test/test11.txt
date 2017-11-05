@@ -4,8 +4,8 @@ Short name:x
 Author:y
 Invalid - Char - In - Key:
 Maintainer:w
+Background:dark
 Color:black rgb(0,0,0) 0 Black
 Color:white #ffffff 255 White
-Background:dark
 Normal white black
 

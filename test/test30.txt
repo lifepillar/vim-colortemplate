@@ -6,7 +6,7 @@ Maintainer:w
 documentation
   @shortname_transp_bg
 enddocumentation
+Background:dark
 Color:black rgb(0,0,0) 0 Black
 Color:white #ffffff 255 White
-Background:dark
 Normal white black

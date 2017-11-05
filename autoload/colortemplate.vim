@@ -405,6 +405,7 @@ fun! s:generate_colorscheme()
         call s:put("if &background ==# '" .l:bg. "'")
         call s:print_hi_groups(l:bg)
         call s:put("endif")
+        call s:put('')
       endfor
     else
       call s:print_color_details(s:background)

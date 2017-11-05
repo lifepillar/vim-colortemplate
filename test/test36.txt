@@ -3,11 +3,13 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
-Color:red rgb(255,0,0) 0 Red " ERROR: background directive must occur first
-Background:dark
+# Color defined before background
+# must be valid for both background
 Color:white #ffffff 255 White
+Background:dark
 Color:black rgb(0,0,0) 0 Black
 Normal white black
-
-
+Background:light
+Normal white white
+ColorColumn white black # black is undefined here
 

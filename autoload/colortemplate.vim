@@ -181,9 +181,16 @@ fun! s:check_valid_color_name(name)
   return a:name
 endf
 
-" Add or override a color definition
+" Add a color definition
 fun! s:add_color(name, gui, base256, base16, delta)
-  let s:palette[s:background][a:name] = [a:gui, a:base256, a:base16, a:delta]
+  if !(s:uses_background['dark'] || s:uses_background['light'])
+    " Background directive not given yet, so assume color definitions common
+    " to both backgrounds
+    let s:palette['dark' ][a:name] = [a:gui, a:base256, a:base16, a:delta]
+    let s:palette['light'][a:name] = [a:gui, a:base256, a:base16, a:delta]
+  else
+    let s:palette[s:background][a:name] = [a:gui, a:base256, a:base16, a:delta]
+  endif
 endf
 
 " Store a line to send to the output.
@@ -597,9 +604,6 @@ endf
 fun! s:parse_color_def()
   if s:token.next().kind !=# ':'
     throw 'Expected colon after Color keyword'
-  endif
-  if !s:uses_background[s:background]
-    throw 'Missing Background directive before color definition'
   endif
   let l:colorname          = s:parse_color_name()
   let l:col_gui            = s:parse_gui_value()

@@ -132,16 +132,8 @@ fun! Test_CT_invalid_background()
   edit test12.txt
   Colortemplate
   let l:loclist = getloclist(0)
-  call assert_equal(5, len(l:loclist))
+  call assert_equal(1, len(l:loclist))
   call assert_equal('Background can only be dark or light.', l:loclist[0]['text'])
-  call assert_equal(6, l:loclist[0]['lnum'])
-  call assert_equal('Missing Background directive before color definition', l:loclist[1]['text'])
-  call assert_equal(7, l:loclist[1]['lnum'])
-  call assert_equal('Missing Background directive before color definition', l:loclist[2]['text'])
-  call assert_equal(8, l:loclist[2]['lnum'])
-  call assert_equal('Undefined color name: white', l:loclist[3]['text'])
-  call assert_equal(9, l:loclist[3]['lnum'])
-  call assert_equal('Please define the Normal highlight group', l:loclist[4]['text'])
   lclose
   bwipe
 endf
@@ -478,14 +470,14 @@ fun! Test_CT_color_already_defined()
   bwipe
 endf
 
-fun! Test_CT_background_after_color()
+fun! Test_CT_color_def_before_background_is_set()
   edit test36.txt
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(1, len(l:loclist))
-  call assert_equal('Missing Background directive before color definition', l:loclist[0]['text'])
-  call assert_equal(6, l:loclist[0]['lnum'])
-  call assert_equal(6, l:loclist[0]['col'])
+  call assert_equal('Undefined color name: black', l:loclist[0]['text'])
+  call assert_equal(14, l:loclist[0]['lnum'])
+  call assert_equal(19, l:loclist[0]['col'])
   lclose
   bwipe
 endf

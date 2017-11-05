@@ -22,6 +22,8 @@ terminal.
 enddocumentation
 # }}}
 
+Background: dark
+
 # Color palette {{{
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                #000000                0        0
@@ -37,8 +39,6 @@ Color: brightblue           #0000ff               21        12
 Color: brightcyan           #00ffff               51        14
 Color: brightwhite          #ffffff              255        15
 # }}}
-
-Background: dark
 
 # Default highlight groups {{{
 verbatim

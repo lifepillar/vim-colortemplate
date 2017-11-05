@@ -87,11 +87,11 @@ endverbatim
     Normal black white
 verbatim
 else
-endif
 endverbatim
     # Transparent background
     Normal white none
 verbatim
+endif
 endverbatim
 
 # Group              Foreground        Background        Attributes
@@ -206,11 +206,11 @@ endverbatim
     Normal white black
 verbatim
 else
-endif
 endverbatim
     # Transparent background
     Normal white none
 verbatim
+endif
 endverbatim
 
 # Group              Foreground        Background        Attributes

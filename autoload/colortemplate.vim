@@ -862,6 +862,7 @@ fun! colortemplate#parse(filename) abort
   call s:init()
   call s:template.load(a:filename)
   while !s:template.eof()
+    call add(s:source, s:template.getl())
     call s:token.reset()
     try
       if s:is_verbatim
@@ -879,7 +880,6 @@ fun! colortemplate#parse(filename) abort
       let [l:path, l:line] = s:template.curr_pos()
       call s:add_error(l:path, l:line, s:token.spos + 1, v:exception)
     endtry
-    call add(s:source, s:template.getl())
     call s:template.next_line()
   endwhile
 

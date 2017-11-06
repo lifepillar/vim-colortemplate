@@ -58,8 +58,8 @@ fun! s:new_template()
 endf
 
 fun! s:load(path) dict
-  let self.path = a:path
-  let self.data = readfile(fnameescape(a:path))
+  let self.path = s:full_path(a:path)
+  let self.data = readfile(self.path)
   let self.numlines = len(self.data)
 endf
 
@@ -149,6 +149,7 @@ endf
 
 fun! s:init()
   call setloclist(0, [], 'r')
+  let s:work_dir = ''
   let s:template = s:new_template()
   let s:source = [] " This is where we keep the relevant lines from the template
   let g:colortemplate_exit_status = 0
@@ -198,11 +199,34 @@ fun! s:init()
   " backround.
   let s:normal_group_defined     = { 'dark': 0, 'light': 0 }
 endf
+
+fun! s:set_working_directory(filename)
+  let s:work_dir = fnamemodify(a:filename, ":p:h")
+  execute 'lcd' s:work_dir
+endf
 " }}} Internal state
 
 " Helper functions {{{
-fun! s:slash() abort
+fun! s:slash() abort " Code borrowed from Pathogen
   return !exists("+shellslash") || &shellslash ? '/' : '\'
+endf
+
+fun! s:is_absolute(path) abort " Code borrowed from Pathogen
+  return a:path =~# (has('win32') ? '^\%([\\/]\|\w:\)[\\/]\|^[~$]' : '^[/~$]')
+endf
+
+" Returns an already escaped full path, after verifying that the path is valid
+" (i.e., it is inside the working directory).
+fun! s:full_path(path)
+  if s:is_absolute(a:path)
+    let l:path = fnamemodify(a:path, ":p")
+  else
+    let l:path = fnamemodify(s:work_dir . s:slash() . a:path, ":p")
+  endif
+  if match(l:path, '^'.s:work_dir) == -1
+    throw 'Path outside working directory: ' . l:path
+  endif
+  return fnameescape(l:path)
 endf
 
 " Verify that a color name has been defined before it is used.
@@ -860,6 +884,7 @@ endf
 " Public interface {{{
 fun! colortemplate#parse(filename) abort
   call s:init()
+  call s:set_working_directory(a:filename)
   call s:template.load(a:filename)
   while !s:template.eof()
     call add(s:source, s:template.getl())

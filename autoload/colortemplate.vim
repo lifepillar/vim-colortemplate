@@ -33,48 +33,76 @@
 
 " Internal state {{{
 
-" Template data
-let s:template = {
-      \ 'path': '',
-      \ 'data': [],
-      \ 'linenr': -1,
-      \ 'numlines': 0
-      \ }
+" Template data structure {{{
+" path: path of the currently processed file
+" data: the List of the lines from the file
+" linenr: the currently processed line from data
+" numlines: total number of lines in the file (i.e. length of data)
+" includes: the currently processed included file
+" NOTE: we do not keep the whole tree of included files because we process
+" everything in one pass in a streaming fashion.
+fun! s:new_template()
+  return {
+        \ 'path':      '',
+        \ 'data':      [],
+        \ 'linenr':     0,
+        \ 'numlines':   0,
+        \ 'includes':  {},
+        \ 'load':      function("s:load"),
+        \ 'include':   function("s:include"),
+        \ 'getl':      function("s:getl"),
+        \ 'next_line': function("s:next_line"),
+        \ 'eof':       function("s:eof"),
+        \ 'curr_pos':  function("s:curr_pos")
+        \ }
+endf
 
-fun! s:template.load(path) dict
+fun! s:load(path) dict
   let self.path = a:path
   let self.data = readfile(fnameescape(a:path))
   let self.numlines = len(self.data)
-  let self.linenr = -1
-  call setloclist(0, [], 'r')
 endf
 
-fun! s:template.include(path) dict
-  " Rather inefficient, but simple
-  let l:new_data = self.data[:self.linenr] + readfile(fnameescape(a:path)) + self.data[self.linenr + 1:]
-  let self.data = l:new_data
-  let self.numlines = len(self.data)
+fun! s:include(path) dict
+  let self.includes = s:new_template()
+  call self.includes.load(a:path)
+endf
+
+fun! s:eof() dict
+  return self.linenr >= self.numlines
 endf
 
 " Get current line
-fun! s:template.getl() dict
-  return self.data[self.linenr]
+fun! s:getl() dict
+  if empty(self.includes) || self.includes.eof()
+    return self.data[self.linenr]
+  else
+    return self.includes.getl()
+  endif
 endf
 
-fun! s:template.next_line() dict
-  let self.linenr += 1
-  call s:token.reset()
-  return self.linenr < self.numlines
+" Move to the next line. Returns 0 if at eof, 1 otherwise.
+fun! s:next_line() dict
+  if self.eof()
+    return 0
+  endif
+  if empty(self.includes) || !self.includes.next_line()
+    let self.linenr += 1
+    return !self.eof()
+  endif
+  return 1
 endf
 
-fun! s:template.add_error(msg)
-  call setloclist(0, [{'filename': self.path, 'lnum' : self.linenr + 1, 'col': s:token.spos + 1, 'text' : a:msg, 'type' : 'E'}], 'a')
+fun! s:curr_pos() dict
+  if empty(self.includes) || self.includes.eof()
+    return [self.path, self.linenr]
+  else
+    return self.includes.curr_pos()
+  endif
 endf
+" }}}
 
-fun! s:template.add_warning(msg)
-  call setloclist(0, [{'filename': self.path, 'lnum' : self.linenr + 1, 'col': s:token.spos + 1, 'text' : a:msg, 'type' : 'W'}], 'a')
-endf
-
+" Tokenizer {{{
 " Current token in the currently parsed line
 let s:token = { 'spos' :  0, 'pos'  :  0, 'value': '', 'kind' : '' }
 
@@ -117,8 +145,12 @@ fun! s:token.peek() dict
   let l:token = copy(self)
   return l:token.next()
 endf
+" }}}
 
 fun! s:init()
+  call setloclist(0, [], 'r')
+  let s:template = s:new_template()
+  let s:source = [] " This is where we keep the relevant lines from the template
   let g:colortemplate_exit_status = 0
   let s:info = {
         \ 'fullname': '',
@@ -266,40 +298,40 @@ fun! s:has_dark_and_light()
   return s:uses_background['dark'] && s:uses_background['light']
 endf
 
-fun! s:add_warning(msg)
-  call setloclist(0, [{'filename': s:template.path, 'lnum': 1, 'text': a:msg, 'type': 'W'}], 'a')
+fun! s:add_error(path, line, col, msg)
+  call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
 endf
 
-fun! s:add_error(msg)
-  call setloclist(0, [{'filename': s:template.path, 'lnum': 1, 'text': a:msg, 'type': 'E'}], 'a')
+fun! s:add_generic_error(msg)
+  call s:add_error(s:template.path, 0, 1, a:msg)
 endf
 
 fun! s:check_requirements()
   if empty(s:info['fullname'])
-    call s:add_error('Please specify the full name of your color scheme')
+    call s:add_generic_error('Please specify the full name of your color scheme')
   endif
   if empty(s:info['shortname'])
-    call s:add_error('Please specify a short name for your colorscheme')
+    call s:add_generic_error('Please specify a short name for your colorscheme')
   elseif s:info['shortname'] !~? '\m^\w\+$'
-    call s:add_error('The short name may contain only letters, numbers and underscore.')
+    call s:add_generic_error('The short name may contain only letters, numbers and underscore.')
   elseif empty(s:info['optionprefix'])
     let s:info['optionprefix'] = s:info['shortname']
   elseif s:info['optionprefix'] !~? '\m\w\+$'
-    call s:add_error('The option prefix may contain only letters, numbers and underscore.')
+    call s:add_generic_error('The option prefix may contain only letters, numbers and underscore.')
   endif
   if empty(s:info['author'])
-    call s:add_error('Please specify an author and the corresponding email')
+    call s:add_generic_error('Please specify an author and the corresponding email')
   endif
   if empty(s:info['maintainer'])
-    call s:add_error('Please specify a maintainer and the corresponding email')
+    call s:add_generic_error('Please specify a maintainer and the corresponding email')
   endif
   if empty(s:info['license'])
     let s:info['license'] = 'Vim License (see `:help license`)'
   endif
   if s:has_dark_and_light() && !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
-    call s:add_error('Please define the Normal highlight group for both dark and light background')
+    call s:add_generic_error('Please define the Normal highlight group for both dark and light background')
   elseif !s:normal_group_defined[s:background]
-    call s:add_error('Please define the Normal highlight group')
+    call s:add_generic_error('Please define the Normal highlight group')
   endif
 endf
 
@@ -432,7 +464,7 @@ fun! s:generate_colorscheme()
   call s:put('')
   " Add template as a comment to make the color scheme reproducible.
   let l:skip = 0
-  for l:line in s:template.data
+  for l:line in s:source
     if l:line =~? '\m^\s*documentation'
       let l:skip = 1
     elseif l:line =~? '\m^\s*enddocumentation'
@@ -829,7 +861,8 @@ endf
 fun! colortemplate#parse(filename) abort
   call s:init()
   call s:template.load(a:filename)
-  while s:template.next_line()
+  while !s:template.eof()
+    call s:token.reset()
     try
       if s:is_verbatim
         call s:parse_verbatim_line()
@@ -838,9 +871,16 @@ fun! colortemplate#parse(filename) abort
       else
         call s:parse_line()
       endif
+    catch /^FATAL/
+      let [l:path, l:line] = s:template.curr_pos()
+      call s:add_error(l:path, l:line, s:token.spos + 1, v:exception)
+      throw 'Parse error'
     catch /.*/
-      call s:template.add_error(v:exception)
+      let [l:path, l:line] = s:template.curr_pos()
+      call s:add_error(l:path, l:line, s:token.spos + 1, v:exception)
     endtry
+    call add(s:source, s:template.getl())
+    call s:template.next_line()
   endwhile
 
   call s:check_requirements()

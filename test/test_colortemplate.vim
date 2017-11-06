@@ -494,4 +494,26 @@ fun! Test_CT_background_selected_twice()
   bwipe
 endf
 
+fun! Test_CT_template_with_included_files()
+  edit test38a.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
+fun! Test_CT_error_in_included_file()
+  edit test39a.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal('Undefined color name: pink', l:loclist[0]['text'])
+  call assert_equal('test39b.txt', bufname(l:loclist[0]['bufnr']))
+  call assert_equal(6, l:loclist[0]['lnum'])
+  call assert_equal(14, l:loclist[0]['col'])
+  lclose
+  bwipe
+endf
+
 call RunBabyRun('CT')

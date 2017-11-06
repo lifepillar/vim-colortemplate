@@ -1,0 +1,6 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Include: test39b.txt

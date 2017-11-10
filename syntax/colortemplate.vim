@@ -151,9 +151,12 @@ syn match   colortemplateCompoundName contained "white smoke"
 syn match   colortemplateCompoundName contained "x11 \(gray\|green\|grey\|maroon\|purple\)"
 syn match   colortemplateCompoundName contained "yellow green"
 
+syn region auxfile matchgroup=colortemplateKeyword start=/auxfile\s\+\S.*$/ end=/endauxfile/ keepend
+
 syn include @colortemplatevim syntax/vim.vim
 unlet b:current_syntax
 syn region colortemplatevim matchgroup=colortemplateKeyword start=/verbatim/ end=/endverbatim/ keepend contains=@colortemplatevim
+syn region auxfilevim       matchgroup=colortemplateKeyword start=/auxfile.*\.vim$/ end=/endauxfile/ keepend contains=@colortemplatevim
 
 syn include @colortemplatehelp syntax/help.vim
 unlet b:current_syntax

@@ -3,9 +3,12 @@
 " Grammar {{{
 " <Template>                  ::= <Line>*
 " <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> |
-"                                 <VerbatimText>  | <Documentation>
+"                                 <VerbatimText>  | <AuxFile> | <Documentation>
 " <VerbatimText>              ::= verbatim <Anything> endverbatim
+" <AuxFile>                   ::= auxfile <Path> <Anything> endauxfile
+" <Path>                      ::= .+
 " <Documentation>             ::= documentation <Anything> enddocumentation
+" <Anything>                  ::= .*
 " <Comment>                   ::= # .*
 " <KeyValuePair>              ::= <ColorDef> | <Key> : <Value>
 " <Key>                       ::= Full name | Short name | Author | Background | ...
@@ -30,10 +33,98 @@
 " <AttrList>                  ::= <Attr> [, <AttrList]
 " <Attr>                      ::= bold | italic | reverse | inverse | underline | ...
 " }}}
+" Generic helper functions {{{
+fun! s:slash() abort " Code borrowed from Pathogen (thanks T. Pope!)
+  return !exists("+shellslash") || &shellslash ? '/' : '\'
+endf
 
+fun! s:is_absolute(path) abort " Code borrowed from Pathogen (thanks T. Pope)
+  return a:path =~# (has('win32') ? '^\%([\\/]\|\w:\)[\\/]\|^[~$]' : '^[/~$]')
+endf
+
+" Returns path as an absolute path, after verifying that path is valid,
+" i.e., it is inside the directory specified in env.
+"
+" path: a String specifying a relative or absolute path
+" env:  a Dictionary with a 'dir' key specifying a valid directory for path.
+fun! s:full_path(path, env)
+  if s:is_absolute(a:path)
+    let l:path = fnamemodify(a:path, ":p")
+  else
+    let l:path = fnamemodify(a:env['dir'] . s:slash() . a:path, ":p")
+  endif
+  call s:assert_path_inside(l:path, a:env['dir'])
+  return l:path
+endf
+
+fun! s:assert_path_inside(path, dir)
+  if !isdirectory(a:dir)
+    throw 'FATAL: Path is not a directory: ' . a:dir
+  endif
+  if match(a:path, '^' . a:dir) == -1
+    throw 'Path ' . l:path . ' outside valid directory: ' . a:env['dir']
+  endif
+  return 1
+endf
+
+fun! s:make_dir(dirpath)
+  if isdirectory(a:dirpath)
+    return
+  endif
+  try
+    call mkdir(fnameescape(a:dirpath), "p")
+  catch /.*/
+    echoerr '[Colortemplate] Could not create directory: ' . a:dirpath
+    let g:colortemplate_exit_status = 1
+    return
+  endtry
+endf
+
+" Write the current buffer into path. The path must be inside env['dir'].
+fun! s:write_buffer(path, env, overwrite)
+  let l:path = s:full_path(a:path, a:env)
+  call s:make_dir(fnamemodify(l:path, ":h"))
+  try
+    execute "write".(a:overwrite ? '!' : '') fnameescape(l:path)
+  catch /.*/
+    echoerr '[Colortemplate] Could not write ' . l:path . ': ' . v:exception
+    let g:colortemplate_exit_status = 1
+    return
+  endtry
+endf
+
+fun! s:add_error(path, line, col, msg)
+  call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
+endf
+
+fun! s:add_fatal_error(path, line, col, msg)
+  call s:add_error(a:path, a:line, a:col, 1, 'FATAL: ' . a:msg)
+endf
+
+fun! s:add_generic_error(msg)
+  call s:add_error(bufname('%'), 0, 1, a:msg)
+endf
+
+" Append a String to the end of the current buffer.
+fun! s:put(line)
+  call append(line('$'), a:line)
+endf
+" }}} Helper functions
 " Internal state {{{
+" Working directory {{{
+fun! s:init_working_directory(path)
+  if !isdirectory(a:path)
+    throw 'FATAL: Path is not a directory: ' . a:path
+  endif
+  let s:work_dir = fnamemodify(a:path, ":p")
+  execute 'lcd' s:work_dir
+endf
 
-" Template data structure {{{
+fun! s:working_directory()
+  return s:work_dir
+endf
+" }}}
+" Template {{{
 " path: path of the currently processed file
 " data: the List of the lines from the file
 " linenr: the currently processed line from data
@@ -57,8 +148,12 @@ fun! s:new_template()
         \ }
 endf
 
+fun! s:init_template()
+  let s:template = s:new_template()
+endf
+
 fun! s:load(path) dict
-  let self.path = s:full_path(a:path)
+  let self.path = fnameescape(s:full_path(a:path, {'dir': s:work_dir}))
   let self.data = readfile(self.path)
   let self.numlines = len(self.data)
 endf
@@ -101,7 +196,6 @@ fun! s:curr_pos() dict
   endif
 endf
 " }}}
-
 " Tokenizer {{{
 " Current token in the currently parsed line
 let s:token = { 'spos' :  0, 'pos'  :  0, 'value': '', 'kind' : '' }
@@ -146,13 +240,8 @@ fun! s:token.peek() dict
   return l:token.next()
 endf
 " }}}
-
-fun! s:init()
-  call setloclist(0, [], 'r')
-  let s:work_dir = ''
-  let s:template = s:new_template()
-  let s:source = [] " This is where we keep the relevant lines from the template
-  let g:colortemplate_exit_status = 0
+" Info {{{
+fun! s:init_info()
   let s:info = {
         \ 'fullname': '',
         \ 'shortname': '',
@@ -161,22 +250,110 @@ fun! s:init()
         \ 'website': '',
         \ 'description': '',
         \ 'license': '',
-        \ 'terminalcolors': [256],
+        \ 'terminalcolors': ['256'],
+        \ 'prefer16colors': 0,
         \ 'optionprefix': ''
         \ }
-  let s:use16colors = 0
-  let s:background                = 'dark' " Current background
-  let s:uses_background           = { 'dark': 0, 'light': 0 }
-  let s:is_verbatim               = 0 " When set to 1, source is copied (almost) verbatim
-  let s:is_documentation          = 0 " Set to 1 when inside a help block
+endf
 
-  " A palette is a dictionary of color names and their definitions. Each
-  " definition consists of a GUI color value, a base-256 color value,
-  " a base-16 color value, and a distance between the GUI value and the
-  " base-256 value (in this order). Base-16 color values are used instead of
-  " base-256 values when g:<colorscheme>_use16 is set to 1.
-  " Each background (dark, light) has its own palette.
-  let s:palette                  = {
+fun! s:get_info(key)
+  return s:info[a:key]
+endf
+
+fun! s:set_info(key, value)
+  if !has_key(s:info, a:key)
+    throw 'Unknown key: ' . a:key
+  endif
+  if a:key ==# 'terminalcolors'
+    if type(a:value) != type([])
+      throw 'FATAL: terminalcolors value must be a List (add_info)'
+    endif
+    if empty(a:value)
+      let a:value = ['256']
+    endif
+    let s:info['prefer16colors'] = (a:value[0] == '16')
+  else
+    if type(a:value) != type('')
+      throw "FATAL: key value must be a String (add_info)"
+    endif
+  endif
+  let s:info[a:key] = a:value
+  if a:key ==# 'shortname' && empty(s:info['optionprefix'])
+    let s:info['optionprefix'] = s:info['shortname']
+  endif
+endf
+
+fun! s:has16and256colors()
+  return len(s:info['terminalcolors']) > 1
+endf
+
+fun! s:prefer16colors()
+  return s:info['prefer16colors']
+endf
+
+fun! s:preferred_number_of_colors()
+  return get(s:info['terminalcolors'], 0, 256)
+endf
+" }}}
+" Source {{{
+fun! s:init_source()
+  let s:source = [] " Keep the source lines here
+endf
+
+fun! s:add_source_line(line)
+  call add(s:source, a:line)
+endf
+
+fun! s:print_source_as_comment()
+  for l:line in s:source
+    call s:put('" ' . l:line)
+  endfor
+endf
+" }}}
+" Background {{{
+fun! s:init_current_background()
+  let s:current_background = ''
+  let s:uses_background = { 'dark': 0, 'light': 0 }
+endf
+
+fun! s:current_background()
+  return empty(s:current_background) ? 'dark' : s:current_background
+endf
+
+fun! s:set_current_background(value)
+  if a:value !=# 'dark' && a:value !=# 'light'
+    throw 'Background can only be dark or light'
+  endif
+  if s:has_background(a:value)
+    throw 'Cannot select ' . a:value . ' background more than once'
+  endif
+  let s:current_background = a:value
+  let s:uses_background[s:current_background] = 1
+endf
+
+fun! s:background_undefined()
+  return empty(s:current_background)
+endf
+
+fun! s:has_background(value)
+  if a:value !=# 'dark' && a:value !=# 'light'
+    throw 'FATAL: invalid background value (has_background)'
+  endif
+  return s:uses_background[a:value]
+endf
+
+fun! s:has_dark_and_light()
+  return s:has_background('dark') && s:has_background('light')
+endf
+" }}}
+" Palette {{{
+" A palette is a Dictionary of color names and their definitions. Each
+" definition consists of a GUI color value, a base-256 color value,
+" a base-16 color value, and a distance between the GUI value and the
+" base-256 value (in this order).
+" Each background (dark, light) has its own palette.
+fun! s:init_palette()
+  let s:palette = {
         \ 'dark':  { 'none': ['NONE', 'NONE', 'NONE', 0.0],
         \            'fg':   ['fg',   'fg',   'fg',   0.0],
         \            'bg':   ['bg',   'bg',   'bg',   0.0]
@@ -186,210 +363,409 @@ fun! s:init()
         \            'bg':   ['bg',   'bg',   'bg',   0.0]
         \          }
         \ }
-
-  " Dictionary to store highlight group definitions. Definitions for dark and
-  " light background are kept distinct. Each element in each list is a line of
-  " the output.
-  let s:hi_group                 = { 'dark': [], 'light': [] }
-
-  " List to store the lines of the help file.
-  let s:doc                      = [] " For help file
-
-  " Flags to tell whether the Normal group has been defined for a given
-  " backround.
-  let s:normal_group_defined     = { 'dark': 0, 'light': 0 }
 endf
 
-fun! s:set_working_directory(filename)
-  let s:work_dir = fnamemodify(a:filename, ":p:h")
-  execute 'lcd' s:work_dir
-endf
-" }}} Internal state
-
-" Helper functions {{{
-fun! s:slash() abort " Code borrowed from Pathogen
-  return !exists("+shellslash") || &shellslash ? '/' : '\'
+fun! s:current_palette()
+  return s:palette[s:current_background()]
 endf
 
-fun! s:is_absolute(path) abort " Code borrowed from Pathogen
-  return a:path =~# (has('win32') ? '^\%([\\/]\|\w:\)[\\/]\|^[~$]' : '^[/~$]')
+fun! s:palette(background)
+  return s:palette[a:background]
 endf
 
-" Returns an already escaped full path, after verifying that the path is valid
-" (i.e., it is inside the working directory).
-fun! s:full_path(path)
-  if s:is_absolute(a:path)
-    let l:path = fnamemodify(a:path, ":p")
+fun! s:color_exists(name, background)
+  return has_key(s:palette[a:background], a:name)
+endf
+
+fun! s:get_color(name, background)
+  return s:palette[a:background][a:name]
+endf
+
+fun! s:get_term_color(name, background, use16colors)
+  return s:palette[a:background][a:name][a:use16colors ? 2 : 1]
+endf
+
+fun! s:get_gui_color(name, background)
+  return s:palette[a:background][a:name][0]
+endf
+
+" name: a color name
+" If the optional arguments are not provided, their values are computed automatically
+fun! s:add_color(name, gui, base16, ...)
+  " Find an approximation and/or a distance from the GUI value if none was provided
+  if a:0 == 0
+    let l:approx_color = colortemplate#colorspace#approx(a:gui)
+    let l:base256 = l:approx_color['index']
+    let l:delta = l:approx_color['delta']
   else
-    let l:path = fnamemodify(s:work_dir . s:slash() . a:path, ":p")
+    let l:base256 = a:1
+    if a:0 == 1
+      let l:delta = (l:base256 >= 16 && l:base256 <= 255
+            \ ? colortemplate#colorspace#hex_delta_e(a:gui, g:colortemplate#colorspace#xterm256_hexvalue(l:base256))
+            \ : 0.0 / 0.0)
+    else
+      let l:delta = a:2
+    endif
   endif
-  if match(l:path, '^'.s:work_dir) == -1
-    throw 'Path outside working directory: ' . l:path
+  if s:background_undefined()
+    " Assume color definitions common to both backgrounds
+    let s:palette['dark' ][a:name] = [a:gui, l:base256, a:base16, l:delta]
+    let s:palette['light'][a:name] = [a:gui, l:base256, a:base16, l:delta]
+  else
+    " Assume color definition for the current background
+    let s:palette[s:current_background()][a:name] = [a:gui, l:base256, a:base16, l:delta]
   endif
-  return fnameescape(l:path)
 endf
 
-" Verify that a color name has been defined before it is used.
-fun! s:is_undefined_color(color)
-  return !has_key(s:palette[s:background], a:color)
-endf
-
-fun! s:check_valid_color_name(name)
+fun! s:assert_valid_color_name(name)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
     throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
   endif
-  if has_key(s:palette[s:background], a:name)
-    throw "Color already defined for " . s:background . " background"
+  if s:color_exists(a:name, s:current_background())
+    throw "Color already defined for " . s:current_background() . " background"
   endif
-  return a:name
+  " TODO: check that color name starts with alphabetic char
+  return 1
 endf
 
-" Add a color definition
-fun! s:add_color(name, gui, base256, base16, delta)
-  if !(s:uses_background['dark'] || s:uses_background['light'])
-    " Background directive not given yet, so assume color definitions common
-    " to both backgrounds
-    let s:palette['dark' ][a:name] = [a:gui, a:base256, a:base16, a:delta]
-    let s:palette['light'][a:name] = [a:gui, a:base256, a:base16, a:delta]
-  else
-    let s:palette[s:background][a:name] = [a:gui, a:base256, a:base16, a:delta]
-  endif
+fun! s:interpolate(line, use16colors)
+  let l:i = (a:use16colors ? 2 : 1)
+  let l:line = substitute(a:line, '@term16\(\w\+\)', '\=s:current_palette()[submatch(1)][2]', 'g')
+  let l:line = substitute(l:line, '@term256\(\w\+\)', '\=s:current_palette()[submatch(1)][1]', 'g')
+  let l:line = substitute(l:line, '@term\(\w\+\)', '\=s:current_palette()[submatch(1)][l:i]', 'g')
+  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:current_palette()[submatch(1)][0]', 'g')
+  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:current_palette()[submatch(2)][l:i]', 'g')
+  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:current_palette()[submatch(2)][0]', 'g')
+  let l:line = substitute(l:line, '@\(\a\+\)', '\=s:get_info(submatch(1))', 'g')
+  return l:line
+endf
+" }}}
+" Highlight group {{{
+fun! s:new_hi_group()
+  return {
+        \ 'name': '',
+        \ 'fg': '',
+        \ 'bg': '',
+        \ 'sp': 'none',
+        \ 'term': [],
+        \ 'gui': []
+        \}
 endf
 
-" Store a line to send to the output.
-" scope must be 'opaque', 'transp', or 'any'.
-" definition is the line as it should appear in the output.
-fun! s:add_line(definition)
-  call add(s:hi_group[s:background], a:definition)
+fun! s:hi_name(hg)
+  return a:hg['name']
 endf
 
-" Store a line to send to the help file.
-fun! s:add_help(line)
-  call add(s:doc, a:line)
+fun! s:fg(hg)
+  return a:hg['fg']
 endf
 
-" Return a highlight group definition as a String.
-"
-" group: the name of the highlight group
-" fg: the name of the foreground color for the group
-" bg: the name of the background color for the group
-" guisp: the name of the special color
-" cterm: a list of term attributes
-" gui: a list of gui attributes
-"
-" Color names are as specified in the color palette of the template.
-fun! s:hlstring(group, fg, bg, guisp, cterm, gui)
-  return join([
-        \ 'hi', a:group,
-        \ 'ctermfg=@'   . a:fg,
-        \ 'ctermbg=@'   . a:bg,
-        \ 'guifg=@'     . a:fg,
-        \ 'guibg=@'     . a:bg,
-        \ 'guisp=@'     . (empty(a:guisp) ? 'none' : a:guisp),
-        \ 'cterm=NONE'  . (empty(a:cterm) ? '' : ',' . join(a:cterm, ',')),
-        \ 'gui=NONE'    . (empty(a:gui)   ? '' : ',' . join(a:gui,   ','))
-        \ ])
+fun! s:bg(hg)
+  return a:hg['bg']
 endf
 
-" The Normal highlight group needs special treatment.
-fun! s:check_normal_group(hi_group)
-  let l:hi_group = a:hi_group
-  if l:hi_group['fg'] =~# '\m^\%(fg\|bg\)$' || l:hi_group['bg'] =~# '\m^\%(fg\|bg\)$'
-    throw "The colors for Normal cannot be 'fg' or 'bg'"
-  endif
-  if match(l:hi_group['cterm'], '\%(inv\|rev\)erse') > -1 || match(l:hi_group['gui'], '\%(inv\|rev\)erse') > -1
-    throw "Do not use reverse mode for the Normal group"
-  endif
-  let s:normal_group_defined[s:background] = 1
-  return l:hi_group
+fun! s:sp(hg)
+  return a:hg['sp']
 endf
 
-" Adds a string containing a highlight group definition.
-fun! s:build_hi_group_def(hi_group)
-  if a:hi_group['name'] ==# 'Normal'
-    let l:hg = s:check_normal_group(a:hi_group)
-  else
-    let l:hg = a:hi_group
-  endif
-  call s:add_line(s:hlstring(l:hg['name'], l:hg['fg'], l:hg['bg'], l:hg['sp'], l:hg['cterm'], l:hg['gui']))
+fun! s:term_attr(hg)
+  return a:hg['term']
+endf
+
+fun! s:gui_attr(hg)
+  return a:hg['gui']
+endf
+
+fun! s:set_hi_name(hg, name)
+  let a:hg['name'] = a:name
+endf
+
+fun! s:set_fg(hg, colorname)
+  let a:hg['fg'] = a:colorname
+endf
+
+fun! s:set_bg(hg, colorname)
+  let a:hg['bg'] = a:colorname
+endf
+
+fun! s:set_sp(hg, colorname)
+  let a:hg['sp'] = a:colorname
+endf
+
+fun! s:has_term_attr(hg)
+  return !empty(a:hg['term'])
+endf
+
+fun! s:has_gui_attr(hg)
+  return !empty(a:hg['gui'])
+endf
+
+fun! s:add_term_attr(hg, attrlist)
+  let a:hg['term'] += a:attrlist
+  call uniq(sort(a:hg['term']))
+endf
+
+fun! s:add_gui_attr(hg, attrlist)
+  let a:hg['gui'] += a:attrlist
+  call uniq(sort(a:hg['gui']))
+endf
+
+fun! s:term_fg(hg, use16colors)
+  return s:get_term_color(s:fg(a:hg), s:current_background(), a:use16colors)
+endf
+
+fun! s:term_bg(hg, use16colors)
+  return s:get_term_color(s:bg(a:hg), s:current_background(), a:use16colors)
+endf
+
+fun! s:gui_fg(hg)
+  return s:get_gui_color(s:fg(a:hg), s:current_background())
+endf
+
+fun! s:gui_bg(hg)
+  return s:get_gui_color(s:bg(a:hg), s:current_background())
+endf
+
+fun! s:gui_sp(hg)
+  return s:get_gui_color(s:sp(a:hg), s:current_background())
+endf
+" }}}
+" Colorscheme {{{
+fun! s:init_colorscheme()
+  let s:colorscheme =  {
+        \ '16'       : { 'dark': [], 'light': [], 'preamble': [] },
+        \ '256'      : { 'dark': [], 'light': [], 'preamble': [] },
+        \ 'outpath'  : '/',
+        \ 'has_normal': { 'dark': 0, 'light': 0 }
+        \ }
+endf
+
+fun! s:has_normal_group(background)
+  return s:colorscheme['has_normal'][a:background]
 endf
 
 fun! s:add_linked_group_def(src, tgt)
-  call add(s:hi_group[s:background], 'hi! link ' . a:src . ' ' . a:tgt)
+  for l:numcol in s:get_info('terminalcolors')
+    call add(s:colorscheme[l:numcol][s:current_background()],
+          \ 'hi! link ' . a:src . ' ' . a:tgt)
+  endfor
 endf
 
-fun! s:has_dark_and_light()
-  return s:uses_background['dark'] && s:uses_background['light']
+" Adds the current highlight group to the colorscheme
+" This function must be called only after the background is defined
+fun! s:add_highlight_group(hg)
+  let l:bg = s:current_background()
+  if s:hi_name(a:hg) ==# 'Normal' " Normal group needs special treatment
+    if s:fg(a:hg) =~# '\m^\%(fg\|bg\)$' || s:bg(a:hg) =~# '\m^\%(fg\|bg\)$'
+      throw "The colors for Normal cannot be 'fg' or 'bg'"
+    endif
+    if match(s:term_attr(a:hg), '\%(inv\|rev\)erse') > -1 || match(s:gui_attr(a:hg), '\%(inv\|rev\)erse') > -1
+      throw "Do not use reverse mode for the Normal group"
+    endif
+    let s:colorscheme['has_normal'][l:bg] = 1
+  endif
+  for l:numcol in s:get_info('terminalcolors')
+    let l:use16colors = (l:numcol == '16')
+    call add(s:colorscheme[l:numcol][l:bg],
+          \ join(['hi', s:hi_name(a:hg),
+          \       'ctermfg='  . s:term_fg(a:hg, l:use16colors),
+          \       'ctermbg='  . s:term_bg(a:hg, l:use16colors),
+          \       'guifg='    . s:gui_fg(a:hg),
+          \       'guibg='    . s:gui_bg(a:hg),
+          \       'guisp='    . s:gui_sp(a:hg),
+          \       'cterm=NONE'. (s:has_term_attr(a:hg) ? ',' . join(s:term_attr(a:hg), ',') : ''),
+          \       'gui=NONE'  . (s:has_gui_attr(a:hg)  ? ',' . join(s:gui_attr(a:hg), ',')  : '')
+          \ ])
+          \ )
+  endfor
 endf
 
-fun! s:add_error(path, line, col, msg)
-  call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
+fun! s:print_colorscheme(background, use16colors)
+  for l:line in s:colorscheme[a:use16colors ? '16' : '256']['preamble']
+    call s:put(l:line)
+  endfor
+  call s:put('')
+  for l:line in s:colorscheme[a:use16colors ? '16' : '256'][a:background]
+    call s:put(l:line)
+  endfor
+endf
+" }}}
+" Verbatim {{{
+fun! s:init_verbatim()
+  let s:is_verbatim_block = 0
 endf
 
-fun! s:add_generic_error(msg)
-  call s:add_error(s:template.path, 0, 1, a:msg)
+fun! s:start_verbatim()
+  let s:is_verbatim_block = 1
 endf
 
-fun! s:check_requirements()
-  if empty(s:info['fullname'])
+fun! s:stop_verbatim()
+  let s:is_verbatim_block = 0
+endf
+
+fun! s:is_verbatim()
+  return s:is_verbatim_block
+endf
+
+fun! s:add_verbatim_line(line)
+  for l:numcol in s:get_info('terminalcolors')
+    try
+      let l:line = s:interpolate(a:line, l:numcol == '16')
+    catch /.*/
+      throw 'Undefined keyword (' . v:exception . ')'
+    endtry
+    if s:background_undefined()
+      call add(s:colorscheme[l:numcol]['preamble'], l:line)
+    else " Add to current background
+      call add(s:colorscheme[l:numcol][s:current_background()], l:line)
+    endif
+  endfor
+endf
+" }}}
+" Aux files {{{
+fun! s:init_aux_files()
+  let s:auxfiles = {}    " Mappings from paths to list of lines
+  let s:auxfilepath = '' " Path to the currently processed aux file
+  let s:is_auxfile = 0   " Set to 1 when processing an aux file
+  let s:is_helpfile = 0  " Set to 1 when processing a documentation block
+endf
+
+" path: path of the aux file as specified in the template
+fun! s:start_aux_file(path)
+  let s:is_auxfile = 1
+  if empty(a:path)
+    throw 'Missing path'
+  endif
+  let s:auxfiles[a:path] = []
+  let s:auxfilepath = a:path
+endf
+
+fun! s:stop_aux_file()
+  let s:is_auxfile = 0
+endf
+
+fun! s:is_aux_file()
+  return s:is_auxfile
+endf
+
+fun! s:start_help_file()
+  let l:path = 'doc' . s:slash() . s:get_info('shortname') . '.txt'
+  let s:auxfiles[l:path] = []
+  let s:auxfilepath = l:path
+  let s:is_helpfile = 1
+endf
+
+fun! s:is_help_file()
+  return s:is_helpfile
+endf
+
+fun! s:stop_help_file()
+  let s:is_helpfile = 0
+endf
+
+fun! s:add_line_to_aux_file(line)
+  try " to interpolate variables
+    let l:line = s:interpolate(a:line, s:prefer16colors())
+  catch /.*/
+    throw 'Undefined keyword'
+  endtry
+  call add(s:auxfiles[s:auxfilepath], l:line)
+endf
+
+fun! s:generate_aux_files(outdir, overwrite)
+  for l:path in keys(s:auxfiles)
+    if fnamemodify(l:path, ":e") ==# 'vim'
+      silent tabnew +setlocal\ ft=vim
+    elseif match(l:path, '^doc' . s:slash()) > -1
+      silent tabnew +setlocal\ ft=help
+    else
+      silent tabnew
+    endif
+    for l:line in s:auxfiles[l:path]
+      call s:put(l:line)
+    endfor
+    if !empty(a:outdir)
+      call s:write_buffer(l:path, { 'dir': a:outdir }, a:overwrite)
+    else
+      execute 'file' l:path
+    endif
+  endfor
+endf
+" }}}
+" Initialize state {{{
+fun! s:init(work_dir)
+  let g:colortemplate_exit_status = 0
+
+  call setloclist(0, [], 'r') " Reset location list
+
+  call s:init_working_directory(a:work_dir)
+  call s:init_template()
+  call s:init_info()
+  call s:init_source()
+  call s:init_current_background()
+  call s:init_palette()
+  call s:init_colorscheme()
+  call s:init_aux_files()
+  call s:init_verbatim()
+endf
+" }}}
+" }}} Internal state
+" Colorscheme generation {{{
+fun! s:assert_requirements()
+  if empty(s:get_info('fullname'))
     call s:add_generic_error('Please specify the full name of your color scheme')
   endif
-  if empty(s:info['shortname'])
+  if empty(s:get_info('shortname'))
     call s:add_generic_error('Please specify a short name for your colorscheme')
-  elseif s:info['shortname'] !~? '\m^\w\+$'
+  elseif s:get_info('shortname') !~? '\m^\w\+$'
     call s:add_generic_error('The short name may contain only letters, numbers and underscore.')
-  elseif empty(s:info['optionprefix'])
-    let s:info['optionprefix'] = s:info['shortname']
-  elseif s:info['optionprefix'] !~? '\m\w\+$'
+  elseif empty(s:get_info('optionprefix'))
+    call s:set_info('optionprefix', s:get_info('shortname'))
+  elseif s:get_info('optionprefix') !~? '\m\w\+$'
     call s:add_generic_error('The option prefix may contain only letters, numbers and underscore.')
   endif
-  if empty(s:info['author'])
+  if empty(s:get_info('author'))
     call s:add_generic_error('Please specify an author and the corresponding email')
   endif
-  if empty(s:info['maintainer'])
+  if empty(s:get_info('maintainer'))
     call s:add_generic_error('Please specify a maintainer and the corresponding email')
   endif
-  if empty(s:info['license'])
+  if empty(s:get_info('license'))
     let s:info['license'] = 'Vim License (see `:help license`)'
   endif
-  if s:has_dark_and_light() && !(s:normal_group_defined['dark'] && s:normal_group_defined['light'])
+  if s:has_dark_and_light() && !(s:has_normal_group('dark') && s:has_normal_group('light'))
     call s:add_generic_error('Please define the Normal highlight group for both dark and light background')
-  elseif !s:normal_group_defined[s:background]
+  elseif !s:has_normal_group(s:current_background())
     call s:add_generic_error('Please define the Normal highlight group')
   endif
 endf
 
-" Append a String to the end of the current buffer.
-fun! s:put(line)
-  call append(line('$'), a:line)
-endf
-
 fun! s:print_header()
-  if len(s:info['terminalcolors']) > 1
-    let l:limit = "(get(g:, '" . s:info['optionprefix'] . "_use16', 0) ? 16 : 256)"
+  if s:has16and256colors()
+    let l:limit = "(get(g:, '" . s:get_info('optionprefix') . "_use16', " . string(s:prefer16colors()) . ") ? 16 : 256)"
   else
-    let l:limit = s:info['terminalcolors'][0]
+    let l:limit = s:preferred_number_of_colors()
   endif
-  call setline(1, '" Name:         ' . s:info['fullname']                                             )
-  if !empty(s:info['description'])
-    call s:put(   '" Description:  ' . s:info['description']                                          )
+  call setline(1, '" Name:         ' . s:get_info('fullname')                                         )
+  if !empty(s:get_info('description'))
+    call s:put(   '" Description:  ' . s:get_info('description')                                      )
   endif
-  call s:put  (   '" Author:       ' . s:info['author']                                               )
-  call s:put  (   '" Maintainer:   ' . s:info['maintainer']                                           )
-  if !empty(s:info['website'])
-    call s:put(   '" Website:      ' . s:info['website']                                              )
+  call s:put  (   '" Author:       ' . s:get_info('author')                                           )
+  call s:put  (   '" Maintainer:   ' . s:get_info('maintainer')                                       )
+  if !empty(s:get_info('website'))
+    call s:put(   '" Website:      ' . s:get_info('website')                                          )
   endif
-  call s:put  (   '" License:      ' . s:info['license']                                              )
+  call s:put  (   '" License:      ' . s:get_info('license')                                          )
   call s:put  (   '" Last Updated: ' . strftime("%c")                                                 )
   call s:put  (   ''                                                                                  )
   call s:put  (   "if !(has('termguicolors') && &termguicolors) && !has('gui_running')"               )
   call s:put  (   "      \\ && (!exists('&t_Co') || &t_Co < " . l:limit . ')'                         )
-  call s:put  (   "  echoerr '[" . s:info['fullname'] . "] There are not enough colors.'"             )
+  call s:put  (   "  echoerr '[" . s:get_info('fullname') . "] There are not enough colors.'"         )
   call s:put  (   '  finish'                                                                          )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
   if !s:has_dark_and_light()
-    call s:put(   'set background=' . s:background                                                    )
+    call s:put(   'set background=' . s:current_background()                                          )
     call s:put(   ''                                                                                  )
   endif
   call s:put  (   'hi clear'                                                                          )
@@ -397,16 +773,17 @@ fun! s:print_header()
   call s:put  (   '  syntax reset'                                                                    )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
-  call s:put  (   "let g:colors_name = '" . s:info['shortname'] . "'"                                 )
+  call s:put  (   "let g:colors_name = '" . s:get_info('shortname') . "'"                             )
+  call s:put  (   ''                                                                                  )
 endf
 
-" Print details about the color palette as comments
-fun! s:print_color_details(bg)
-  if s:info['terminalcolors'] == [16]
+" Print details about the color palette for the specified background as comments
+fun! s:print_color_details(bg, use16colors)
+  if a:use16colors
     return
   endif
   call s:put('" Color similarity table (' . a:bg . ' background)')
-  let l:palette = s:palette[a:bg]
+  let l:palette = s:palette(a:bg)
   " Find maximum length of color names (used for formatting)
   let l:len = max(map(copy(l:palette), { k,_ -> len(k)}))
   " Sort colors by increasing delta
@@ -434,157 +811,97 @@ fun! s:print_color_details(bg)
     let l:fmt = '" %'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
     call s:put(printf(l:fmt, l:color, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:delta))
   endfor
-  call s:put('')
 endf
 
-fun! s:interpolate_keywords(line)
-  let l:line = substitute(a:line, '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
-  return l:line
-endf
-
-fun! s:interpolate_values(line, bg)
-  let l:line = substitute(a:line, '@term\(\w\+\)', '\=s:palette[a:bg][submatch(1)][s:use16colors ? 2 : 1]', 'g')
-  let l:line = substitute(l:line, '@gui\(\w\+\)',  '\=s:palette[a:bg][submatch(1)][0]', 'g')
-  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)', '\=submatch(1).s:palette[a:bg][submatch(2)][s:use16colors ? 2 : 1]', 'g')
-  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:palette[a:bg][submatch(2)][0]', 'g')
-  let l:line = substitute(l:line, '@optionprefix', s:info['optionprefix'], 'g')
-  let l:line = substitute(l:line, '@shortname',    s:info['shortname'], 'g')
-  return l:line
-endf
-
-fun! s:print_hi_groups(bg)
-  for l:line in s:hi_group[a:bg]
-    call append('$', s:interpolate_values(l:line, a:bg))
-  endfor
-endf
-
-fun! s:generate_colorscheme()
+fun! s:generate_colorscheme(outdir, overwrite)
   silent tabnew +setlocal\ ft=vim
   call s:print_header()
-  call s:put('')
-  let l:prefer16colors = (get(s:info['terminalcolors'], 0, 256) == 16)
-  for l:numcol in s:info['terminalcolors']
-    let s:use16colors = (l:numcol == 16)
-    if len(s:info['terminalcolors']) > 1 " == 2
-      let l:not = s:use16colors ? '' : '!'
-      call s:put("if " .l:not."get(g:, '" . s:info['optionprefix'] . "_use16', " . l:prefer16colors .")")
+  for l:numcol in s:get_info('terminalcolors')
+    let l:use16colors = (l:numcol == 16)
+    if s:has16and256colors()
+      let l:not = s:prefer16colors() ? '' : '!'
+      call s:put("if " .l:not."get(g:, '" . s:get_info('optionprefix') . "_use16', " . s:prefer16colors() .")")
+      if (l:numcol != s:preferred_number_of_colors())
+        call s:put('finish')
+        call s:put('endif')
+        call s:put('')
+        call s:put('" ' . string(l:numcol) . '-color variant')
+      endif
     endif
     if s:has_dark_and_light()
-      for l:bg in ['dark', 'light']
-        call s:print_color_details(l:bg)
-        call s:put("if &background ==# '" .l:bg. "'")
-        call s:print_hi_groups(l:bg)
-        call s:put("endif")
-        call s:put('')
-      endfor
-    else
-      call s:print_color_details(s:background)
-      call s:print_hi_groups(s:background)
+      call s:put("if &background ==# 'dark'")
+      call s:print_color_details('dark', l:use16colors)
+      call s:print_colorscheme('dark', l:use16colors)
+      call s:put("finish")
+      call s:put("endif")
+      call s:put('')
+      call s:print_color_details('light', l:use16colors)
+      call s:print_colorscheme('light', l:use16colors)
+    else " One background
+      call s:print_color_details(s:current_background(), l:use16colors)
+      call s:print_colorscheme(s:current_background(), l:use16colors)
     end
-    if len(s:info['terminalcolors']) > 1
+    if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
       call s:put("endif")
     endif
   endfor
   call s:put('')
-  " Add template as a comment to make the color scheme reproducible.
-  let l:skip = 0
-  for l:line in s:source
-    if l:line =~? '\m^\s*documentation'
-      let l:skip = 1
-    elseif l:line =~? '\m^\s*enddocumentation'
-      let l:skip = 0
-      continue
-    endif
-    if l:skip
-      continue
-    endif
-    if l:line =~? '\m^\s*color\s*:'
-          \ || l:line =~? '\m^\s*background\s*:'
-          \ || !(l:line =~? '\m^\s*$' || l:line =~? '\m^\s*#' || l:line =~? '\m^\s*\%(\w[^:]*\):')
-      call append('$', '" ' . l:line)
-    endif
-  endfor
+  call s:print_source_as_comment()
+  " Reindent
+  norm gg=G
+  if !empty(a:outdir)
+    call s:write_buffer(
+          \ a:outdir . s:slash() . 'colors' . s:slash() . s:get_info('shortname') . '.vim',
+          \ { 'dir': a:outdir },
+          \ a:overwrite)
+  endif
 endf
 
 fun! s:predefined_options()
-  if len(s:info['terminalcolors']) > 1
-    let l:default = (s:info['terminalcolors'][0] == 16)
+  if s:has16and256colors()
+    let l:default = s:prefer16colors()
     call s:add_help('=============================================================================='            )
     call s:add_help('@fullname other options                   *@shortname-other-options*'                      )
     call s:add_help(''                                                                                          )
     call s:add_help('                                          *g:@optionprefix_use16*'                         )
-    call s:add_help('Set to ' . (1-l:default) . ' if you want to use ' .s:info['terminalcolors'][1] . ' colors.')
+    call s:add_help('Set to ' . (1-l:default) . ' if you want to use ' .s:get_info('terminalcolors')[1] . ' colors.')
     call s:add_help('>'                                                                                         )
     call s:add_help('  let g:@optionprefix_use16 = ' . l:default                                                )
     call s:add_help('<'                                                                                         )
   endif
 endf
-
-fun! s:generate_documentation()
-  new +setlocal\ ft=help
-  call s:predefined_options()
-  for l:line in s:doc
-    call s:put(s:interpolate_keywords(l:line))
-  endfor
-endf
-
-fun! s:save_buffer(path, filename, overwrite)
-  if empty(a:path)
-    return
-  endif
-  " Create output directory if it does not exist
-  if !isdirectory(a:path)
-    try
-      call mkdir(a:path)
-    catch /.*/
-      echoerr '[Colortemplate] Could not create directory: ' . a:path
-      let g:colortemplate_exit_status = 1
-      return
-    endtry
-  endif
-  " Write file
-  try
-    execute "write".(a:overwrite ? '!' : '') fnameescape(a:path . s:slash() . a:filename)
-  catch /.*/
-    echoerr '[Colortemplate] Error while writing ' . a:filename . ': ' . v:exception
-    let g:colortemplate_exit_status = 1
-    return
-  endtry
-endf
-" }}} Helper functions
-
+" }}}
 " Parser {{{
 fun! s:parse_verbatim_line()
   if s:template.getl() =~? '\m^\s*endverbatim'
-    let s:is_verbatim = 0
+    call s:stop_verbatim()
     if s:template.getl() !~? '\m^\s*endverbatim\s*$'
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    try " Check that the colors and keywords to be interpolated have been defined by attempting a dry substitution
-      let l:line = substitute(s:template.getl(), '@\%(term\|gui\)\(\w\+\)',  '\=s:palette[s:background][submatch(1)][0]', 'g')
-      let l:line = substitute(l:line, '\%(term[bf]g=\|gui[bf]g=\|guisp=\)@\(\w\+\)',  '\=s:palette[s:background][submatch(1)][0]', 'g')
-      call substitute(l:line, '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
-    catch /.*/
-      throw 'Undefined @ value'
-    endtry
-    call s:add_line(s:template.getl())
+    call s:add_verbatim_line(s:template.getl())
   endif
 endf
 
-fun! s:parse_documentation_line()
+fun! s:parse_help_line()
   if s:template.getl() =~? '\m^\s*enddocumentation'
-    let s:is_documentation = 0
+    call s:stop_help_file()
     if s:template.getl() !~? '\m^\s*enddocumentation\s*$'
       throw "Extra characters after 'enddocumentation'"
     endif
   else
-    try " Check that the keywords to be interpolated have been defined by attempting a dry substitution
-      call substitute(s:template.getl(), '@\(\a\+\)', '\=s:info[submatch(1)]', 'g')
-    catch /.*/
-      throw 'Undefined keyword'
-    endtry
-    call s:add_help(s:template.getl())
+    call s:add_line_to_aux_file(s:template.getl())
+  endif
+endf
+
+fun! s:parse_auxfile_line()
+  if s:template.getl() =~? '\m^\s*endauxfile'
+    call s:stop_aux_file()
+    if s:template.getl() !~? '\m^\s*endauxfile\s*$'
+      throw "Extra characters after 'endauxfile'"
+    endif
+  else
+    call s:add_line_to_aux_file(s:template.getl())
   endif
 endf
 
@@ -595,15 +912,14 @@ fun! s:parse_line()
     return s:parse_comment()
   elseif s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
-      let s:is_verbatim = 1
+      call s:start_verbatim()
       if s:token.next().kind !=# 'EOL'
         throw "Extra characters after 'verbatim'"
       endif
+    elseif s:token.value ==? 'auxfile'
+      call s:start_aux_file(matchstr(s:template.getl(), '^\s*auxfile\s\+\zs.*'))
     elseif s:token.value ==? 'documentation'
-      let s:is_documentation = 1
-      if s:token.next().kind !=# 'EOL'
-        throw "Extra characters after 'documentation'"
-      endif
+      call s:start_help_file()
     elseif s:template.getl() =~? '\m:' " Look ahead
       call s:parse_key_value_pair()
     else
@@ -620,6 +936,7 @@ endf
 
 fun! s:parse_key_value_pair()
   if s:token.value ==? 'color'
+    call s:add_source_line(s:template.getl())
     call s:parse_color_def()
   else " Generic key-value pair
     let l:key_tokens = [s:token.value]
@@ -632,36 +949,28 @@ fun! s:parse_key_value_pair()
     let l:key = tolower(join(l:key_tokens, ''))
     let l:val = matchstr(s:template.getl(), '\s*\zs.*$', s:token.pos)
     if l:key ==# 'background'
+      call s:add_source_line(s:template.getl())
       if l:val =~? '\m^dark\s*$'
-        let s:background = 'dark'
+        call s:set_current_background('dark')
       elseif l:val =~? '\m^light\s*$'
-        let s:background = 'light'
+        call s:set_current_background('light')
       else
         throw 'Background can only be dark or light.'
       endif
-      if s:uses_background[s:background]
-        throw 'Cannot select ' . s:background . ' background more than once'
-      endif
-      let s:uses_background[s:background] = 1
     elseif l:key ==# 'terminalcolors'
-      let l:numcol = uniq(map(split(l:val, '\s*,\s*'), { _,v -> str2nr(v) }))
+      let l:numcol = uniq(map(split(l:val, '\s*,\s*'), { _,v -> string(str2nr(v)) }))
       if !empty(l:numcol)
         if len(l:numcol) > 2 || (l:numcol[0] != 16 && l:numcol[0] != 256) ||
               \ (len(l:numcol) == 2 && l:numcol[1] != 16 && l:numcol[1] != 256)
           throw 'Only 16 and/or 256 colors can be specified.'
         else
-          let s:info['terminalcolors'] = l:numcol
+          call s:set_info('terminalcolors', l:numcol)
         endif
       endif
     elseif l:key ==# 'include'
-      call s:template.include(l:val)
-    elseif !has_key(s:info, l:key)
-      throw 'Unknown key: ' . l:key
+      call s:template.include(l:val, { 'work_dir': s:working_directory() })
     else
-      let s:info[l:key] = l:val
-      if l:key ==# 'shortname' && empty(s:info['optionprefix'])
-        let s:info['optionprefix'] = s:info['shortname']
-      endif
+      call s:set_info(l:key, l:val)
     endif
   endif
 endf
@@ -674,14 +983,15 @@ fun! s:parse_color_def()
   let l:col_gui            = s:parse_gui_value()
   let [l:col_256, l:delta] = s:parse_base_256_value(l:col_gui)
   let l:col_16             = s:parse_base_16_value()
-  call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16, l:delta)
+  call s:add_color(l:colorname, l:col_gui, l:col_16, l:col_256, l:delta)
 endf
 
 fun! s:parse_color_name()
   if s:token.next().kind !=# 'WORD'
     throw 'Invalid color name'
   endif
-  return s:check_valid_color_name(s:token.value)
+  call s:assert_valid_color_name(s:token.value)
+  return s:token.value
 endf
 
 fun! s:parse_gui_value()
@@ -784,41 +1094,40 @@ fun! s:parse_base_16_value()
 endf
 
 fun! s:parse_hi_group_def()
+  call s:add_source_line(s:template.getl())
+
   if s:template.getl() =~# '\m->' " Look ahead
     return s:parse_linked_group_def()
   endif
 
-  let l:hi_group = {}
+  let l:hg = s:new_hi_group()
   " Base highlight group definition
-  let l:hi_group['name'] = s:token.value " Name of highlight group
+  call s:set_hi_name(l:hg, s:token.value)
   " Foreground color
   if s:token.next().kind !=# 'WORD'
     throw 'Foreground color name missing'
   endif
-  let l:hi_group['fg'] = s:parse_color_value()
+  call s:set_fg(l:hg, s:parse_color_value())
   " Background color
   if s:token.next().kind !=# 'WORD'
     throw 'Background color name missing'
   endif
-  let l:hi_group['bg'] = s:parse_color_value()
+  call s:set_bg(l:hg, s:parse_color_value())
 
-  call extend(l:hi_group, s:parse_attributes())
+  let l:hg = s:parse_attributes(l:hg)
 
-  " Add highlight group's definition
-  call s:build_hi_group_def(l:hi_group)
+  call s:add_highlight_group(l:hg)
 endf
 
 fun! s:parse_color_value()
   let l:color = s:token.value
-  if s:is_undefined_color(l:color)
+  if !s:color_exists(l:color, s:current_background())
     throw 'Undefined color name: ' . l:color
   endif
   return l:color
 endf
 
-fun! s:parse_attributes()
-  let l:attributes = { 'cterm': [], 'gui': [], 'sp': '' }
-
+fun! s:parse_attributes(hg)
   while s:token.next().kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
     if s:token.kind !=# 'WORD'
       throw 'Invalid attributes'
@@ -829,30 +1138,27 @@ fun! s:parse_attributes()
         throw "Expected = symbol after 'term'"
       endif
       call s:token.next()
-      let l:attributes['cterm'] += s:parse_attr_list()
+      call s:add_term_attr(a:hg, s:parse_attr_list())
     elseif s:token.value ==? 'g' || s:token.value ==? 'gui'
       if s:token.next().kind !=# '='
         throw "Expected = symbol after 'gui'"
       endif
       call s:token.next()
-      let l:attributes['gui'] += s:parse_attr_list()
+      call s:add_gui_attr(a:hg, s:parse_attr_list())
     elseif s:token.value ==? 's' || s:token.value ==? 'guisp'
       if s:token.next().kind !=# '='
         throw "Expected = symbol after 'guisp'"
       endif
       call s:token.next()
-      let l:attributes['sp'] = s:parse_color_value()
+      call s:set_sp(a:hg, s:parse_color_value())
     else
       let l:attrlist = s:parse_attr_list()
-      let l:attributes['cterm'] += l:attrlist
-      let l:attributes['gui']   += l:attrlist
+      call s:add_term_attr(a:hg, l:attrlist)
+      call s:add_gui_attr(a:hg, l:attrlist)
     endif
   endwhile
 
-  call uniq(sort(l:attributes['cterm']))
-  call uniq(sort(l:attributes['gui']))
-
-  return l:attributes
+  return a:hg
 endf
 
 fun! s:parse_attr_list()
@@ -880,20 +1186,19 @@ fun! s:parse_linked_group_def()
   call s:add_linked_group_def(l:source_group, s:token.value)
 endf
 " }}} Parser
-
 " Public interface {{{
 fun! colortemplate#parse(filename) abort
-  call s:init()
-  call s:set_working_directory(a:filename)
+  call s:init(fnamemodify(a:filename, ":h"))
   call s:template.load(a:filename)
   while !s:template.eof()
-    call add(s:source, s:template.getl())
     call s:token.reset()
     try
-      if s:is_verbatim
+      if s:is_verbatim()
         call s:parse_verbatim_line()
-      elseif s:is_documentation
-        call s:parse_documentation_line()
+      elseif s:is_aux_file()
+        call s:parse_auxfile_line()
+      elseif s:is_help_file()
+        call s:parse_help_line()
       else
         call s:parse_line()
       endif
@@ -908,7 +1213,7 @@ fun! colortemplate#parse(filename) abort
     call s:template.next_line()
   endwhile
 
-  call s:check_requirements()
+  call s:assert_requirements()
 
   if !empty(getloclist(0))
     lopen
@@ -921,12 +1226,14 @@ endf
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
-  if !empty(a:1)
-    if !isdirectory(a:1)
-      echoerr "[Colortemplate] Path is not a directory:" a:1
+  let l:outdir = (a:0 > 0 ? a:1 : '')
+  let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
+  if !empty(l:outdir)
+    if !isdirectory(l:outdir)
+      echoerr "[Colortemplate] Path is not a directory:" l:outdir
       return
-    elseif filewritable(a:1) != 2
-      echoerr "[Colortemplate] Directory is not writable:" a:1
+    elseif filewritable(l:outdir) != 2
+      echoerr "[Colortemplate] Directory is not writable:" l:outdir
       return
     endif
   endif
@@ -943,21 +1250,15 @@ fun! colortemplate#make(...)
     return
   endtry
 
-  let l:doc_dir = (a:0 > 0 && !empty(a:1) ? a:1 . s:slash() . 'doc'    : '')
-  let l:col_dir = (a:0 > 0 && !empty(a:1) ? a:1 . s:slash() . 'colors' : '')
-  let l:overwrite = (a:0 > 1)
-  call s:generate_colorscheme()
-  call s:save_buffer(l:col_dir, s:info['shortname'].'.vim', l:overwrite)
-  if !get(g:, 'colortemplate_no_doc', 0)
-    call s:generate_documentation()
-    call s:save_buffer(l:doc_dir, s:info['shortname'].'.txt', l:overwrite)
-  endif
+  call s:generate_aux_files(l:outdir, l:overwrite)
+  call s:generate_colorscheme(l:outdir, l:overwrite)
+
   redraw
   echo "\r"
   if g:colortemplate_exit_status == 0
-    echomsg '[Colortemplate] Colorscheme written successfully!'
+    echomsg '[Colortemplate] Colorscheme successfully created!'
   else
-    echoerr '[Colortemplate] Colorscheme was not written'
+    echoerr '[Colortemplate] There were errors. See `:messages`.'
   endif
 endf
 " }}} Public interface

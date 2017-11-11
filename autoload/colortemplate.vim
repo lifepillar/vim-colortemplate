@@ -691,8 +691,14 @@ fun! s:add_line_to_aux_file(line)
 endf
 
 fun! s:generate_aux_files(outdir, overwrite)
+  if get (g:, 'colortemplate_no_aux_files', 0)
+    return
+  endif
   for l:path in keys(s:auxfiles)
     if match(l:path, '^doc' . s:slash()) > -1 " Help file
+      if get(g:, 'colortemplate_no_doc', 0)
+        continue
+      endif
       silent bot new +setlocal\ tw=78\ ts=8\ ft=help\ norl
       call append(0, s:auxfiles[l:path])
       call s:predefined_help_text()

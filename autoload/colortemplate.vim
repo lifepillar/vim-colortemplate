@@ -684,7 +684,7 @@ fun! s:generate_aux_files(outdir, overwrite)
     if match(l:path, '^doc' . s:slash()) > -1 " Help file
       silent bot new +setlocal\ tw=78\ ts=8\ ft=help\ norl
       call append(0, s:auxfiles[l:path])
-      call s:predefined_options()
+      call s:predefined_help_text()
     else                                      " Other aux files
       if fnamemodify(l:path, ":e") ==# 'vim'
         silent bot new +setlocal\ ft=vim
@@ -699,7 +699,7 @@ fun! s:generate_aux_files(outdir, overwrite)
   endfor
 endf
 
-fun! s:predefined_options()
+fun! s:predefined_help_text()
   if s:has16and256colors()
     let l:default = s:prefer16colors()
     let l:pad = len(s:get_info('fullname')) + len(s:get_info('shortname'))

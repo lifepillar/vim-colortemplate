@@ -530,4 +530,9 @@ fun! Test_CT_short_name_too_long()
   bwipe
 endf
 
+let s:old = get(g:, 'colortemplate_no_warnings', 0)
+let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')
+let g:colortemplate_no_warnings = s:old
+unlet s:old
+

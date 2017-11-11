@@ -328,6 +328,11 @@ Set to 1 if you do not want to generate the help file.
 >
   let g:colortemplate_no_doc = 0
 <
+						*g:colortemplate_no_warnings*
+Set to 1 if you want Colortemplate to report only errors.
+>
+  let g:colortemplate_no_warnings = 0
+
 ==============================================================================
 Colortemplate command		       		*colortemplate-commands*
 
@@ -407,8 +412,8 @@ Here are some guidelines to develop outstanding hackable colorschemes:
 - Do not define too many options. The ideal number of options for
   a colorscheme is… zero.
 
-- Verbatim blocks allow you to get fancy. If you plan to submit your
-  colorscheme for inclusion in Vim, do not get fancy.
+- Verbatim blocks and aux files allow you to get fancy. If you plan to submit
+  your colorscheme for inclusion in Vim, do not get fancy.
 
 - Do not rely only on boldface to visually distinguish an element: some users
   may have boldface disabled.

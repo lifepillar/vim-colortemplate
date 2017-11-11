@@ -105,6 +105,10 @@ fun! s:add_generic_error(msg)
   call s:add_error(bufname('%'), 0, 1, a:msg)
 endf
 
+fun! s:add_warning(msg)
+  call setloclist(0, [{'filename': bufname('%'), 'lnum' : 1, 'col': 1, 'text' : a:msg, 'type' : 'W'}], 'a')
+endf
+
 " Append a String to the end of the current buffer.
 fun! s:put(line)
   call append('$', a:line)
@@ -458,9 +462,78 @@ fun! s:interpolate(line, use16colors)
 endf
 " }}}
 " Highlight group {{{
-fun! s:new_hi_group()
+let s:default_hi_groups = {
+      \ 'Normal': 0,
+      \ 'ColorColumn': 0,
+      \ 'Conceal': 0,
+      \ 'Cursor': 0,
+      \ 'CursorColumn': 0,
+      \ 'CursorLine': 0,
+      \ 'CursorLineNr': 0,
+      \ 'DiffAdd': 0,
+      \ 'DiffChange': 0,
+      \ 'DiffDelete': 0,
+      \ 'DiffText': 0,
+      \ 'Directory': 0,
+      \ 'EndOfBuffer': 0,
+      \ 'ErrorMsg': 0,
+      \ 'FoldColumn': 0,
+      \ 'Folded': 0,
+      \ 'IncSearch': 0,
+      \ 'LineNr': 0,
+      \ 'MatchParen': 0,
+      \ 'ModeMsg': 0,
+      \ 'MoreMsg': 0,
+      \ 'NonText': 0,
+      \ 'Pmenu': 0,
+      \ 'PmenuSbar': 0,
+      \ 'PmenuSel': 0,
+      \ 'PmenuThumb': 0,
+      \ 'Question': 0,
+      \ 'QuickFixLine': 0,
+      \ 'Search': 0,
+      \ 'SignColumn': 0,
+      \ 'SpecialKey': 0,
+      \ 'SpellBad': 0,
+      \ 'SpellCap': 0,
+      \ 'SpellLocal': 0,
+      \ 'SpellRare': 0,
+      \ 'StatusLine': 0,
+      \ 'StatusLineNC': 0,
+      \ 'StatusLineTerm': 0,
+      \ 'StatusLineTermNC': 0,
+      \ 'TabLine': 0,
+      \ 'TabLineFill': 0,
+      \ 'TabLineSel': 0,
+      \ 'Title': 0,
+      \ 'VertSplit': 0,
+      \ 'Visual': 0,
+      \ 'VisualNOS': 0,
+      \ 'WarningMsg': 0,
+      \ 'WildMenu': 0,
+      \ 'Comment': 0,
+      \ 'Constant': 0,
+      \ 'Error': 0,
+      \ 'Identifier': 0,
+      \ 'Ignore': 0,
+      \ 'PreProc': 0,
+      \ 'Special': 0,
+      \ 'Statement': 0,
+      \ 'Todo': 0,
+      \ 'Type': 0,
+      \ 'Underlined': 0
+      \ }
+
+fun! s:undefined_default_groups()
+  return keys(filter(copy(s:default_hi_groups), { k,v -> v == 0 }))
+endf
+
+fun! s:new_hi_group(name)
+  if has_key(s:default_hi_groups, a:name)
+    let s:default_hi_groups[a:name] = 1
+  endif
   return {
-        \ 'name': '',
+        \ 'name': a:name,
         \ 'fg': '',
         \ 'bg': '',
         \ 'sp': 'none',
@@ -491,10 +564,6 @@ endf
 
 fun! s:gui_attr(hg)
   return a:hg['gui']
-endf
-
-fun! s:set_hi_name(hg, name)
-  let a:hg['name'] = a:name
 endf
 
 fun! s:set_fg(hg, colorname)
@@ -566,6 +635,9 @@ fun! s:add_linked_group_def(src, tgt)
     call add(s:colorscheme[l:numcol][s:current_background()],
           \ 'hi! link ' . a:src . ' ' . a:tgt)
   endfor
+  if has_key(s:default_hi_groups, a:src)
+    let s:default_hi_groups[a:src] = 1
+  endif
 endf
 
 " Adds the current highlight group to the colorscheme
@@ -769,6 +841,12 @@ fun! s:assert_requirements()
     call s:add_generic_error('Please define the Normal highlight group for both dark and light background')
   elseif !s:has_normal_group(s:current_background())
     call s:add_generic_error('Please define the Normal highlight group')
+  endif
+  if !get(g:, 'colortemplate_no_warnings', 0)
+    let l:missing_groups = s:undefined_default_groups()
+    for l:hg in l:missing_groups
+      call s:add_warning('No definition for ' . l:hg . ' highlight group')
+    endfor
   endif
 endf
 
@@ -1118,9 +1196,8 @@ fun! s:parse_hi_group_def()
     return s:parse_linked_group_def()
   endif
 
-  let l:hg = s:new_hi_group()
   " Base highlight group definition
-  call s:set_hi_name(l:hg, s:token.value)
+  let l:hg = s:new_hi_group(s:token.value)
   " Foreground color
   if s:token.next().kind !=# 'WORD'
     throw 'Foreground color name missing'
@@ -1235,10 +1312,12 @@ fun! colortemplate#parse(filename) abort
 
   if !empty(getloclist(0))
     lopen
-    throw 'Parse error'
+    if !empty(filter(getloclist(0), { i,v -> v['type'] !=# 'W' }))
+      throw 'Parse error'
+    endif
+  else
+    lclose
   endif
-
-  lclose
 endf
 
 " a:1 is the optional path to an output directory

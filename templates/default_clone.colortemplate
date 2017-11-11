@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker
+# vim: ft=colortemplate fdm=marker ts=8
 
 # Information {{{
 # Mandatory
@@ -14,9 +14,9 @@ Description: A nearly exact clone of Vim's default colorscheme
 # Documentation {{{
 documentation
 ==============================================================================
-@fullname colorscheme                     *@shortname*
+@fullname colorscheme				*@shortname*
 
-                                          *g:@optionprefix_transp_bg*
+						*g:@optionprefix_transp_bg*
 Set to 0 if you want an opaque background. Takes effect only in the
 terminal.
 >

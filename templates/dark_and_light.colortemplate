@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker
+# vim: ft=colortemplate fdm=marker ts=8
 
 
 # Information {{{
@@ -18,11 +18,11 @@ Option Prefix: dark_and_light
 # Documentation {{{
 documentation
 ==============================================================================
-@fullname colorscheme                     *@shortname*
+@fullname colorscheme				*@shortname*
 
 DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY.
 
-                                          *g:@optionprefix_transp_bg*
+						*g:@optionprefix_transp_bg*
 Set to 1 if you want a transparent background. Takes effect only in the
 terminal.
 >

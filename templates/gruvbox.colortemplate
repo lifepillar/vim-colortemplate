@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker
+# vim: ft=colortemplate fdm=marker ts=8
 
 # Information {{{
 Full name: Gruvbox
@@ -13,9 +13,9 @@ Terminal Colors: 256, 16
 # Documentation {{{
 documentation
 ==============================================================================
-@fullname colorscheme                     *@shortname*
+@fullname colorscheme				*@shortname*
 
-                                          *g:@optionprefix_transp_bg*
+						*g:@optionprefix_transp_bg*
 Set to 1 if you want a transparent background. Takes effect only in the
 terminal.
 >

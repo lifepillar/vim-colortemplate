@@ -727,7 +727,7 @@ fun! s:predefined_help_text()
     call s:put(s:interpolate(repeat("\t", max([1,(68-l:pad)/8])) . '*g:@optionprefix_use16*', 0)                               )
     call s:put(              'Set to ' . (1-l:default) . ' if you want to use ' .s:get_info('terminalcolors')[1] . ' colors.'  )
     call s:put(              '>'                                                                                               )
-    call s:put(s:interpolate('  let g:@optionprefix_use16 = ', 0) . l:default                                                  )
+    call s:put(s:interpolate('	let g:@optionprefix_use16 = ', 0) . l:default                                                  )
     call s:put(              '<'                                                                                               )
   endif
   call s:put(              'vim:tw=78:ts=8:ft=help:norl:'                                                                      )

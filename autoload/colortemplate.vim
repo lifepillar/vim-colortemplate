@@ -107,7 +107,7 @@ endf
 
 " Append a String to the end of the current buffer.
 fun! s:put(line)
-  call append(line('$'), a:line)
+  call append('$', a:line)
 endf
 " }}} Helper functions
 " Internal state {{{

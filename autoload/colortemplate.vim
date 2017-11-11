@@ -597,11 +597,14 @@ fun! s:add_highlight_group(hg)
   endfor
 endf
 
-fun! s:print_colorscheme(background, use16colors)
+fun! s:print_colorscheme_preamble(use16colors)
   if !empty(s:colorscheme[a:use16colors ? '16' : '256']['preamble'])
     call append('$', s:colorscheme[a:use16colors ? '16' : '256']['preamble'])
     call s:put('')
   endif
+endf
+
+fun! s:print_colorscheme(background, use16colors)
   call append('$', s:colorscheme[a:use16colors ? '16' : '256'][a:background])
 endf
 " }}}
@@ -846,6 +849,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
       let l:not = s:prefer16colors() ? '' : '!'
       call s:put("if " .l:not."get(g:, '" . s:get_info('optionprefix') . "_use16', " . s:prefer16colors() .")")
     endif
+    call s:print_colorscheme_preamble(l:use16colors)
     if s:has_dark_and_light()
       call s:put("if &background ==# 'dark'")
       call s:print_color_details('dark', l:use16colors)

@@ -278,8 +278,13 @@ fun! s:set_info(key, value)
     endif
   endif
   let s:info[a:key] = a:value
-  if a:key ==# 'shortname' && empty(s:info['optionprefix'])
-    let s:info['optionprefix'] = s:info['shortname']
+  if a:key ==# 'shortname'
+    if len(a:value) > 24
+      throw 'The short name must be at most 24 characters long'
+    endif
+    if empty(s:info['optionprefix'])
+      let s:info['optionprefix'] = s:info['shortname']
+    endif
   endif
 endf
 

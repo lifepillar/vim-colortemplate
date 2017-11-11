@@ -10,11 +10,12 @@ CONTENTS					*colortemplate-contents*
     7. Verbatim blocks ...... |colortemplate-verbatim|
     8. Documentation blocks . |colortemplate-doc|
     9. Auxiliary files ...... |colortemplate-auxfiles|
-   10. Options .............. |colortemplate-options|
-   11. Commands ............. |colortemplate-commands|
-   12. Functions ............ |colortemplate-functions|
-   13. Best practices ....... |colortemplate-best-practices|
-   14. Providing feedback ... |colortemplate-feedback|
+   10. Include directive .... |colortemplate-include|
+   11. Options .............. |colortemplate-options|
+   12. Commands ............. |colortemplate-commands|
+   13. Functions ............ |colortemplate-functions|
+   14. Best practices ....... |colortemplate-best-practices|
+   15. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
 Color templates				*colortemplate-intro* *ft-colortemplate*
@@ -295,9 +296,9 @@ example, `@fullname` is replaced by the value of the `Full Name` directive.
 Names to be interpolated must be all lowercase and without spaces. Do not
 hardcode your colorscheme's name into the documentation!
 
-If the `Terminal Colors` field includes both `16` and `256`, an option is
-automatically defined and documented by Colortemplate, which allows the user
-to choose the preferred terminal color palette. The option's name is
+If the `Terminal Colors` field includes both `16` and `256` (in any order), an
+option is automatically defined and documented by Colortemplate, which allows
+the user to choose the preferred terminal color palette. The option's name is
 `g:<colorscheme>_use16`, where `<colorscheme>` is the option prefix of your
 template.
 
@@ -313,6 +314,37 @@ If you need to create additional files, you may put their content into an
 
 You must specify the path of the resulting file after `auxfile`. The content
 of an `auxfile` block is interpolated as in verbatim blocks.
+
+==============================================================================
+Include directive		       		*colortemplate-include*
+
+You may split your template into several files, and include snippets from one
+file into another. You do so with an `Include` directive. For example, you
+might put the documentation of your colorscheme into a separate template, say
+`_help.colortemplate`, and include it into the main template as follows:
+>
+  Include: _help.colortemplate
+<
+The result is the same as if the content of `_help.colortemplate` had been
+written at the inclusion point.
+
+Conventionally, templates that are not meant to be used directly, but only
+included into other templates, have names starting with an underscore.
+
+You may include the same file more than once. This is useful, for example, if
+you have highlight group definitions that are common to a dark and light
+background. Then, you may put them into a `_common.colortemplate` file, and
+include it twice:
+>
+  Background: dark
+  Include: _common.colortemplate
+  # Other definitions specific to dark background
+  Background: light
+  Include: _common.colortemplate
+  # Other definitions specific to light background
+<
+NOTE: beware cyclic inclusions, which will cause Colortemplate to run an
+infinite loop!
 
 ==============================================================================
 Colortemplate options		       		*colortemplate-options*

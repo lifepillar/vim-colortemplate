@@ -696,6 +696,24 @@ fun! s:generate_aux_files(outdir, overwrite)
     endif
   endfor
 endf
+
+fun! s:predefined_options()
+  if s:has16and256colors()
+    let l:default = s:prefer16colors()
+    let l:pad = len(s:get_info('fullname')) + len(s:get_info('shortname'))
+    call s:put(              '=============================================================================='                )
+    call s:put(s:interpolate('@fullname other options' . repeat("\t", (40-l:pad)/8) . '*@shortname-other-options*', 0)       )
+    call s:put(              ''                                                                                              )
+    let l:pad = len(s:get_info('optionprefix'))
+    call s:put(s:interpolate(repeat("\t", (68-l:pad)/8) . '*g:@optionprefix_use16*', 0)                                      )
+    call s:put(              'Set to ' . (1-l:default) . ' if you want to use ' .s:get_info('terminalcolors')[1] . ' colors.')
+    call s:put(              '>'                                                                                             )
+    call s:put(s:interpolate('  let g:@optionprefix_use16 = ', 0) . l:default                                                )
+    call s:put(              '<'                                                                                             )
+    call s:put(              ''                                                                                              )
+    call s:put(              'vim:tw=78:ts=8:ft=help:norl:'                                                                  )
+  endif
+endf
 " }}}
 " Initialize state {{{
 fun! s:init(work_dir)
@@ -859,20 +877,6 @@ fun! s:generate_colorscheme(outdir, overwrite)
           \ a:outdir . s:slash() . 'colors' . s:slash() . s:get_info('shortname') . '.vim',
           \ { 'dir': a:outdir },
           \ a:overwrite)
-  endif
-endf
-
-fun! s:predefined_options()
-  if s:has16and256colors()
-    let l:default = s:prefer16colors()
-    call s:add_help('=============================================================================='            )
-    call s:add_help('@fullname other options                   *@shortname-other-options*'                      )
-    call s:add_help(''                                                                                          )
-    call s:add_help('                                          *g:@optionprefix_use16*'                         )
-    call s:add_help('Set to ' . (1-l:default) . ' if you want to use ' .s:get_info('terminalcolors')[1] . ' colors.')
-    call s:add_help('>'                                                                                         )
-    call s:add_help('  let g:@optionprefix_use16 = ' . l:default                                                )
-    call s:add_help('<'                                                                                         )
   endif
 endf
 " }}}

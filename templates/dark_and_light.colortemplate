@@ -26,7 +26,7 @@ DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY.
 Set to 1 if you want a transparent background. Takes effect only in the
 terminal.
 >
-  let g:@optionprefix_transp_bg = 0
+	let g:@optionprefix_transp_bg = 0
 <
 enddocumentation
 # }}}

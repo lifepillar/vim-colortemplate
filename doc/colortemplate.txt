@@ -295,7 +295,7 @@ example, `@fullname` is replaced by the value of the `Full Name` directive.
 Names to be interpolated must be all lowercase and without spaces. Do not
 hardcode your colorscheme's name into the documentation!
 
-If the `Terminal Colors` fields includes both `16` and `256`, an option is
+If the `Terminal Colors` field includes both `16` and `256`, an option is
 automatically defined and documented by Colortemplate, which allows the user
 to choose the preferred terminal color palette. The option's name is
 `g:<colorscheme>_use16`, where `<colorscheme>` is the option prefix of your

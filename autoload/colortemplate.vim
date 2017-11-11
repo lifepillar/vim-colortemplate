@@ -712,9 +712,8 @@ fun! s:predefined_help_text()
     call s:put(              '>'                                                                                             )
     call s:put(s:interpolate('  let g:@optionprefix_use16 = ', 0) . l:default                                                )
     call s:put(              '<'                                                                                             )
-    call s:put(              ''                                                                                              )
-    call s:put(              'vim:tw=78:ts=8:ft=help:norl:'                                                                  )
   endif
+  call s:put(              'vim:tw=78:ts=8:ft=help:norl:'                                                                    )
 endf
 " }}}
 " Initialize state {{{

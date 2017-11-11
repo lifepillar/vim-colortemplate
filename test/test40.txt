@@ -1,9 +1,10 @@
 # vim: ft=colortemplate
 Full name:X
-Short name: invalid-name$
+Short name: short-name-with-dashes or spaces-is-invalid
 Author:y
 Maintainer:w
 Background:dark
 Color:black rgb(0,0,0) 0 Black
 Color:white #ffffff 255 White
 Normal white black
+

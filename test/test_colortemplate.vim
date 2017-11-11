@@ -435,7 +435,9 @@ fun! Test_CT_invalid_short_name()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(1, len(l:loclist))
-  call assert_equal("The short name may contain only letters, numbers and underscore.", l:loclist[0]['text'])
+  call assert_equal("The short name may contain only letters, numbers and underscore", l:loclist[0]['text'])
+  call assert_equal(3, l:loclist[0]['lnum'])
+  call assert_equal(11, l:loclist[0]['col'])
   lclose
   bwipe
 endf
@@ -512,6 +514,18 @@ fun! Test_CT_error_in_included_file()
   call assert_equal('test39b.txt', bufname(l:loclist[0]['bufnr']))
   call assert_equal(6, l:loclist[0]['lnum'])
   call assert_equal(14, l:loclist[0]['col'])
+  lclose
+  bwipe
+endf
+
+fun! Test_CT_short_name_too_long()
+  edit test40.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("The short name must be at most 24 characters long", l:loclist[0]['text'])
+  call assert_equal(3, l:loclist[0]['lnum'])
+  call assert_equal(11, l:loclist[0]['col'])
   lclose
   bwipe
 endf

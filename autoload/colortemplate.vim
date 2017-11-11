@@ -279,11 +279,19 @@ fun! s:set_info(key, value)
   endif
   let s:info[a:key] = a:value
   if a:key ==# 'shortname'
-    if len(a:value) > 24
+    if empty(a:value)
+      throw 'Please specify a short name for your colorscheme'
+    elseif len(a:value) > 24
       throw 'The short name must be at most 24 characters long'
+    elseif a:value !~? '\m^\w\+$'
+      throw 'The short name may contain only letters, numbers and underscore'
     endif
     if empty(s:info['optionprefix'])
       let s:info['optionprefix'] = s:info['shortname']
+    endif
+  elseif a:key ==# 'optionprefix'
+    if a:value !~? '\m\w\+$'
+      throw 'The option prefix may contain only letters, numbers and underscore'
     endif
   endif
 endf
@@ -619,7 +627,7 @@ fun! s:add_verbatim_line(line)
     try
       let l:line = s:interpolate(a:line, l:numcol == '16')
     catch /.*/
-      throw 'Undefined keyword (' . v:exception . ')'
+      throw 'Undefined @ value'
     endtry
     if s:background_undefined()
       call add(s:colorscheme[l:numcol]['preamble'], l:line)
@@ -738,15 +746,6 @@ endf
 fun! s:assert_requirements()
   if empty(s:get_info('fullname'))
     call s:add_generic_error('Please specify the full name of your color scheme')
-  endif
-  if empty(s:get_info('shortname'))
-    call s:add_generic_error('Please specify a short name for your colorscheme')
-  elseif s:get_info('shortname') !~? '\m^\w\+$'
-    call s:add_generic_error('The short name may contain only letters, numbers and underscore.')
-  elseif empty(s:get_info('optionprefix'))
-    call s:set_info('optionprefix', s:get_info('shortname'))
-  elseif s:get_info('optionprefix') !~? '\m\w\+$'
-    call s:add_generic_error('The option prefix may contain only letters, numbers and underscore.')
   endif
   if empty(s:get_info('author'))
     call s:add_generic_error('Please specify an author and the corresponding email')
@@ -977,7 +976,7 @@ fun! s:parse_key_value_pair()
         endif
       endif
     elseif l:key ==# 'include'
-      call s:template.include(l:val, { 'work_dir': s:working_directory() })
+      call s:template.include(l:val)
     else
       call s:set_info(l:key, l:val)
     endif

@@ -145,14 +145,3 @@ Type                 green             none                 g=bold
 # CursorIM             none              fg
 # }}}
 
-# Additional highlight groups {{{
-# Add additional highlight groups here if you want
-# }}}
-
-# Plugin specific highlight groups {{{
-# Add plugin specific highlight groups here if you want
-# }}}
-
-# Filetype specific highlight groups {{{
-# Add filetype specific highlight groups here if you want
-# }}}

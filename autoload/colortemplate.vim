@@ -299,6 +299,10 @@ endf
 fun! s:preferred_number_of_colors()
   return get(s:info['terminalcolors'], 0, 256)
 endf
+
+fun! s:secondary_number_of_colors()
+  return get(s:info['terminalcolors'], 1, 16)
+endf
 " }}}
 " Source {{{
 fun! s:init_source()
@@ -586,13 +590,11 @@ fun! s:add_highlight_group(hg)
 endf
 
 fun! s:print_colorscheme(background, use16colors)
-  for l:line in s:colorscheme[a:use16colors ? '16' : '256']['preamble']
-    call s:put(l:line)
-  endfor
-  call s:put('')
-  for l:line in s:colorscheme[a:use16colors ? '16' : '256'][a:background]
-    call s:put(l:line)
-  endfor
+  if !empty(s:colorscheme[a:use16colors ? '16' : '256']['preamble'])
+    call append('$', s:colorscheme[a:use16colors ? '16' : '256']['preamble'])
+    call s:put('')
+  endif
+  call append('$', s:colorscheme[a:use16colors ? '16' : '256'][a:background])
 endf
 " }}}
 " Verbatim {{{
@@ -679,20 +681,20 @@ endf
 
 fun! s:generate_aux_files(outdir, overwrite)
   for l:path in keys(s:auxfiles)
-    if fnamemodify(l:path, ":e") ==# 'vim'
-      silent tabnew +setlocal\ ft=vim
-    elseif match(l:path, '^doc' . s:slash()) > -1
-      silent tabnew +setlocal\ ft=help
-    else
-      silent tabnew
+    if match(l:path, '^doc' . s:slash()) > -1 " Help file
+      silent bot new +setlocal\ tw=78\ ts=8\ ft=help\ norl
+      call append(0, s:auxfiles[l:path])
+      call s:predefined_options()
+    else                                      " Other aux files
+      if fnamemodify(l:path, ":e") ==# 'vim'
+        silent bot new +setlocal\ ft=vim
+      else
+        silent bot new
+      endif
+      call append(0, s:auxfiles[l:path])
     endif
-    for l:line in s:auxfiles[l:path]
-      call s:put(l:line)
-    endfor
     if !empty(a:outdir)
       call s:write_buffer(l:path, { 'dir': a:outdir }, a:overwrite)
-    else
-      execute 'file' l:path
     endif
   endfor
 endf
@@ -841,15 +843,10 @@ fun! s:generate_colorscheme(outdir, overwrite)
   call s:print_header()
   for l:numcol in s:get_info('terminalcolors')
     let l:use16colors = (l:numcol == 16)
-    if s:has16and256colors()
+    if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
+      call s:put('" ' . l:numcol . '-color variant')
       let l:not = s:prefer16colors() ? '' : '!'
       call s:put("if " .l:not."get(g:, '" . s:get_info('optionprefix') . "_use16', " . s:prefer16colors() .")")
-      if (l:numcol != s:preferred_number_of_colors())
-        call s:put('finish')
-        call s:put('endif')
-        call s:put('')
-        call s:put('" ' . string(l:numcol) . '-color variant')
-      endif
     endif
     if s:has_dark_and_light()
       call s:put("if &background ==# 'dark'")
@@ -865,9 +862,13 @@ fun! s:generate_colorscheme(outdir, overwrite)
       call s:print_colorscheme(s:current_background(), l:use16colors)
     end
     if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
-      call s:put("endif")
+      call s:put('finish')
+      call s:put('endif')
+      call s:put('')
+      call s:put('" ' . s:secondary_number_of_colors() . '-color variant')
     endif
   endfor
+  call s:put('finish')
   call s:put('')
   call s:print_source_as_comment()
   " Reindent
@@ -1259,8 +1260,8 @@ fun! colortemplate#make(...)
     return
   endtry
 
-  call s:generate_aux_files(l:outdir, l:overwrite)
   call s:generate_colorscheme(l:outdir, l:overwrite)
+  call s:generate_aux_files(l:outdir, l:overwrite)
 
   redraw
   echo "\r"

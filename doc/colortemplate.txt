@@ -472,7 +472,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      like disconnected components?
 
 =============================================================================
-Providind feedback				*colortemplate-feedback*
+Providing feedback				*colortemplate-feedback*
 
 For bug reports and feature requests please use:
 

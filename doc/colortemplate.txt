@@ -434,48 +434,29 @@ Here are some guidelines to develop outstanding hackable colorschemes:
 
 - Give each of your colors a distinctive name.
 
+- Do not use too many colors. Probably, six-height colors are already enough.
+  Sixteen are plenty.
+
 - Prefer falling back to a 256 color palette when true colors are not
   available. Although not all xterm color palettes are the same, this provides
   the less unpredictable look. Relying on a terminal's 16 ANSI color palette
-  in general results in colorschemes displaying arbitrary colors.
+  in general results in colorschemes displaying arbitrary colors. If you
+  really need to do that, use color names instead of numbers (see
+  |cterm-colors|).
 
 - Document all the options of your colorscheme.
 
 - Do not define too many options. The ideal number of options for
   a colorscheme is… zero.
 
-- Verbatim blocks and aux files allow you to get fancy. If you plan to submit
-  your colorscheme for inclusion in Vim, do not get fancy.
+- Do not rely only on boldface, italics, or underlined text to visually
+  distinguish an element: some setups do not support any of those.
 
-- Do not rely only on boldface to visually distinguish an element: some users
-  may have boldface disabled.
-
-- Similarly, do not rely only on underlined text to distinguish an element
-  (e.g., for SpellBad, SpellCap, SpellLocal, SpellRare), but use also
-  different colors: in some setups, underline is not used or implemented.
-
-- Some users like to use a transparent background (e.g., with custom images)
-  in the terminal. You may easily support that by adapting this snippet:
-  >
-   verbatim
-   if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
-   endverbatim
-     Normal some_color none
-     # Other highlight groups
-   verbatim
-   else
-   endverbatim
-     Normal some_color some_other_color
-     # Other highlight groups
-   verbatim
-   endif
-   endverbatim
-<
-  Do not forget to document the `@optionsprefix_transp_bg` option!
-
-- Visually check every part of your colorscheme. If you support transparent
-  backgrounds, make sure to test your colorcheme both with an opaque and with
-  a transparent background. A few areas that are often overlooked include:
+- Visually check every part of your colorscheme. Use as many text samples as
+  possible: string-heavy languages may look completely different from
+  keyword-heavy ones. If you support transparent backgrounds, make sure to
+  test your colorcheme both against an opaque and a transparent background.
+  A few areas that are often overlooked include:
 
   a. The tab line (TabLine, TabLineFill, TabLineSel highlight groups). You may
      open a new tab with |tabnew|;
@@ -499,31 +480,75 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      you see where the cursor is?
   g. Diffs (DiffAdd, DiffChange, DiffDelete, DiffText). Open two buffers in
      a split window and execute |diffthis| on both of them.
-  h. Do the statuslines (StatusLine, StatusLineNC), the tab line (see above),
-     and the vertical split (VertSplit) merge harmoniously or do they appear
-     like disconnected components?
-  i. Avoid defining filetype-specific highlight groups as much as possible.
-     They override ftplugin definitions causing highlighting to be messed up
-     after switching colorschemes. For example, suppose that the Vim filetype
-     defines vimCommand to be a link to Statement. If your colorscheme sets
-     vimCommand's attributes, after switching away from your colorscheme
-     vimCommand will be cleared, and not restored to its default as you might
-     expect. Even resetting the filetype will not fix it. If you link
-     vimCommand instead, the linking will persist after switching to another
-     colorscheme (so, again, the default will not be restored), which will
-     likely result in a different highlighting than expected.
-     If you absolutely need filetype-specific highlight group definitions in
-     your colorscheme, define an option that allows the user to turn them
-     on/off (the default should be off):
+
+- Do the statuslines (StatusLine, StatusLineNC), the tab line (see above), and
+  the vertical split (VertSplit) merge harmoniously or do they appear like
+  disconnected components?
+
+- Avoid defining filetype-specific highlight groups as much as possible. They
+  override ftplugin definitions causing highlighting to be messed up after
+  switching colorschemes. For example, suppose that the Vim filetype defines
+  vimCommand to be a link to Statement. If your colorscheme sets vimCommand's
+  attributes, after switching away from your colorscheme vimCommand will be
+  cleared, and not restored to a link to Statement as you might expect. Even
+  resetting the filetype will not fix that. If you link vimCommand instead,
+  the linking will persist after switching to another colorscheme (so, again,
+  the default link will not be restored), which will likely result in
+  a different highlighting than expected. If you absolutely need
+  filetype-specific highlight group definitions in your colorscheme, define an
+  option that allows the user to turn them on/off (the default should be off):
 >
-	verbatim
-	if get(g:, '@optionprefix_extra_hi_groups', 0)
-        endverbatim
-          " Filetype-specific highlight group definitions go here
-        verbatim
-        endif
-        endverbatim
+    verbatim
+    if get(g:, '@optionprefix_extra_hi_groups', 0)
+    endverbatim
+      " Filetype-specific highlight group definitions go here
+    verbatim
+    endif
+    endverbatim
 <
+- Some users like to use a transparent background (e.g., with custom images)
+  in the terminal. You may easily support that by adapting this snippet:
+  >
+   verbatim
+   if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+   endverbatim
+     Normal some_color none
+     # Other definitions
+   verbatim
+   else
+   endverbatim
+     Normal some_color some_other_color
+     # Other definitions
+   verbatim
+   endif
+   endverbatim
+<
+  Do not forget to document the `@optionsprefix_transp_bg` option!
+
+- Verbatim blocks and aux files allow you to get fancy. If you plan to submit
+  your colorscheme for inclusion in Vim, do not get fancy.
+
+- Finally, these online resources can help you design your colorscheme:
+
+  - http://color.hailpixel.com/
+    Play with hexadecimal colors
+  - http://colourco.de/
+    Similar concept, fancier implementation
+  - http://www.colr.org/
+    Extract a palette from an image
+  - http://www.colourlovers.com/palettes
+    User-created palettes
+  - http://www.perbang.dk/color+scheme/
+    A no-nonsense colorscheme generator
+  - https://color.adobe.com/
+    Adobe's fancy colorscheme generator
+  - http://paletton.com/
+    The classic 'Color Scheme Designer', rebranded
+  - http://vrl.cs.brown.edu/color
+    A very smart palette generator
+
+  Kudos to Romain Lafourcade for collecting the above links!
+
 =============================================================================
 Providing feedback				*colortemplate-feedback*
 

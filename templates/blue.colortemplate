@@ -7,7 +7,7 @@ Short name:  blue
 Author:      Steven Vertigan <steven@vertigan.wattle.id.au>
 Maintainer:  To be determined
 Description: Templatized version of blue colorscheme from Vim
-Terminal Colors: 16,256
+Terminal Colors: 16
 # }}}
 
 # Documentation {{{
@@ -23,6 +23,11 @@ terminal.
 <
 enddocumentation
 # }}}
+
+verbatim
+" Revision #5: Switch main text from white to yellow for easier contrast,
+" fixed some problems with terminal backgrounds.
+endverbatim
 
 Background: dark
 

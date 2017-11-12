@@ -480,7 +480,6 @@ Here are some guidelines to develop outstanding hackable colorschemes:
 	:sign define piet text=>>
 	:exe ":sign place 2 line=23 name=piet file=" . expand("%:p")
 <
-
   d. The cursor's appearance (Cursor), especially with |cursorline| and
      |cursorcolumn| on. For this, you may need to use some GUI version of Vim,
      as most terminals override the cursor's color.
@@ -509,7 +508,6 @@ Here are some guidelines to develop outstanding hackable colorschemes:
        CursorColumn none   grey            # Ditto
        Search       yellow fg    reverse   # Use reverse
 <
-
   g. Diffs (DiffAdd, DiffChange, DiffDelete, DiffText). Open two buffers in
      a split window and execute |diffthis| on both of them.
 

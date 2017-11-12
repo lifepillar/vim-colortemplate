@@ -1336,7 +1336,7 @@ fun! colortemplate#make(...)
   endif
 
   try
-    call colortemplate#parse(expand('%'))
+    call colortemplate#parse(expand('%:p'))
   catch /Parse error/
     let g:colortemplate_exit_status = 1
     lopen

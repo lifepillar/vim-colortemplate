@@ -1,0 +1,166 @@
+# vim: ft=colortemplate fdm=marker ts=8
+
+# Information {{{
+# Mandatory
+Full name:   Blue
+Short name:  blue
+Author:      Steven Vertigan <steven@vertigan.wattle.id.au>
+Maintainer:  To be determined
+Description: Templatized version of blue colorscheme from Vim
+Terminal Colors: 16,256
+# }}}
+
+# Documentation {{{
+documentation
+==============================================================================
+@fullname colorscheme                           *@shortname*
+
+                                                *g:@optionprefix_transp_bg*
+Set to 1 if you want a transparent background. Takes effect only in the
+terminal.
+>
+        let g:@optionprefix_transp_bg = 0
+<
+enddocumentation
+# }}}
+
+Background: dark
+
+# Color palette {{{
+
+# NOTE: GUI values are from $VIMRUNTIME/rgb.txt
+
+# Color name                GUI                  Base256    Base16 (optional)
+Color: black                rgb(  0,   0,   0)     ~        black
+Color: blue                 rgb(  0,   0, 255)     ~        blue
+Color: coral                rgb(255, 127,  80)     ~        cyan
+Color: cyan                 rgb(  0, 255, 255)     ~        cyan
+Color: darkgreen            rgb(  0, 100,   0)     ~        darkGreen
+Color: darkblue             rgb(  0,   0, 139)     ~        darkBlue
+Color: darkcyan             rgb(  0, 139, 139)     ~        darkCyan
+Color: gray                 rgb(190, 190, 190)     ~        gray
+Color: gray_red             rgb(190, 190, 190)     ~        red
+Color: gray30               rgb( 77,  77,  77)     ~        gray
+Color: green                rgb(  0, 255,   0)     ~        green
+Color: magenta              rgb(255,   0, 255)     ~        lightMagenta
+Color: olivedrab            rgb(107, 142,  35)     ~        lightGreen
+Color: orange               rgb(255, 165,   0)     ~        lightRed
+Color: orange_darkyellow    rgb(255, 165,   0)     ~        darkYellow
+Color: orange_yellow        rgb(255, 165,   0)     ~        yellow
+Color: red                  rgb(255,   0,   0)     ~        red
+Color: slateblue            rgb(106,  90, 205)     ~        blue
+Color: white                rgb(255, 255, 255)     ~        white
+Color: yellow               rgb(255, 255,   0)     ~        yellow
+Color: yellow_darkyellow    rgb(255, 255,   0)     ~        darkYellow
+# }}}
+
+# Default highlight groups {{{
+verbatim
+if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+endverbatim
+    # Transparent background
+    Normal yellow none
+verbatim
+else
+endverbatim
+    # Opaque background
+    Normal yellow darkblue
+verbatim
+endif
+endverbatim
+
+# Group              Foreground        Background        Attributes
+# ColorColumn          fg                bg
+# Conceal              none              none
+Cursor               black             white
+# CursorColumn         white             black
+# CursorLine           white             black
+# CursorLineNr         white             black
+DiffAdd              black             slateblue
+DiffChange           black             darkgreen
+DiffDelete           black             coral
+DiffText             black             olivedrab
+# Directory            white             black
+# EndOfBuffer          white             black
+ErrorMsg             orange            darkblue
+FoldColumn           black             gray30
+Folded               black             orange_yellow
+IncSearch            black             yellow_darkyellow
+LineNr               cyan              none
+# MatchParen           white             black
+ModeMsg              yellow            none
+MoreMsg              yellow            none
+NonText              magenta           none
+# Pmenu                white             black
+# PmenuSbar            white             black
+# PmenuSel             white             black
+# PmenuThumb           white             black
+# Question             white             black
+# QuickFixLine     ->  Search
+Search               black             orange_darkyellow
+# SignColumn           white             black
+# SpecialKey           white             black
+# SpellBad             white             black             s=red
+# SpellCap             white             black             s=blue
+# SpellLocal           white             black             s=magenta
+# SpellRare            white             black             s=cyan reverse
+StatusLine           cyan              blue              g=bold
+StatusLineNC         black             blue
+# StatusLineTerm    -> StatusLine
+# StatusLineTermNC  -> StatusLineNC
+# TabLine              white             black
+# TabLineFill          white             black
+# TabLineSel           white             black
+verbatim
+hi Title guifg=@white gui=bold cterm=bold
+endverbatim
+VertSplit            blue              blue
+Visual               black             darkcyan          t=reverse
+# VisualNOS            white             black
+WarningMsg           cyan              darkblue          g=bold
+# WildMenu             white             black
+# # Other conventional group names (see `:help group-name`)
+# Boolean           -> Constant
+# Character         -> Constant
+Comment              gray              darkblue
+# Conditional       -> Statement
+Constant             cyan              none
+# Define            -> PreProc
+# Debug             -> Special
+# Delimiter         -> Special
+Error                red               darkblue          g=underline
+# Exception         -> Statement
+# Float             -> Constant
+# Function          -> Identifier
+Identifier           gray_red          none
+# Ignore               white             none
+# Include           -> PreProc
+# Keyword           -> Statement
+Label                yellow            none
+# Macro             -> PreProc
+# Number            -> Constant
+Operator             orange            darkblue          g=bold
+# PreCondit         -> PreProc
+PreProc              green             none
+# Repeat            -> Statement
+Special              magenta           darkblue
+# SpecialChar       -> Special
+# SpecialComment    -> Special
+Statement            white             darkblue
+# StorageClass      -> Type
+# String            -> Constant
+# Structure         -> Type
+# Tag               -> Special
+Todo                 black             orange_darkyellow
+Type                 orange            darkblue
+# Typedef           -> Type
+Underlined           cyan              none              underline
+# # See `:help lCursor`
+# lCursor           -> Cursor
+# # See `:help CursorIM`
+# CursorIM             none              fg
+# }}}
+
+# Additional highlight groups {{{
+cIf0                 gray              none
+# }}}

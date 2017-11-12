@@ -1174,7 +1174,7 @@ fun! s:parse_base_256_value(guicolor)
 endf
 
 fun! s:parse_base_16_value()
-  if s:token.next().kind ==# 'EOL'
+  if s:token.next().kind ==# 'EOL' || s:token.kind ==# 'COMMENT'
     return 'Black'
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)

@@ -530,6 +530,15 @@ fun! Test_CT_short_name_too_long()
   bwipe
 endf
 
+fun! Test_CT_comment_after_base256_color()
+  edit test41.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

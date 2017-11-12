@@ -1,0 +1,9 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Background:dark
+Color:black  #000000 ~            # Comment after color definition
+Color:white  #ffffff ~
+Normal       white  black

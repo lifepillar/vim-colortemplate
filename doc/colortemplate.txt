@@ -438,11 +438,11 @@ Here are some guidelines to develop outstanding hackable colorschemes:
   Sixteen are plenty.
 
 - Prefer falling back to a 256 color palette when true colors are not
-  available. Although not all xterm color palettes are the same, this provides
-  the less unpredictable look. Relying on a terminal's 16 ANSI color palette
-  in general results in colorschemes displaying arbitrary colors. If you
-  really need to do that, use color names instead of numbers (see
-  |cterm-colors|).
+  available. Although not all xterm color palettes are the same, and your
+  colorscheme may not look that great with only 256 colors, this provides the
+  less unpredictable look. Relying on a terminal's 16 ANSI color palette in
+  general results in colorschemes displaying arbitrary colors. If you really
+  need to do that, use color names instead of numbers (see |cterm-colors|).
 
 - Document all the options of your colorscheme.
 
@@ -455,33 +455,81 @@ Here are some guidelines to develop outstanding hackable colorschemes:
 - Visually check every part of your colorscheme. Use as many text samples as
   possible: string-heavy languages may look completely different from
   keyword-heavy ones. If you support transparent backgrounds, make sure to
-  test your colorcheme both against an opaque and a transparent background.
+  test your colorscheme both against an opaque and a transparent background.
   A few areas that are often overlooked include:
 
-  a. The tab line (TabLine, TabLineFill, TabLineSel highlight groups). You may
-     open a new tab with |tabnew|;
+  a. The tabline (TabLine, TabLineFill, TabLineSel highlight groups). You may
+     open a new tab with |tabnew|. See also |showtabline|.
+
   b. Folded text (Folded, FoldColumn). Set |foldcolumn| to a positive value to
-     test the latter;
+     test the latter; for the former, create a buffer and execute:
+>
+       :set fdm=marker
+<
+     then type something like:
+>
+       {{{
+       some text
+       }}}
+<
+     Position the cursor on the text and use |zc| and |zv| to toggle the fold.
+
   c. The signs column (SignColumn). Try placing a sign as explained in
      |sign-commands|:
 >
 	:sign define piet text=>>
 	:exe ":sign place 2 line=23 name=piet file=" . expand("%:p")
 <
+
   d. The cursor's appearance (Cursor), especially with |cursorline| and
      |cursorcolumn| on. For this, you may need to use some GUI version of Vim,
-     as most terminals override Vim color settings for the cursor.
-  e. Matching parentheses (MatchParen), and the cursor's appearance against
-     them (is the cursor clearly visible when over a parenthesis?).
+     as most terminals override the cursor's color.
+
+  e. Matching parentheses (MatchParen) and the cursor's appearance against
+     them. Is the cursor clearly visible over a parenthesis? Is the matching
+     parenthesis easily spotted? Even when |cursorline| and |cursorcolumn| are
+     set?
+
   f. Search highlight (Search, IncSearch), especially with |cursorline| and
      |cursorcolumn| on. The Search and IncSearch highlight groups must be
      distinguishable: set |incsearch| and |hlsearch|, search for a pattern
      with multiple occurrences and move among them with CTRL-G and CTRL-T. Can
-     you see where the cursor is?
+     you spot where the cursor is?
+     With |cursorcolumn| and |cursorline| on, the highlighted column and
+     cursor line should "pass behind" highlighted search results. You may
+     achieve that effect by adapting the following snippet:
+>
+       Background:dark
+       Color:black  #000000 ~
+       Color:white  #ffffff ~
+       Color:grey   #404040 ~
+       Color:yellow #b58900 ~
+       Normal       white  black
+       CursorLine   none   grey            # No foreground color
+       CursorColumn none   grey            # Ditto
+       Search       yellow fg    reverse   # Use reverse
+<
+
   g. Diffs (DiffAdd, DiffChange, DiffDelete, DiffText). Open two buffers in
      a split window and execute |diffthis| on both of them.
 
-- Do the statuslines (StatusLine, StatusLineNC), the tab line (see above), and
+  h. The completion menu (Pmenu, PmenuSbar, PmenuSel, PmenuThumb). A simple
+     way to test that is to define a dictionary: 
+>
+       :set dictionary=/usr/share/dict/words
+<
+     then type something like `vi`<c-x><c-k>. Scroll through the entries with
+     CTRL-N and CTRL-P to make sure that the sidebar is properly visible.
+
+  i. Line numbers (LineNr, CursorLineNr). Set |number| and check that
+  everything looks right.
+
+- Execute:
+>
+    :set showtabline=2 laststatus=2
+    :vsplit
+<
+  Do the statuslines (StatusLine, StatusLineNC), the tabline (see above), and
   the vertical split (VertSplit) merge harmoniously or do they appear like
   disconnected components?
 
@@ -513,17 +561,17 @@ Here are some guidelines to develop outstanding hackable colorschemes:
    if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
    endverbatim
      Normal some_color none
-     # Other definitions
+     # Other definitions specific for transparency
    verbatim
    else
    endverbatim
      Normal some_color some_other_color
-     # Other definitions
+     # Other definitions specific for opaqueness
    verbatim
    endif
    endverbatim
 <
-  Do not forget to document the `@optionsprefix_transp_bg` option!
+  Do not forget to document `@optionsprefix_transp_bg`!
 
 - Verbatim blocks and aux files allow you to get fancy. If you plan to submit
   your colorscheme for inclusion in Vim, do not get fancy.
@@ -547,7 +595,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
   - http://vrl.cs.brown.edu/color
     A very smart palette generator
 
-  Kudos to Romain Lafourcade for collecting the above links!
+  Kudos to Romain Lafourcade for collecting the links above!
 
 =============================================================================
 Providing feedback				*colortemplate-feedback*

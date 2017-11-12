@@ -162,14 +162,6 @@ CursorIM             none              fg
 # Add additional highlight groups here if you want
 # }}}
 
-# Plugin specific highlight groups {{{
-# Add plugin specific highlight groups here if you want
-# }}}
-
-# Filetype specific highlight groups {{{
-# Add filetype specific highlight groups here if you want
-# }}}
-
 Background: light
 
 # Color palette for light variant {{{

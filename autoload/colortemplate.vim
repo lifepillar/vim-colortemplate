@@ -49,23 +49,18 @@ endf
 " env:  a Dictionary with a 'dir' key specifying a valid directory for path.
 fun! s:full_path(path, env)
   if s:is_absolute(a:path)
-    let l:path = fnamemodify(a:path, ":p")
+    let l:path = simplify(fnamemodify(a:path, ":p"))
   else
-    let l:path = fnamemodify(a:env['dir'] . s:slash() . a:path, ":p")
+    let l:path = simplify(fnamemodify(a:env['dir'] . s:slash() . a:path, ":p"))
   endif
-  call s:assert_path_inside(l:path, a:env['dir'])
-  return l:path
-endf
-
-fun! s:assert_path_inside(path, dir)
-  let l:dir = fnamemodify(a:dir, ":p")
+  let l:dir = simplify(fnamemodify(a:env['dir'], ":p"))
   if !isdirectory(l:dir)
     throw 'FATAL: Path is not a directory: ' . l:dir
   endif
-  if match(a:path, '^' . l:dir) == -1
-    throw 'Path ' . a:path . ' outside valid directory: ' . l:dir
+  if match(l:path, '^' . l:dir) == -1
+    throw 'Path ' . l:path . ' outside valid directory: ' . l:dir
   endif
-  return 1
+  return l:path
 endf
 
 fun! s:make_dir(dirpath)
@@ -1325,7 +1320,7 @@ endf
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
-  let l:outdir = (a:0 > 0 ? fnamemodify(a:1, ':p') : '')
+  let l:outdir = (a:0 > 0 ? simplify(fnamemodify(a:1, ':p')) : '')
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)

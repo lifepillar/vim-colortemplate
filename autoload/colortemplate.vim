@@ -1347,15 +1347,20 @@ fun! colortemplate#make(...)
     return
   endtry
 
-  call s:generate_colorscheme(l:outdir, l:overwrite)
-  call s:generate_aux_files(l:outdir, l:overwrite)
+  try
+    call s:generate_colorscheme(l:outdir, l:overwrite)
+    call s:generate_aux_files(l:outdir, l:overwrite)
+  catch /.*/
+    call s:add_generic_error(v:exception)
+    lopen
+  endtry
 
   redraw
   echo "\r"
   if g:colortemplate_exit_status == 0
     echomsg '[Colortemplate] Colorscheme successfully created!'
   else
-    echoerr '[Colortemplate] There were errors. See `:messages`.'
+    echoerr '[Colortemplate] There are errors.'
   endif
 endf
 " }}} Public interface

@@ -58,23 +58,25 @@ fun! s:full_path(path, env)
 endf
 
 fun! s:assert_path_inside(path, dir)
-  if !isdirectory(a:dir)
-    throw 'FATAL: Path is not a directory: ' . a:dir
+  let l:dir = fnamemodify(a:dir, ":p")
+  if !isdirectory(l:dir)
+    throw 'FATAL: Path is not a directory: ' . l:dir
   endif
-  if match(a:path, '^' . a:dir) == -1
-    throw 'Path ' . a:path . ' outside valid directory: ' . a:dir
+  if match(a:path, '^' . l:dir) == -1
+    throw 'Path ' . a:path . ' outside valid directory: ' . l:dir
   endif
   return 1
 endf
 
 fun! s:make_dir(dirpath)
-  if isdirectory(a:dirpath)
+  let l:dirpath = fnamemodify(a:dirpath, ":p")
+  if isdirectory(l:dirpath)
     return
   endif
   try
-    call mkdir(fnameescape(a:dirpath), "p")
+    call mkdir(fnameescape(l:dirpath), "p")
   catch /.*/
-    echoerr '[Colortemplate] Could not create directory: ' . a:dirpath
+    echoerr '[Colortemplate] Could not create directory: ' . l:dirpath
     let g:colortemplate_exit_status = 1
     return
   endtry
@@ -1323,7 +1325,7 @@ endf
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
-  let l:outdir = (a:0 > 0 ? a:1 : '')
+  let l:outdir = (a:0 > 0 ? fnamemodify(a:1, ':p') : '')
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)

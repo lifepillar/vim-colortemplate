@@ -62,7 +62,7 @@ fun! s:assert_path_inside(path, dir)
     throw 'FATAL: Path is not a directory: ' . a:dir
   endif
   if match(a:path, '^' . a:dir) == -1
-    throw 'Path ' . a:path . ' outside valid directory: ' . a:env['dir']
+    throw 'Path ' . a:path . ' outside valid directory: ' . a:dir
   endif
   return 1
 endf

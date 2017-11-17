@@ -1320,7 +1320,7 @@ endf
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
-  let l:outdir = (a:0 > 0 ? simplify(fnamemodify(a:1, ':p')) : '')
+  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : '')
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)

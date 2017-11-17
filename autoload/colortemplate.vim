@@ -297,6 +297,42 @@ fun! s:set_info(key, value)
   endif
 endf
 
+fun! s:fullname()
+  return s:info['fullname']
+endf
+
+fun! s:shortname()
+  return s:info['shortname']
+endf
+
+fun! s:author()
+  return s:info['author']
+endf
+
+fun! s:maintainer()
+  return s:info['maintainer']
+endf
+
+fun! s:description()
+  return s:info['description']
+endf
+
+fun! s:website()
+  return s:info['website']
+endf
+
+fun! s:license()
+  return s:info['license']
+endf
+
+fun! s:optionprefix()
+  return s:info['optionprefix']
+endf
+
+fun! s:terminalcolors()
+  return s:info['terminalcolors']
+endf
+
 fun! s:has16and256colors()
   return len(s:info['terminalcolors']) > 1
 endf
@@ -628,7 +664,7 @@ fun! s:has_normal_group(background)
 endf
 
 fun! s:add_linked_group_def(src, tgt)
-  for l:numcol in s:get_info('terminalcolors')
+  for l:numcol in s:terminalcolors()
     call add(s:colorscheme[l:numcol][s:current_background()],
           \ 'hi! link ' . a:src . ' ' . a:tgt)
   endfor
@@ -650,7 +686,7 @@ fun! s:add_highlight_group(hg)
     endif
     let s:colorscheme['has_normal'][l:bg] = 1
   endif
-  for l:numcol in s:get_info('terminalcolors')
+  for l:numcol in s:terminalcolors()
     let l:use16colors = (l:numcol == '16')
     call add(s:colorscheme[l:numcol][l:bg],
           \ join(['hi', s:hi_name(a:hg),
@@ -695,7 +731,7 @@ fun! s:is_verbatim()
 endf
 
 fun! s:add_verbatim_line(line)
-  for l:numcol in s:get_info('terminalcolors')
+  for l:numcol in s:terminalcolors()
     try
       let l:line = s:interpolate(a:line, l:numcol == '16')
     catch /.*/
@@ -736,7 +772,7 @@ fun! s:is_aux_file()
 endf
 
 fun! s:start_help_file()
-  let l:path = 'doc' . s:slash() . s:get_info('shortname') . '.txt'
+  let l:path = 'doc' . s:slash() . s:shortname() . '.txt'
   let s:auxfiles[l:path] = []
   let s:auxfilepath = l:path
   let s:is_helpfile = 1
@@ -788,13 +824,13 @@ endf
 fun! s:predefined_help_text()
   if s:has16and256colors()
     let l:default = s:prefer16colors()
-    let l:pad = len(s:get_info('fullname')) + len(s:get_info('shortname'))
+    let l:pad = len(s:fullname()) + len(s:shortname())
     call s:put(              '=============================================================================='                  )
     call s:put(s:interpolate('@fullname other options' . repeat("\t", max([1,(40-l:pad)/8])) . '*@shortname-other-options*', 0))
     call s:put(              ''                                                                                                )
-    let l:pad = len(s:get_info('optionprefix'))
+    let l:pad = len(s:optionprefix())
     call s:put(s:interpolate(repeat("\t", max([1,(68-l:pad)/8])) . '*g:@optionprefix_use16*', 0)                               )
-    call s:put(              'Set to ' . (1-l:default) . ' if you want to use ' .s:get_info('terminalcolors')[1] . ' colors.'  )
+    call s:put(              'Set to ' . (1-l:default) . ' if you want to use ' .s:secondary_number_of_colors() . ' colors.'   )
     call s:put(              '>'                                                                                               )
     call s:put(s:interpolate('	let g:@optionprefix_use16 = ', 0) . l:default                                                  )
     call s:put(              '<'                                                                                               )
@@ -822,16 +858,16 @@ endf
 " }}} Internal state
 " Colorscheme generation {{{
 fun! s:assert_requirements()
-  if empty(s:get_info('fullname'))
+  if empty(s:fullname())
     call s:add_generic_error('Please specify the full name of your color scheme')
   endif
-  if empty(s:get_info('author'))
+  if empty(s:author())
     call s:add_generic_error('Please specify an author and the corresponding email')
   endif
-  if empty(s:get_info('maintainer'))
+  if empty(s:maintainer())
     call s:add_generic_error('Please specify a maintainer and the corresponding email')
   endif
-  if empty(s:get_info('license'))
+  if empty(s:license())
     let s:info['license'] = 'Vim License (see `:help license`)'
   endif
   if s:has_dark_and_light() && !(s:has_normal_group('dark') && s:has_normal_group('light'))
@@ -849,25 +885,25 @@ endf
 
 fun! s:print_header()
   if s:has16and256colors()
-    let l:limit = "(get(g:, '" . s:get_info('optionprefix') . "_use16', " . string(s:prefer16colors()) . ") ? 16 : 256)"
+    let l:limit = "(get(g:, '" . s:optionprefix() . "_use16', " . string(s:prefer16colors()) . ") ? 16 : 256)"
   else
     let l:limit = s:preferred_number_of_colors()
   endif
-  call setline(1, '" Name:         ' . s:get_info('fullname')                                         )
-  if !empty(s:get_info('description'))
-    call s:put(   '" Description:  ' . s:get_info('description')                                      )
+  call setline(1, '" Name:         ' . s:fullname()                                                   )
+  if !empty(s:description())
+    call s:put(   '" Description:  ' . s:description()                                                )
   endif
-  call s:put  (   '" Author:       ' . s:get_info('author')                                           )
-  call s:put  (   '" Maintainer:   ' . s:get_info('maintainer')                                       )
-  if !empty(s:get_info('website'))
-    call s:put(   '" Website:      ' . s:get_info('website')                                          )
+  call s:put  (   '" Author:       ' . s:author()                                                     )
+  call s:put  (   '" Maintainer:   ' . s:maintainer()                                                 )
+  if !empty(s:website())
+    call s:put(   '" Website:      ' . s:website()                                                    )
   endif
-  call s:put  (   '" License:      ' . s:get_info('license')                                          )
+  call s:put  (   '" License:      ' . s:license()                                                    )
   call s:put  (   '" Last Updated: ' . strftime("%c")                                                 )
   call s:put  (   ''                                                                                  )
   call s:put  (   "if !(has('termguicolors') && &termguicolors) && !has('gui_running')"               )
   call s:put  (   "      \\ && (!exists('&t_Co') || &t_Co < " . l:limit . ')'                         )
-  call s:put  (   "  echoerr '[" . s:get_info('fullname') . "] There are not enough colors.'"         )
+  call s:put  (   "  echoerr '[" . s:fullname() . "] There are not enough colors.'"                   )
   call s:put  (   '  finish'                                                                          )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
@@ -880,7 +916,7 @@ fun! s:print_header()
   call s:put  (   '  syntax reset'                                                                    )
   call s:put  (   'endif'                                                                             )
   call s:put  (   ''                                                                                  )
-  call s:put  (   "let g:colors_name = '" . s:get_info('shortname') . "'"                             )
+  call s:put  (   "let g:colors_name = '" . s:shortname() . "'"                                       )
   call s:put  (   ''                                                                                  )
 endf
 
@@ -923,12 +959,12 @@ endf
 fun! s:generate_colorscheme(outdir, overwrite)
   silent tabnew +setlocal\ ft=vim
   call s:print_header()
-  for l:numcol in s:get_info('terminalcolors')
+  for l:numcol in s:terminalcolors()
     let l:use16colors = (l:numcol == 16)
     if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
       call s:put('" ' . l:numcol . '-color variant')
       let l:not = s:prefer16colors() ? '' : '!'
-      call s:put("if " .l:not."get(g:, '" . s:get_info('optionprefix') . "_use16', " . s:prefer16colors() .")")
+      call s:put("if " .l:not."get(g:, '" . s:optionprefix() . "_use16', " . s:prefer16colors() .")")
     endif
     call s:print_colorscheme_preamble(l:use16colors)
     if s:has_dark_and_light()
@@ -958,7 +994,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
   norm gg=G
   if !empty(a:outdir)
     call s:write_buffer(
-          \ a:outdir . s:slash() . 'colors' . s:slash() . s:get_info('shortname') . '.vim',
+          \ a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim',
           \ { 'dir': a:outdir },
           \ a:overwrite)
   endif

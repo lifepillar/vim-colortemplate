@@ -36,27 +36,27 @@ Background: dark
 # NOTE: GUI values are from $VIMRUNTIME/rgb.txt
 
 # Color name                GUI                  Base256    Base16 (optional)
-Color: black                rgb(  0,   0,   0)     ~        black
-Color: blue                 rgb(  0,   0, 255)     ~        blue
-Color: coral                rgb(255, 127,  80)     ~        cyan
-Color: cyan                 rgb(  0, 255, 255)     ~        cyan
-Color: darkgreen            rgb(  0, 100,   0)     ~        darkGreen
-Color: darkblue             rgb(  0,   0, 139)     ~        darkBlue
-Color: darkcyan             rgb(  0, 139, 139)     ~        darkCyan
-Color: gray                 rgb(190, 190, 190)     ~        gray
-Color: gray_red             rgb(190, 190, 190)     ~        red
-Color: gray30               rgb( 77,  77,  77)     ~        gray
-Color: green                rgb(  0, 255,   0)     ~        green
-Color: magenta              rgb(255,   0, 255)     ~        lightMagenta
-Color: olivedrab            rgb(107, 142,  35)     ~        lightGreen
-Color: orange               rgb(255, 165,   0)     ~        lightRed
-Color: orange_darkyellow    rgb(255, 165,   0)     ~        darkYellow
-Color: orange_yellow        rgb(255, 165,   0)     ~        yellow
-Color: red                  rgb(255,   0,   0)     ~        red
-Color: slateblue            rgb(106,  90, 205)     ~        blue
-Color: white                rgb(255, 255, 255)     ~        white
-Color: yellow               rgb(255, 255,   0)     ~        yellow
-Color: yellow_darkyellow    rgb(255, 255,   0)     ~        darkYellow
+Color: black                black                  ~        black
+Color: blue                 blue                   ~        blue
+Color: coral                coral                  ~        cyan
+Color: cyan                 cyan                   ~        cyan
+Color: darkgreen            darkGreen              ~        darkGreen
+Color: darkblue             darkBlue               ~        darkBlue
+Color: darkcyan             darkCyan               ~        darkCyan
+Color: gray                 gray                   ~        gray
+Color: gray_red             gray                   ~        red
+Color: gray30               gray30                 ~        gray
+Color: green                green                  ~        green
+Color: magenta              magenta                ~        lightMagenta
+Color: olivedrab            olivedrab              ~        lightGreen
+Color: orange               orange                 ~        lightRed
+Color: orange_darkyellow    orange                 ~        darkYellow
+Color: orange_yellow        orange                 ~        yellow
+Color: red                  red                    ~        red
+Color: slateblue            slateblue              ~        blue
+Color: white                white                  ~        white
+Color: yellow               yellow                 ~        yellow
+Color: yellow_darkyellow    yellow                 ~        darkYellow
 # }}}
 
 # Default highlight groups {{{

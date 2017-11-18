@@ -202,7 +202,7 @@ fun! Test_CT_invalid_gui_value_bis()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(3, len(l:loclist))
-  call assert_equal('Only hex and RGB values are allowed', l:loclist[0]['text'])
+  call assert_equal('Unknown RGB color name', l:loclist[0]['text'])
   call assert_equal(7, l:loclist[0]['lnum'])
   call assert_equal(13, l:loclist[0]['col'])
   call assert_equal("Undefined color name: black", l:loclist[1]['text'])
@@ -258,23 +258,17 @@ fun! Test_CT_base_256_value()
   edit test19.txt
   Colortemplate
   let l:loclist = getloclist(0)
-  call assert_equal(6, len(l:loclist))
+  call assert_equal(4, len(l:loclist))
   call assert_equal('Base-256 color value is out of range', l:loclist[0]['text'])
   call assert_equal(8, l:loclist[0]['lnum'])
   call assert_equal(21, l:loclist[0]['col'])
-  call assert_equal('Missing closing single quote', l:loclist[1]['text'])
+  call assert_equal('Expected base-256 number or tilde', l:loclist[1]['text'])
   call assert_equal(9, l:loclist[1]['lnum'])
-  call assert_equal(37, l:loclist[1]['col'])
-  call assert_equal('Expected base-256 number or color name', l:loclist[2]['text'])
+  call assert_equal(21, l:loclist[1]['col'])
+  call assert_equal("Undefined color name: white", l:loclist[2]['text'])
   call assert_equal(10, l:loclist[2]['lnum'])
-  call assert_equal(21, l:loclist[2]['col'])
-  call assert_equal("Empty quoted color name", l:loclist[3]['text'])
-  call assert_equal(11, l:loclist[3]['lnum'])
-  call assert_equal(22, l:loclist[3]['col'])
-  call assert_equal("Undefined color name: white", l:loclist[4]['text'])
-  call assert_equal(12, l:loclist[4]['lnum'])
-  call assert_equal(8, l:loclist[4]['col'])
-  call assert_equal("Please define the Normal highlight group", l:loclist[5]['text'])
+  call assert_equal(8, l:loclist[2]['col'])
+  call assert_equal("Please define the Normal highlight group", l:loclist[3]['text'])
   lclose
   bwipe
 endf
@@ -532,6 +526,15 @@ endf
 
 fun! Test_CT_comment_after_base256_color()
   edit test41.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
+fun! Test_CT_colors_from_rgb_txt()
+  edit test42.txt
   let l:src = bufnr('%')
   Colortemplate
   let l:tgt = bufnr('%')

@@ -1,0 +1,11 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Background:dark
+# Color names from $VIMRUNTIME/rgb.txt are accepted, even with spaces
+Color:c1 snow                     ~
+Color:c2 ghost white              ~
+Color:c3 BlanchedAlmond           ~
+Normal c2 c3

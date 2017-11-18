@@ -15,13 +15,12 @@
 " <Value>                     ::= .*
 " <ColorDef>                  ::= Color : <ColorName> <GUIValue> <Base256Value> [ <Base16Value> ]
 " <ColorName>                 ::= [a-z1-9_]+
-" <GUIValue>                  ::= <HexValue> | <RGBValue>
+" <GUIValue>                  ::= <HexValue> | <RGBValue> | <RGBColorName>
 " <HexValue>                  ::= #[a-f0-9]{6}
 " <RGBValue>                  ::= rgb ( <8BitNumber> , <8BitNumber> , <8BitNumber> )
-" <Base256Value>              ::= ~ | <8BitNumber> | <StandardColorName> | ' <StandardCompoundColorName> '
+" <RGBColorName>              ::= See $VIMRUNTIME/rgb.txt
+" <Base256Value>              ::= ~ | <8BitNumber>
 " <8BitNumber>                ::= 0 | 1 | ... | 255
-" <StandardColorName>         ::= AliceBlue | AntiqueWhite | ...
-" <StandardCompoundColorName> ::= alice blue | antique white | ...
 " <Base16Value>               ::= 0 | 1 | ... | 15 | Black | DarkRed | ...
 " <HiGroupDef>                ::= <LinkedGroup> | <BaseGroup>
 " <LinkedGroup>               ::= <HiGroupName> -> <HiGroupName>
@@ -88,6 +87,31 @@ fun! s:write_buffer(path, env, overwrite)
     let g:colortemplate_exit_status = 1
     return
   endtry
+endf
+
+" Without arguments, returns the List of the color names from $VIMRUNTIME/rgb.txt
+" (converted to all lowercase).
+" If an argument is given, returns the hex value of the specified color name.
+fun! s:get_rgb_colors(...) abort
+  if !exists('s:rgb_colors')
+    let s:rgb_colors = {}
+    let l:rgb = readfile($VIMRUNTIME . s:slash() . 'rgb.txt')
+    for l:line in l:rgb
+      let l:match = matchlist(l:line, '^\s*\(\d\+\)\s*\(\d\+\)\s*\(\d\+\)\s*\(.*\)$')
+      if len(l:match) > 4
+        let [l:name, l:r, l:g, l:b] = [l:match[4], str2nr(l:match[1]), str2nr(l:match[2]), str2nr(l:match[3])]
+        let s:rgb_colors[l:name] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
+      endif
+    endfor
+  endif
+  if a:0 > 0
+    if has_key(s:rgb_colors, a:1)
+      return s:rgb_colors[a:1]
+    else
+      throw 'Unknown RGB color name: ' . a:1
+    endif
+  endif
+  return keys(s:rgb_colors)
 endf
 
 fun! s:add_error(path, line, col, msg)
@@ -440,26 +464,37 @@ fun! s:get_term_color(name, background, use16colors)
 endf
 
 fun! s:get_gui_color(name, background)
-  return s:palette[a:background][a:name][0]
+  let l:col = s:palette[a:background][a:name][0]
+  if match(l:col, '\s') > -1 " Quote RGB color name with spaces
+    return "'" . l:col . "'"
+  else
+    return l:col
+  endif
 endf
 
-" name: a color name
-" If the optional arguments are not provided, their values are computed automatically
-fun! s:add_color(name, gui, base16, ...)
+" If the GUI value is a color name, convert it to a hex value
+fun! s:rgbname2hex(color)
+  return match(a:color, '^#') == - 1 ? s:get_rgb_colors(a:color) : a:color
+endf
+
+" name:    A color name
+" gui:     GUI color name (e.g, indianred) or hex value (e.g., #c4fed6)
+" base256: Base-256 color number or empty string
+" base16:  Base-16 color number or color name
+"
+" If base256 is empty, its value is inferred.
+fun! s:add_color(name, gui, base256, base16)
+  let l:gui = s:rgbname2hex(a:gui)
   " Find an approximation and/or a distance from the GUI value if none was provided
-  if a:0 == 0
-    let l:approx_color = colortemplate#colorspace#approx(a:gui)
+  if empty(a:base256)
+    let l:approx_color = colortemplate#colorspace#approx(l:gui)
     let l:base256 = l:approx_color['index']
     let l:delta = l:approx_color['delta']
   else
-    let l:base256 = a:1
-    if a:0 == 1
-      let l:delta = (l:base256 >= 16 && l:base256 <= 255
-            \ ? colortemplate#colorspace#hex_delta_e(a:gui, g:colortemplate#colorspace#xterm256_hexvalue(l:base256))
-            \ : 0.0 / 0.0)
-    else
-      let l:delta = a:2
-    endif
+    let l:base256 = a:base256
+    let l:delta = (l:base256 >= 16 && l:base256 <= 255
+          \ ? colortemplate#colorspace#hex_delta_e(l:gui, g:colortemplate#colorspace#xterm256_hexvalue(l:base256))
+          \ : 0.0 / 0.0)
   endif
   if s:background_undefined()
     " Assume color definitions common to both backgrounds
@@ -940,7 +975,7 @@ fun! s:print_color_details(bg, use16colors)
     if l:color =~? '\m^\%(fg\|bg\|none\)$'
       continue
     endif
-    let l:colgui = l:palette[l:color][0]
+    let l:colgui = s:rgbname2hex(l:palette[l:color][0])
     let l:col256 = l:palette[l:color][1]
     let l:delta  = l:palette[l:color][3]
     let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
@@ -1108,11 +1143,11 @@ fun! s:parse_color_def()
   if s:token.next().kind !=# ':'
     throw 'Expected colon after Color keyword'
   endif
-  let l:colorname          = s:parse_color_name()
-  let l:col_gui            = s:parse_gui_value()
-  let [l:col_256, l:delta] = s:parse_base_256_value(l:col_gui)
-  let l:col_16             = s:parse_base_16_value()
-  call s:add_color(l:colorname, l:col_gui, l:col_16, l:col_256, l:delta)
+  let l:colorname = s:parse_color_name()
+  let l:col_gui   = s:parse_gui_value()
+  let l:col_256   = s:parse_base_256_value(l:col_gui)
+  let l:col_16    = s:parse_base_16_value()
+  call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16)
 endf
 
 fun! s:parse_color_name()
@@ -1130,8 +1165,16 @@ fun! s:parse_gui_value()
     throw 'Invalid GUI color value'
   elseif s:token.value ==? 'rgb'
     return s:parse_rgb_value()
-  else
-    throw 'Only hex and RGB values are allowed'
+  else " Assume RGB name from $VIMRUNTIME/rgb.txt
+    let l:rgb_name = s:token.value
+    while s:token.peek().kind ==# 'WORD'
+      let l:rgb_name .= ' ' . s:token.next().value
+    endwhile
+    if index(s:get_rgb_colors(), l:rgb_name) == -1
+      throw 'Unknown RGB color name'
+    else
+      return l:rgb_name
+    endif
   endif
 endf
 
@@ -1174,41 +1217,20 @@ endf
 
 fun! s:parse_base_256_value(guicolor)
   if s:token.next().kind ==# '~' " Find best approximation automatically
-    let l:color256 = colortemplate#colorspace#approx(a:guicolor)
-    return [l:color256['index'], l:color256['delta']]
+    return ''
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
     if l:val > 255 || l:val < 0
       throw "Base-256 color value is out of range"
     endif
-    if l:val >= 16
-      let l:delta = colortemplate#colorspace#hex_delta_e(a:guicolor, g:colortemplate#colorspace#xterm256[l:val - 16])
-    else
-      let l:delta = 0.0 / 0.0
-    endif
-    return [l:val, l:delta]
-  elseif s:token.kind ==# 'WORD'
-    return [s:token.value, 0.0 / 0.0]
-  elseif s:token.kind ==# "'"    " Compound color name (e.g., 'alice blue')
-    let l:colorname = []
-    while s:token.next().kind ==# 'WORD'
-      call add(l:colorname, s:token.value)
-    endwhile
-    if s:token.kind !=# "'"
-      throw 'Missing closing single quote'
-    endif
-    if empty(l:colorname)
-      throw 'Empty quoted color name'
-    endif
-    return ["'" . join(l:colorname, ' ') . "'", 0.0/0.0]
-  else
-    throw 'Expected base-256 number or color name'
+    return l:val
   endif
+  throw 'Expected base-256 number or tilde'
 endf
 
 fun! s:parse_base_16_value()
   if s:token.next().kind ==# 'EOL' || s:token.kind ==# 'COMMENT'
-    return 'Black'
+    return 'Black' " Just a placeholder: we assume that base-16 colors are not used
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
     if l:val > 15 || l:val < 0

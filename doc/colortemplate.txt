@@ -1,5 +1,5 @@
 ==============================================================================
-CONTENTS					*colortemplate-contents*
+CONTENTS					*ft-colortemplate*
 
     1. Introduction ......... |colortemplate-intro|
     2. Getting started ...... |colortemplate-getting-started|
@@ -18,7 +18,7 @@ CONTENTS					*colortemplate-contents*
    15. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
-Color templates				*colortemplate-intro* *ft-colortemplate*
+Color templates					*colortemplate-intro* 
 
 A colortemplate file is designed to help users create their own colorschemes
 without much effort. It can also be used to create colorschemes suitable for
@@ -32,7 +32,7 @@ following features:
 - they are licensed under the Vim license by default.
 
 ==============================================================================
-Getting Started				*colortemplate-getting-started*
+Getting Started					*colortemplate-getting-started*
 
 To get started quickly, |:edit| `templates/dark.colortemplate`, which is
 located in colortemplate's plugin folder, and type:
@@ -380,7 +380,7 @@ auxiliary files must be saved. To override existing files, use
 `:Colortemplate!`.
 
 ==============================================================================
-Colortemplate functions			*colortemplate-functions*
+Colortemplate functions				*colortemplate-functions*
 
   				  *colortemplate#colorspace#approx()*
 Finds the xterm's terminal color that best approximates a given color. For

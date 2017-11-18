@@ -345,8 +345,8 @@ include it twice:
   Include: _common.colortemplate
   # Other definitions specific to light background
 <
-NOTE: beware cyclic inclusions, which will cause Colortemplate to run an
-infinite loop!
+NOTE: beware of cyclic inclusions, which will cause Colortemplate to run into
+an infinite loop!
 
 ==============================================================================
 Colortemplate options		       		*colortemplate-options*
@@ -522,7 +522,11 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      CTRL-N and CTRL-P to make sure that the sidebar is properly visible.
 
   i. Line numbers (LineNr, CursorLineNr). Set |number| and check that
-  everything looks right.
+     everything looks right.
+
+  j. Command-line completion (WildMenu). Set |wildmenu| and try to complete
+     something in the command-line. Can you easily see the possible
+     completions and the current completion above the command-line?
 
 - Execute:
 >

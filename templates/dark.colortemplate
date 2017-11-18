@@ -156,6 +156,9 @@ Underlined           white             none
 lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
+# See :help window-toolbar
+ToolbarLine          none              bg
+ToolbarButton        white             black             bold
 # }}}
 
 # Additional highlight groups {{{

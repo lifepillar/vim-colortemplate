@@ -89,8 +89,8 @@ fun! s:write_buffer(path, env, overwrite)
   endtry
 endf
 
-" Without arguments, returns the List of the color names from $VIMRUNTIME/rgb.txt
-" (converted to all lowercase).
+" Without arguments, returns a Dictionary of the color names from $VIMRUNTIME/rgb.txt
+" (converted to all lowercase), with the associated hex values.
 " If an argument is given, returns the hex value of the specified color name.
 fun! s:get_rgb_colors(...) abort
   if !exists('s:rgb_colors')
@@ -100,18 +100,18 @@ fun! s:get_rgb_colors(...) abort
       let l:match = matchlist(l:line, '^\s*\(\d\+\)\s*\(\d\+\)\s*\(\d\+\)\s*\(.*\)$')
       if len(l:match) > 4
         let [l:name, l:r, l:g, l:b] = [l:match[4], str2nr(l:match[1]), str2nr(l:match[2]), str2nr(l:match[3])]
-        let s:rgb_colors[l:name] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
+        let s:rgb_colors[tolower(l:name)] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
       endif
     endfor
   endif
   if a:0 > 0
-    if has_key(s:rgb_colors, a:1)
-      return s:rgb_colors[a:1]
+    if has_key(s:rgb_colors, tolower(a:1))
+      return s:rgb_colors[tolower(a:1)]
     else
       throw 'Unknown RGB color name: ' . a:1
     endif
   endif
-  return keys(s:rgb_colors)
+  return s:rgb_colors
 endf
 
 fun! s:add_error(path, line, col, msg)
@@ -1170,7 +1170,7 @@ fun! s:parse_gui_value()
     while s:token.peek().kind ==# 'WORD'
       let l:rgb_name .= ' ' . s:token.next().value
     endwhile
-    if index(s:get_rgb_colors(), l:rgb_name) == -1
+    if !has_key(s:get_rgb_colors(), tolower(l:rgb_name))
       throw 'Unknown RGB color name'
     else
       return l:rgb_name

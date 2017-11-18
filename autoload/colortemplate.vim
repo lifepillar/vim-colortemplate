@@ -483,14 +483,14 @@ endf
 
 " name:    A color name
 " gui:     GUI color name (e.g, indianred) or hex value (e.g., #c4fed6)
-" base256: Base-256 color number or empty string
+" base256: Base-256 color number or -1
 " base16:  Base-16 color number or color name
 "
-" If base256 is empty, its value is inferred.
+" If base256 is -1, its value is inferred.
 fun! s:add_color(name, gui, base256, base16)
   let l:gui = s:rgbname2hex(a:gui)
   " Find an approximation and/or a distance from the GUI value if none was provided
-  if empty(a:base256)
+  if a:base256 < 0
     let l:approx_color = colortemplate#colorspace#approx(l:gui)
     let l:base256 = l:approx_color['index']
     let l:delta = l:approx_color['delta']
@@ -1221,7 +1221,7 @@ endf
 
 fun! s:parse_base_256_value(guicolor)
   if s:token.next().kind ==# '~' " Find best approximation automatically
-    return ''
+    return -1
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
     if l:val > 255 || l:val < 0

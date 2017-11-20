@@ -18,7 +18,7 @@ CONTENTS					*ft-colortemplate*
    15. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
-Color templates					*colortemplate-intro* 
+Color templates					*colortemplate-intro*
 
 A colortemplate file is designed to help users create their own colorschemes
 without much effort. It can also be used to create colorschemes suitable for
@@ -147,7 +147,7 @@ supports a 256 color palette, a 16 color palette, or both, is determined by
 the value of the `Terminal` `Colors` field. The possible values are:
 
 - `256`: the colorscheme falls back to an xterm's 256 color palette when true
-  colors are not available or |termguicolors| is not set. 
+  colors are not available or |termguicolors| is not set.
 - `16`: the colorscheme falls back to a 16 color palette (see |cterm-colors|)
   when true colors are not available or |termguicolors| is not set. This
   typically requires tweaking with terminal settings to choose a consistent
@@ -284,7 +284,7 @@ toggle italics, you may document it as follows:
   documentation
   ===========================================================================
   @fullname Options                                *@shortname-options*
-  
+
                                                    *g:@shortname_italic*
   Set to 1 if you want to enable italics.
   >
@@ -514,7 +514,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      a split window and execute |diffthis| on both of them.
 
   h. The completion menu (Pmenu, PmenuSbar, PmenuSel, PmenuThumb). A simple
-     way to test that is to define a dictionary: 
+     way to test that is to define a dictionary:
 >
        :set dictionary=/usr/share/dict/words
 <
@@ -528,6 +528,13 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      something in the command-line. Can you easily see the possible
      completions and the current completion above the command-line?
 
+  k. The window toolbar (ToolbarLine, ToolbarButton). See |window-toolbar|.
+     This is likely very seldom used, but top notch colorschemes must care
+     about all details! Create a window toolbar with a couple of items:
+>
+       nnoremenu 1.10 WinBar.Prev :bprev<cr>
+       nnoremenu 1.20 WinBar.Next :bnext<cr>
+<
 - Execute:
 >
     :set showtabline=2 laststatus=2

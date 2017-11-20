@@ -198,6 +198,8 @@ Typedef           -> Type
 Underlined           slateblue         none              underline
 # See `:help lCursor`
 lCursor              bg                fg
+# See `:help terminal-size-color`
+Terminal             fg                bg
 # See `:help window-toolbar`
 ToolbarLine          none              lightgrey
 ToolbarButton        white             grey40            bold

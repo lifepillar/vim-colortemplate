@@ -81,7 +81,7 @@ fun! s:write_buffer(path, env, overwrite)
   let l:path = s:full_path(a:path, a:env)
   call s:make_dir(fnamemodify(l:path, ":h"))
   try
-    execute "write".(a:overwrite ? '!' : '') fnameescape(l:path)
+    execute (a:overwrite ? 'silent! write!' : 'write') fnameescape(l:path)
   catch /.*/
     echoerr '[Colortemplate] Could not write ' . l:path . ': ' . v:exception
     let g:colortemplate_exit_status = 1

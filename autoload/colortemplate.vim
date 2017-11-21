@@ -122,6 +122,12 @@ fun! s:add_error(path, line, col, msg)
   call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
 endf
 
+fun! s:add_warning(path, line, col, msg)
+  if !get(g:, 'colortemplate_no_warnings', 0)
+    call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'W'}], 'a')
+  endif
+endf
+
 fun! s:add_fatal_error(path, line, col, msg)
   call s:add_error(a:path, a:line, a:col, 1, 'FATAL: ' . a:msg)
 endf
@@ -131,7 +137,7 @@ fun! s:add_generic_error(msg)
 endf
 
 fun! s:add_generic_warning(msg)
-  call setloclist(0, [{'filename': bufname('%'), 'lnum' : 1, 'col': 1, 'text' : a:msg, 'type' : 'W'}], 'a')
+  call s:add_warning(bufname('%'), 0, 1, a:msg)
 endf
 
 " Append a String to the end of the current buffer.
@@ -914,12 +920,10 @@ fun! s:assert_requirements()
   elseif !s:has_normal_group(s:current_background())
     call s:add_generic_error('Please define the Normal highlight group')
   endif
-  if !get(g:, 'colortemplate_no_warnings', 0)
-    let l:missing_groups = s:undefined_default_groups()
-    for l:hg in l:missing_groups
-      call s:add_generic_warning('No definition for ' . l:hg . ' highlight group')
-    endfor
-  endif
+  let l:missing_groups = s:undefined_default_groups()
+  for l:hg in l:missing_groups
+    call s:add_generic_warning('No definition for ' . l:hg . ' highlight group')
+  endfor
 endf
 
 fun! s:print_header()

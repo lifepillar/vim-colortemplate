@@ -46,12 +46,15 @@ verbatim
 if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
     # Transparent background
-    Normal white none
+    Normal           white             none
+    # See `:help terminal-size-color`
+    Terminal         white             none
 verbatim
 else
 endverbatim
     # Opaque background
-    Normal white black
+    Normal           white             black
+    Terminal         white             black
 verbatim
 endif
 endverbatim
@@ -144,10 +147,8 @@ Underlined           white             none
 lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
-# See `:help terminal-size-color`
-Terminal             fg                black
 # See `:help window-toolbar`
-ToolbarLine          none              black
+ToolbarLine          none              white
 ToolbarButton        white             black             bold
 # }}}
 
@@ -184,12 +185,15 @@ verbatim
 if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
     # Transparent background
-    Normal black none
+    Normal           black             none
+    # See `:help terminal-size-color`
+    Terminal         black             none
 verbatim
 else
 endverbatim
     # Opaque background
-    Normal black white
+    Normal           black             white
+    Terminal         black             white
 verbatim
 endif
 endverbatim
@@ -282,8 +286,6 @@ Underlined           black             none
 lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
-# See `:help terminal-size-color`
-Terminal             fg                black
 # See `:help window-toolbar`
 ToolbarLine          none              black
 ToolbarButton        black             white             bold

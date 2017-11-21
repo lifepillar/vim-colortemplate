@@ -48,15 +48,13 @@ endverbatim
     # Transparent background
     Normal           white             none
     # See `:help terminal-size-color`
-    Terminal         fg                none
+    Terminal         white             none
 verbatim
 else
 endverbatim
     # Opaque background
     Normal           white             black
-    # See `:help terminal-size-color`
-
-    Terminal         fg                black   
+    Terminal         white             black   
 verbatim
 endif
 endverbatim

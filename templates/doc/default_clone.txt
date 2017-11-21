@@ -1,0 +1,11 @@
+==============================================================================
+Default Clone colorscheme				*default_clone*
+
+						*g:default_clone_transp_bg*
+Set to 0 if you want an opaque background. Takes effect only in the
+terminal.
+>
+	let g:default_clone_transp_bg = 1
+<
+
+vim:tw=78:ts=8:ft=help:norl:

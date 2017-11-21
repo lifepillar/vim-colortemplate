@@ -1,0 +1,19 @@
+==============================================================================
+Gruvbox colorscheme				*gruvbox*
+
+						*g:gruvbox_transp_bg*
+Set to 1 if you want a transparent background. Takes effect only in the
+terminal.
+>
+	let g:gruvbox_transp_bg = 0
+<
+
+==============================================================================
+Gruvbox other options			*gruvbox-other-options*
+
+							*g:gruvbox_use16*
+Set to 1 if you want to use 16 colors.
+>
+	let g:gruvbox_use16 = 0
+<
+vim:tw=78:ts=8:ft=help:norl:

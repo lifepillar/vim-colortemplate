@@ -88,13 +88,15 @@ verbatim
 if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
 
-Normal               pablo_brightwhite none
+Normal               pablo_brightwhite       none
+Terminal             white                   none
 
 verbatim
 else
 endverbatim
 
 Normal               pablo_brightwhite pablo_black
+Terminal             white                   black
 
 verbatim
 endif
@@ -206,7 +208,6 @@ Typedef           -> Type
 Underlined           lightblueunderlined none            underline
 # See `:help lCursor`
 lCursor           -> Cursor
-Terminal             white             black
 # See `:help window-toolbar`
 ToolbarLine          none              grey50
 ToolbarButton        black             lightgrey         bold

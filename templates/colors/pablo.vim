@@ -3,7 +3,7 @@
 " Author:       Ron Aaron <ron@ronware.org>
 " Maintainer:   Ron Aaron <ron@ronware.org>
 " License:      Vim License (see `:help license`)
-" Last Updated: Tue Nov 21 19:58:53 2017
+" Last Updated: Tue Nov 21 20:11:30 2017
 
 if !(has('termguicolors') && &termguicolors) && !has('gui_running')
       \ && (!exists('&t_Co') || &t_Co < (get(g:, 'pablo_use16', 0) ? 16 : 256))
@@ -87,8 +87,10 @@ if !get(g:, 'pablo_use16', 0)
   "               white: GUI=#ffffff/rgb(255,255,255)  Term= 15                           [delta=nan]
   if !has('gui_running') && get(g:, 'pablo_transp_bg', 0)
     hi Normal ctermfg=231 ctermbg=NONE guifg=#ffffff guibg=NONE guisp=NONE cterm=NONE gui=NONE
+    hi Terminal ctermfg=15 ctermbg=NONE guifg=White guibg=NONE guisp=NONE cterm=NONE gui=NONE
   else
     hi Normal ctermfg=231 ctermbg=16 guifg=#ffffff guibg=#000000 guisp=NONE cterm=NONE gui=NONE
+    hi Terminal ctermfg=15 ctermbg=0 guifg=White guibg=Black guisp=NONE cterm=NONE gui=NONE
   endif
   hi Comment ctermfg=244 ctermbg=NONE guifg=#808080 guibg=NONE guisp=NONE cterm=NONE gui=NONE
   hi Constant ctermfg=51 ctermbg=NONE guifg=#00ffff guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -175,7 +177,6 @@ if !get(g:, 'pablo_use16', 0)
   hi! link Typedef Type
   hi Underlined ctermfg=81 ctermbg=NONE guifg=#80a0ff guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
   hi! link lCursor Cursor
-  hi Terminal ctermfg=15 ctermbg=0 guifg=White guibg=Black guisp=NONE cterm=NONE gui=NONE
   hi ToolbarLine ctermfg=NONE ctermbg=242 guifg=NONE guibg=Grey50 guisp=NONE cterm=NONE gui=NONE
   hi ToolbarButton ctermfg=0 ctermbg=7 guifg=Black guibg=LightGrey guisp=NONE cterm=NONE,bold gui=NONE,bold
   finish
@@ -184,8 +185,10 @@ endif
 " 16-color variant
 if !has('gui_running') && get(g:, 'pablo_transp_bg', 0)
   hi Normal ctermfg=15 ctermbg=NONE guifg=#ffffff guibg=NONE guisp=NONE cterm=NONE gui=NONE
+  hi Terminal ctermfg=White ctermbg=NONE guifg=White guibg=NONE guisp=NONE cterm=NONE gui=NONE
 else
   hi Normal ctermfg=15 ctermbg=0 guifg=#ffffff guibg=#000000 guisp=NONE cterm=NONE gui=NONE
+  hi Terminal ctermfg=White ctermbg=Black guifg=White guibg=Black guisp=NONE cterm=NONE gui=NONE
 endif
 hi Comment ctermfg=8 ctermbg=NONE guifg=#808080 guibg=NONE guisp=NONE cterm=NONE gui=NONE
 hi Constant ctermfg=14 ctermbg=NONE guifg=#00ffff guibg=NONE guisp=NONE cterm=NONE gui=NONE
@@ -272,7 +275,6 @@ hi! link Tag Special
 hi! link Typedef Type
 hi Underlined ctermfg=LightBlue ctermbg=NONE guifg=#80a0ff guibg=NONE guisp=NONE cterm=NONE,underline gui=NONE,underline
 hi! link lCursor Cursor
-hi Terminal ctermfg=White ctermbg=Black guifg=White guibg=Black guisp=NONE cterm=NONE gui=NONE
 hi ToolbarLine ctermfg=NONE ctermbg=DarkGrey guifg=NONE guibg=Grey50 guisp=NONE cterm=NONE gui=NONE
 hi ToolbarButton ctermfg=Black ctermbg=LightGrey guifg=Black guibg=LightGrey guisp=NONE cterm=NONE,bold gui=NONE,bold
 finish
@@ -340,8 +342,10 @@ finish
 " Color: white231             White                231        White
 " Color: yellow               Yellow                11        Yellow
 " Color: yellowstatement      #ffff60               11        Yellow
-" Normal               pablo_brightwhite none
+" Normal               pablo_brightwhite       none
+" Terminal             white                   none
 " Normal               pablo_brightwhite pablo_black
+" Terminal             white                   black
 " Comment              pablo_brightblack       none
 " Constant             pablo_brightcyan        none
 " Identifier           pablo_cyan              none                 t=bold
@@ -415,6 +419,5 @@ finish
 " Typedef           -> Type
 " Underlined           lightblueunderlined none            underline
 " lCursor           -> Cursor
-" Terminal             white             black
 " ToolbarLine          none              grey50
 " ToolbarButton        black             lightgrey         bold

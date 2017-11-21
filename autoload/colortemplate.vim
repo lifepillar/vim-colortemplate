@@ -645,6 +645,9 @@ fun! s:gui_attr(hg)
 endf
 
 fun! s:set_fg(hg, colorname)
+  if a:colorname ==# 'bg'
+    call s:add_warning(s:template.path, s:template.linenr, s:token.pos, "Using 'bg' may cause an error with transparent backgrounds")
+  endif
   let a:hg['fg'] = a:colorname
 endf
 

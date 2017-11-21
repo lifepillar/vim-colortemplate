@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker ts=8
+# vim: ft=colortemplate fdm=marker
 
 # Information {{{
 # Mandatory
@@ -15,19 +15,7 @@ Option Prefix: dark
 # }}}
 
 # Documentation {{{
-documentation
-==============================================================================
-@fullname colorscheme				*@shortname*
-
-DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY.
-
-						*g:@optionprefix_transp_bg*
-Set to 1 if you want a transparent background. Takes effect only in the
-terminal.
->
-	let g:@optionprefix_transp_bg = 0
-<
-enddocumentation
+Include: _help.colortemplate
 # }}}
 
 Background: dark

@@ -68,7 +68,7 @@ endif
 endverbatim
 
 # Group              Foreground        Background        Attributes
-ColorColumn          fg                bg
+ColorColumn          fg                white
 Conceal              none              none
 Cursor               black             white
 CursorColumn         black             white
@@ -156,9 +156,9 @@ lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
 # See `:help terminal-size-color`
-Terminal             fg                bg
+Terminal             fg                white
 # See `:help window-toolbar`
-ToolbarLine          none              bg
+ToolbarLine          none              white
 ToolbarButton        black             white             bold
 # }}}
 

@@ -58,18 +58,23 @@ verbatim
 if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
     # Transparent background
-    Normal white none
+    Normal           white             none
+    # See `:help terminal-size-color`
+    Terminal         fg                none
 verbatim
 else
 endverbatim
     # Opaque background
-    Normal white black
+    Normal           white             black
+    # See `:help terminal-size-color`
+
+    Terminal         fg                black   
 verbatim
 endif
 endverbatim
 
 # Group              Foreground        Background        Attributes
-ColorColumn          fg                bg
+ColorColumn          fg                black
 Conceal              none              none
 Cursor               white             black
 CursorColumn         white             black
@@ -156,10 +161,8 @@ Underlined           white             none
 lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
-# See `:help terminal-size-color`
-Terminal             fg                bg
 # See `:help window-toolbar`
-ToolbarLine          none              bg
+ToolbarLine          none              black
 ToolbarButton        white             black             bold
 # }}}
 

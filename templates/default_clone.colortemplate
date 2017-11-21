@@ -85,12 +85,14 @@ verbatim
 if has('gui_running') || get(g:, '@optionprefix_transp_bg', 1)
 endverbatim
     # Opaque background
-    Normal black white
+    Normal           black             white
+    Terminal         black             white
 verbatim
 else
 endverbatim
     # Transparent background
-    Normal white none
+    Normal           white             none
+    Terminal         white             none
 verbatim
 endif
 endverbatim
@@ -99,7 +101,7 @@ endverbatim
 ColorColumn          none              lightred
 Conceal              lightgrey         darkgrey
 # NOTE: Vim's default does not define Cursor/lCursor in the terminal
-Cursor               bg                fg
+Cursor               white             fg
 CursorColumn         none              lightgrey90
 verbatim
 hi CursorLine ctermfg=NONE ctermbg=NONE cterm=underline guifg=NONE guibg=Grey90 gui=NONE guisp=NONE
@@ -197,9 +199,7 @@ Type                 seagreen          none              g=bold
 Typedef           -> Type
 Underlined           slateblue         none              underline
 # See `:help lCursor`
-lCursor              bg                fg
-# See `:help terminal-size-color`
-Terminal             fg                bg
+lCursor              white             fg
 # See `:help window-toolbar`
 ToolbarLine          none              lightgrey
 ToolbarButton        white             grey40            bold
@@ -213,12 +213,14 @@ verbatim
 if has('gui_running') || get(g:, '@optionprefix_transp_bg', 1)
 endverbatim
     # Opaque background
-    Normal white black
+    Normal           white             black
+    Terminal         white             black
 verbatim
 else
 endverbatim
     # Transparent background
-    Normal white none
+    Normal           white             none
+    Terminal         white             black
 verbatim
 endif
 endverbatim
@@ -227,7 +229,7 @@ endverbatim
 ColorColumn          none              darkred
 Conceal              lightgrey         darkgrey
 # NOTE: Vim's default does not define Cursor/lCursor in the terminal
-Cursor               bg                fg
+Cursor               black             fg
 CursorColumn         none              grey40
 verbatim
 hi CursorLine ctermfg=NONE ctermbg=NONE cterm=underline guifg=NONE guibg=Grey40 gui=NONE guisp=NONE
@@ -298,7 +300,7 @@ Exception         -> Statement
 Float             -> Number
 Function          -> Identifier
 Identifier           cyanidentifier    none              t=bold
-Ignore               bg                none
+Ignore               black             none
 Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement

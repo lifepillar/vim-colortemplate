@@ -130,7 +130,7 @@ fun! s:add_generic_error(msg)
   call s:add_error(bufname('%'), 0, 1, a:msg)
 endf
 
-fun! s:add_warning(msg)
+fun! s:add_generic_warning(msg)
   call setloclist(0, [{'filename': bufname('%'), 'lnum' : 1, 'col': 1, 'text' : a:msg, 'type' : 'W'}], 'a')
 endf
 
@@ -917,7 +917,7 @@ fun! s:assert_requirements()
   if !get(g:, 'colortemplate_no_warnings', 0)
     let l:missing_groups = s:undefined_default_groups()
     for l:hg in l:missing_groups
-      call s:add_warning('No definition for ' . l:hg . ' highlight group')
+      call s:add_generic_warning('No definition for ' . l:hg . ' highlight group')
     endfor
   endif
 endf

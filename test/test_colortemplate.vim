@@ -541,6 +541,15 @@ fun! Test_CT_colors_from_rgb_txt()
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
 endf
+fun! Test_CT_trailing_spaces_are_skipped()
+  edit test43.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
 
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1

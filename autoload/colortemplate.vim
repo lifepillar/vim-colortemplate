@@ -243,7 +243,7 @@ fun! s:token.reset() dict
 endf
 
 fun! s:token.next() dict
-  let [l:char, self.spos, self.pos] = matchstrpos(s:template.getl(), '\s*\zs.', self.pos) " Get first non-white character starting at pos
+  let [l:char, self.spos, self.pos] = matchstrpos(s:template.getl(), '\s*\zs\S', self.pos) " Get first non-white character starting at pos
   if empty(l:char)
     let self.kind = 'EOL'
     let self.spos = len(s:template.getl()) - 1 " For correct error location

@@ -82,7 +82,7 @@ Background: light
 # Default highlight groups for light variant {{{
 # NOTE: Vim's default does not define Normal
 verbatim
-if has('gui_running') || get(g:, '@optionprefix_transp_bg', 1)
+if has('gui_running') || !get(g:, '@optionprefix_transp_bg', 1)
 endverbatim
     # Opaque background
     Normal           black             white
@@ -210,7 +210,7 @@ Background: dark
 # Default highlight groups for dark variant {{{
 # NOTE: Vim's default does not define Normal
 verbatim
-if has('gui_running') || get(g:, '@optionprefix_transp_bg', 1)
+if has('gui_running') || !get(g:, '@optionprefix_transp_bg', 1)
 endverbatim
     # Opaque background
     Normal           white             black

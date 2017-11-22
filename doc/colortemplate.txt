@@ -529,12 +529,15 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      completions and the current completion above the command-line?
 
   k. The window toolbar (ToolbarLine, ToolbarButton). See |window-toolbar|.
-     This is likely very seldom used, but top notch colorschemes must care
-     about all details! Create a window toolbar with a couple of items:
+     This is a feature introduced in Vim 8.0.1123: each window can have
+     a local toolbar, spanning one line. Create a window toolbar with a couple
+     of items:
 >
        nnoremenu 1.10 WinBar.Prev :bprev<cr>
        nnoremenu 1.20 WinBar.Next :bnext<cr>
 <
+     and verify that the colors of the toolbar and its items look as you want.
+
 - Execute:
 >
     :set showtabline=2 laststatus=2

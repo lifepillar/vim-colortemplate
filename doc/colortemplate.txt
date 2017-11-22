@@ -440,11 +440,13 @@ Here are some guidelines to develop outstanding hackable colorschemes:
   Sixteen are plenty.
 
 - Prefer falling back to a 256 color palette when true colors are not
-  available. Although not all xterm color palettes are the same, and your
-  colorscheme may not look that great with only 256 colors, this provides the
-  less unpredictable look. Relying on a terminal's 16 ANSI color palette in
-  general results in colorschemes displaying arbitrary colors. If you really
-  need to do that, use color names instead of numbers (see |cterm-colors|).
+  available, using color numbers between 16 and 255. Although not all xterm
+  color palettes are the same, and your colorscheme may not look that great
+  with a choice of only 240 colors, this provides the less unpredictable look.
+  Relying on a terminal's 16 ANSI color palette (color numbers between 0 and
+  15) in general results in colorschemes displaying arbitrary colors. If you
+  really need to do that, use color names instead of numbers (see
+  |cterm-colors|).
 
 - Document all the options of your colorscheme.
 

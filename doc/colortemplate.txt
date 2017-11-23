@@ -587,7 +587,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
    endif
    endverbatim
 <
-  Do not forget to document `@optionsprefix_transp_bg`!
+  Do not forget to document `@optionprefix_transp_bg`!
 
 - Verbatim blocks and aux files allow you to get fancy. If you plan to submit
   your colorscheme for inclusion in Vim, do not get fancy.

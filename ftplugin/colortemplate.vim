@@ -13,6 +13,6 @@ let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') .
 
 setlocal commentstring=#%s
 
-command! -buffer -nargs=? -bang -complete=file Colortemplate call colortemplate#make(<q-args>, "<bang>")
+command! -buffer -nargs=? -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
 
 " vim: foldmethod=marker nowrap

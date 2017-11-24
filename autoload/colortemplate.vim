@@ -124,10 +124,6 @@ fun! s:add_warning(path, line, col, msg)
   endif
 endf
 
-fun! s:add_fatal_error(path, line, col, msg)
-  call s:add_error(a:path, a:line, a:col, 1, 'FATAL: ' . a:msg)
-endf
-
 fun! s:add_generic_error(msg)
   call s:add_error(bufname('%'), 0, 1, a:msg)
 endf

@@ -78,8 +78,15 @@ endf
 fun! s:write_buffer(path, env, overwrite)
   let l:path = s:full_path(a:path, a:env)
   call s:make_dir(fnamemodify(l:path, ":h"))
+  if bufloaded(l:path)
+    if a:overwrite
+      execute "bdelete" bufname(a:path)
+    else
+      throw "Buffer " . l:path . " exists. Use ! to override."
+    endif
+  endif
   try
-    execute (a:overwrite ? 'silent! write!' : 'write') fnameescape(l:path)
+    execute (a:overwrite ? 'write!' : 'write') fnameescape(l:path)
   catch /.*/
     throw 'Could not write ' . l:path . ': ' . v:exception
   endtry

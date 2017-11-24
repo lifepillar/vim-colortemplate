@@ -70,9 +70,7 @@ fun! s:make_dir(dirpath)
   try
     call mkdir(fnameescape(l:dirpath), "p")
   catch /.*/
-    echoerr '[Colortemplate] Could not create directory: ' . l:dirpath
-    let g:colortemplate_exit_status = 1
-    return
+    throw 'Could not create directory: ' . l:dirpath
   endtry
 endf
 
@@ -83,9 +81,7 @@ fun! s:write_buffer(path, env, overwrite)
   try
     execute (a:overwrite ? 'silent! write!' : 'write') fnameescape(l:path)
   catch /.*/
-    echoerr '[Colortemplate] Could not write ' . l:path . ': ' . v:exception
-    let g:colortemplate_exit_status = 1
-    return
+    throw 'Could not write ' . l:path . ': ' . v:exception
   endtry
 endf
 
@@ -138,6 +134,18 @@ endf
 
 fun! s:add_generic_warning(msg)
   call s:add_warning(bufname('%'), 0, 1, a:msg)
+endf
+
+fun! s:print_error_msg(msg, rethrow)
+  redraw
+  echo "\r"
+  if a:rethrow
+    echoerr '[Colortemplate]' a:msg
+  else
+    echohl Error
+    echomsg '[Colortemplate]' a:msg
+    echohl None
+  endif
 endf
 
 " Append a String to the end of the current buffer.
@@ -1396,10 +1404,12 @@ fun! colortemplate#make(...)
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)
-      echoerr "[Colortemplate] Path is not a directory:" l:outdir
+      call s:print_error_msg("Path is not a directory: " . l:outdir, 0)
+      let g:colortemplate_exit_status = 1
       return
     elseif filewritable(l:outdir) != 2
-      echoerr "[Colortemplate] Directory is not writable:" l:outdir
+      call s:print_error_msg("Directory is not writable: " . l:outdir, 0)
+      let g:colortemplate_exit_status = 1
       return
     endif
   endif
@@ -1420,16 +1430,12 @@ fun! colortemplate#make(...)
     call s:generate_colorscheme(l:outdir, l:overwrite)
     call s:generate_aux_files(l:outdir, l:overwrite)
   catch /.*/
-    call s:add_generic_error(v:exception)
-    lopen
+    call s:print_error_msg(v:exception, 0)
+    return
   endtry
 
   redraw
   echo "\r"
-  if g:colortemplate_exit_status == 0
-    echomsg '[Colortemplate] Colorscheme successfully created!'
-  else
-    echoerr '[Colortemplate] There are errors.'
-  endif
+  echomsg '[Colortemplate] Colorscheme successfully created!'
 endf
 " }}} Public interface

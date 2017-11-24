@@ -98,6 +98,10 @@ endf
 fun! s:get_rgb_colors(...) abort
   if !exists('s:rgb_colors')
     let s:rgb_colors = {}
+    " Add some color names not in rgb.txt (see syntax.c for the values)
+    let s:rgb_colors['darkyellow']   = '#af5f00' " 130
+    let s:rgb_colors['lightmagenta'] = '#ffd7ff' " 225
+    let s:rgb_colors['lightred']     = '#ffd7d7' " 224
     let l:rgb = readfile($VIMRUNTIME . s:slash() . 'rgb.txt')
     for l:line in l:rgb
       let l:match = matchlist(l:line, '^\s*\(\d\+\)\s*\(\d\+\)\s*\(\d\+\)\s*\(.*\)$')
@@ -106,10 +110,6 @@ fun! s:get_rgb_colors(...) abort
         let s:rgb_colors[tolower(l:name)] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
       endif
     endfor
-    " Add some other valid color names, not in rgb.txt (see syntax.c for the values)
-    let s:rgb_colors['darkyellow']   = '#af5f00' " 130
-    let s:rgb_colors['lightmagenta'] = '#ffd7ff' " 225
-    let s:rgb_colors['lightred']     = '#ffd7d7' " 224
   endif
   if a:0 > 0
     if has_key(s:rgb_colors, tolower(a:1))

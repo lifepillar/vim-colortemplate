@@ -866,14 +866,14 @@ fun! s:generate_aux_files(outdir, overwrite)
       if get(g:, 'colortemplate_no_doc', 0)
         continue
       endif
-      silent bot new +setlocal\ tw=78\ ts=8\ ft=help\ norl
+      silent bot new +setlocal\ tw=78\ noet\ ts=8\ sw=8\ ft=help\ norl
       call append(0, s:auxfiles[l:path])
       call s:predefined_help_text()
     else                                      " Other aux files
       if fnamemodify(l:path, ":e") ==# 'vim'
-        silent bot new +setlocal\ ft=vim
+        silent bot new +setlocal\ ft=vim\ et\ ts=2\ sw=2
       else
-        silent bot new
+        silent bot new +setlocal\ et\ ts=2\ sw=2
       endif
       call append(0, s:auxfiles[l:path])
     endif
@@ -1017,7 +1017,7 @@ fun! s:print_color_details(bg, use16colors)
 endf
 
 fun! s:generate_colorscheme(outdir, overwrite)
-  silent tabnew +setlocal\ ft=vim
+  silent tabnew +setlocal\ ft=vim\ et\ ts=2\ sw=2
   call s:print_header()
   for l:numcol in s:terminalcolors()
     let l:use16colors = (l:numcol == 16)

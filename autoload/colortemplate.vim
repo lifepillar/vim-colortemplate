@@ -609,6 +609,8 @@ let s:default_hi_groups = {
       \ 'Special': 0,
       \ 'Statement': 0,
       \ 'Todo': 0,
+      \ 'ToolbarLine': 0,
+      \ 'ToolbarButton': 0,
       \ 'Type': 0,
       \ 'Underlined': 0
       \ }

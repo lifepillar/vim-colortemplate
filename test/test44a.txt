@@ -1,0 +1,4 @@
+Full name:X
+Include: test44b.txt
+# vim: ft=colortemplate
+

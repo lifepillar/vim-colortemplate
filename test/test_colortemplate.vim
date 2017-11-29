@@ -418,8 +418,9 @@ fun! Test_CT_empty_short_name()
   edit test31.txt
   Colortemplate
   let l:loclist = getloclist(0)
-  call assert_equal(1, len(l:loclist))
-  call assert_equal("Please specify a short name for your colorscheme", l:loclist[0]['text'])
+  call assert_equal(2, len(l:loclist))
+  call assert_equal("Missing value for short name key", l:loclist[0]['text'])
+  call assert_equal("Please specify the short name of your color scheme", l:loclist[1]['text'])
   lclose
   bwipe
 endf
@@ -550,6 +551,15 @@ fun! Test_CT_trailing_spaces_are_skipped()
   call assert_notequal(l:src, l:tgt)
 endf
 
+fun! Test_CT_check_for_missing_short_name()
+  edit test45.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal('Please specify the short name of your color scheme', l:loclist[0]['text'])
+  lclose
+  bwipe
+endf
 
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1

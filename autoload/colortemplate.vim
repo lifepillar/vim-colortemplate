@@ -326,7 +326,7 @@ fun! s:set_info(key, value)
   let s:info[a:key] = a:value
   if a:key ==# 'shortname'
     if empty(a:value)
-      throw 'Please specify a short name for your colorscheme'
+      throw 'Missing value for short name key'
     elseif len(a:value) > 24
       throw 'The short name must be at most 24 characters long'
     elseif a:value !~? '\m^\w\+$'
@@ -924,6 +924,9 @@ endf
 fun! s:assert_requirements()
   if empty(s:fullname())
     call s:add_generic_error('Please specify the full name of your color scheme')
+  endif
+  if empty(s:shortname())
+    call s:add_generic_error('Please specify the short name of your color scheme')
   endif
   if empty(s:author())
     call s:add_generic_error('Please specify an author and the corresponding email')

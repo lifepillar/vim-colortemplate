@@ -54,7 +54,7 @@ else
 endverbatim
     # Opaque background
     Normal           white             black
-    Terminal         white             black   
+    Terminal         white             black
 verbatim
 endif
 endverbatim

@@ -1113,7 +1113,7 @@ fun! s:parse_line()
         throw "Extra characters after 'verbatim'"
       endif
     elseif s:token.value ==? 'auxfile'
-      call s:start_aux_file(matchstr(s:template.getl(), '^\s*auxfile\s\+\zs.*'))
+      call s:start_aux_file(s:interpolate(matchstr(s:template.getl(), '^\s*auxfile\s\+\zs.*'), s:prefer16colors()))
     elseif s:token.value ==? 'documentation'
       call s:start_help_file()
     elseif s:template.getl() =~? '\m:' " Look ahead

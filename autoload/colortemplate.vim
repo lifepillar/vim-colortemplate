@@ -182,7 +182,7 @@ fun! s:new_template()
   return {
         \ 'path':      '',
         \ 'data':      [],
-        \ 'linenr':     0,
+        \ 'linenr':    -1,
         \ 'numlines':   0,
         \ 'includes':  {},
         \ 'load':      function("s:load"),
@@ -207,15 +207,20 @@ endf
 fun! s:include(path) dict
   let self.includes = s:new_template()
   call self.includes.load(a:path)
+  let self.includes.linenr = -1
 endf
 
 fun! s:eof() dict
   return self.linenr >= self.numlines
 endf
 
-" Get current line
+" Get current line.
+" NOTE: it must be called only after s:next_line() has been invoked at least once.
 fun! s:getl() dict
   if empty(self.includes) || self.includes.eof()
+    if self.linenr < 0
+      throw 'FATAL: invalid call to getl()' " This should never happen, unless there is a bug
+    endif
     return self.data[self.linenr]
   else
     return self.includes.getl()
@@ -224,9 +229,6 @@ endf
 
 " Move to the next line. Returns 0 if at eof, 1 otherwise.
 fun! s:next_line() dict
-  if self.eof()
-    return 0
-  endif
   if empty(self.includes) || !self.includes.next_line()
     let self.linenr += 1
     return !self.eof()
@@ -1370,7 +1372,7 @@ endf
 fun! colortemplate#parse(filename) abort
   call s:init(fnamemodify(a:filename, ":h"))
   call s:template.load(a:filename)
-  while !s:template.eof()
+  while s:template.next_line()
     call s:token.reset()
     try
       if s:is_verbatim()
@@ -1390,7 +1392,6 @@ fun! colortemplate#parse(filename) abort
       let [l:path, l:line] = s:template.curr_pos()
       call s:add_error(l:path, l:line, s:token.spos + 1, v:exception)
     endtry
-    call s:template.next_line()
   endwhile
 
   call s:assert_requirements()

@@ -43,8 +43,8 @@ This command opens a new tab with two windows: one window contains the
 colorscheme derived from the template and the other window displays the
 colorscheme's help file. Besides, both files are saved into the specified
 directory (`~/.vim`), under the `colors` and `doc` directories respectively
-(the directories are created by Colortemplate if they do not exist; files are
-not overridden by default).
+(the directories are created by |:Colortemplate| if they do not exist; files
+are not overridden by default).
 
 After generating the colorscheme with the command above, you may load it with:
 >
@@ -62,8 +62,12 @@ colorscheme. The process is divided in five steps:
 4. document your colorscheme's options;
 5. generate your colorscheme with `:Colortemplate`.
 
-Lines starting with `#` are interpreted as comments. Comments are
-ignored by Colortemplate and are not included in the generated colorscheme.
+If you want start from scratch instead of using one of the predefined
+templates (not recommended), set the modeline to
+>
+  # vim: ft=colortemplate
+<
+and save your buffer before executing |:Colortemplate|.
 
 ==============================================================================
 General information				*colortemplate-info*
@@ -87,6 +91,9 @@ optional fields:
 All the fields should be self-descriptive, The `Terminal Colors` field is
 discussed further below. When the option prefix is not defined, Colortemplate
 sets it equal to the short name.
+
+Lines starting with `#` are interpreted as comments. Comments are ignored by
+Colortemplate and are not included in the generated colorscheme.
 
 ==============================================================================
 Colorscheme background				*colortemplate-background*
@@ -378,6 +385,9 @@ it is not saved. The command takes an optional argument, which is the path of
 the directory where the generated colorscheme, its documentation and any
 auxiliary files must be saved. To override existing files, use
 `:Colortemplate!`.
+
+NOTE: the command is available only for buffers whose |'filetype'| is set to
+`colortemplate`. 
 
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*

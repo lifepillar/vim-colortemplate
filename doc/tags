@@ -3,7 +3,9 @@
 colortemplate#colorspace#approx()	colortemplate.txt	/*colortemplate#colorspace#approx()*
 colortemplate#colorspace#colors_within()	colortemplate.txt	/*colortemplate#colorspace#colors_within()*
 colortemplate#colorspace#k_neighbours()	colortemplate.txt	/*colortemplate#colorspace#k_neighbours()*
+colortemplate#format_palette()	colortemplate.txt	/*colortemplate#format_palette()*
 colortemplate#syn#toggle()	colortemplate.txt	/*colortemplate#syn#toggle()*
+colortemplate#vimspectr#palette()	colortemplate.txt	/*colortemplate#vimspectr#palette()*
 colortemplate-auxfiles	colortemplate.txt	/*colortemplate-auxfiles*
 colortemplate-background	colortemplate.txt	/*colortemplate-background*
 colortemplate-best-practices	colortemplate.txt	/*colortemplate-best-practices*

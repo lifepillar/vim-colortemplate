@@ -1449,7 +1449,7 @@ fun! colortemplate#make(...)
 endf
 
 " Format a dictionary of color name/value pairs in Colortemplate format
-fun! colortemplate#print_palette(colors)
+fun! colortemplate#format_palette(colors)
   let l:template = []
   for [l:name, l:value] in items(a:colors)
     call add(l:template, printf('Color: %s %s ~', l:name, l:value))

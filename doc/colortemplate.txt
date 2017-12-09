@@ -392,7 +392,7 @@ NOTE: the command is available only for buffers whose |'filetype'| is set to
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*
 
-  				  *colortemplate#colorspace#approx()*
+  				*colortemplate#colorspace#approx()*
 Finds the xterm's terminal color that best approximates a given color. For
 example:
 >
@@ -410,7 +410,7 @@ The keys of the output have the following interpretation:
 - `delta`: the ΔE* distance between the input color and its approximation.
 
 
-				  *colortemplate#colorspace#colors_within()*
+				*colortemplate#colorspace#colors_within()*
 Returns a list of xterm's colors at distance less than the specified threshold
 from the given color. For example:
 >
@@ -418,7 +418,7 @@ from the given color. For example:
 <
 returns the list `[88,124]`.
 
-				  *colortemplate#colorspace#k_neighbours()*
+				*colortemplate#colorspace#k_neighbours()*
 Returns the list of the k xterm's colors most similar to the specified color,
 for a given k. For example:
 >
@@ -426,7 +426,16 @@ for a given k. For example:
 <
 returns the list `[124,88,160,52]`.
 
-				  *colortemplate#syn#toggle()*
+				*colortemplate#format_palette()*
+Formats a Dictionary of color name/value pairs into Colortemplate format. The
+returned value is a List, each item of which contains a color definition. To
+insert the color definitions at the current cursor's position, you may use
+something like:
+>
+  :call append('.', colortemplate#format_palette(some_color_dictionary))
+<
+
+				*colortemplate#syn#toggle()*
 Toggles the display of highlight group information for the highlight group
 under the cursor. For example:
 >
@@ -438,6 +447,19 @@ From left to right, this shows:
 - a sample of how the text looks like with the current hi group (`xxx`);
 - the hi group to which the current hi group resolves, if any (`→`);
 - the terminal/GUI values of the foreground and background color.
+
+				*colortemplate#vimspectr#palette()*
+Returns a Dictionary of color name/value pairs corresponding to the given
+Vimspectr parameters. The function takes two arguments: the first argument is
+the saturation curve (allowed values are `'grey'`, `'flat'`, `'wflat'`,
+`'curve'`, and `'wcurve'`); the second argument is a hue value between 0 and
+359. For example:
+>
+  echo colortemplate#vimspectr#palette('curve', 0)
+<
+The returned value may be used by |colortemplate#format_palette()|.
+
+See also: https://github.com/nightsense/vimspectr
 
 ==============================================================================
 Best practices					*colortemplate-best-practices*

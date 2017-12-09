@@ -206,16 +206,19 @@ Colortemplate includes some functions that generate good-looking palettes (see
 template using the `Palette` directive. You specify the name of the palette
 followed by the required arguments (which depend on the palette you use),
 separated by spaces; Colortemplate then generates the corresponding color
-definitions. For example, to use |colortemplate#vimspectr#palette()|, add
+directives. For example, to use |colortemplate#vimspectr#palette()|, add
 something like this to your template:
 >
   Palette: vimspectr curve 30
 <
-This will generate color definitions for colors called `g0`, `g1`, etc... at
-the point where the `Palette` directive appears.
+A `Palette` directive generates color directives at the point where the
+`Palette` directive appears. To know which color names are defined, read the
+documentation of the corresponding function (for example, `vimspectr`
+generates colors called `g0`, `g1`, etc...).
 
 Palette and Color directives are not mutually exclusive: a template may use
-both.
+both. A template may also include more than one `Palette` directive, provided
+that the generated color names are all distinct.
 
 ==============================================================================
 Highlight group definitions			*colortemplate-hi-groups*

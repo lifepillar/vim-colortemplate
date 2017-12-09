@@ -580,6 +580,15 @@ fun! Test_CT_include_empty_file()
   call assert_notequal(l:src, l:tgt)
 endf
 
+fun! Test_CT_use_vimspectr_palette()
+  edit test47.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

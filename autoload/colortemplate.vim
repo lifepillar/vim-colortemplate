@@ -220,8 +220,12 @@ endf
 
 " string params are expected to be properly quoted
 fun! s:include_palette(name, params) dict
+  try
+    execute 'let l:colors = colortemplate#'.a:name.'#palette('.join(map(a:params, { _,v -> v =~# '\m^[0-9]\+$' ? v : "'".v."'" }), ',').')'
+  catch /.*/
+    throw 'Could not load palette: ' . v:exception
+  endtry
   let self.includes = s:new_template()
-  execute 'let l:colors = colortemplate#'.a:name.'#palette('.join(map(a:params, { _,v -> v =~# '\m^[0-9]\+$' ? v : "'".v."'" }), ',').')'
   let self.includes.data = colortemplate#format_palette(l:colors)
   let self.includes.numlines = len(l:colors)
   let self.includes.linenr = -1

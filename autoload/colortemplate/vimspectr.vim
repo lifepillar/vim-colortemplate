@@ -75,5 +75,5 @@ fun! colortemplate#vimspectr#palette(satline, hue)
   let [l:b3, l:b3_lum] = s:vimspectr_find_val2(l:hue, l:sat[3], l:b0_lum, 3.25)
   let [l:b5, l:b5_lum] = s:vimspectr_find_val2(l:hue, l:sat[5], l:b0_lum, 5.5)
 
-  return [l:b0, l:b1, l:b2, l:b3, l:b4, l:b5, l:b6, l:b7]
+  return {'g0': l:b0, 'g1': l:b1, 'g2': l:b2, 'g3': l:b3, 'g4': l:b4, 'g5': l:b5, 'g6': l:b6, 'g7': l:b7}
 endf

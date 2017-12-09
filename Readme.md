@@ -49,6 +49,8 @@ Besides, Colortemplate has a few functions to help you develop your colorscheme,
 in particular functions to find the best 256-color approximations for GUI colors
 and to display information about the highlight group under the cursor.
 
+Colortemplate also includes functions to generate good looking color palettes!
+
 
 ## Contributions
 

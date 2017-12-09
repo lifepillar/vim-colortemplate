@@ -12,6 +12,63 @@ fun! colortemplate#colorspace#rgb2hex(r, g, b)
   return '#' . printf('%02x', a:r) . printf('%02x', a:g) . printf('%02x', a:b)
 endf
 
+" Convert an HSV color into RGB space.
+" Input values must be in the interval [0,1]
+" See: http://www.easyrgb.com/en/math.php
+" Last optional parameter may be 1 or 256 (default is 256)
+fun! colortemplate#colorspace#hsv2rgb(h, s, v, ...)
+  " Force values to be interpreted as floats
+  let l:h = a:h / 1.0
+  let l:s = a:s / 1.0
+  let l:v = a:v / 1.0
+  if l:s == 0.0
+    return a:0 > 0 && a:1 == 1
+          \ ? [l:v, l:v, l:v]
+          \ : map([l:v, l:v, l:v], { _,v -> float2nr(round(255 * v)) })
+  endif
+  let l:var_h = l:h * 6.0
+  if l:var_h >= 6.0
+    let l:var_h = 0.0
+  endif
+  let l:var_i = floor(l:var_h)
+  let l:var_1 = l:v * (1.0 - l:s)
+  let l:var_2 = l:v * (1.0 - l:s * (l:var_h - l:var_i))
+  let l:var_3 = l:v * (1.0 - l:s * (1.0 - (l:var_h - l:var_i)))
+  if l:var_i == 0.0
+    let l:var_r = l:v
+    let l:var_g = l:var_3
+    let l:var_b = l:var_1
+  elseif l:var_i == 1.0
+    let l:var_r = l:var_2
+    let l:var_g = l:v
+    let l:var_b = l:var_1
+  elseif l:var_i == 2.0
+    let l:var_r = l:var_1
+    let l:var_g = l:v
+    let l:var_b = l:var_3
+  elseif l:var_i == 3.0
+    let l:var_r = l:var_1
+    let l:var_g = l:var_2
+    let l:var_b = l:v
+  elseif l:var_i == 4.0
+    let l:var_r = l:var_3
+    let l:var_g = l:var_1
+    let l:var_b = l:v
+  else
+    let l:var_r = l:v
+    let l:var_g = l:var_1
+    let l:var_b = l:var_2
+  endif
+  return a:0 > 0 && a:1 == 1
+        \ ? [l:var_r, l:var_g, l:var_b]
+        \ : map([l:var_r, l:var_g, l:var_b], { _,v -> float2nr(round(255 * v)) })
+endf
+
+fun! colortemplate#colorspace#hsv2hex(h, s, v)
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hsv2rgb(a:h, a:s, a:v, 256)
+  return colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
+endf
+
 " XYZ (Tristimulus) Reference values of a perfect reflecting diffuser
 " (Values from http://www.easyrgb.com/en/math.php)
 " See also: https://en.wikipedia.org/wiki/Standard_illuminant

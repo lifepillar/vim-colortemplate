@@ -1447,4 +1447,13 @@ fun! colortemplate#make(...)
   echo "\r"
   echomsg '[Colortemplate] Colorscheme successfully created!'
 endf
+
+" Format a dictionary of color name/value pairs in Colortemplate format
+fun! colortemplate#print_palette(colors)
+  let l:template = []
+  for [l:name, l:value] in items(a:colors)
+    call add(l:template, printf('Color: %s %s ~', l:name, l:value))
+  endfor
+  return l:template
+endf
 " }}} Public interface

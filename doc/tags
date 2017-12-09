@@ -20,6 +20,7 @@ colortemplate-include	colortemplate.txt	/*colortemplate-include*
 colortemplate-info	colortemplate.txt	/*colortemplate-info*
 colortemplate-intro	colortemplate.txt	/*colortemplate-intro*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
+colortemplate-palettes	colortemplate.txt	/*colortemplate-palettes*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_italic	colortemplate.txt	/*g:@shortname_italic*

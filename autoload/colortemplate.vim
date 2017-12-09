@@ -10,9 +10,12 @@
 " <Documentation>             ::= documentation <Anything> enddocumentation
 " <Anything>                  ::= .*
 " <Comment>                   ::= # .*
-" <KeyValuePair>              ::= <ColorDef> | <Key> : <Value>
+" <KeyValuePair>              ::= <PaletteSpec> | <ColorDef> | <Key> : <Value>
 " <Key>                       ::= Full name | Short name | Author | Background | ...
 " <Value>                     ::= .*
+" <PaletteSpec>               ::= <PaletteName> [<Arg> [<Arg>]*]
+" <PaletteName>               ::= \w\+
+" <Arg>                       ::= number or word
 " <ColorDef>                  ::= Color : <ColorName> <GUIValue> <Base256Value> [ <Base16Value> ]
 " <ColorName>                 ::= [a-z1-9_]+
 " <GUIValue>                  ::= <HexValue> | <RGBValue> | <RGBColorName>
@@ -180,17 +183,18 @@ endf
 " everything in one pass in a streaming fashion.
 fun! s:new_template()
   return {
-        \ 'path':      '',
-        \ 'data':      [],
-        \ 'linenr':    -1,
-        \ 'numlines':   0,
-        \ 'includes':  {},
-        \ 'load':      function("s:load"),
-        \ 'include':   function("s:include"),
-        \ 'getl':      function("s:getl"),
-        \ 'next_line': function("s:next_line"),
-        \ 'eof':       function("s:eof"),
-        \ 'curr_pos':  function("s:curr_pos")
+        \ 'path':            '',
+        \ 'data':            [],
+        \ 'linenr':          -1,
+        \ 'numlines':         0,
+        \ 'includes':        {},
+        \ 'load':            function("s:load"),
+        \ 'include':         function("s:include"),
+        \ 'include_palette': function("s:include_palette"),
+        \ 'getl':            function("s:getl"),
+        \ 'next_line':       function("s:next_line"),
+        \ 'eof':             function("s:eof"),
+        \ 'curr_pos':        function("s:curr_pos")
         \ }
 endf
 
@@ -212,6 +216,15 @@ endf
 
 fun! s:eof() dict
   return self.linenr >= self.numlines
+endf
+
+" string params are expected to be properly quoted
+fun! s:include_palette(name, params) dict
+  let self.includes = s:new_template()
+  execute 'let l:colors = colortemplate#'.a:name.'#palette('.join(map(a:params, { _,v -> v =~# '\m^[0-9]\+$' ? v : "'".v."'" }), ',').')'
+  let self.includes.data = colortemplate#format_palette(l:colors)
+  let self.includes.numlines = len(l:colors)
+  let self.includes.linenr = -1
 endf
 
 " Get current line.
@@ -1131,7 +1144,9 @@ fun! s:parse_comment()
 endf
 
 fun! s:parse_key_value_pair()
-  if s:token.value ==? 'color'
+  if s:token.value ==? 'palette'
+    call s:parse_palette_spec()
+  elseif s:token.value ==? 'color'
     call s:add_source_line(s:template.getl())
     call s:parse_color_def()
   else " Generic key-value pair
@@ -1169,6 +1184,24 @@ fun! s:parse_key_value_pair()
       call s:set_info(l:key, l:val)
     endif
   endif
+endf
+
+fun! s:parse_palette_spec()
+  if s:token.next().kind !=# ':'
+    throw 'Expected colon after Palette keyword'
+  endif
+  if s:token.next().kind !=# 'WORD'
+    throw 'Palette name expected'
+  endif
+  let l:palette_name = s:token.value
+  let l:params = []
+  while s:token.next().kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
+    if s:token.kind !=# 'WORD' && s:token.kind !=# 'NUM'
+      throw 'Only number or word allowed here'
+    endif
+    call add(l:params, s:token.value)
+  endwhile
+  call s:template.include_palette(l:palette_name, l:params)
 endf
 
 fun! s:parse_color_def()

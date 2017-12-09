@@ -6,16 +6,17 @@ CONTENTS					*ft-colortemplate*
     3. Information block .... |colortemplate-info|
     4. Backgrounds .......... |colortemplate-background|
     5. Color definitions .... |colortemplate-colors|
-    6. Highlight groups ..... |colortemplate-hi-groups|
-    7. Verbatim blocks ...... |colortemplate-verbatim|
-    8. Documentation blocks . |colortemplate-doc|
-    9. Auxiliary files ...... |colortemplate-auxfiles|
-   10. Include directive .... |colortemplate-include|
-   11. Options .............. |colortemplate-options|
-   12. Commands ............. |colortemplate-commands|
-   13. Functions ............ |colortemplate-functions|
-   14. Best practices ....... |colortemplate-best-practices|
-   15. Providing feedback ... |colortemplate-feedback|
+    6. Predefined palettes .. |colortemplate-palettes|
+    7. Highlight groups ..... |colortemplate-hi-groups|
+    8. Verbatim blocks ...... |colortemplate-verbatim|
+    9. Documentation blocks . |colortemplate-doc|
+   10. Auxiliary files ...... |colortemplate-auxfiles|
+   11. Include directive .... |colortemplate-include|
+   12. Options .............. |colortemplate-options|
+   13. Commands ............. |colortemplate-commands|
+   14. Functions ............ |colortemplate-functions|
+   15. Best practices ....... |colortemplate-best-practices|
+   16. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
 Color templates					*colortemplate-intro*
@@ -196,6 +197,25 @@ ultimately depends on the interactions among all the colors. Colortemplate
 provides a few utility functions to help you experiment and find other good
 (but not optimal in the sense of ΔE*) approximations: see
 |colortemplate-functions|.
+
+==============================================================================
+Predefined palettes				*colortemplate-palettes*
+
+Colortemplate includes some functions that generate good-looking palettes (see
+|colortemplate-functions|). It is possible to use such functions in your
+template using the `Palette` directive. You specify the name of the palette
+followed by the required arguments (which depend on the palette you use),
+separated by spaces; Colortemplate then generates the corresponding color
+definitions. For example, to use |colortemplate#vimspectr#palette()|, add
+something like this to your template:
+>
+  Palette: vimspectr curve 30
+<
+This will generate color definitions for colors called `g0`, `g1`, etc... at
+the point where the `Palette` directive appears.
+
+Palette and Color directives are not mutually exclusive: a template may use
+both.
 
 ==============================================================================
 Highlight group definitions			*colortemplate-hi-groups*
@@ -457,7 +477,7 @@ the saturation curve (allowed values are `'grey'`, `'flat'`, `'wflat'`,
 >
   echo colortemplate#vimspectr#palette('curve', 0)
 <
-The returned value may be used by |colortemplate#format_palette()|.
+The color names are `g0`, `g1`, ... through `g7`.
 
 See also: https://github.com/nightsense/vimspectr
 

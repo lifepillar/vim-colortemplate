@@ -8,6 +8,7 @@ Colortemplate is based on a very simple but very flexible template format.
 This is a minimal template:
 
 ```
+# vim: colortemplate
 Full name:  My Gorgeous Theme
 Short name: gorgeous
 Author:     Me <me@somewhere.org>
@@ -24,8 +25,8 @@ Normal white black
 # Etc…
 ```
 
-Use `:Colortemplate` to turn a template into a full-fledged colorscheme. For
-example:
+Save the template and use `:Colortemplate` to turn it into a full-fledged
+colorscheme. For example:
 
 ```vim
 :Colortemplate ~/.vim

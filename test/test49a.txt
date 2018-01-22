@@ -1,0 +1,11 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Maintainer:w
+Background:dark
+Color:black rgb(0,0,0) 0 Black
+Include: test49b.txt
+Include: test49c.txt
+     ** # Make sure that this line is reached
+

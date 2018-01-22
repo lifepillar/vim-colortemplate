@@ -605,6 +605,20 @@ fun! Test_CT_multiple_nested_inclusions()
   bwipe
 endf
 
+fun! Test_CT_sequential_inclusions()
+  edit test49a.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  let l:loclist = getloclist(0)
+  call assert_equal(1, len(l:loclist))
+  call assert_equal("Invalid token", l:loclist[0]['text'])
+  call assert_equal(10, l:loclist[0]['lnum'])
+  call assert_equal(6, l:loclist[0]['col'])
+  lclose
+  bwipe
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

@@ -250,11 +250,16 @@ endf
 
 " Move to the next line. Returns 0 if at eof, 1 otherwise.
 fun! s:next_line() dict
-  if empty(self.includes) || !self.includes.next_line()
+  if empty(self.includes)
+    let self.linenr += 1
+    return !self.eof()
+  elseif self.includes.next_line()
+    return 1
+  else " End of included file
+    let self.includes = {}
     let self.linenr += 1
     return !self.eof()
   endif
-  return 1
 endf
 
 fun! s:curr_pos() dict

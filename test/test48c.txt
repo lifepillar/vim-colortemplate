@@ -1,0 +1,3 @@
+# vim: ft=colortemplate
+Include: test48d.txt
+Normal black white # Normal is defined only if we reach this line

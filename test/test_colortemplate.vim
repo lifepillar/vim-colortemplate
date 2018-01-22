@@ -589,6 +589,22 @@ fun! Test_CT_use_vimspectr_palette()
   call assert_notequal(l:src, l:tgt)
 endf
 
+fun! Test_CT_multiple_nested_inclusions()
+  edit test48a.txt
+  let l:src = bufnr('%')
+  Colortemplate
+  let l:tgt = bufnr('%')
+  let l:loclist = getloclist(0)
+  call assert_equal(2, len(l:loclist))
+  call assert_equal("Invalid token", l:loclist[0]['text'])
+  call assert_equal(4, l:loclist[0]['lnum'])
+  call assert_equal(3, l:loclist[0]['col'])
+  call assert_equal(9, l:loclist[1]['lnum'])
+  call assert_equal(6, l:loclist[1]['col'])
+  lclose
+  bwipe
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

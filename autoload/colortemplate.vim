@@ -209,7 +209,11 @@ fun! s:load(path) dict
 endf
 
 fun! s:include(path) dict
-  let self.includes = s:new_template()
+  if empty(self.includes)
+    let self.includes = s:new_template()
+  else
+    return self.includes.include(a:path)
+  endif
   call self.includes.load(a:path)
   let self.includes.linenr = -1
 endf

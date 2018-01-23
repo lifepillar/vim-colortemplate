@@ -35,6 +35,9 @@ colorscheme. For example:
 will translate your template and write your new shining colorscheme into
 `~/.vim/colors/gorgeous.vim`, ready to be used!
 
+If you want to get a flavor of how Colortemplate can be used in the real world,
+take a look at [Gruvbox 8](https://github.com/lifepillar/vim-gruvbox8) and
+[Solarized 8](https://github.com/lifepillar/vim-solarized8).
 
 ## Main Features
 

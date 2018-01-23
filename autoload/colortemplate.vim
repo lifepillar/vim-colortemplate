@@ -847,12 +847,14 @@ endf
 
 " path: path of the aux file as specified in the template
 fun! s:start_aux_file(path)
-  let s:is_auxfile = 1
   if empty(a:path)
     throw 'Missing path'
   endif
-  let s:auxfiles[a:path] = []
+  if !has_key(s:auxfiles, a:path)
+    let s:auxfiles[a:path] = []
+  endif
   let s:auxfilepath = a:path
+  let s:is_auxfile = 1
 endf
 
 fun! s:stop_aux_file()

@@ -865,7 +865,9 @@ endf
 
 fun! s:start_help_file()
   let l:path = 'doc' . s:slash() . s:shortname() . '.txt'
-  let s:auxfiles[l:path] = []
+  if !has_key(s:auxfiles, l:path)
+    let s:auxfiles[l:path] = []
+  endif
   let s:auxfilepath = l:path
   let s:is_helpfile = 1
 endf

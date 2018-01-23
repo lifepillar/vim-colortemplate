@@ -1,12 +1,9 @@
-" Source this script to parse all the templates in the templates folder except
-" for the default ones ({dark,dark_and_light,light}.colortemplate). Generate
-" corresponding colorschemes in the colors folder of this plugin (the colors
-" folder will be created if it does not exist).
-" Note: existing files in the colors folder are overridden.
+" Source this script to parse all the templates in the templates folder.
+" Colorschemes are created inside this plugin's folder.
 
 let s:curdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 let s:errors = 0
-let s:exceptions = ['dark', 'dark_and_light', 'light']
+let s:exceptions = []
 
 execute 'lcd' s:curdir
 

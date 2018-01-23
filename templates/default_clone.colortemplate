@@ -10,17 +10,7 @@ Description: A nearly exact clone of Vim's default colorscheme
 # }}}
 
 # Documentation {{{
-documentation
-==============================================================================
-@fullname colorscheme				*@shortname*
-
-						*g:@optionprefix_transp_bg*
-Set to 0 if you want an opaque background. Takes effect only in the
-terminal.
->
-	let g:@optionprefix_transp_bg = 1
-<
-enddocumentation
+Include: _help.colortemplate
 # }}}
 
 # Color palette {{{

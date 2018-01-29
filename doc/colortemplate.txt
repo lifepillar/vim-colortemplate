@@ -625,6 +625,10 @@ Here are some guidelines to develop outstanding hackable colorschemes:
     endif
     endverbatim
 <
+- For the same reason, plugin-specific highlight groups should be avoided. If
+  you really need to define plugin-specific highlight groups, provide an
+  option to suppress them (by default, they should be suppressed).
+
 - Some users like to use a transparent background (e.g., with custom images)
   in the terminal. You may easily support that by adapting this snippet:
   >

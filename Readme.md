@@ -44,6 +44,7 @@ take a look at [Gruvbox 8](https://github.com/lifepillar/vim-gruvbox8) and
 - Generates colorschemes that support true colors and 256 colors by default.
 - Generates colorschemes that load efficiently and have a consistent structure
   following best practices.
+- Syntax completion for highlight groups, keywords and common colors.
 - Detects a few common mistakes, e.g., missing highlight group definitions.
 - Supports generating any number of auxiliary files (say,
   `autoload/gorgeous.vim`).

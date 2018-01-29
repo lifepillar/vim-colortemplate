@@ -7,7 +7,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-syn case    ignore
+syn case    match
 " Highlight groups
 syn match   colortemplateAttrs        "\<\%(te\?r\?m\?\|gu\?i\?\)=\S\+" contains=colortemplateAttr
 syn match   colortemplateGuisp        "\<\%(guisp\|sp\?\)="

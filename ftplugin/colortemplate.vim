@@ -8,10 +8,11 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-let s:undo_ftplugin = "setlocal commentstring<"
+let s:undo_ftplugin = "setlocal commentstring< omnifunc<"
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
 
 setlocal commentstring=#%s
+setlocal omnifunc=syntaxcomplete#Complete
 
 command! -buffer -nargs=? -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
 

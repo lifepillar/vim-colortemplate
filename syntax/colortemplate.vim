@@ -140,6 +140,10 @@ syn keyword colortemplateConstant     contained WebPurple wheat wheat1 wheat2 wh
 syn keyword colortemplateConstant     contained WhiteSmoke x11 X11Gray X11Green X11Grey X11Maroon X11Purple yellow
 syn keyword colortemplateConstant     contained yellow1 yellow2 yellow3 yellow4 YellowGreen
 
+" These are defined for syntax completion. Since they are `contained`, but not
+" really contained into anything, this rule is never triggered.
+syn keyword colortemplateKeyword      contained auxfile endauxfile documentation enddocumentation verbatim endverbatim
+
 syn region auxfile matchgroup=colortemplateKeyword start=/auxfile\s\+\S.*$/ end=/endauxfile/ keepend
 
 syn include @colortemplatevim syntax/vim.vim

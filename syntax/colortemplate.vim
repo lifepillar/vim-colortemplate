@@ -21,9 +21,9 @@ syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuSbar Pme
 syn keyword colortemplateHiGroup      QuickFixLine Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup      SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
 syn keyword colortemplateHiGroup      Structure TabLine TabLineFill TabLineSel Tag Title Todo Type Typedef Underlined VertSplit
-syn keyword colortemplateHiGroup      ToolbarLine ToolbarButton
+syn keyword colortemplateHiGroup      debugPC debugBreakpoint ToolbarLine ToolbarButton
 syn keyword colortemplateHiGroup      Visual VisualNOS WarningMsg WildMenu lCursor
-syn keyword colortemplateHiGroup      Menu Scrollbar Tooltip User1 User2 User3 User4 User5 User6 User7 User8 User9 
+syn keyword colortemplateHiGroup      Menu Scrollbar Tooltip User1 User2 User3 User4 User5 User6 User7 User8 User9
 syn keyword colortemplateHiGroup      vimAuSyntax vimAugroup vimAutoCmdSfxList vimAutoCmdSpace vimAutoEventList vimBracket vimClusterName vimCmdSep
 syn keyword colortemplateHiGroup      vimCollClass vimCollection vimCommentTitle vimCommentTitleLeader vimEcho vimEscapeBrace vimExecute vimExtCmd
 syn keyword colortemplateHiGroup      vimFiletype vimFilter vimFuncBlank vimFuncBody vimFunction vimGlobal vimGroupList vimHiBang

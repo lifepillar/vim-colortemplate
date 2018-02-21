@@ -12,8 +12,8 @@ endf
 " Prints information about the highlight group at the cursor position.
 " See: http://vim.wikia.com/wiki/VimTip99 and hilinks.vim script.
 fun! colortemplate#syn#hi_group()
-  let trans = synIDattr(synID(line("."), col("."), v:false), "name")
-  let synid = synID(line("."), col("."), v:true)
+  let trans = synIDattr(synID(line("."), col("."), 0), "name")
+  let synid = synID(line("."), col("."), 1)
   let higrp = synIDattr(synid, "name")
   let synid = synIDtrans(synid)
   let logrp = synIDattr(synid, "name")

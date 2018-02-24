@@ -63,7 +63,7 @@ colorscheme. The process is divided in five steps:
 4. document your colorscheme's options;
 5. generate your colorscheme with `:Colortemplate`.
 
-If you want start from scratch instead of using one of the predefined
+If you want to start from scratch instead of using one of the predefined
 templates (not recommended), set the modeline to
 >
   # vim: ft=colortemplate

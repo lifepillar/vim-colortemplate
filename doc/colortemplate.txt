@@ -491,7 +491,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
 
 - Give each of your colors a distinctive name.
 
-- Do not use too many colors. Probably, six-height colors are already enough.
+- Do not use too many colors. Probably, six-eight colors are already enough.
   Sixteen are plenty.
 
 - Prefer falling back to a 256 color palette when true colors are not

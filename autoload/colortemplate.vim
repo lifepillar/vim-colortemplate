@@ -1017,6 +1017,16 @@ fun! s:print_header()
   call s:put  (   ''                                                                                  )
 endf
 
+if has('nvim')
+  fun! s:isnan(x)
+    return printf("%f", a:x) ==# 'nan'
+  endf
+else
+  fun! s:isnan(x)
+    return isnan(a:x)
+  endf
+endif
+
 " Print details about the color palette for the specified background as comments
 fun! s:print_color_details(bg, use16colors)
   if a:use16colors
@@ -1029,9 +1039,9 @@ fun! s:print_color_details(bg, use16colors)
   " Sort colors by increasing delta
   let l:color_names = keys(l:palette)
   call sort(l:color_names, { c1,c2 ->
-        \ isnan(l:palette[c1][3])
-        \      ? (isnan(l:palette[c2][3]) ? 0 : 1)
-        \      : (isnan(l:palette[c2][3]) ? -1 : (l:palette[c1][3] < l:palette[c2][3] ? -1 : (l:palette[c1][3] > l:palette[c2][3] ? 1 : 0)))
+        \ s:isnan(l:palette[c1][3])
+        \      ? (s:isnan(l:palette[c2][3]) ? 0 : 1)
+        \      : (s:isnan(l:palette[c2][3]) ? -1 : (l:palette[c1][3] < l:palette[c2][3] ? -1 : (l:palette[c1][3] > l:palette[c2][3] ? 1 : 0)))
         \ })
   for l:color in l:color_names
     if l:color =~? '\m^\%(fg\|bg\|none\)$'

@@ -410,7 +410,7 @@ auxiliary files must be saved. To override existing files, use
 `:Colortemplate!`.
 
 NOTE: the command is available only for buffers whose |'filetype'| is set to
-`colortemplate`. 
+`colortemplate`.
 
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*
@@ -610,7 +610,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
   and background colors for VertSplit, so that the separator character (a
   vertical bar by default) is visible. The user can always suppress (or
   replace) the separator character with 'fillchars'.
-  
+
   The rationale for this guideline is that it makes it clear how a windows has
   been split. For example, a vertical split followed by two horizontal splits
   produces this layout:
@@ -621,7 +621,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
 	      |
 	      |
 <
-  A horizonal split followed by two vertical splits produces this instead:
+  A horizontal split followed by two vertical splits produces this instead:
 >
 	      |
 	      |
@@ -632,7 +632,7 @@ Here are some guidelines to develop outstanding hackable colorschemes:
   In the former case, the two status lines can be dragged independently, while
   in the latter case they move together as if they were a single status line.
   Similarly, in the former case there is only one long vertical split, while
-  in the latter there are two independet vertical bars.
+  in the latter there are two independent vertical bars.
 
 - Avoid defining filetype-specific highlight groups as much as possible. They
   override ftplugin definitions causing highlighting to be messed up after

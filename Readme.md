@@ -8,7 +8,7 @@ Colortemplate is based on a very simple but very flexible template format.
 This is a minimal template:
 
 ```
-# vim: colortemplate
+# vim: ft=colortemplate
 Full name:  My Gorgeous Theme
 Short name: gorgeous
 Author:     Me <me@somewhere.org>

@@ -979,7 +979,7 @@ fun! s:postcheck()
   " Check for missing highlight groups
   for l:hg in s:default_hi_groups
     if !search('\%(hi\|hi! link\) \<'.l:hg.'\>', 'nW')
-      call s:add_generic_warning('No definition for ' . l:hg . ' highlight group')
+      call s:add_warning(s:template.path, 0, 1, 'No definition for ' . l:hg . ' highlight group')
     endif
   endfor
   " Is g:terminal_ansi_colors defined?

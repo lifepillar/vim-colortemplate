@@ -156,6 +156,29 @@ ToolbarButton        white             black             bold
 # Add additional highlight groups here if you want
 # }}}
 
+# Terminal colors {{{
+verbatim
+let g:terminal_ansi_colors = [
+    \ '@guiblack',
+    \ '@guired',
+    \ '@guigreen',
+    \ '@guiyellow',
+    \ '@guiblue',
+    \ '@guimagenta',
+    \ '@guicyan',
+    \ '@guiwhite',
+    \ '@guibrightblack',
+    \ '@guibrightred',
+    \ '@guibrightgreen',
+    \ '@guibrightyellow',
+    \ '@guibrightblue',
+    \ '@guibrightmagenta',
+    \ '@guibrightcyan',
+    \ '@guibrightwhite'
+\ ]
+endverbatim
+# }}}
+
 Background: light
 
 # Color palette for light variant {{{
@@ -295,3 +318,25 @@ ToolbarButton        black             white             bold
 # Add additional highlight groups here if you want
 # }}}
 
+# Terminal colors {{{
+verbatim
+let g:terminal_ansi_colors = [
+    \ '@guiblack',
+    \ '@guired',
+    \ '@guigreen',
+    \ '@guiyellow',
+    \ '@guiblue',
+    \ '@guimagenta',
+    \ '@guicyan',
+    \ '@guiwhite',
+    \ '@guibrightblack',
+    \ '@guibrightred',
+    \ '@guibrightgreen',
+    \ '@guibrightyellow',
+    \ '@guibrightblue',
+    \ '@guibrightmagenta',
+    \ '@guibrightcyan',
+    \ '@guibrightwhite'
+\ ]
+endverbatim
+# }}}

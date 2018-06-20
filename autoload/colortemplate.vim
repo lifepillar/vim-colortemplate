@@ -979,12 +979,18 @@ fun! s:postcheck()
   " Check for missing highlight groups
   for l:hg in s:default_hi_groups
     if !search('\%(hi\|hi! link\) \<'.l:hg.'\>', 'nW')
-      call s:add_warning(s:template.path, 0, 1, 'No definition for ' . l:hg . ' highlight group')
+      call s:add_generic_warning('No definition for ' . l:hg . ' highlight group')
+    endif
+  endfor
+  " Were debugPC and debugBreakpoint defined? (They shouldn't: see :h colortemplate-best-practices)
+  for l:hg in ['debugPC', 'debugBreakpoint']
+    if search('\%(hi\|hi! link\) \<'.l:hg.'\>', 'nW')
+      call s:add_generic_warning('A colorscheme should not define plugin-specific highlight groups: ' . l:hg )
     endif
   endfor
   " Is g:terminal_ansi_colors defined?
   if !search('g:terminal_ansi_colors','nW')
-    call s:add_warning(s:template.path, 0, 1, 'g:terminal_ansi_colors is not defined (see :help g:terminal_ansi_colors)')
+    call s:add_generic_warning('g:terminal_ansi_colors is not defined (see :help g:terminal_ansi_colors)')
   endif
   if !empty(getloclist(0))
     lopen

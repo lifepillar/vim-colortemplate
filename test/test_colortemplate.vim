@@ -9,6 +9,8 @@ fun! Test_CT_fine()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_color_typo()
@@ -58,6 +60,8 @@ fun! Test_CT_Normal_must_be_first()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_Normal_alt_background()
@@ -69,6 +73,8 @@ fun! Test_CT_Normal_alt_background()
   call assert_equal(9, l:loclist[0]['lnum'])
   call assert_equal(19, l:loclist[0]['col'])
   call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
+  lclose
+  bwipe
 endf
 
 fun! Test_CT_Normal_reverse()
@@ -78,6 +84,8 @@ fun! Test_CT_Normal_reverse()
   call assert_equal(2, len(l:loclist))
   call assert_equal("Do not use reverse mode for the Normal group", l:loclist[0]['text'])
   call assert_equal("Please define the Normal highlight group", l:loclist[1]['text'])
+  lclose
+  bwipe
 endf
 
 fun! Test_CT_extra_chars_after_verbatim()
@@ -89,6 +97,8 @@ fun! Test_CT_extra_chars_after_verbatim()
   call assert_equal(10, l:loclist[0]['lnum'])
   call assert_equal("Extra characters after 'endverbatim'", l:loclist[1]['text'])
   call assert_equal(11, l:loclist[1]['lnum'])
+  lclose
+  bwipe
 endf
 
 fun! Test_CT_undefined_color_in_verbatim_block()
@@ -104,6 +114,8 @@ fun! Test_CT_undefined_color_in_verbatim_block()
   call assert_equal(13, l:loclist[2]['lnum'])
   call assert_equal("Undefined @ value", l:loclist[3]['text'])
   call assert_equal(14, l:loclist[3]['lnum'])
+  lclose
+  bwipe
 endf
 
 fun! Test_CT_unexpected_token_at_start_of_line()
@@ -316,6 +328,8 @@ fun! Test_CT_attributes_ok()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_attributes_errors()
@@ -355,6 +369,8 @@ fun! Test_CT_parse_linked_group_ok()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_parse_linked_group_errors()
@@ -382,6 +398,8 @@ fun! Test_CT_minimal()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_verbatim_interpolation()
@@ -391,6 +409,8 @@ fun! Test_CT_verbatim_interpolation()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_wrong_keyword_in_doc()
@@ -412,6 +432,9 @@ fun! Test_CT_keyword_followed_by_underscore_in_doc()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_empty_short_name()
@@ -444,6 +467,8 @@ fun! Test_CT_commented_hex_color()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_comments_after_hi_group_defs()
@@ -453,6 +478,8 @@ fun! Test_CT_comments_after_hi_group_defs()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_color_already_defined()
@@ -498,6 +525,8 @@ fun! Test_CT_template_with_included_files()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_error_in_included_file()
@@ -532,6 +561,8 @@ fun! Test_CT_comment_after_base256_color()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_colors_from_rgb_txt()
@@ -541,6 +572,8 @@ fun! Test_CT_colors_from_rgb_txt()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_trailing_spaces_are_skipped()
@@ -550,6 +583,8 @@ fun! Test_CT_trailing_spaces_are_skipped()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_first_line_of_included_file_is_not_skipped()
@@ -559,6 +594,8 @@ fun! Test_CT_first_line_of_included_file_is_not_skipped()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_check_for_missing_short_name()
@@ -578,6 +615,8 @@ fun! Test_CT_include_empty_file()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_use_vimspectr_palette()
@@ -587,6 +626,8 @@ fun! Test_CT_use_vimspectr_palette()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!
+  bwipe
 endf
 
 fun! Test_CT_multiple_nested_inclusions()

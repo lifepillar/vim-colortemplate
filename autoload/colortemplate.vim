@@ -402,6 +402,10 @@ fun! s:optionprefix()
   return s:info['optionprefix']
 endf
 
+fun! s:use16option(g)
+  return (a:g ? 'g:' : '').s:optionprefix().'_use16'
+endf
+
 fun! s:terminalcolors()
   return s:info['terminalcolors']
 endf
@@ -921,17 +925,17 @@ fun! s:predefined_help_text()
   if s:has16and256colors()
     let l:default = s:prefer16colors()
     let l:pad = len(s:fullname()) + len(s:shortname())
-    call s:put(              '=============================================================================='                  )
-    call s:put(s:interpolate('@fullname other options' . repeat("\t", max([1,(40-l:pad)/8])) . '*@shortname-other-options*', 0))
-    call s:put(              ''                                                                                                )
+    call s:put(              '=============================================================================='                            )
+    call s:put(s:interpolate('@fullname other options' . repeat("\t", max([1,(40-l:pad)/8])) . '*@shortname-other-options*', 0)          )
+    call s:put(              ''                                                                                                          )
     let l:pad = len(s:optionprefix())
-    call s:put(s:interpolate(repeat("\t", max([1,(68-l:pad)/8])) . '*g:@optionprefix_use16*', 0)                               )
-    call s:put(              'Set to ' . (1-l:default) . ' if you want to use ' .s:secondary_number_of_colors() . ' colors.'   )
-    call s:put(              '>'                                                                                               )
-    call s:put(s:interpolate('	let g:@optionprefix_use16 = ', 0) . l:default                                                  )
-    call s:put(              '<'                                                                                               )
+    call s:put(repeat("\t", max([1,(68-l:pad)/8])) . '*'.s:use16option(1).'*', 0                                                         )
+    call s:put(              'Set to ' . (1-l:default) . ' if you want to force the use of ' .s:secondary_number_of_colors() . ' colors.')
+    call s:put(              '>'                                                                                                         )
+    call s:put('	let '.s:use16option(1).' = ', 0 . l:default                                                                            )
+    call s:put(              '<'                                                                                                         )
   endif
-  call s:put(              'vim:tw=78:ts=8:ft=help:norl:'                                                                      )
+  call s:put(              'vim:tw=78:ts=8:ft=help:norl:'                                                                                )
 endf
 " }}}
 " Initialize state {{{
@@ -1071,7 +1075,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
     if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
       call s:put('" ' . l:numcol . '-color variant')
       let l:not = s:prefer16colors() ? '' : '!'
-      call s:put("if " .l:not."get(g:, '" . s:optionprefix() . "_use16', " . s:prefer16colors() .")")
+      call s:put("if " .l:not."get(g:, '" . s:use16option(0) . "', " . s:prefer16colors() .")")
     endif
     call s:print_colorscheme_preamble(l:use16colors)
     if s:has_dark_and_light()

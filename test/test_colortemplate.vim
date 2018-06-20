@@ -619,6 +619,41 @@ fun! Test_CT_sequential_inclusions()
   bwipe
 endf
 
+fun! Test_CT_terminal_ansi_colors_not_defined()
+  edit test50a.txt
+  let l:src = bufnr('%')
+  let l:warnings = g:colortemplate_no_warnings
+  let g:colortemplate_no_warnings = 0
+  Colortemplate
+  let l:tgt = bufnr('%')
+  let l:loclist = getloclist(0)
+  let l:sublist = filter(l:loclist, { i,v -> v['text'] =~# 'g:terminal_ansi_colors' })
+  call assert_false(empty(l:sublist))
+  call assert_equal(1, len(l:sublist))
+  lclose
+  bwipe!
+  lclose
+  bwipe
+  let g:colortemplate_no_warnings = 1
+endf
+
+fun! Test_CT_terminal_ansi_colors_defined()
+  edit test50b.txt
+  let l:src = bufnr('%')
+  let l:warnings = g:colortemplate_no_warnings
+  let g:colortemplate_no_warnings = 0
+  Colortemplate
+  let l:tgt = bufnr('%')
+  let l:loclist = getloclist(0)
+  let l:sublist = filter(l:loclist, { i,v -> v['text'] =~# 'g:terminal_ansi_colors' })
+  call assert_true(empty(l:sublist))
+  lclose
+  bwipe!
+  lclose
+  bwipe
+  let g:colortemplate_no_warnings = 1
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

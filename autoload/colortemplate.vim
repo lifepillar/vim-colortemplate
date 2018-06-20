@@ -986,7 +986,8 @@ endf
 
 fun! s:print_header()
   if s:has16and256colors()
-    let l:limit = "(get(g:, '" . s:optionprefix() . "_use16', " . string(s:prefer16colors()) . ") ? 16 : 256)"
+    let l:default = s:prefer16colors() ? string(s:prefer16colors()) : '&t_Co < 256'
+    let l:limit = "(get(g:, '" . s:use16option(0) . "', " . l:default . ") ? 16 : 256)"
   else
     let l:limit = s:preferred_number_of_colors()
   endif

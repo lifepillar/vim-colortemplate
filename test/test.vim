@@ -4,7 +4,7 @@ let s:done = 0
 let s:fail = 0
 
 fun! RunTheTest(test)
-  let l:message = a:test . '… '
+  let l:message = a:test . ' '
   let s:done += 1
   try
     exe 'call ' . a:test
@@ -15,11 +15,18 @@ fun! RunTheTest(test)
   if len(v:errors) > 0
     let s:fail += 1
     let l:message .= 'FAILED'
+    call add(s:errors, '')
     call add(s:errors, a:test)
-    call extend(s:errors, v:errors)
+    for l:err in v:errors
+      if l:err =~# '^Caught exception'
+        call add(s:errors, substitute(l:err, '^Caught exception\zs.*: Vim[^:]*\ze:', '', ''))
+      else
+        call add(s:errors, substitute(l:err, '^.*\zeline \d\+', '', ''))
+      endif
+    endfor
     let v:errors = []
   else
-    let l:message .= 'ok'
+    let l:message .= '✔︎'
   endif
   call add(s:messages,  l:message)
 endfunc
@@ -28,7 +35,7 @@ fun! FinishTesting()
   call add(s:messages, '')
   call add(s:messages, 'Run ' . s:done . (s:done > 1 ? ' tests' : ' test'))
   if s:fail == 0
-    call add(s:messages, 'ALL TESTS PASSED!')
+    call add(s:messages, 'ALL TESTS PASSED! ✔︎')
   else
     call add(s:messages, s:fail . (s:fail > 1 ? ' tests' : ' test') . ' failed')
   endif
@@ -37,16 +44,23 @@ fun! FinishTesting()
   call append(line('$'), s:messages)
   call append(line('$'), '')
   call append(line('$'), s:errors)
+  call matchadd('Identifier', '✔︎')
+  call matchadd('WarningMsg', '\<FAILED\>')
+  call matchadd('WarningMsg', '^\d\+ tests\? failed')
+  call matchadd('Keyword', '^\<line \d\+')
+  call matchadd('Constant', '\<Expected\>')
+  call matchadd('Constant', '\<but got\>')
+  call matchadd('ErrorMsg', 'Caught exception')
 endf
 
 fun! RunBabyRun(...)
   " Locate Test_ functions and execute them.
-  redir @q
+  redir @t
   execute 'silent function /^Test_'.(a:0 > 0 ? a:1 : '')
   redir END
-  let s:tests = split(substitute(@q, 'function \(\k*()\)', '\1', 'g'))
+  let s:tests = split(substitute(@t, 'function \(\k*()\)', '\1', 'g'))
 
-  for s:test in sort(s:tests) " Run the tests in lexicographic order
+  for s:test in sort(s:tests)
     call RunTheTest(s:test)
   endfor
 

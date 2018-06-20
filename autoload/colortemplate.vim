@@ -984,6 +984,18 @@ fun! s:assert_requirements()
   endfor
 endf
 
+" Checks to be performed on the generated colorscheme code
+fun! s:postcheck()
+  " Is g:terminal_ansi_colors defined?
+  call cursor(1,1)
+  if search('g:terminal_ansi_colors','nW') ==# 0
+    call s:add_warning(s:template.path, 0, 1, 'g:terminal_ansi_colors is not defined (see :help g:terminal_ansi_colors)')
+  endif
+  if !empty(getloclist(0))
+    lopen
+  endif
+endf
+
 fun! s:print_header()
   if s:has16and256colors()
     let l:default = s:prefer16colors() ? string(s:prefer16colors()) : '&t_Co < 256'
@@ -1110,6 +1122,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
           \ { 'dir': a:outdir },
           \ a:overwrite)
   endif
+  call s:postcheck()
 endf
 " }}}
 " Parser {{{

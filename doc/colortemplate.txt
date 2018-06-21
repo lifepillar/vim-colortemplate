@@ -49,9 +49,10 @@ are not overridden by default).
 
 After generating the colorscheme with the command above, you may load it with:
 >
-  colorscheme dark
+  :colorscheme dark
 <
-(That template uses only black and white, so it is not an outstanding theme.)
+(The dark template uses only black and white, so it does not stand out as
+a catchy colorscheme.)
 
 You may use `dark.colortemplate`, `light.colortemplate` or
 `dark_and_light.colortemplate` as starting points for creating your own

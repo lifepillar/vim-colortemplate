@@ -152,26 +152,29 @@ be used, too, although their use is discouraged:
 Base-256 or base-16 specifications are used in terminals that do not support
 true colors, or when |termguicolors| is not set. Whether your colorscheme
 supports a 256 color palette, a 16 color palette, or both, is determined by
-the value of the `Terminal` `Colors` field. The possible values are:
+the value of the `Terminal` `Colors` field. The possible values of `Terminal`
+`Colors` are:
 
 - `256`: the colorscheme falls back to an xterm's 256 color palette when true
-  colors are not available or |termguicolors| is not set.
+  colors are not available or |termguicolors| is not set. An error will be
+  raised if the environment does not support at least 256 colors.
 - `16`: the colorscheme falls back to a 16 color palette (see |cterm-colors|)
   when true colors are not available or |termguicolors| is not set. This
   typically requires tweaking with terminal settings to choose a consistent
   palette, so this value is not recommended.
-- `256,16`: the colorscheme falls back to a 256 color palette by default, but
-  a 16 color palette may be enabled by setting `g:<colorscheme>_use16` to `1`,
-  where `<colorscheme>` is the option prefix.
+- `256,16`: the colorscheme falls back to a 256 color palette, or to a 16
+  color palette if |t_Co| is less that 256, when true colors are not available
+  or |termguicolors| is not set. The user may force the use of a 16 color
+  palette by setting `g:<option prefix>_use16` to `1`.
 - `16,256`: the colorscheme falls back to a 16 color palette by default, but
-  a 256 color palette may be enabled by setting `g:<colorscheme>_use16` to
-  `0`. This value is not recommended.
+  the user may force the use of a 256 color palette by setting
+  `g:<option prefix>_use16` to `0`. This value is not recommended.
 
-In general, only the GUI value is mandatory. Base-256 values may be replaced
-by a `~` symbol, which means that the color should be inferred automatically
-from the GUI value. Base-16 values may be omitted entirely, unless you plan to
-support the use of a 16 color palette. So, a minimal color definition might
-look as follows:
+In general, only the GUI value of a color specification is necessary. Base-256
+values may be replaced by a `~` symbol, which means that the color should be
+inferred automatically from the GUI value. Base-16 values may be omitted
+entirely, unless you plan to support the use of a 16 color palette. So,
+a minimal color definition might look as follows:
 >
   Color: black #000000 ~
 <

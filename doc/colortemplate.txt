@@ -194,8 +194,8 @@ the corresponding terminal color (`88`). The used distance is a sophisticated
 variant of the CIELAB ΔE* metric, which takes into account the perceptual
 characteristics of the human eye. Roughly speaking, colors at distance less
 than 2.3 correspond to "just noticeable differences". The greater the
-distance, the greater the discrepancy between GUI colors and their base-256
-approximations.
+distance, the greater the discrepancy between the GUI color and its base-256
+counterpart.
 
 Keep in mind that the "most similar" terminal color may not necessarily be the
 "best looking" color, because the overall look&feel of a colorscheme
@@ -276,9 +276,9 @@ For example:
 Verbatim blocks					*colortemplate-verbatim*
 
 Colortemplate offers the possibility to add arbitrary code to a colorscheme.
-Code between `verbatim` and `endverbatim` is copied (almost) verbatim into the
+Code between `verbatim` and `endverbatim` is copied almost verbatim into the
 output. The exception is that you may still use your color names by prepending
-an @ sign. Such names will be interpolated and replaced by suitable color
+an @ sign: such names will be interpolated and replaced by suitable color
 values. For example:
 >
   verbatim
@@ -337,21 +337,23 @@ hardcode your colorscheme's name into the documentation!
 If the `Terminal Colors` field includes both `16` and `256` (in any order), an
 option is automatically defined and documented by Colortemplate, which allows
 the user to choose the preferred terminal color palette. The option's name is
-`g:<colorscheme>_use16`, where `<colorscheme>` is the option prefix of your
-template.
+`g:<option prefix>_use16`, where `<option prefix>` is the string specified in
+the `Option` `Prefix` directive (see |colortemplate-info|).
 
 ==============================================================================
 Auxiliary files				       	*colortemplate-auxfiles*
 
-If you need to create additional files, you may put their content into an
-`auxfile` block. For example:
+If you want to generate additional files besides the colorscheme itself, you
+may put the content of each file into a separate `auxfile` block. For example:
 >
   auxfile autoload/airline/themes/mycolorscheme.vim
   " Anything can go here
   endauxfile
 
-You must specify the path of the resulting file after `auxfile`. The content
-of an `auxfile` block is interpolated as in verbatim blocks.
+This will write the content of the auxfile block into the specified file
+(creating the intermediate directories if necessary). The path is mandatory
+and is relative to |:Colortemplate|'s argument. The content of an `auxfile`
+block is interpolated as in verbatim blocks.
 
 ==============================================================================
 Include directive		       		*colortemplate-include*
@@ -399,7 +401,7 @@ Set to 1 if you do not want to generate the help file.
   let g:colortemplate_no_doc = 0
 <
 						*g:colortemplate_no_warnings*
-Set to 1 if you want Colortemplate to report only errors.
+Set to 1 if you want Colortemplate to report only errors (not recommended).
 >
   let g:colortemplate_no_warnings = 0
 
@@ -563,14 +565,8 @@ Here are some guidelines to develop outstanding hackable colorschemes:
      cursor line should "pass behind" highlighted search results. You may
      achieve that effect by adapting the following snippet:
 >
-       Background:dark
-       Color:black  #000000 ~
-       Color:white  #ffffff ~
-       Color:grey   #404040 ~
-       Color:yellow #b58900 ~
-       Normal       white  black
        CursorLine   none   grey            # No foreground color
-       CursorColumn none   grey            # Ditto
+       CursorColumn none   grey            # No foreground color
        Search       yellow fg    reverse   # Use reverse
 <
   g. Diffs (DiffAdd, DiffChange, DiffDelete, DiffText). Open two buffers in

@@ -11,7 +11,7 @@ colortemplate-background	colortemplate.txt	/*colortemplate-background*
 colortemplate-best-practices	colortemplate.txt	/*colortemplate-best-practices*
 colortemplate-colors	colortemplate.txt	/*colortemplate-colors*
 colortemplate-commands	colortemplate.txt	/*colortemplate-commands*
-colortemplate-doc	colortemplate.txt	/*colortemplate-doc*
+colortemplate-doc-blocks	colortemplate.txt	/*colortemplate-doc-blocks*
 colortemplate-feedback	colortemplate.txt	/*colortemplate-feedback*
 colortemplate-functions	colortemplate.txt	/*colortemplate-functions*
 colortemplate-getting-started	colortemplate.txt	/*colortemplate-getting-started*

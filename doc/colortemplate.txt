@@ -9,7 +9,7 @@ CONTENTS					*ft-colortemplate*
     6. Predefined palettes .. |colortemplate-palettes|
     7. Highlight groups ..... |colortemplate-hi-groups|
     8. Verbatim blocks ...... |colortemplate-verbatim|
-    9. Documentation blocks . |colortemplate-doc|
+    9. Documentation blocks . |colortemplate-doc-blocks|
    10. Auxiliary files ...... |colortemplate-auxfiles|
    11. Include directive .... |colortemplate-include|
    12. Options .............. |colortemplate-options|
@@ -312,7 +312,7 @@ refer to a specific colorspace, use `@term16<color>` or `@term256<color>`
 instead.
 
 ==============================================================================
-Documentation blocks				*colortemplate-doc*
+Documentation blocks				*colortemplate-doc-blocks*
 
 Any settings that your colorscheme provides should be documented in
 a documentation block. For instance, if you add a `g:mytheme_italic` flag to

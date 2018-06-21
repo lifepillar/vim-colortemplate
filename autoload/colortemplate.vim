@@ -1089,7 +1089,8 @@ fun! s:generate_colorscheme(outdir, overwrite)
     if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
       call s:put('" ' . l:numcol . '-color variant')
       let l:not = s:prefer16colors() ? '' : '!'
-      call s:put("if " .l:not."get(g:, '" . s:use16option(0) . "', " . s:prefer16colors() .")")
+      let l:default = s:preferred_number_of_colors() == 256 ? '&t_Co < 256' : s:prefer16colors()
+      call s:put("if " .l:not."get(g:, '" . s:use16option(0) . "', " . l:default .")")
     endif
     call s:print_colorscheme_preamble(l:use16colors)
     if s:has_dark_and_light()

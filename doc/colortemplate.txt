@@ -165,7 +165,10 @@ the value of the `Terminal` `Colors` field. The possible values of `Terminal`
 - `256,16`: the colorscheme falls back to a 256 color palette, or to a 16
   color palette if |t_Co| is less that 256, when true colors are not available
   or |termguicolors| is not set. The user may force the use of a 16 color
-  palette by setting `g:<option prefix>_use16` to `1`.
+  palette by setting `g:<option prefix>_use16` to `1`. Similarly, the user may
+  force the use a 256 color palette by setting `g:<option prefix>_use16` to
+  `0`. In the latter case, an error will be raised if the environment does not
+  support at least 256 colors.
 - `16,256`: the colorscheme falls back to a 16 color palette by default, but
   the user may force the use of a 256 color palette by setting
   `g:<option prefix>_use16` to `0`. This value is not recommended.

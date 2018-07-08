@@ -1523,6 +1523,23 @@ fun! colortemplate#make(...)
     return
   endtry
 
+  if get(g:, 'colortemplate#contrast_matrix', 1)
+    let l:backgrounds = s:has_dark_and_light() ? ['dark', 'light'] : [s:current_background()]
+    for l:bg in l:backgrounds
+      let [l:colors,l:labels] = [[],[]]
+      for [l:key,l:val] in items(s:palette(l:bg))
+        if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
+          call add(l:labels, l:key)
+          call add(l:colors, l:val[0])
+        endif
+      endfor
+      call colortemplate#contrast_matrix(
+            \ l:bg . ' background',
+            \ l:colors,
+            \ l:labels)
+    endfor
+  endif
+
   redraw
   echo "\r"
   echomsg '[Colortemplate] Colorscheme successfully created!'
@@ -1537,7 +1554,7 @@ fun! colortemplate#format_palette(colors)
   return l:template
 endf
 
-fun! colortemplate#contrast_matrix(colors, labels)
+fun! colortemplate#contrast_matrix(title, colors, labels)
   let l:colors = []
   " Find maximum length of color names (used for formatting)
   let l:tw = 2 + max(map(copy(a:labels), { _,v -> len(v)}))
@@ -1551,10 +1568,9 @@ fun! colortemplate#contrast_matrix(colors, labels)
     endif
   endfor
   let l:M = colortemplate#colorspace#contrast_matrix(l:colors)
-  silent botright new +setlocal\ buftype=nofile\ bufhidden=wipe\
-        \ noswapfile\ noet\ norl\ nowrap
+  silent botright new +setlocal\ buftype=nofile\ noswapfile\ noet\ norl\ nowrap
   execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
-  call append(0, 'Contrast Ratio Matrix')
+  call append(0, 'Contrast Ratio Matrix - ' . a:title)
   call append('$', 'Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
   call append('$', '')
   call append('$', "█ Not W3C conforming   █ Not ISO-9241-3 conforming")

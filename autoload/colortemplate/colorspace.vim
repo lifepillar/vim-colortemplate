@@ -125,7 +125,7 @@ fun! colortemplate#colorspace#contrast_matrix(colors)
   for l:i in l:range
     call add(l:M, [])
     for l:j in l:range
-      call add(l:M[l:i], colortemplate#colorspace#contrast_ratio(l:col[l:i], l:col[l:j]))
+      call add(l:M[l:i], colortemplate#colorspace#contrast_ratio(a:colors[l:i], a:colors[l:j]))
     endfor
   endfor
   return l:M

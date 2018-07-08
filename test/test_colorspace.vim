@@ -48,11 +48,12 @@ fun! Test_CS_2_neighbours()
 endf
 
 fun! Test_CS_contrast_ratio()
-  call assert_equal(1.0, colortemplate#colorspace#contrast_ratio(0,0,0,0,0,0))
-  call assert_equal(1.0, colortemplate#colorspace#contrast_ratio(255,255,255,255,255,255))
-  call assert_equal(1.0, colortemplate#colorspace#contrast_ratio(100,100,100,100,100,100))
-  call assert_equal(21.0, colortemplate#colorspace#contrast_ratio(0,0,0,255,255,255))
-  call assert_equal(21.0, colortemplate#colorspace#contrast_ratio(255,255,255,0,0,0))
+  call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([0,0,0],[0,0,0]))
+  call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([255,255,255],[255,255,255]))
+  call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([100,100,100],[100,100,100]))
+  call assert_equal(21.0, colortemplate#colorspace#contrast_ratio([0,0,0],[255,255,255]))
+  call assert_equal(21.0, colortemplate#colorspace#contrast_ratio([255,255,255],[0,0,0]))
+  " call assert_equal(4.54, colortemplate#colorspace#contrast_ratio())
 endf
 
 call RunBabyRun('CS')

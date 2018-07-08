@@ -96,9 +96,12 @@ fun! colortemplate#colorspace#relative_luminance(sR, sG, sB)
   return 0.2126 * var_R + 0.7152 * var_G + 0.0722 * var_B
 endf
 
-fun! colortemplate#colorspace#contrast_ratio(sR1, sG1, sB1, sR2, sG2, sB2)
-  let L1 = colortemplate#colorspace#relative_luminance(a:sR1, a:sG1, a:sB1)
-  let L2 = colortemplate#colorspace#relative_luminance(a:sR2, a:sG2, a:sB2)
+" Arguments must be hex colors (strings) or RGB values as 3-element lists.
+fun! colortemplate#colorspace#contrast_ratio(col1, col2)
+  let [l:sR1, l:sG1, l:sB1] = type(a:col1) == v:t_string ? s:hex2rgb(a:col1) : a:col1
+  let [l:sR2, l:sG2, l:sB2] = type(a:col2) == v:t_string ? s:hex2rgb(a:col2) : a:col2
+  let L1 = colortemplate#colorspace#relative_luminance(l:sR1, l:sG1, l:sB1)
+  let L2 = colortemplate#colorspace#relative_luminance(l:sR2, l:sG2, l:sB2)
   return L1 > L2 ? (L1 + 0.05) / (L2 + 0.05) : (L2 + 0.05) / (L1 + 0.05)
 endf
 

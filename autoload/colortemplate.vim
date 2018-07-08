@@ -1580,7 +1580,7 @@ fun! colortemplate#contrast_matrix(title, colors, labels)
     call append('$', a:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t"))
   endfor
   syntax match ColortemplateW3C /\D[0123]\.\d\+\|\D4\.[01234]\d\+/
-  syntax match ColortemplateW3C /^█/
+  syntax match ColortemplateW3C /\%<23c█/
   syntax match ColortemplateISO /\D[012]\.\d\+/
   syntax match ColortemplateISO /\%>23c█/
   hi! link ColortemplateISO Special

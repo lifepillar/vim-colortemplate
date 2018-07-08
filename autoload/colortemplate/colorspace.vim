@@ -113,6 +113,24 @@ fun! colortemplate#colorspace#contrast_ratio(col1, col2)
   return L1 > L2 ? (L1 + 0.05) / (L2 + 0.05) : (L2 + 0.05) / (L1 + 0.05)
 endf
 
+" Returns a matrix of contrast ratio values, comparing all colors among
+" themselves.
+"
+" colors: a List of colors
+
+" Colors may be hex colors (strings) or RGB values as 3-element lists.
+fun! colortemplate#colorspace#contrast_matrix(colors)
+  let l:M = []
+  let l:range = range(len(a:colors))
+  for l:i in l:range
+    call add(l:M, [])
+    for l:j in l:range
+      call add(l:M[l:i], colortemplate#colorspace#contrast_ratio(l:col[l:i], l:col[l:j]))
+    endfor
+  endfor
+  return l:M
+endf
+
 " XYZ (Tristimulus) Reference values of a perfect reflecting diffuser
 " (Values from http://www.easyrgb.com/en/math.php)
 " See also: https://en.wikipedia.org/wiki/Standard_illuminant

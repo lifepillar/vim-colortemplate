@@ -4,6 +4,10 @@ execute 'source' s:testdir.'/test.vim'
 
 let s:eps = 0.000001
 
+fun! s:round(num, digits)
+  return str2float(printf('%.0'.a:digits.'f', a:num))
+endf
+
 fun! Test_CS_srgb2xyz238238239()
   let [x,y,z] = colortemplate#colorspace#srgb2xyz(238, 238, 239)
   " Values as computed by http://colormine.org/color-converter
@@ -53,7 +57,12 @@ fun! Test_CS_contrast_ratio()
   call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([100,100,100],[100,100,100]))
   call assert_equal(21.0, colortemplate#colorspace#contrast_ratio([0,0,0],[255,255,255]))
   call assert_equal(21.0, colortemplate#colorspace#contrast_ratio([255,255,255],[0,0,0]))
-  " call assert_equal(4.54, colortemplate#colorspace#contrast_ratio())
+  call assert_equal(4.54, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#e1fafa'), 2))
+  call assert_equal(4.52, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafa96'), 2))
+  call assert_equal(4.56, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafaaf'), 2))
+  call assert_equal(4.62, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafac8'), 2))
+  call assert_equal(4.68, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafae1'), 2))
+  call assert_equal(4.74, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafafa'), 2))
 endf
 
 call RunBabyRun('CS')

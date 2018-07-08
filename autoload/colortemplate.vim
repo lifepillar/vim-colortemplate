@@ -1536,4 +1536,38 @@ fun! colortemplate#format_palette(colors)
   endfor
   return l:template
 endf
+
+fun! colortemplate#contrast_matrix(colors, labels)
+  let l:colors = []
+  " Find maximum length of color names (used for formatting)
+  let l:tw = 2 + max(map(copy(a:labels), { _,v -> len(v)}))
+  for l:col in a:colors
+    if l:col =~# '^#' " Hex color
+      call add(l:colors, l:col)
+    elseif l:col =~# 'rgb'
+      call add(l:colors, colortemplate#colorspace#rgb2hex(TODO))
+    else " Assume color name
+      call add(l:colors, get(s:current_palette(), l:col, '#000000'))
+    endif
+  endfor
+  let l:M = colortemplate#colorspace#contrast_matrix(l:colors)
+  silent botright new +setlocal\ buftype=nofile\ bufhidden=wipe\
+        \ noswapfile\ noet\ norl\ nowrap
+  execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
+  call append(0, 'Contrast Ratio Matrix')
+  call append('$', 'Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
+  call append('$', '')
+  call append('$', "█ Not W3C conforming   █ Not ISO-9241-3 conforming")
+  call append('$', '')
+  call append('$', "\t".join(a:labels, "\t"))
+  for l:i in range(len(l:M))
+    call append('$', a:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t"))
+  endfor
+  syntax match ColortemplateW3C /\D[0123]\.\d\+\|\D4\.[01234]\d\+/
+  syntax match ColortemplateW3C /^█/
+  syntax match ColortemplateISO /\D[012]\.\d\+/
+  syntax match ColortemplateISO /\%>23c█/
+  hi! link ColortemplateISO Special
+  hi! link ColortemplateW3C Constant
+endf
 " }}} Public interface

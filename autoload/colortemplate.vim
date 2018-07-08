@@ -1570,7 +1570,7 @@ fun! colortemplate#contrast_matrix(title, colors, labels)
   let l:M = colortemplate#colorspace#contrast_matrix(l:colors)
   silent botright new +setlocal\ buftype=nofile\ noswapfile\ noet\ norl\ nowrap
   execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
-  call append(0, 'Contrast Ratio Matrix - ' . a:title)
+  call append(0, 'Contrast Ratio Matrix for ' . s:fullname() . ' (' . a:title . ')')
   call append('$', 'Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
   call append('$', '')
   call append('$', "█ Not W3C conforming   █ Not ISO-9241-3 conforming")

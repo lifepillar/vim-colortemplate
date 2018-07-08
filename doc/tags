@@ -24,6 +24,7 @@ colortemplate-palettes	colortemplate.txt	/*colortemplate-palettes*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_italic	colortemplate.txt	/*g:@shortname_italic*
+g:colortemplate_contrast_matrix	colortemplate.txt	/*g:colortemplate_contrast_matrix*
 g:colortemplate_no_aux_files	colortemplate.txt	/*g:colortemplate_no_aux_files*
 g:colortemplate_no_doc	colortemplate.txt	/*g:colortemplate_no_doc*
 g:colortemplate_no_warnings	colortemplate.txt	/*g:colortemplate_no_warnings*

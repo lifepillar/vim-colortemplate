@@ -40,12 +40,15 @@ located in colortemplate's plugin folder, and type:
 >
   :Colortemplate ~/.vim
 <
-This command opens a new tab with two windows: one window contains the
-colorscheme derived from the template and the other window displays the
-colorscheme's help file. Besides, both files are saved into the specified
-directory (`~/.vim`), under the `colors` and `doc` directories respectively
-(the directories are created by |:Colortemplate| if they do not exist; files
-are not overridden by default).
+This command opens a new tab with a few windows: one window contains the
+colorscheme derived from the template. Another window displays the
+colorscheme's help file. Both files are saved into the specified directory
+(`~/.vim`), under the `colors` and `doc` subdirectories respectively (the
+directories are created by |:Colortemplate| if they do not exist; files are
+not overridden by default). By default, a scratch buffer is also created,
+showing the value of the contrast ratio between any pair of colors of your
+colorscheme (if you want to suppress this buffer, see
+|colortemplate-options|). 
 
 After generating the colorscheme with the command above, you may load it with:
 >
@@ -390,6 +393,11 @@ an infinite loop!
 ==============================================================================
 Colortemplate options		       		*colortemplate-options*
 
+						*g:colortemplate_contrast_matrix*
+Set to 0 to suppress showing the contrast ratio matrices.
+>
+  let g:colortemplate_contrast_matrix = 1
+<
 						*g:colortemplate_no_aux_files*
 Set to 1 if you do not want to generate any auxiliary file (including the help
 file).

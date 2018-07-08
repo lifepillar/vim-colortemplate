@@ -1523,7 +1523,7 @@ fun! colortemplate#make(...)
     return
   endtry
 
-  if get(g:, 'colortemplate#contrast_matrix', 1)
+  if get(g:, 'colortemplate_contrast_matrix', 1)
     let l:backgrounds = s:has_dark_and_light() ? ['dark', 'light'] : [s:current_background()]
     for l:bg in l:backgrounds
       let [l:colors,l:labels] = [[],[]]

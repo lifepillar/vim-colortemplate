@@ -69,6 +69,39 @@ fun! colortemplate#colorspace#hsv2hex(h, s, v)
   return colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
 endf
 
+" See:
+" https://en.wikipedia.org/wiki/Relative_luminance
+" https://www.w3.org/TR/WCAG20-TECHS/G18.html
+fun! colortemplate#colorspace#relative_luminance(sR, sG, sB)
+  let var_R = (a:sR / 255.0)
+  let var_G = (a:sG / 255.0)
+  let var_B = (a:sB / 255.0)
+
+  if var_R > 0.04045
+    let var_R = pow((var_R + 0.055) / 1.055, 2.4)
+  else
+    let var_R = var_R / 12.92
+  endif
+  if var_G > 0.04045
+    let var_G = pow((var_G + 0.055) / 1.055, 2.4)
+  else
+    let var_G = var_G / 12.92
+  endif
+  if var_B > 0.04045
+    let var_B = pow((var_B + 0.055) / 1.055, 2.4)
+  else
+    let var_B = var_B / 12.92
+  endif
+
+  return 0.2126 * var_R + 0.7152 * var_G + 0.0722 * var_B
+endf
+
+fun! colortemplate#colorspace#contrast_ratio(sR1, sG1, sB1, sR2, sG2, sB2)
+  let L1 = colortemplate#colorspace#relative_luminance(a:sR1, a:sG1, a:sB1)
+  let L2 = colortemplate#colorspace#relative_luminance(a:sR2, a:sG2, a:sB2)
+  return L1 > L2 ? (L1 + 0.05) / (L2 + 0.05) : (L2 + 0.05) / (L1 + 0.05)
+endf
+
 " XYZ (Tristimulus) Reference values of a perfect reflecting diffuser
 " (Values from http://www.easyrgb.com/en/math.php)
 " See also: https://en.wikipedia.org/wiki/Standard_illuminant

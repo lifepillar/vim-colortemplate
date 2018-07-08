@@ -1,15 +1,23 @@
+fun! s:hex2rgb(col)
+  return map(matchlist(a:col, '^#\?\(..\)\(..\)\(..\)$')[1:3], 'str2nr(v:val,16)')
+endf
+
+fun! s:rgb2hex(r, g, b)
+  return '#' . printf('%02x', a:r) . printf('%02x', a:g) . printf('%02x', a:b)
+endf
+
 " Convert a hexadecimal color string into a three-elements list of RGB values.
 "
 " Example: call colortemplate#colorspace#hex2rgb('#ffffff') -> [255,255,255]
 fun! colortemplate#colorspace#hex2rgb(col)
-  return map(matchlist(a:col, '^#\?\(..\)\(..\)\(..\)$')[1:3], 'str2nr(v:val,16)')
+  return s:hex2rgb(a:col)
 endf
 
 " Convert an RGB color into the equivalent hexadecimal string.
 "
 " Example: call colortemplate#colorspace#rgb2hex(255,255,255) -> '#ffffff'
 fun! colortemplate#colorspace#rgb2hex(r, g, b)
-  return '#' . printf('%02x', a:r) . printf('%02x', a:g) . printf('%02x', a:b)
+  return s:rgb2hex(a:r, a:g, a:b)
 endf
 
 " Convert an HSV color into RGB space.

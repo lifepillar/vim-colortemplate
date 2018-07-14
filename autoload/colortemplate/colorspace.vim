@@ -132,6 +132,7 @@ fun! colortemplate#colorspace#contrast_matrix(colors)
 endf
 
 " Arguments must be hex colors (strings) or RGB values as 3-element lists.
+" See also: https://www.w3.org/TR/AERT/#color-contrast
 fun! colortemplate#colorspace#color_difference(col1, col2)
   let [l:sR1, l:sG1, l:sB1] = type(a:col1) == v:t_string ? s:hex2rgb(a:col1) : a:col1
   let [l:sR2, l:sG2, l:sB2] = type(a:col2) == v:t_string ? s:hex2rgb(a:col2) : a:col2
@@ -146,6 +147,27 @@ fun! colortemplate#colorspace#coldiff_matrix(colors)
     call add(l:M, [])
     for l:j in l:range
       call add(l:M[l:i], colortemplate#colorspace#color_difference(a:colors[l:i], a:colors[l:j]))
+    endfor
+  endfor
+  return l:M
+endf
+
+" Arguments must be hex colors (strings) or RGB values as 3-element lists.
+fun! colortemplate#colorspace#brightness_diff(col1, col2)
+  let [l:sR1, l:sG1, l:sB1] = type(a:col1) == v:t_string ? s:hex2rgb(a:col1) : a:col1
+  let [l:sR2, l:sG2, l:sB2] = type(a:col2) == v:t_string ? s:hex2rgb(a:col2) : a:col2
+  " return ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
+  return abs(((l:sR1 * 299.0 + l:sG1 * 587.0 + l:sB1 * 114.0) / 1000.0) - ((l:sR2 * 299.0 + l:sG2 * 587.0 + l:sB2 * 114.0) / 1000.0))
+endf
+
+" Colors may be hex colors (strings) or RGB values as 3-element lists.
+fun! colortemplate#colorspace#brightness_diff_matrix(colors)
+  let l:M = []
+  let l:range = range(len(a:colors))
+  for l:i in l:range
+    call add(l:M, [])
+    for l:j in l:range
+      call add(l:M[l:i], colortemplate#colorspace#brightness_diff(a:colors[l:i], a:colors[l:j]))
     endfor
   endfor
   return l:M

@@ -131,6 +131,26 @@ fun! colortemplate#colorspace#contrast_matrix(colors)
   return l:M
 endf
 
+" Arguments must be hex colors (strings) or RGB values as 3-element lists.
+fun! colortemplate#colorspace#color_difference(col1, col2)
+  let [l:sR1, l:sG1, l:sB1] = type(a:col1) == v:t_string ? s:hex2rgb(a:col1) : a:col1
+  let [l:sR2, l:sG2, l:sB2] = type(a:col2) == v:t_string ? s:hex2rgb(a:col2) : a:col2
+  return abs(l:sR1 - l:sR2) + abs(l:sG1 - l:sG2) + abs(l:sB1 - l:sB2)
+endf
+
+" Colors may be hex colors (strings) or RGB values as 3-element lists.
+fun! colortemplate#colorspace#coldiff_matrix(colors)
+  let l:M = []
+  let l:range = range(len(a:colors))
+  for l:i in l:range
+    call add(l:M, [])
+    for l:j in l:range
+      call add(l:M[l:i], colortemplate#colorspace#color_difference(a:colors[l:i], a:colors[l:j]))
+    endfor
+  endfor
+  return l:M
+endf
+
 " XYZ (Tristimulus) Reference values of a perfect reflecting diffuser
 " (Values from http://www.easyrgb.com/en/math.php)
 " See also: https://en.wikipedia.org/wiki/Standard_illuminant

@@ -1109,6 +1109,33 @@ fun! s:print_contrast_matrix(bg)
   call s:put('}}} Contrast Ratio Matrix')
 endf
 
+fun! s:print_color_difference_matrix(bg)
+  let [l:colors, l:labels] = [{'gui': [], 'term': []}, []]
+  for l:key in sort(keys(s:palette(a:bg)))
+    if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
+      let l:val = s:palette(a:bg)[l:key]
+      call add(l:labels, l:key)
+      call add(l:colors['gui'], l:val[0])
+      call add(l:colors['term'], colortemplate#colorspace#xterm256_hexvalue(l:val[1]))
+    endif
+  endfor
+  call s:put('{{{ Color Difference Matrix (' . a:bg . ' background)')
+  call s:put('')
+  call s:put('Pairs of colors whose color difference is ≥500 can be safely used as a fg/bg combo')
+  call s:put('')
+  for l:type in ['gui', 'term']
+    let l:M = colortemplate#colorspace#coldiff_matrix(l:colors[l:type])
+    call s:put('{{{ '.(l:type ==# 'gui' ? 'GUI (exact)' : 'Terminal (approximate)'))
+    call s:put("\t".join(l:labels, "\t"))
+    for l:i in range(len(l:M))
+      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], { j,v -> j ==# l:i ? '' : printf("%5.02f", v) }), "\t")."\t".l:labels[l:i])
+    endfor
+    call s:put("\t".join(l:labels, "\t"))
+    call s:put('}}}')
+  endfor
+  call s:put('}}} Color Difference Matrix')
+endf
+
 fun! s:print_color_info()
   silent tabnew +setlocal\ buftype=nofile\ foldmethod=marker\ noet\ norl\ noswf\ nowrap
   set ft=colortemplate-info
@@ -1127,6 +1154,9 @@ fun! s:print_color_info()
     call s:print_similarity_table(l:bg)
     call s:put('')
     call s:print_contrast_matrix(l:bg)
+    call s:put('')
+    call s:print_color_difference_matrix(l:bg)
+    call s:put('')
     if s:has_dark_and_light()
       call s:put('}}}')
     endif

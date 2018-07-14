@@ -1524,6 +1524,7 @@ fun! colortemplate#make(...)
   endtry
 
   if get(g:, 'colortemplate_contrast_matrix', 1)
+    tabnew
     let l:backgrounds = s:has_dark_and_light() ? ['dark', 'light'] : [s:current_background()]
     for l:bg in l:backgrounds
       let [l:colors,l:labels] = [[],[]]
@@ -1577,8 +1578,9 @@ fun! colortemplate#contrast_matrix(title, colors, labels)
   call append('$', '')
   call append('$', "\t".join(a:labels, "\t"))
   for l:i in range(len(l:M))
-    call append('$', a:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t"))
+    call append('$', a:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t")."\t".a:labels[l:i])
   endfor
+  call append('$', "\t".join(a:labels, "\t"))
   syntax match ColortemplateW3C /\D[0123]\.\d\+\|\D4\.[01234]\d\+/
   syntax match ColortemplateW3C /\%<23c█/
   syntax match ColortemplateISO /\D[012]\.\d\+/

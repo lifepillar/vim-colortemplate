@@ -1082,8 +1082,9 @@ endf
 " Adds the contrast matrix for the specified background to the current buffer.
 fun! s:print_contrast_matrix(bg)
   let [l:colors, l:labels] = [{'gui': [], 'term': []}, []]
-  for [l:key,l:val] in items(s:palette(a:bg))
+  for l:key in sort(keys(s:palette(a:bg)))
     if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
+      let l:val = s:palette(a:bg)[l:key]
       call add(l:labels, l:key)
       call add(l:colors['gui'], l:val[0])
       call add(l:colors['term'], colortemplate#colorspace#xterm256_hexvalue(l:val[1]))

@@ -393,11 +393,6 @@ an infinite loop!
 ==============================================================================
 Colortemplate options		       		*colortemplate-options*
 
-						*g:colortemplate_contrast_matrix*
-Set to 0 to suppress showing the contrast ratio matrices.
->
-  let g:colortemplate_contrast_matrix = 1
-<
 						*g:colortemplate_no_aux_files*
 Set to 1 if you do not want to generate any auxiliary file (including the help
 file).
@@ -408,6 +403,12 @@ file).
 Set to 1 if you do not want to generate the help file.
 >
   let g:colortemplate_no_doc = 0
+<
+						*g:colortemplate_no_stat*
+Set to 1 if you do not want `:Colortemplate` to open a tab with information
+about the generated colorscheme.
+>
+  let g:colortemplate_no_stat = 0
 <
 						*g:colortemplate_no_warnings*
 Set to 1 if you want Colortemplate to report only errors (not recommended).

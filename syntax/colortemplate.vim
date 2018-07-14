@@ -1,4 +1,4 @@
-" Name:        Colorscheme template
+" Name:        Colortemplate
 " Author:      Lifepillar <lifepillar@lifepillar.me>
 " Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 " License:     Vim license (see `:help license`)

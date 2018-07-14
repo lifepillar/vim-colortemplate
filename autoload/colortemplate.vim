@@ -1046,11 +1046,8 @@ else
 endif
 
 " Print details about the color palette for the specified background as comments
-fun! s:print_color_details(bg, use16colors)
-  if a:use16colors
-    return
-  endif
-  call s:put('" Color similarity table (' . a:bg . ' background)')
+fun! s:print_similarity_table(bg)
+  call s:put('{{{ Color similarity table (' . a:bg . ' background)')
   let l:palette = s:palette(a:bg)
   " Find maximum length of color names (used for formatting)
   let l:len = max(map(copy(l:palette), { k,_ -> len(k)}))
@@ -1076,8 +1073,62 @@ fun! s:print_color_details(bg, use16colors)
     else
       let l:def256 = repeat(' ', 24)
     endif
-    let l:fmt = '" %'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
+    let l:fmt = '%'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
     call s:put(printf(l:fmt, l:color, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:delta))
+  endfor
+  call s:put('}}}')
+endf
+
+" Adds the contrast matrix for the specified background to the current buffer.
+fun! s:print_contrast_matrix(bg)
+  let [l:colors, l:labels] = [{'gui': [], 'term': []}, []]
+  for [l:key,l:val] in items(s:palette(a:bg))
+    if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
+      call add(l:labels, l:key)
+      call add(l:colors['gui'], l:val[0])
+      call add(l:colors['term'], colortemplate#colorspace#xterm256_hexvalue(l:val[1]))
+    endif
+  endfor
+  call s:put('{{{ Contrast Ratio Matrix (' . a:bg . ' background)')
+  call s:put('')
+  call s:put('Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
+  call s:put('')
+  call s:put("█ Not W3C conforming   █ Not ISO-9241-3 conforming")
+  call s:put('')
+  for l:type in ['gui', 'term']
+    let l:M = colortemplate#colorspace#contrast_matrix(l:colors[l:type])
+    call s:put('{{{ '.(l:type ==# 'gui' ? 'GUI (exact)' : 'Terminal (approximate)'))
+    call s:put("\t".join(l:labels, "\t"))
+    for l:i in range(len(l:M))
+      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t")."\t".l:labels[l:i])
+    endfor
+    call s:put("\t".join(l:labels, "\t"))
+    call s:put('}}}')
+  endfor
+  call s:put('}}} Contrast Ratio Matrix')
+endf
+
+fun! s:print_color_info()
+  silent tabnew +setlocal\ buftype=nofile\ foldmethod=marker\ noet\ norl\ noswf\ nowrap
+  set ft=colortemplate-info
+  " Find maximum length of color names (used for formatting)
+  let l:labels = keys(s:palette('dark')) + keys(s:palette('light'))
+  let l:tw = 2 + max(map(l:labels, { _,v -> len(v)}))
+  execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
+
+  call append(0, 'Color information about ' . s:fullname())
+  let l:backgrounds = s:has_dark_and_light() ? ['dark', 'light'] : [s:current_background()]
+  for l:bg in l:backgrounds
+    if s:has_dark_and_light()
+      call s:put('{{{ '.l:bg.' background')
+      call s:put('')
+    endif
+    call s:print_similarity_table(l:bg)
+    call s:put('')
+    call s:print_contrast_matrix(l:bg)
+    if s:has_dark_and_light()
+      call s:put('}}}')
+    endif
   endfor
 endf
 
@@ -1095,15 +1146,12 @@ fun! s:generate_colorscheme(outdir, overwrite)
     call s:print_colorscheme_preamble(l:use16colors)
     if s:has_dark_and_light()
       call s:put("if &background ==# 'dark'")
-      call s:print_color_details('dark', l:use16colors)
       call s:print_colorscheme('dark', l:use16colors)
       call s:put("finish")
       call s:put("endif")
       call s:put('')
-      call s:print_color_details('light', l:use16colors)
       call s:print_colorscheme('light', l:use16colors)
     else " One background
-      call s:print_color_details(s:current_background(), l:use16colors)
       call s:print_colorscheme(s:current_background(), l:use16colors)
     end
     if s:has16and256colors() && l:numcol == s:preferred_number_of_colors()
@@ -1523,22 +1571,9 @@ fun! colortemplate#make(...)
     return
   endtry
 
-  if get(g:, 'colortemplate_contrast_matrix', 1)
-    tabnew
-    let l:backgrounds = s:has_dark_and_light() ? ['dark', 'light'] : [s:current_background()]
-    for l:bg in l:backgrounds
-      let [l:colors,l:labels] = [[],[]]
-      for [l:key,l:val] in items(s:palette(l:bg))
-        if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
-          call add(l:labels, l:key)
-          call add(l:colors, l:val[0])
-        endif
-      endfor
-      call colortemplate#contrast_matrix(
-            \ l:bg . ' background',
-            \ l:colors,
-            \ l:labels)
-    endfor
+  " Stats tab
+  if !get(g:, 'colortemplate_no_stat', 0)
+    call s:print_color_info()
   endif
 
   redraw
@@ -1553,39 +1588,5 @@ fun! colortemplate#format_palette(colors)
     call add(l:template, printf('Color: %s %s ~', l:name, l:value))
   endfor
   return l:template
-endf
-
-fun! colortemplate#contrast_matrix(title, colors, labels)
-  let l:colors = []
-  " Find maximum length of color names (used for formatting)
-  let l:tw = 2 + max(map(copy(a:labels), { _,v -> len(v)}))
-  for l:col in a:colors
-    if l:col =~# '^#' " Hex color
-      call add(l:colors, l:col)
-    elseif l:col =~# 'rgb'
-      call add(l:colors, colortemplate#colorspace#rgb2hex(TODO))
-    else " Assume color name
-      call add(l:colors, get(s:current_palette(), l:col, '#000000'))
-    endif
-  endfor
-  let l:M = colortemplate#colorspace#contrast_matrix(l:colors)
-  silent botright new +setlocal\ buftype=nofile\ noswapfile\ noet\ norl\ nowrap
-  execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
-  call append(0, 'Contrast Ratio Matrix for ' . s:fullname() . ' (' . a:title . ')')
-  call append('$', 'Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
-  call append('$', '')
-  call append('$', "█ Not W3C conforming   █ Not ISO-9241-3 conforming")
-  call append('$', '')
-  call append('$', "\t".join(a:labels, "\t"))
-  for l:i in range(len(l:M))
-    call append('$', a:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t")."\t".a:labels[l:i])
-  endfor
-  call append('$', "\t".join(a:labels, "\t"))
-  syntax match ColortemplateW3C /\D[0123]\.\d\+\|\D4\.[01234]\d\+/
-  syntax match ColortemplateW3C /\%<23c█/
-  syntax match ColortemplateISO /\D[012]\.\d\+/
-  syntax match ColortemplateISO /\%>23c█/
-  hi! link ColortemplateISO Special
-  hi! link ColortemplateW3C Constant
 endf
 " }}} Public interface

@@ -1101,7 +1101,7 @@ fun! s:print_contrast_matrix(bg)
     call s:put('{{{ '.(l:type ==# 'gui' ? 'GUI (exact)' : 'Terminal (approximate)'))
     call s:put("\t".join(l:labels, "\t"))
     for l:i in range(len(l:M))
-      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], 'printf("%5.02f", v:val)'), "\t")."\t".l:labels[l:i])
+      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], { j,v -> j ==# l:i ? '' : printf("%5.02f", v) }), "\t")."\t".l:labels[l:i])
     endfor
     call s:put("\t".join(l:labels, "\t"))
     call s:put('}}}')

@@ -17,10 +17,11 @@ colortemplate-functions	colortemplate.txt	/*colortemplate-functions*
 colortemplate-getting-started	colortemplate.txt	/*colortemplate-getting-started*
 colortemplate-hi-groups	colortemplate.txt	/*colortemplate-hi-groups*
 colortemplate-include	colortemplate.txt	/*colortemplate-include*
-colortemplate-info	colortemplate.txt	/*colortemplate-info*
 colortemplate-intro	colortemplate.txt	/*colortemplate-intro*
+colortemplate-meta	colortemplate.txt	/*colortemplate-meta*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
 colortemplate-palettes	colortemplate.txt	/*colortemplate-palettes*
+colortemplate-stat	colortemplate.txt	/*colortemplate-stat*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_italic	colortemplate.txt	/*g:@shortname_italic*

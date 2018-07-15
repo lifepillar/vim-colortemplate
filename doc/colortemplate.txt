@@ -3,7 +3,7 @@ CONTENTS					*ft-colortemplate*
 
     1. Introduction ......... |colortemplate-intro|
     2. Getting started ...... |colortemplate-getting-started|
-    3. Information block .... |colortemplate-info|
+    3. Metadata block ....... |colortemplate-meta|
     4. Backgrounds .......... |colortemplate-background|
     5. Color definitions .... |colortemplate-colors|
     6. Predefined palettes .. |colortemplate-palettes|
@@ -12,11 +12,12 @@ CONTENTS					*ft-colortemplate*
     9. Documentation blocks . |colortemplate-doc-blocks|
    10. Auxiliary files ...... |colortemplate-auxfiles|
    11. Include directive .... |colortemplate-include|
-   12. Options .............. |colortemplate-options|
-   13. Commands ............. |colortemplate-commands|
-   14. Functions ............ |colortemplate-functions|
-   15. Best practices ....... |colortemplate-best-practices|
-   16. Providing feedback ... |colortemplate-feedback|
+   12. Colors statistics..... |colortemplate-stat|
+   13. Options .............. |colortemplate-options|
+   14. Commands ............. |colortemplate-commands|
+   15. Functions ............ |colortemplate-functions|
+   16. Best practices ....... |colortemplate-best-practices|
+   17. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
 Color templates					*colortemplate-intro*
@@ -40,15 +41,14 @@ located in colortemplate's plugin folder, and type:
 >
   :Colortemplate ~/.vim
 <
-This command opens a new tab with a few windows: one window contains the
-colorscheme derived from the template. Another window displays the
-colorscheme's help file. Both files are saved into the specified directory
-(`~/.vim`), under the `colors` and `doc` subdirectories respectively (the
-directories are created by |:Colortemplate| if they do not exist; files are
-not overridden by default). By default, a scratch buffer is also created,
-showing the value of the contrast ratio between any pair of colors of your
-colorscheme (if you want to suppress this buffer, see
-|colortemplate-options|). 
+By default, this command opens two new tabs. The first tab has one window for
+each generated file (in this example, there will be two windows: one for the
+colorscheme and one for the colorscheme's help file). All the files in the
+first tab are saved into the specified directory (`~/.vim`) (the directory and
+its subdirectories are created by |:Colortemplate| if they do not exist; files
+are not overridden by default). The second tab has one scratch buffer with
+some useful statistics about your colorscheme (see |colortemplate-stat|). If
+you want to suppress this buffer, see |colortemplate-options|. 
 
 After generating the colorscheme with the command above, you may load it with:
 >
@@ -75,7 +75,7 @@ templates (not recommended), set the modeline to
 and save your buffer before executing |:Colortemplate|.
 
 ==============================================================================
-General information				*colortemplate-info*
+Metadata block						*colortemplate-meta*
 
 Information about a colorscheme consists of the following mandatory and
 optional fields:
@@ -187,26 +187,7 @@ a minimal color definition might look as follows:
 <
 It is recommended that you let Colortemplate compute the best color
 approximations, and override the automatically generated values only if
-necessary. Colortemplate adds a "color similarity table" to the output, which
-contains a detailed summary of the generated color values, i.e., comments like
-the following:
->
- " red: GUI=#9e0006/rgb(158,0,6) Term=88 #870000/rgb(135,0,0) [delta=4.473285]
-<
-Here, the delta value is the distance between the GUI value (`#9e0006`) and
-the corresponding terminal color (`88`). The used distance is a sophisticated
-variant of the CIELAB ΔE* metric, which takes into account the perceptual
-characteristics of the human eye. Roughly speaking, colors at distance less
-than 2.3 correspond to "just noticeable differences". The greater the
-distance, the greater the discrepancy between the GUI color and its base-256
-counterpart.
-
-Keep in mind that the "most similar" terminal color may not necessarily be the
-"best looking" color, because the overall look&feel of a colorscheme
-ultimately depends on the interactions among all the colors. Colortemplate
-provides a few utility functions to help you experiment and find other good
-(but not optimal in the sense of ΔE*) approximations: see
-|colortemplate-functions|.
+necessary.
 
 ==============================================================================
 Predefined palettes				*colortemplate-palettes*
@@ -342,7 +323,7 @@ If the `Terminal Colors` field includes both `16` and `256` (in any order), an
 option is automatically defined and documented by Colortemplate, which allows
 the user to choose the preferred terminal color palette. The option's name is
 `g:<option prefix>_use16`, where `<option prefix>` is the string specified in
-the `Option` `Prefix` directive (see |colortemplate-info|).
+the `Option` `Prefix` directive (see |colortemplate-meta|).
 
 ==============================================================================
 Auxiliary files				       	*colortemplate-auxfiles*
@@ -391,7 +372,65 @@ NOTE: beware of cyclic inclusions, which will cause Colortemplate to run into
 an infinite loop!
 
 ==============================================================================
-Colortemplate options		       		*colortemplate-options*
+Colors statistics					*colortemplate-stat*
+
+When a template is compiled into a colorscheme, Colortemplate computes some
+useful statistics to help you assess the quality of your colorscheme. Such
+information is displayed in a scratch buffer inside its own tab.
+
+Color similarity table ~
+Colortemplate adds a "color similarity table" to the output, which contains
+a detailed summary of the generated color values, i.e., lines like the
+following:
+>
+ red: GUI=#9e0006/rgb(158,0,6) Term=88 #870000/rgb(135,0,0) [delta=4.473285]
+<
+Here, the delta value is the distance between the GUI value (`#9e0006`) and
+the corresponding terminal color (`88`). The used distance is a sophisticated
+variant of the CIELAB ΔE* metric, which takes into account the perceptual
+characteristics of the human eye. Roughly speaking, colors at distance less
+than 2.3 correspond to "just noticeable differences". The greater the
+distance, the greater the discrepancy between the GUI color and its base-256
+counterpart.
+
+Keep in mind that the "most similar" terminal color may not necessarily be the
+"best looking" color, because the overall look&feel of a colorscheme
+ultimately depends on the interactions among all the colors. Colortemplate
+provides a few utility functions to help you experiment and find other good
+(but not optimal in the sense of ΔE*) approximations: see
+|colortemplate-functions|.
+
+Contrast ratio matrix ~
+The contrast ratio statistics compares the relative luminance of two colors.
+This is useful, in particular, to determine whether there is enough contrast
+between a foreground color and the background. Values that are too low, i.e.,
+values that may be problematic for people with color deficits or when viewed
+on a black and white screen, are highlighted. Although Colortemplate
+calculates the contrast ratio for each pair of colors, you should mostly pay
+attention to the pairs that are used as a foreground/background combination in
+your colorscheme.
+
+ISO-9241-3 recommends at least a 3:1 contrast ratio between the foreground and
+the background color. W3C's WCAG guidelines suggest 4.5:1 as a minimum.
+
+Contrast ratio ranges between 1.0 (no contrast difference) and 21.0 (maximum
+contrast).
+
+Brightness and color difference matrices ~
+Two colors provide good color visibility if their brightness difference and
+their color difference exceed a certain threshold. Colortemplate computes
+color and brightness difference for each pair of colors in your colorscheme.
+
+Color difference ranges between 0.0 (no difference) and 765.0 (maximum
+difference). At least for the Normal highlight group, the difference should be
+at least 500.
+
+Brightness difference ranges between 0.0 (no difference) and 255.0 (maximum
+difference). At least for the Normal highlight group, the difference should be
+at least 125.
+
+==============================================================================
+Colortemplate options					*colortemplate-options*
 
 						*g:colortemplate_no_aux_files*
 Set to 1 if you do not want to generate any auxiliary file (including the help
@@ -507,7 +546,7 @@ Best practices					*colortemplate-best-practices*
 
 Here are some guidelines to develop outstanding hackable colorschemes:
 
-- Give each of your colors a distinctive name.
+- Give each of your colors a short distinctive name.
 
 - Do not use too many colors. Probably, six-eight colors are already enough.
   Sixteen are plenty.

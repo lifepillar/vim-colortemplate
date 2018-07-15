@@ -1047,7 +1047,7 @@ endif
 
 " Print details about the color palette for the specified background as comments
 fun! s:print_similarity_table(bg)
-  call s:put('{{{ Color similarity table (' . a:bg . ' background)')
+  call s:put('{{{ Color Similarity Table (' . a:bg . ' background)')
   let l:palette = s:palette(a:bg)
   " Find maximum length of color names (used for formatting)
   let l:len = max(map(copy(l:palette), { k,_ -> len(k)}))
@@ -1076,7 +1076,7 @@ fun! s:print_similarity_table(bg)
     let l:fmt = '%'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
     call s:put(printf(l:fmt, l:color, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:delta))
   endfor
-  call s:put('}}}')
+  call s:put('}}} Color Similarity Table')
 endf
 
 " Adds the contrast matrix for the specified background to the current buffer.

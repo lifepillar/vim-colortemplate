@@ -52,8 +52,7 @@ take a look at [Gruvbox 8](https://github.com/lifepillar/vim-gruvbox8) and
 - Can display information about the highlight group under the cursor.
 - …And more! To get started, see `:help ft-colortemplate`.
 
-Colortemplate allows you to answer the following questions about your
-colorscheme:
+Colortemplate allows you to answer questions about your colorscheme, such as:
 
 - Are those two colors different enough to be used as a foreground and
   background pair?

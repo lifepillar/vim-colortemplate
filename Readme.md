@@ -39,20 +39,27 @@ If you want to get a flavor of how Colortemplate can be used in the real world,
 take a look at [Gruvbox 8](https://github.com/lifepillar/vim-gruvbox8) and
 [Solarized 8](https://github.com/lifepillar/vim-solarized8).
 
+
 ## Main Features
 
 - Generates colorschemes that support true colors and 256 colors by default.
 - Generates colorschemes that load efficiently and have a consistent structure
   following best practices.
-- Syntax completion for highlight groups, keywords and common colors.
+- Has syntax completion for highlight groups, keywords and common colors.
 - Detects a few common mistakes, e.g., missing highlight group definitions.
-- Supports generating any number of auxiliary files (say,
-  `autoload/gorgeous.vim`).
-- Much more! To get started, see `:help ft-colortemplate`.
+- Supports generating any kind of auxiliary files (say,
+  `autoload/gorgeous.vim` or `scripts/foo.sh`).
+- Can display information about the highlight group under the cursor.
+- …And more! To get started, see `:help ft-colortemplate`.
 
-Besides, Colortemplate has a few functions to help you develop your colorscheme,
-in particular functions to find the best 256-color approximations for GUI colors
-and to display information about the highlight group under the cursor.
+Colortemplate allows you to answer the following questions about your
+colorscheme:
+
+- Are those two colors different enough to be used as a foreground and
+  background pair?
+- Do they have enough contrast? What is their brightness difference?
+- What are the four xterm colors most similar to color 88?
+- How different are GUI colors from their xterm approximations?
 
 Colortemplate also includes functions to generate good looking color palettes!
 

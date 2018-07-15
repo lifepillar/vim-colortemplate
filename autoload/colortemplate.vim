@@ -1160,7 +1160,7 @@ fun! s:print_brightness_difference_matrix(bg)
     call s:put("\t".join(l:labels, "\t"))
     call s:put('}}}')
   endfor
-  call s:put('}}} Color Difference Matrix')
+  call s:put('}}} Brightness Difference Matrix')
 endf
 
 fun! s:print_color_info()

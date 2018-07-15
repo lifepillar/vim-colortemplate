@@ -13,12 +13,12 @@ syn sync fromstart
 
 syn match colortemplateInfoTitle /^\%({{{\|}}}\).*$/
 syn match colortemplateInfoDelta /\[delta=\%(\d\d\.\d\+\|[3456789]\.\d\+\|2\.[456789]\d*\)\]/ contained
-syn match colortemplateInfoW3C /\D[0123]\.\d\+\|\D4\.[01234]\d\+/ contained
+syn match colortemplateInfoW3C /\D\zs\%([0123]\.\d\+\|4\.[01234]\d\+\)/ contained
 syn match colortemplateInfoW3C /\%<23c█/ contained
-syn match colortemplateInfoISO /\D[012]\.\d\+/ contained
+syn match colortemplateInfoISO /\D\zs[012]\.\d\+/ contained
 syn match colortemplateInfoISO /\%>23c█/ contained
-syn match colortemplateInfoBright /\D\d\d\?\.\d\+\|\D1\%([01]\d\|2[01234]\)\.\d\+/ contained
-syn match colortemplateInfoColDif /\D\d\d\?\.\d\+\|\D[1234]\d\d\.\d\+/ contained
+syn match colortemplateInfoBright /\D\zs\%(\d\d\?\.\d\+\|1\%([01]\d\|2[01234]\)\.\d\+\)/ contained
+syn match colortemplateInfoColDif /\D\zs\%(\d\d\?\.\d\+\|[1234]\d\d\.\d\+\)/ contained
 
 syn region colortemplateInfoDLT matchgroup=colortemplateInfoTitle start=/^{{{ Color Sim.*$/ end=/^}}} Color Sim.*$/ contains=colortemplateInfoTitle,colortemplateInfoDelta keepend
 syn region colortemplateInfoCRM matchgroup=colortemplateInfoTitle start=/^{{{ Contrast.*$/ end=/^}}} Contrast.*$/ contains=colortemplateInfoTitle,colortemplateInfoW3C,colortemplateInfoISO keepend

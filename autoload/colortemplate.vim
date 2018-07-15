@@ -582,6 +582,23 @@ fun! s:interpolate(line, use16colors)
   return l:line
 endf
 " }}}
+" {{{ Color pairs
+" We keep track of pairs of colors used as a fg/bg combination.
+" Used for highlighting critical pairs in the various debugging matrices.
+fun! s:init_color_pairs()
+  let s:fg_bg_pairs = { }
+endf
+
+fun! s:add_color_pair(fg, bg)
+  let l:key = (a:fg < a:bg) ? a:fg.'/'.a:bg : a:bg.'/'.a:fg
+  let s:fg_bg_pairs[l:key] = 1
+endf
+
+fun! s:has_color_pair(fg, bg)
+  let l:key = (a:fg < a:bg) ? a:fg.'/'.a:bg : a:bg.'/'.a:fg
+  return has_key(s:fg_bg_pairs, l:key)
+endf
+" }}}
 " Highlight group {{{
 let s:default_hi_groups = [
       \ 'ColorColumn',
@@ -772,6 +789,7 @@ fun! s:add_highlight_group(hg)
     endif
     let s:colorscheme['has_normal'][l:bg] = 1
   endif
+  call s:add_color_pair(s:fg(a:hg), s:bg(a:hg))
   for l:numcol in s:terminalcolors()
     let l:use16colors = (l:numcol == '16')
     call add(s:colorscheme[l:numcol][l:bg],
@@ -940,6 +958,7 @@ fun! s:init(work_dir)
   call s:init_source()
   call s:init_current_background()
   call s:init_palette()
+  call s:init_color_pairs()
   call s:init_colorscheme()
   call s:init_aux_files()
   call s:init_verbatim()

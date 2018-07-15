@@ -763,6 +763,7 @@ fun! s:init_colorscheme()
         \ 'outpath'  : '/',
         \ 'has_normal': { 'dark': 0, 'light': 0 }
         \ }
+  let s:normal_colors = { 'dark': { 'fg': [], 'bg': [] }, 'light': { 'fg': [], 'bg': [] } }
 endf
 
 fun! s:has_normal_group(background)
@@ -787,6 +788,8 @@ fun! s:add_highlight_group(hg)
     if match(s:term_attr(a:hg), '\%(inv\|rev\)erse') > -1 || match(s:gui_attr(a:hg), '\%(inv\|rev\)erse') > -1
       throw "Do not use reverse mode for the Normal group"
     endif
+    call add(s:normal_colors[l:bg]['fg'], s:fg(a:hg))
+    call add(s:normal_colors[l:bg]['bg'], s:bg(a:hg))
     let s:colorscheme['has_normal'][l:bg] = 1
   endif
   call s:add_color_pair(s:fg(a:hg), s:bg(a:hg))

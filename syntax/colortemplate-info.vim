@@ -25,10 +25,10 @@ syn region colortemplateInfoCRM matchgroup=colortemplateInfoTitle start=/^{{{ Co
 syn region colortemplateInfoBDM matchgroup=colortemplateInfoTitle start=/^{{{ Brightness.*$/ end=/^}}} Brightness.*$/ contains=colortemplateInfoTitle,colortemplateInfoBright keepend
 syn region colortemplateInfoCDM matchgroup=colortemplateInfoTitle start=/^{{{ Color Diff.*$/ end=/^}}} Color Diff.*$/ contains=colortemplateInfoTitle,colortemplateInfoColDif keepend
 
-hi def link colortemplateInfoDelta Special
-hi def link colortemplateInfoBright Special
-hi def link colortemplateInfoColDif Special
-hi def link colortemplateInfoISO WarningMsg
-hi def link colortemplateInfoW3C Special
+hi def link colortemplateInfoDelta Keyword
+hi def link colortemplateInfoBright Keyword
+hi def link colortemplateInfoColDif Keyword
+hi def link colortemplateInfoISO Special
+hi def link colortemplateInfoW3C Keyword
 hi def link colortemplateInfoTitle Title
 

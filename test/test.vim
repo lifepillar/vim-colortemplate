@@ -2,15 +2,21 @@ let s:messages = []
 let s:errors = []
 let s:done = 0
 let s:fail = 0
+let s:time_passed = 0.0
 
 fun! RunTheTest(test)
-  let l:message = a:test . ' '
   let s:done += 1
+
+  let l:message = a:test
+  let l:start_time = reltime()
+
   try
     exe 'call ' . a:test
   catch
     call add(v:errors, 'Caught exception in ' . a:test . ': ' . v:exception . ' @ ' . v:throwpoint)
   endtry
+
+  let l:message .= ' (' . printf('%.01f', 1000.0 * reltimefloat(reltime(l:start_time))) . 'ms) '
 
   if len(v:errors) > 0
     let s:fail += 1
@@ -33,7 +39,7 @@ endfunc
 
 fun! FinishTesting()
   call add(s:messages, '')
-  call add(s:messages, 'Run ' . s:done . (s:done > 1 ? ' tests' : ' test'))
+  call add(s:messages, 'Run ' . s:done . (s:done > 1 ? ' tests' : ' test') . ' in ' . printf('%.03f', s:time_passed) . 's')
   if s:fail == 0
     call add(s:messages, 'ALL TESTS PASSED! ✔︎')
   else
@@ -60,9 +66,13 @@ fun! RunBabyRun(...)
   redir END
   let s:tests = split(substitute(@t, 'function \(\k*()\)', '\1', 'g'))
 
+  let l:start_time = reltime()
+
   for s:test in sort(s:tests)
     call RunTheTest(s:test)
   endfor
+
+  let s:time_passed = reltimefloat(reltime(l:start_time))
 
   call FinishTesting()
 endf

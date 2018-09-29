@@ -44,6 +44,13 @@ fun! s:is_absolute(path) abort " Code borrowed from Pathogen (thanks T. Pope)
   return a:path =~# (has('win32') ? '^\%([\\/]\|\w:\)[\\/]\|^[~$]' : '^[/~$]')
 endf
 
+fun! s:match_path(path, regexp)
+  if exists('+shellslash') && !shellslash
+    return match(tr(a:path, '\', '/'), tr(a:regexp, '\', '/')) > -1
+  else
+    return match(a:path, a:regexp) > -1
+endf
+
 " Returns path as an absolute path, after verifying that path is valid,
 " i.e., it is inside the directory specified in env.
 "
@@ -59,7 +66,7 @@ fun! s:full_path(path, env)
   if !isdirectory(l:dir)
     throw 'FATAL: Path is not a directory: ' . l:dir
   endif
-  if match(l:path, '^' . l:dir) == -1
+  if !s:match_path(l:path, '^' . l:dir)
     throw 'Path ' . l:path . ' outside valid directory: ' . l:dir
   endif
   return l:path

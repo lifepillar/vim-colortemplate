@@ -45,7 +45,7 @@ fun! s:is_absolute(path) abort " Code borrowed from Pathogen (thanks T. Pope)
 endf
 
 fun! s:match_path(path, regexp)
-  if exists('+shellslash') && !shellslash
+  if exists('+shellslash') && !&shellslash
     return match(tr(a:path, '\', '/'), tr(a:regexp, '\', '/')) > -1
   else
     return match(a:path, a:regexp) > -1

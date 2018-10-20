@@ -9,6 +9,7 @@ fun! Test_CT_fine()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -60,6 +61,7 @@ fun! Test_CT_Normal_must_be_first()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -214,7 +216,7 @@ fun! Test_CT_invalid_gui_value_bis()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(3, len(l:loclist))
-  call assert_equal('Unknown RGB color name', l:loclist[0]['text'])
+  call assert_equal('Unknown RGB color name: cmyk', l:loclist[0]['text'])
   call assert_equal(7, l:loclist[0]['lnum'])
   call assert_equal(13, l:loclist[0]['col'])
   call assert_equal("Undefined color name: black", l:loclist[1]['text'])
@@ -271,7 +273,7 @@ fun! Test_CT_base_256_value()
   Colortemplate
   let l:loclist = getloclist(0)
   call assert_equal(4, len(l:loclist))
-  call assert_equal('Base-256 color value is out of range', l:loclist[0]['text'])
+  call assert_equal('Base-256 color value is out of range [16-255]', l:loclist[0]['text'])
   call assert_equal(8, l:loclist[0]['lnum'])
   call assert_equal(21, l:loclist[0]['col'])
   call assert_equal('Expected base-256 number or tilde', l:loclist[1]['text'])
@@ -328,6 +330,7 @@ fun! Test_CT_attributes_ok()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -369,6 +372,7 @@ fun! Test_CT_parse_linked_group_ok()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -398,6 +402,7 @@ fun! Test_CT_minimal()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -409,6 +414,7 @@ fun! Test_CT_verbatim_interpolation()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -428,10 +434,12 @@ endf
 fun! Test_CT_keyword_followed_by_underscore_in_doc()
   edit test30.txt
   let l:src = bufnr('%')
+  let g:colortemplate_no_stat = 1
   Colortemplate
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  unlet g:colortemplate_no_stat
   bwipe!
   bwipe!
   bwipe
@@ -467,6 +475,7 @@ fun! Test_CT_commented_hex_color()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -478,6 +487,7 @@ fun! Test_CT_comments_after_hi_group_defs()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -525,6 +535,7 @@ fun! Test_CT_template_with_included_files()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -561,6 +572,7 @@ fun! Test_CT_comment_after_base256_color()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -572,6 +584,7 @@ fun! Test_CT_colors_from_rgb_txt()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -583,6 +596,7 @@ fun! Test_CT_trailing_spaces_are_skipped()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -594,6 +608,7 @@ fun! Test_CT_first_line_of_included_file_is_not_skipped()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -615,6 +630,7 @@ fun! Test_CT_include_empty_file()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -626,6 +642,7 @@ fun! Test_CT_use_vimspectr_palette()
   let l:tgt = bufnr('%')
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
+  bwipe!  " Stat buffer
   bwipe!
   bwipe
 endf
@@ -663,8 +680,8 @@ endf
 fun! Test_CT_terminal_ansi_colors_not_defined()
   edit test50a.txt
   let l:src = bufnr('%')
-  let l:warnings = g:colortemplate_no_warnings
   let g:colortemplate_no_warnings = 0
+  let g:colortemplate_no_stat = 1
   Colortemplate
   let l:tgt = bufnr('%')
   let l:loclist = getloclist(0)
@@ -675,14 +692,15 @@ fun! Test_CT_terminal_ansi_colors_not_defined()
   bwipe!
   lclose
   bwipe
+  unlet g:colortemplate_no_stat
   let g:colortemplate_no_warnings = 1
 endf
 
 fun! Test_CT_terminal_ansi_colors_defined()
   edit test50b.txt
   let l:src = bufnr('%')
-  let l:warnings = g:colortemplate_no_warnings
   let g:colortemplate_no_warnings = 0
+  let g:colortemplate_no_stat = 1
   Colortemplate
   let l:tgt = bufnr('%')
   let l:loclist = getloclist(0)
@@ -692,6 +710,7 @@ fun! Test_CT_terminal_ansi_colors_defined()
   bwipe!
   lclose
   bwipe
+  unlet g:colortemplate_no_stat
   let g:colortemplate_no_warnings = 1
 endf
 
@@ -705,7 +724,27 @@ fun! Test_CT_rgb_color_names_issue_12()
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call assert_notequal(l:src, l:tgt)
   unlet g:colortemplate_no_stat
+  bwipe!  " Stat buffer
   bwipe!
+  bwipe
+endf
+
+fun! Test_CT_out_of_range_base256_colors()
+  edit test52.txt
+  Colortemplate
+  let l:loclist = getloclist(0)
+  call assert_equal(4, len(l:loclist))
+  call assert_equal("Base-256 color value is out of range [16-255]", l:loclist[0]['text'])
+  call assert_equal(8, l:loclist[0]['lnum'])
+  call assert_equal(24, l:loclist[0]['col'])
+  call assert_equal("Base-256 color value is out of range [16-255]", l:loclist[1]['text'])
+  call assert_equal(9, l:loclist[1]['lnum'])
+  call assert_equal(21, l:loclist[1]['col'])
+  call assert_equal("Undefined color name: white", l:loclist[2]['text'])
+  call assert_equal(10, l:loclist[2]['lnum'])
+  call assert_equal(8, l:loclist[2]['col'])
+  call assert_equal("Please define the Normal highlight group", l:loclist[3]['text'])
+  lclose
   bwipe
 endf
 

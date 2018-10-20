@@ -155,9 +155,9 @@ be used, too, although their use is discouraged:
 <
 Base-256 or base-16 specifications are used in terminals that do not support
 true colors, or when |termguicolors| is not set. Whether your colorscheme
-supports a 256 color palette, a 16 color palette, or both, is determined by
-the value of the `Terminal` `Colors` field. The possible values of `Terminal`
-`Colors` are:
+supports a base-256 color palette, a base-16 color palette, or both, is
+determined by the value of the `Terminal` `Colors` field. The possible values
+of `Terminal` `Colors` are:
 
 - `256`: the colorscheme falls back to an xterm's 256 color palette when true
   colors are not available or |termguicolors| is not set. An error will be

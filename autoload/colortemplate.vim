@@ -1459,8 +1459,8 @@ fun! s:parse_base_256_value(guicolor)
     return -1
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
-    if l:val > 255 || l:val < 0
-      throw "Base-256 color value is out of range"
+    if l:val > 255 || l:val < 16
+      throw "Base-256 color value is out of range [16-255]"
     endif
     return l:val
   endif

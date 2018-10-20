@@ -4,7 +4,8 @@ Short name:x
 Author:y
 Maintainer:w
 Background:dark
-Color:black rgb(0,0,0) 16 Black
-Color:white #ffffff 255 White
+# Base-256 colors are out of range:
+Color:black rgb(0,0,0) 15 Black
+Color:white #ffffff 256 White
 Normal white black
-😁
+

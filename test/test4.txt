@@ -4,7 +4,7 @@ Short name:x
 Author:y
 Maintainer:w
 Background:dark
-Color: none rgb(0,0,0) 0 Black
-Color:  fg rgb(0,0,0) 0 Black
-Color:bg rgb(0,0,0) 0 Black
+Color: none rgb(0,0,0) 16 Black
+Color:  fg rgb(0,0,0) 16 Black
+Color:bg rgb(0,0,0) 16 Black
 Normal fg  bg

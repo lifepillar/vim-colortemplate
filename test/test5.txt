@@ -4,7 +4,7 @@ Short name:x
 Author:y
 Maintainer:w
 Background:dark
-Color:black rgb(0,0,0) 0 Black
+Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 ColorColumn white black
 Normal white black

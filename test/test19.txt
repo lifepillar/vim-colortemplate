@@ -4,7 +4,7 @@ Short name:x
 Author:y
 Maintainer:w
 Background:dark
-Color:black rgb(0,0,0) 0 Black
+Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 256 White
 Color:white #ffffff not a number is an error
 Normal white black

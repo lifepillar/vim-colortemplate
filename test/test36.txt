@@ -7,7 +7,7 @@ Maintainer:w
 # must be valid for both background
 Color:white #ffffff 255 White
 Background:dark
-Color:black rgb(0,0,0) 0 Black
+Color:black rgb(0,0,0) 16 Black
 Normal white black
 Background:light
 Normal white white

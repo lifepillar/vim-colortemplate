@@ -1,6 +1,6 @@
 # vim: ft=colortemplate
 Background:dark
-Color:black rgb(0,0,0) 0 Black
+Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Normal white black
 Foobar white pink

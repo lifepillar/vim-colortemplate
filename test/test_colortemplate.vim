@@ -695,6 +695,20 @@ fun! Test_CT_terminal_ansi_colors_defined()
   let g:colortemplate_no_warnings = 1
 endf
 
+fun! Test_CT_rgb_color_names_issue_12()
+  edit test51.txt
+  let l:src = bufnr('%')
+  let g:colortemplate_no_stat = 0
+  Colortemplate
+  let l:tgt = bufnr('%')
+  call assert_equal(0, get(g:, 'colortemplate_no_stat', 1))
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call assert_notequal(l:src, l:tgt)
+  unlet g:colortemplate_no_stat
+  bwipe!
+  bwipe
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

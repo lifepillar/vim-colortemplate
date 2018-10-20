@@ -105,7 +105,7 @@ endf
 " Without arguments, returns a Dictionary of the color names from $VIMRUNTIME/rgb.txt
 " (converted to all lowercase), with the associated hex values.
 " If an argument is given, returns the hex value of the specified color name.
-fun! s:get_rgb_colors(...) abort
+fun! s:rgbname2hex(...) abort
   if !exists('s:rgb_colors')
     let s:rgb_colors = {}
     " Add some color names not in rgb.txt (see syntax.c for the values)
@@ -532,28 +532,22 @@ fun! s:get_gui_color(name, background)
   endif
 endf
 
-" If the GUI value is a color name, convert it to a hex value
-fun! s:rgbname2hex(color)
-  return match(a:color, '^#') == - 1 ? s:get_rgb_colors(a:color) : a:color
-endf
-
 " name:    A color name
-" gui:     GUI color name (e.g, indianred) or hex value (e.g., #c4fed6)
+" gui:     GUI hex value (e.g., #c4fed6)
 " base256: Base-256 color number or -1
 " base16:  Base-16 color number or color name
 "
 " If base256 is -1, its value is inferred.
 fun! s:add_color(name, gui, base256, base16)
-  let l:gui = s:rgbname2hex(a:gui)
   " Find an approximation and/or a distance from the GUI value if none was provided
   if a:base256 < 0
-    let l:approx_color = colortemplate#colorspace#approx(l:gui)
+    let l:approx_color = colortemplate#colorspace#approx(a:gui)
     let l:base256 = l:approx_color['index']
     let l:delta = l:approx_color['delta']
   else
     let l:base256 = a:base256
     let l:delta = (l:base256 >= 16 && l:base256 <= 255
-          \ ? colortemplate#colorspace#hex_delta_e(l:gui, g:colortemplate#colorspace#xterm256_hexvalue(l:base256))
+          \ ? colortemplate#colorspace#hex_delta_e(a:gui, g:colortemplate#colorspace#xterm256_hexvalue(l:base256))
           \ : 0.0 / 0.0)
   endif
   if s:background_undefined()
@@ -1091,7 +1085,7 @@ fun! s:print_similarity_table(bg)
     if l:color =~? '\m^\%(fg\|bg\|none\)$'
       continue
     endif
-    let l:colgui = s:rgbname2hex(l:palette[l:color][0])
+    let l:colgui = l:palette[l:color][0]
     let l:col256 = l:palette[l:color][1]
     let l:delta  = l:palette[l:color][3]
     let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
@@ -1419,11 +1413,7 @@ fun! s:parse_gui_value()
     while s:token.peek().kind ==# 'WORD'
       let l:rgb_name .= ' ' . s:token.next().value
     endwhile
-    if !has_key(s:get_rgb_colors(), tolower(l:rgb_name))
-      throw 'Unknown RGB color name'
-    else
-      return l:rgb_name
-    endif
+    return s:rgbname2hex(tolower(l:rgb_name))
   endif
 endf
 

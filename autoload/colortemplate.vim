@@ -132,12 +132,12 @@ fun! s:rgbname2hex(...) abort
 endf
 
 fun! s:add_error(path, line, col, msg)
-  call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
+  call setloclist(0, [{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
 endf
 
 fun! s:add_warning(path, line, col, msg)
   if !get(g:, 'colortemplate_no_warnings', 0)
-    call setloclist(0, [{'filename': a:path, 'lnum' : a:line + 1, 'col': a:col, 'text' : a:msg, 'type' : 'W'}], 'a')
+    call setloclist(0, [{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'W'}], 'a')
   endif
 endf
 
@@ -168,113 +168,78 @@ endf
 " }}} Helper functions
 " Internal state {{{
 " Working directory {{{
-fun! s:init_working_directory(path)
+fun! s:setwd(path)
   if !isdirectory(a:path)
     throw 'FATAL: Path is not a directory: ' . a:path
   endif
-  let s:work_dir = fnamemodify(a:path, ":p")
-  execute 'lcd' s:work_dir
+  let s:wd = fnamemodify(a:path, ":p")
+  execute 'lcd' s:wd
 endf
 
-fun! s:working_directory()
-  return s:work_dir
+fun! s:getwd()
+  return s:wd
 endf
 " }}}
-" Template {{{
-" path: path of the currently processed file
-" data: the List of the lines from the file
-" linenr: the currently processed line from data
-" numlines: total number of lines in the file (i.e. length of data)
-" includes: the currently processed included file
-" NOTE: we do not keep the whole tree of included files because we process
-" everything in one pass in a streaming fashion.
-fun! s:new_template()
-  return {
-        \ 'path':            '',
-        \ 'data':            [],
-        \ 'linenr':          -1,
-        \ 'numlines':         0,
-        \ 'includes':        {},
-        \ 'load':            function("s:load"),
-        \ 'include':         function("s:include"),
-        \ 'include_palette': function("s:include_palette"),
-        \ 'getl':            function("s:getl"),
-        \ 'next_line':       function("s:next_line"),
-        \ 'eof':             function("s:eof"),
-        \ 'curr_pos':        function("s:curr_pos")
-        \ }
+" Stack functions {{{
+fun! s:push(S, e)
+  return add(a:S, a:e)
 endf
 
-fun! s:init_template()
-  let s:template = s:new_template()
+fun! s:pop(S)
+  return remove(a:S, -1)
 endf
 
-fun! s:load(path) dict
-  let self.path = fnameescape(s:full_path(a:path, {'dir': s:work_dir}))
-  let self.data = readfile(self.path)
-  let self.numlines = len(self.data)
+fun! s:top(S)
+  return a:S[-1]
+endf
+" }}}
+" Templates {{{
+fun! s:init_templates()
+  let s:input_stack = []
+  let s:templates_stack = []
+  let s:path = ''
+  let s:linenr = 0
+  let s:numlines = 0
+  let s:currline = ''
+  let s:cache = {}
 endf
 
-fun! s:include(path) dict
-  if empty(self.includes)
-    let self.includes = s:new_template()
-  else
-    return self.includes.include(a:path)
+fun! s:load(path)
+  " Save current position in the stack
+  call s:push(s:templates_stack, { 'path': s:path, 'linenr': s:linenr, 'numlines': s:numlines })
+  let s:path = s:full_path(a:path, {'dir': s:getwd()})
+  let s:linenr = 0
+  if !has_key(s:cache, s:path)
+    let s:cache[s:path] = { 'data': readfile(fnameescape((s:path))) }
   endif
-  call self.includes.load(a:path)
-  let self.includes.linenr = -1
-endf
-
-fun! s:eof() dict
-  return self.linenr >= self.numlines
-endf
-
-" string params are expected to be properly quoted
-fun! s:include_palette(name, params) dict
-  try
-    execute 'let l:colors = colortemplate#'.a:name.'#palette('.join(map(a:params, { _,v -> v =~# '\m^[0-9]\+$' ? v : "'".v."'" }), ',').')'
-  catch /.*/
-    throw 'Could not load palette: ' . v:exception
-  endtry
-  let self.includes = s:new_template()
-  let self.includes.data = colortemplate#format_palette(l:colors)
-  let self.includes.numlines = len(l:colors)
-  let self.includes.linenr = -1
+  let s:numlines = len(s:cache[s:path]['data'])
+  call extend(s:input_stack, reverse(s:cache[s:path]['data']))
 endf
 
 " Get current line.
-" NOTE: it must be called only after s:next_line() has been invoked at least once.
-fun! s:getl() dict
-  if empty(self.includes) || self.includes.eof()
-    if self.linenr < 0
-      throw 'FATAL: invalid call to getl()' " This should never happen, unless there is a bug
-    endif
-    return self.data[self.linenr]
-  else
-    return self.includes.getl()
-  endif
+fun! s:getl()
+  return s:currline
 endf
 
 " Move to the next line. Returns 0 if at eof, 1 otherwise.
-fun! s:next_line() dict
-  if empty(self.includes)
-    let self.linenr += 1
-    return !self.eof()
-  elseif self.includes.next_line()
-    return 1
-  else " End of included file
-    let self.includes = {}
-    let self.linenr += 1
-    return !self.eof()
+fun! s:next_line()
+  if empty(s:input_stack)
+    return 0
   endif
+  let s:linenr += 1
+  while s:linenr > s:numlines
+    " Restore position from the stack
+    let l:tt = s:pop(s:templates_stack)
+    let s:path = l:tt.path
+    let s:linenr = l:tt.linenr + 1
+    let s:numlines = l:tt.numlines
+  endwhile
+  let s:currline = s:pop(s:input_stack)
+  return 1
 endf
 
-fun! s:curr_pos() dict
-  if empty(self.includes) || self.includes.eof()
-    return [self.path, self.linenr]
-  else
-    return self.includes.curr_pos()
-  endif
+fun! s:curr_pos()
+  return [s:path, s:linenr]
 endf
 " }}}
 " Tokenizer {{{
@@ -289,19 +254,19 @@ fun! s:token.reset() dict
 endf
 
 fun! s:token.next() dict
-  let [l:char, self.spos, self.pos] = matchstrpos(s:template.getl(), '\s*\zs\S', self.pos) " Get first non-white character starting at pos
+  let [l:char, self.spos, self.pos] = matchstrpos(s:getl(), '\s*\zs\S', self.pos) " Get first non-white character starting at pos
   if empty(l:char)
     let self.kind = 'EOL'
-    let self.spos = len(s:template.getl()) - 1 " For correct error location
+    let self.spos = len(s:getl()) - 1 " For correct error location
   elseif l:char =~? '\m\a'
-    let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\w\+', self.pos - 1)
+    let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '\w\+', self.pos - 1)
     let self.kind = 'WORD'
   elseif l:char =~# '\m[0-9]'
-    let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '\d\+', self.pos - 1)
+    let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '\d\+', self.pos - 1)
     let self.kind = 'NUM'
   elseif l:char ==# '#'
-    if match(s:template.getl(), '^[0-9a-f]\{6}', self.pos) > -1
-      let [self.value, self.spos, self.pos] = matchstrpos(s:template.getl(), '#[0-9a-f]\{6}', self.pos - 1)
+    if match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
+      let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
     else
       let self.value = '#'
@@ -702,14 +667,14 @@ endf
 
 fun! s:set_fg(hg, colorname)
   if a:colorname ==# 'bg'
-    call s:add_warning(s:template.path, s:template.linenr, s:token.pos, "Using 'bg' may cause an error with transparent backgrounds")
+    call s:add_warning(s:path, s:linenr, s:token.pos, "Using 'bg' may cause an error with transparent backgrounds")
   endif
   let a:hg['fg'] = a:colorname
 endf
 
 fun! s:set_bg(hg, colorname)
   if a:colorname ==# 'bg'
-    call s:add_warning(s:template.path, s:template.linenr, s:token.pos, "Using 'bg' may cause an error with transparent backgrounds")
+    call s:add_warning(s:.path, s:linenr, s:token.pos, "Using 'bg' may cause an error with transparent backgrounds")
   endif
   let a:hg['bg'] = a:colorname
 endf
@@ -953,11 +918,9 @@ endf
 " Initialize state {{{
 fun! s:init(work_dir)
   let g:colortemplate_exit_status = 0
-
   call setloclist(0, [], 'r') " Reset location list
-
-  call s:init_working_directory(a:work_dir)
-  call s:init_template()
+  call s:setwd(a:work_dir)
+  call s:init_templates()
   call s:init_info()
   call s:init_source()
   call s:init_current_background()
@@ -1260,35 +1223,35 @@ endf
 " }}}
 " Parser {{{
 fun! s:parse_verbatim_line()
-  if s:template.getl() =~? '\m^\s*endverbatim'
+  if s:getl() =~? '\m^\s*endverbatim'
     call s:stop_verbatim()
-    if s:template.getl() !~? '\m^\s*endverbatim\s*$'
+    if s:getl() !~? '\m^\s*endverbatim\s*$'
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    call s:add_verbatim_line(s:template.getl())
+    call s:add_verbatim_line(s:getl())
   endif
 endf
 
 fun! s:parse_help_line()
-  if s:template.getl() =~? '\m^\s*enddocumentation'
+  if s:getl() =~? '\m^\s*enddocumentation'
     call s:stop_help_file()
-    if s:template.getl() !~? '\m^\s*enddocumentation\s*$'
+    if s:getl() !~? '\m^\s*enddocumentation\s*$'
       throw "Extra characters after 'enddocumentation'"
     endif
   else
-    call s:add_line_to_aux_file(s:template.getl())
+    call s:add_line_to_aux_file(s:getl())
   endif
 endf
 
 fun! s:parse_auxfile_line()
-  if s:template.getl() =~? '\m^\s*endauxfile'
+  if s:getl() =~? '\m^\s*endauxfile'
     call s:stop_aux_file()
-    if s:template.getl() !~? '\m^\s*endauxfile\s*$'
+    if s:getl() !~? '\m^\s*endauxfile\s*$'
       throw "Extra characters after 'endauxfile'"
     endif
   else
-    call s:add_line_to_aux_file(s:template.getl())
+    call s:add_line_to_aux_file(s:getl())
   endif
 endf
 
@@ -1304,10 +1267,10 @@ fun! s:parse_line()
         throw "Extra characters after 'verbatim'"
       endif
     elseif s:token.value ==? 'auxfile'
-      call s:start_aux_file(s:interpolate(matchstr(s:template.getl(), '^\s*auxfile\s\+\zs.*'), s:prefer16colors()))
+      call s:start_aux_file(s:interpolate(matchstr(s:getl(), '^\s*auxfile\s\+\zs.*'), s:prefer16colors()))
     elseif s:token.value ==? 'documentation'
       call s:start_help_file()
-    elseif s:template.getl() =~? '\m:' " Look ahead
+    elseif s:getl() =~? '\m:' " Look ahead
       call s:parse_key_value_pair()
     else
       call s:parse_hi_group_def()
@@ -1325,7 +1288,7 @@ fun! s:parse_key_value_pair()
   if s:token.value ==? 'palette'
     call s:parse_palette_spec()
   elseif s:token.value ==? 'color'
-    call s:add_source_line(s:template.getl())
+    call s:add_source_line(s:getl())
     call s:parse_color_def()
   else " Generic key-value pair
     let l:key_tokens = [s:token.value]
@@ -1336,9 +1299,9 @@ fun! s:parse_key_value_pair()
       call add(l:key_tokens, s:token.value)
     endwhile
     let l:key = tolower(join(l:key_tokens, ''))
-    let l:val = matchstr(s:template.getl(), '\s*\zs.*$', s:token.pos)
+    let l:val = matchstr(s:getl(), '\s*\zs.*$', s:token.pos)
     if l:key ==# 'background'
-      call s:add_source_line(s:template.getl())
+      call s:add_source_line(s:getl())
       if l:val =~? '\m^dark\s*$'
         call s:set_current_background('dark')
       elseif l:val =~? '\m^light\s*$'
@@ -1357,7 +1320,7 @@ fun! s:parse_key_value_pair()
         endif
       endif
     elseif l:key ==# 'include'
-      call s:template.include(l:val)
+      call s:load(l:val)
     else
       call s:set_info(l:key, l:val)
     endif
@@ -1484,9 +1447,9 @@ fun! s:parse_base_16_value()
 endf
 
 fun! s:parse_hi_group_def()
-  call s:add_source_line(s:template.getl())
+  call s:add_source_line(s:getl())
 
-  if s:template.getl() =~# '\m->' " Look ahead
+  if s:getl() =~# '\m->' " Look ahead
     return s:parse_linked_group_def()
   endif
 
@@ -1578,8 +1541,8 @@ endf
 " Public interface {{{
 fun! colortemplate#parse(filename) abort
   call s:init(fnamemodify(a:filename, ":h"))
-  call s:template.load(a:filename)
-  while s:template.next_line()
+  call s:load(a:filename)
+  while s:next_line()
     call s:token.reset()
     try
       if s:is_verbatim()
@@ -1592,11 +1555,11 @@ fun! colortemplate#parse(filename) abort
         call s:parse_line()
       endif
     catch /^FATAL/
-      let [l:path, l:line] = s:template.curr_pos()
+      let [l:path, l:line] = s:curr_pos()
       call s:add_error(l:path, l:line, s:token.spos + 1, v:exception)
       throw 'Parse error'
     catch /.*/
-      let [l:path, l:line] = s:template.curr_pos()
+      let [l:path, l:line] = s:curr_pos()
       call s:add_error(l:path, l:line, s:token.spos + 1, v:exception)
     endtry
   endwhile

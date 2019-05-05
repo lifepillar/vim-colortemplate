@@ -204,16 +204,16 @@ fun! s:init_templates()
   let s:cache = {}
 endf
 
-fun! s:load(path)
+fun! s:load_template(path)
   " Save current position in the stack
   call s:push(s:templates_stack, { 'path': s:path, 'linenr': s:linenr, 'numlines': s:numlines })
   let s:path = s:full_path(a:path, {'dir': s:getwd()})
   let s:linenr = 0
   if !has_key(s:cache, s:path)
-    let s:cache[s:path] = { 'data': readfile(fnameescape((s:path))) }
+    let s:cache[s:path] = { 'data': reverse(readfile(fnameescape((s:path)))) }
   endif
   let s:numlines = len(s:cache[s:path]['data'])
-  call extend(s:input_stack, reverse(s:cache[s:path]['data']))
+  call extend(s:input_stack, s:cache[s:path]['data'])
 endf
 
 " Get current line.
@@ -1320,7 +1320,7 @@ fun! s:parse_key_value_pair()
         endif
       endif
     elseif l:key ==# 'include'
-      call s:load(l:val)
+      call s:load_template(l:val)
     else
       call s:set_info(l:key, l:val)
     endif
@@ -1541,7 +1541,7 @@ endf
 " Public interface {{{
 fun! colortemplate#parse(filename) abort
   call s:init(fnamemodify(a:filename, ":h"))
-  call s:load(a:filename)
+  call s:load_template(a:filename)
   while s:next_line()
     call s:token.reset()
     try

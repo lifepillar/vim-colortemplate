@@ -1753,17 +1753,18 @@ endf
       call s:put(l:bufnr, '" '.l:line)
     endfor
     " Reindent
-    execute l:bufnr 'bufdo norm gg=G'
-    buffer #
-    " Save
+    silent execute l:bufnr "bufdo norm gg=G"
+    silent buffer #
     if !empty(a:outdir)
       let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'
-      call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)
-      redraw
-      echo "\r"
-      echomsg "[Colotemplate] File written to" l:outpath
-      " echomsg '[Colortemplate] Colorscheme created!'
-      " execute l:bufnr 'bwipe!'
+      try
+        call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)
+        redraw
+        echo "\r"
+        echomsg "[Colortemplate]" l:outpath
+      finally
+        execute l:bufnr 'bwipe!'
+      endtry
     endif
     " call s:postcheck() " TODO: move to a 'validate' function that also calls VIm's own check script
   endf

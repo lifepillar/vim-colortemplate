@@ -131,6 +131,19 @@ fun! s:write_buffer(bufnr, path, env, overwrite)
     throw 'File exists: ' . l:path . '. Use ! to overwrite it.'
   endif
 endf
+
+" Ditto, but writes a List
+fun! s:write_list(lines, path, env, overwrite)
+  let l:path = s:full_path(a:path, a:env)
+  call s:make_dir(fnamemodify(l:path, ":h"))
+  if a:overwrite || !filereadable(l:path)
+    if writefile(a:lines, l:path) < 0
+      throw 'Could not write ' . l:path . ': ' . v:exception
+    endif
+  else
+    throw 'File exists: ' . l:path . '. Use ! to overwrite it.'
+  endif
+endf
 " }}}
 " Errors and warnings {{{
 fun! s:add_error(path, line, col, msg)
@@ -1540,30 +1553,16 @@ endf
     if get (g:, 'colortemplate_no_aux_files', 0)
       return
     endif
-    for l:path in keys(s:auxfiles)
-      if match(l:path, '^doc' . s:slash()) > -1 " Help file
-        if get(g:, 'colortemplate_no_doc', 0)
-          continue
-        endif
-        silent bot new +setlocal\ tw=78\ noet\ ts=8\ sw=8\ ft=help\ norl
-        call append(0, s:auxfiles[l:path])
-        " TODO: interpolate
-        " try " to interpolate variables
-        "   let l:line = s:interpolate(a:line, s:prefer16colors())
-        " catch /.*/
-        "   throw 'Undefined keyword'
-        " endtry
-      else                                      " Other aux files
-        if fnamemodify(l:path, ":e") ==# 'vim'
-          silent bot new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
-        else
-          silent bot new +setlocal\ et\ ts=2\ sw=2\ norl\ nowrap
-        endif
-        call append(0, s:auxfiles[l:path])
+    for l:path in s:auxfile_paths()
+      if match(l:path, '^doc' . s:slash()) > -1 && get(g:, 'colortemplate_no_doc', 0)
+        continue
       endif
-      if !empty(a:outdir)
-        call s:write_buffer(l:path, { 'dir': a:outdir }, a:overwrite)
-      endif
+      try
+        let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate(l) })
+      catch /.*/
+        throw 'Error interpolating aux file: '.v:exception
+      endtry
+      call s:write_list(l:lines, l:path, { 'dir': a:outdir }, a:overwrite)
     endfor
   endf
 
@@ -1982,7 +1981,7 @@ endf
 
     try
       call s:generate_colorscheme(l:outdir, l:overwrite)
-      " call s:generate_aux_files(l:outdir, l:overwrite)
+      call s:generate_aux_files(l:outdir, l:overwrite)
     catch /.*/
       call s:print_error_msg(v:exception, 0)
       return

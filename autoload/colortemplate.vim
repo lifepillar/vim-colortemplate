@@ -1754,6 +1754,7 @@ endf
     endfor
     " Reindent
     execute l:bufnr 'bufdo norm gg=G'
+    buffer #
     " Save
     if !empty(a:outdir)
       let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'

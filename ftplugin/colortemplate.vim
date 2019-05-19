@@ -16,4 +16,6 @@ setlocal omnifunc=syntaxcomplete#Complete
 
 command! -buffer -nargs=? -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
 
+call colortemplate#toolbar#show()
+
 " vim: foldmethod=marker nowrap

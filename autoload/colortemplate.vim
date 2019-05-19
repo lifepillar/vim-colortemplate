@@ -276,6 +276,10 @@ endf
 fun! s:is_color_defined(name)
   return has_key(s:guicol[s:default_bg()], a:name)
 endf
+
+fun! s:color_names(bg)
+  return filter(copy(keys(s:guicol[a:bg])), { _,v -> v !=# 'fg' && v !=# 'bg' && v !=# 'none' })
+endf
 " }}}
 " Terminal ANSI colors {{{
 fun! s:init_term_colors()
@@ -672,6 +676,10 @@ fun! s:colorscheme_definition(col, background)
   return s:data[a:col][a:background]
 endf
 
+fun! s:supported_backgrounds()
+  return (s:has_dark() ? ['dark'] : []) + (s:has_light() ? ['light'] : [])
+endf
+
 fun! s:supported_t_Co()
   return reverse(sort(s:t_Co, 'N'))
 endf
@@ -782,6 +790,129 @@ fun! s:init_data_structures()
   call s:init_aux_files()
 endf
 " }}}
+" }}}
+" Color stats {{{
+" Print details about the color palette for the specified background
+fun! s:print_similarity_table(bg, bufnr)
+  call s:set_active_bg(a:bg)
+  let l:colnames = s:color_names(a:bg)
+  if empty(l:colnames)
+    return
+  endif
+  " Find maximum length of color names (used for formatting)
+  let l:len = max(map(copy(l:colnames), { _,v -> len(v)}))
+  let l:delta = {}
+  for l:c in l:colnames
+    let l:delta[l:c] = colortemplate#colorspace#hex_delta_e(
+          \ s:guicol(l:c),
+          \ colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c))
+          \ )
+  endfor
+  " Sort colors by increasing delta
+  call sort(l:colnames, { c1,c2 -> l:delta[c1] < l:delta[c2] ? -1 : 1 })
+  call s:put(a:bufnr, '{{{ Color Similarity Table (' . a:bg . ' background)')
+  for l:c in l:colnames
+    let l:colgui = s:guicol(l:c)
+    let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
+    let l:col256 = s:col256(l:c)
+    let l:d  = l:delta[l:c]
+    if l:col256 > 15 && l:col256 < 256
+      let l:hex256 = g:colortemplate#colorspace#xterm256[l:col256 - 16]
+      let l:rgb256 = colortemplate#colorspace#hex2rgb(l:hex256)
+      let l:def256 = l:hex256 . printf('/rgb(%3d,%3d,%3d)', l:rgb256[0], l:rgb256[1], l:rgb256[2])
+    else
+      let l:def256 = repeat(' ', 24)
+    endif
+    let l:fmt = '%'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
+    call s:put(a:bufnr, printf(l:fmt, l:c, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:d))
+  endfor
+  call s:put(a:bufnr, '}}} Color Similarity Table')
+endf
+
+fun! s:print_matrix(bufnr, matrix, labels, gui, bg)
+  call s:put(a:bufnr, '{{{ '.(a:gui ? 'GUI (' : 'Terminal (').a:bg.')')
+  call s:put(a:bufnr, "\t".join(a:labels, "\t"))
+  for l:i in range(len(a:matrix))
+    call s:put(a:bufnr, a:labels[l:i]."\t".join(map(a:matrix[l:i], { j,v -> j ==# l:i ? '' : printf("%5.02f", v) }), "\t")."\t".a:labels[l:i])
+  endfor
+  call s:put(a:bufnr, "\t".join(a:labels, "\t"))
+  call s:put(a:bufnr, '}}}')
+endf
+
+fun! s:print_contrast_ratio_matrices(bufnr, colors, colnames, bg)
+  let l:M = {}
+  let l:M['gui'] = colortemplate#colorspace#contrast_matrix(a:colors['gui'])
+  let l:M['term'] = colortemplate#colorspace#contrast_matrix(a:colors['term'])
+  call s:put(a:bufnr, '{{{ Contrast Ratio Matrix (' . a:bg . ' background)')
+  call s:put(a:bufnr, 'Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
+  call s:put(a:bufnr, "█ Not W3C conforming   █ Not ISO-9241-3 conforming")
+  call s:print_matrix(a:bufnr, M['gui'], a:colnames, 1, a:bg)
+  call s:print_matrix(a:bufnr, M['term'], a:colnames, 0, a:bg)
+  call s:put(a:bufnr, '}}} Contrast Ratio Matrix')
+endf
+
+fun! s:print_colordiff_matrix(bufnr, colors, colnames, bg)
+  let l:M = {}
+  let l:M['gui'] = colortemplate#colorspace#coldiff_matrix(a:colors['gui'])
+  let l:M['term'] = colortemplate#colorspace#coldiff_matrix(a:colors['term'])
+  call s:put(a:bufnr, '{{{ Color Difference Matrix (' . a:bg . ' background)')
+  call s:put(a:bufnr, 'Pairs of colors whose color difference is ≥500 can be safely used as a fg/bg combo')
+  call s:print_matrix(a:bufnr, M['gui'], a:colnames, 1, a:bg)
+  call s:print_matrix(a:bufnr, M['term'], a:colnames, 0, a:bg)
+  call s:put(a:bufnr, '}}} Color Difference Matrix')
+endf
+
+fun! s:print_brightness_diff_matrix(bufnr, colors, colnames, bg)
+  let l:M = {}
+  let l:M['gui'] = colortemplate#colorspace#brightness_diff_matrix(a:colors['gui'])
+  let l:M['term'] = colortemplate#colorspace#brightness_diff_matrix(a:colors['term'])
+  call s:put(a:bufnr, '{{{ Brightness Difference Matrix (' . a:bg . ' background)')
+  call s:put(a:bufnr, 'Pairs of colors whose brightness difference is ≥125 can be safely used as a fg/bg combo')
+  call s:print_matrix(a:bufnr, M['gui'], a:colnames, 1, a:bg)
+  call s:print_matrix(a:bufnr, M['term'], a:colnames, 0, a:bg)
+  call s:put(a:bufnr, '}}} Brightness Difference Matrix')
+endf
+
+" Adds the contrast matrix for the specified background to the current buffer.
+fun! s:print_color_matrices(bg, bufnr)
+  call s:set_active_bg(a:bg)
+  let l:colnames = sort(s:color_names(a:bg))
+  if empty(l:colnames)
+    return
+  endif
+  let l:values = { 'gui': [], 'term': [] }
+  for l:c in l:colnames
+    call add(l:values['gui'], s:guicol(l:c))
+    call add(l:values['term'], colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c)))
+  endfor
+  call s:print_contrast_ratio_matrices(a:bufnr, l:values, l:colnames, a:bg)
+  call s:print_colordiff_matrix(a:bufnr, l:values, l:colnames, a:bg)
+  call s:print_brightness_diff_matrix(a:bufnr, l:values, l:colnames, a:bg)
+endf
+
+fun! s:print_color_info()
+  silent botright new
+  setlocal buftype=nofile bufhidden=wipe nobuflisted foldmethod=marker noet norl noswf nowrap
+  let l:bufnr = bufnr('%')
+  set ft=colortemplate-info
+  " Find maximum length of color names (used for formatting)
+  let l:labels = s:color_names('dark') + s:color_names('light')
+  let l:tw = 2 + max(map(l:labels, { _,v -> len(v)}))
+  execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
+
+  call append(0, 'Color statistics for ' . s:fullname())
+
+  for l:bg in s:supported_backgrounds()
+    if s:has_dark_and_light()
+      call s:put(l:bufnr, '{{{ '.l:bg.' background')
+    endif
+    call s:print_similarity_table(l:bg, l:bufnr)
+    call s:print_color_matrices(l:bg, l:bufnr)
+    if s:has_dark_and_light()
+      call s:put(l:bufnr, '}}}')
+    endif
+  endfor
+endf
 " }}}
 " Interpolation {{{
 fun! s:interpolate(line)
@@ -1071,6 +1202,33 @@ fun! s:parse_key_value_pair()
   endif
 endf
 
+fun! s:quickly_parse_color()
+  if s:is_verbatim()
+    if s:getl() =~? '\m^\s*endverbatim'
+      call s:stop_verbatim()
+    endif
+    return
+  endif
+  if s:is_aux_file()
+    if s:getl() =~? '\m^\s*endauxfile'
+      call s:stop_aux_file()
+    endif
+    return
+  endif
+  if s:is_help_file()
+    if s:getl() =~? '\m^\s*enddocumentation'
+      call s:stop_help_file()
+    endif
+    return
+  endif
+  if s:getl() !~? '\m:'
+    return
+  endif
+  if s:token.next().kind ==# 'WORD' && s:token.value ==? 'color'
+    call s:parse_color_def()
+  endif
+endf
+
 fun! s:parse_color_def()
   if s:token.next().kind !=# ':'
     throw 'Expected colon after Color keyword'
@@ -1311,168 +1469,8 @@ fun! s:init(work_dir)
   call s:init_parser()
 endf
 " }}}
-" OLD Internal state {{{
-" Palette {{{
-" A palette is a Dictionary of color names and their definitions. Each
-" definition consists of a GUI color value, a base-256 color value,
-" a base-16 color value, and a distance between the GUI value and the
-" base-256 value (in this order).
-" Each background (dark, light) has its own palette.
-fun! s:init_palette()
-  let s:palette = {
-        \ 'dark':  { 'none': ['NONE', 'NONE', 'NONE', 0.0],
-        \            'fg':   ['fg',   'fg',   'fg',   0.0],
-        \            'bg':   ['bg',   'bg',   'bg',   0.0]
-        \          },
-        \ 'light': { 'none': ['NONE', 'NONE', 'NONE', 0.0],
-        \            'fg':   ['fg',   'fg',   'fg',   0.0],
-        \            'bg':   ['bg',   'bg',   'bg',   0.0]
-        \          }
-        \ }
-endf
-
-fun! s:current_palette()
-  return s:palette[s:current_background()]
-endf
-
-fun! s:palette(background)
-  return s:palette[a:background]
-endf
-
-fun! s:color_exists(name, background)
-  return has_key(s:palette[a:background], a:name)
-endf
-
-fun! s:get_color(name, background)
-  return s:palette[a:background][a:name]
-endf
-
-fun! s:get_term_color(name, background, use16colors)
-  return s:palette[a:background][a:name][a:use16colors ? 2 : 1]
-endf
-
-fun! s:get_gui_color(name, background)
-  let l:col = s:palette[a:background][a:name][0]
-  if match(l:col, '\s') > -1 " Quote RGB color name with spaces
-    return "'" . l:col . "'"
-  else
-    return l:col
-  endif
-endf
-
-" name:    A color name
-" gui:     GUI hex value (e.g., #c4fed6)
-" base256: Base-256 color number or -1
-" base16:  Base-16 color number or color name
-"
-" If base256 is -1, its value is inferred.
-" fun! s:add_color(name, gui, base256, base16)
-" Find an approximation and/or a distance from the GUI value if none was provided
-" if a:base256 < 0
-"   let l:approx_color = colortemplate#colorspace#approx(a:gui)
-"   let l:base256 = l:approx_color['index']
-"   let l:delta = l:approx_color['delta']
-" else
-"   let l:base256 = a:base256
-"   let l:delta = (l:base256 >= 16 && l:base256 <= 255
-"         \ ? colortemplate#colorspace#hex_delta_e(a:gui, g:colortemplate#colorspace#xterm256_hexvalue(l:base256))
-"         \ : 0.0 / 0.0)
-" endif
-" if s:background_undefined()
-"   " Assume color definitions common to both backgrounds
-"   let s:palette['dark' ][a:name] = [a:gui, l:base256, a:base16, l:delta]
-"   let s:palette['light'][a:name] = [a:gui, l:base256, a:base16, l:delta]
-" else
-"   " Assume color definition for the current background
-"   let s:palette[s:current_background()][a:name] = [a:gui, l:base256, a:base16, l:delta]
-" endif
-" endf
-
-
-" }}}
-" {{{ Color pairs
-" We keep track of pairs of colors used as a fg/bg combination.
-" Used for highlighting critical pairs in the various debugging matrices.
-fun! s:init_color_pairs()
-  let s:fg_bg_pairs = { }
-endf
-
-fun! s:add_color_pair(fg, bg)
-  let l:key = (a:fg < a:bg) ? a:fg.'/'.a:bg : a:bg.'/'.a:fg
-  let s:fg_bg_pairs[l:key] = 1
-endf
-
-fun! s:has_color_pair(fg, bg)
-  let l:key = (a:fg < a:bg) ? a:fg.'/'.a:bg : a:bg.'/'.a:fg
-  return has_key(s:fg_bg_pairs, l:key)
-endf
-" }}}
-" Colorscheme {{{
-fun! s:init_colorscheme()
-  let s:colorscheme =  {
-        \ '16'       : { 'dark': [], 'light': [], 'preamble': [] },
-        \ '256'      : { 'dark': [], 'light': [], 'preamble': [] },
-        \ 'outpath'  : '/',
-        \ 'has_normal': { 'dark': 0, 'light': 0 }
-        \ }
-  let s:normal_colors = { 'dark': { 'fg': [], 'bg': [] }, 'light': { 'fg': [], 'bg': [] } }
-endf
-
-fun! s:has_normal_group(background)
-  return s:colorscheme['has_normal'][a:background]
-endf
-
-fun! s:add_linked_group_def(src, tgt)
-  for l:numcol in s:terminalcolors()
-    call add(s:colorscheme[l:numcol][s:current_background()],
-          \ 'hi! link ' . a:src . ' ' . a:tgt)
-  endfor
-endf
-
-" Adds the current highlight group to the colorscheme
-" This function must be called only after the background is defined
-" fun! s:add_highlight_group(hg)
-"   let l:bg = s:current_background()
-"   if s:hi_name(a:hg) ==# 'Normal' " Normal group needs special treatment
-"     if s:fg(a:hg) =~# '\m^\%(fg\|bg\)$' || (a:hg) =~# '\m^\%(fg\|bg\)$'
-"       throw "The colors for Normal cannot be 'fg' or 'bg'"
-"     endif
-"     if match(s:term_attr(a:hg), '\%(inv\|rev\)erse') > -1 || match(s:gui_attr(a:hg), '\%(inv\|rev\)erse') > -1
-"       throw "Do not use reverse mode for the Normal group"
-"     endif
-"     call add(s:normal_colors[l:bg]['fg'], s:fg(a:hg))
-"     call add(s:normal_colors[l:bg]['bg'], (a:hg))
-"     let s:colorscheme['has_normal'][l:bg] = 1
-"   endif
-"   call s:add_color_pair(s:fg(a:hg), (a:hg))
-"   for l:numcol in s:terminalcolors()
-"     let l:use16colors = (l:numcol == '16')
-"     call add(s:colorscheme[l:numcol][l:bg],
-"           \ join(['hi', s:hi_name(a:hg),
-"           \       'ctermfg='  . s:term_fg(a:hg, l:use16colors),
-"           \       'ctermbg='  . s:term_bg(a:hg, l:use16colors),
-"           \       'guifg='    . s:gui_fg(a:hg),
-"           \       'guibg='    . s:gui_bg(a:hg),
-"           \       'guisp='    . s:gui_sp(a:hg),
-"           \       'cterm=NONE'. (s:has_term_attr(a:hg) ? ',' . join(s:term_attr(a:hg), ',') : ''),
-"           \       'gui=NONE'  . (s:has_gui_attr(a:hg)  ? ',' . join(s:gui_attr(a:hg), ',')  : '')
-"           \ ])
-"           \ )
-"   endfor
-" endf
-
-" fun! s:print_colorscheme_preamble(use16colors)
-"   if !empty(s:colorscheme[a:use16colors ? '16' : '256']['preamble'])
-"     call append('$', s:colorscheme[a:use16colors ? '16' : '256']['preamble'])
-"     call s:put('')
-"   endif
-" endf
-
-" fun! s:print_colorscheme(background, use16colors)
-"   call append('$', s:colorscheme[a:use16colors ? '16' : '256'][a:background])
-" endf
-" }}}
-" }}} Internal state
+" FIXME: setwd()
+call s:init(expand("%:h"))
 " Checks {{{
 fun! s:assert_valid_normal_hi_group_def(hg)
   if s:fg(a:hg) =~# '\m^\%(fg\|bg\)$' || s:bg(a:hg) =~# '\m^\%(fg\|bg\)$'
@@ -1768,155 +1766,65 @@ fun! s:generate_colorscheme(outdir, overwrite)
   " call s:postcheck() " TODO: move to a 'validate' function that also calls VIm's own check script
 endf
 " }}}
-" Stats {{{
-" Print details about the color palette for the specified background as comments
-fun! s:print_similarity_table(bg)
-  call s:put('{{{ Color Similarity Table (' . a:bg . ' background)')
-  let l:palette = s:palette(a:bg)
-  " Find maximum length of color names (used for formatting)
-  let l:len = max(map(copy(l:palette), { k,_ -> len(k)}))
-  " Sort colors by increasing delta
-  let l:color_names = keys(l:palette)
-  call sort(l:color_names, { c1,c2 ->
-        \ s:isnan(l:palette[c1][3])
-        \      ? (s:isnan(l:palette[c2][3]) ? 0 : 1)
-  : (s:isnan(l:palette[c2][3]) ? -1 : (l:palette[c1][3] < l:palette[c2][3] ? -1 : (l:palette[c1][3] > l:palette[c2][3] ? 1 : 0)))
-        \ })
-  for l:color in l:color_names
-    if l:color =~? '\m^\%(fg\|bg\|none\)$'
-      continue
-    endif
-    let l:colgui = l:palette[l:color][0]
-    let l:col256 = l:palette[l:color][1]
-    let l:delta  = l:palette[l:color][3]
-    let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
-    if l:col256 > 15 && l:col256 < 256
-      let l:hex256 = g:colortemplate#colorspace#xterm256[l:col256 - 16]
-      let l:rgb256 = colortemplate#colorspace#hex2rgb(l:hex256)
-      let l:def256 = l:hex256 . printf('/rgb(%3d,%3d,%3d)', l:rgb256[0], l:rgb256[1], l:rgb256[2])
-    else
-      let l:def256 = repeat(' ', 24)
-    endif
-    let l:fmt = '%'.l:len.'s: GUI=%s/rgb(%3d,%3d,%3d)  Term=%3d %s  [delta=%f]'
-    call s:put(printf(l:fmt, l:color, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:delta))
-  endfor
-  call s:put('}}} Color Similarity Table')
+" Colorscheme switching {{{
+let s:prev_colors = get(g:, 'colors_name', 'default')
+let s:curr_colors = ''
+
+fun! s:view_colorscheme(colors_name)
+  if a:colors_name ==# get(g:, 'colors_name', 'default')
+    return
+  endif
+  let s:prev_colors = get(g:, 'colors_name', 'default')
+  try
+    execute 'colorscheme' a:colors_name
+  catch /.*/
+    call s:print_error_msg(v:exception, 0)
+  endtry
 endf
 
-" Adds the contrast matrix for the specified background to the current buffer.
-fun! s:print_contrast_matrix(bg)
-  let [l:colors, l:labels] = [{'gui': [], 'term': []}, []]
-  for l:key in sort(keys(s:palette(a:bg)))
-    if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
-      let l:val = s:palette(a:bg)[l:key]
-      call add(l:labels, l:key)
-      call add(l:colors['gui'], l:val[0])
-      call add(l:colors['term'], colortemplate#colorspace#xterm256_hexvalue(l:val[1]))
-    endif
-  endfor
-  call s:put('{{{ Contrast Ratio Matrix (' . a:bg . ' background)')
-  call s:put('')
-  call s:put('Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo')
-  call s:put('')
-  call s:put("█ Not W3C conforming   █ Not ISO-9241-3 conforming")
-  call s:put('')
-  for l:type in ['gui', 'term']
-    let l:M = colortemplate#colorspace#contrast_matrix(l:colors[l:type])
-    call s:put('{{{ '.(l:type ==# 'gui' ? 'GUI (exact)' : 'Terminal (approximate)'))
-    call s:put("\t".join(l:labels, "\t"))
-    for l:i in range(len(l:M))
-      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], { j,v -> j ==# l:i ? '' : printf("%5.02f", v) }), "\t")."\t".l:labels[l:i])
-    endfor
-    call s:put("\t".join(l:labels, "\t"))
-    call s:put('}}}')
-  endfor
-  call s:put('}}} Contrast Ratio Matrix')
-endf
-
-fun! s:print_color_difference_matrix(bg)
-  let [l:colors, l:labels] = [{'gui': [], 'term': []}, []]
-  for l:key in sort(keys(s:palette(a:bg)))
-    if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
-      let l:val = s:palette(a:bg)[l:key]
-      call add(l:labels, l:key)
-      call add(l:colors['gui'], l:val[0])
-      call add(l:colors['term'], colortemplate#colorspace#xterm256_hexvalue(l:val[1]))
-    endif
-  endfor
-  call s:put('{{{ Color Difference Matrix (' . a:bg . ' background)')
-  call s:put('')
-  call s:put('Pairs of colors whose color difference is ≥500 can be safely used as a fg/bg combo')
-  call s:put('')
-  for l:type in ['gui', 'term']
-    let l:M = colortemplate#colorspace#coldiff_matrix(l:colors[l:type])
-    call s:put('{{{ '.(l:type ==# 'gui' ? 'GUI (exact)' : 'Terminal (approximate)'))
-    call s:put("\t".join(l:labels, "\t"))
-    for l:i in range(len(l:M))
-      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], { j,v -> j ==# l:i ? '' : printf("%5.01f", v) }), "\t")."\t".l:labels[l:i])
-    endfor
-    call s:put("\t".join(l:labels, "\t"))
-    call s:put('}}}')
-  endfor
-  call s:put('}}} Color Difference Matrix')
-endf
-
-fun! s:print_brightness_difference_matrix(bg)
-  let [l:colors, l:labels] = [{'gui': [], 'term': []}, []]
-  for l:key in sort(keys(s:palette(a:bg)))
-    if l:key != 'fg' && l:key != 'bg' && l:key != 'none'
-      let l:val = s:palette(a:bg)[l:key]
-      call add(l:labels, l:key)
-      call add(l:colors['gui'], l:val[0])
-      call add(l:colors['term'], colortemplate#colorspace#xterm256_hexvalue(l:val[1]))
-    endif
-  endfor
-  call s:put('{{{ Brightness Difference Matrix (' . a:bg . ' background)')
-  call s:put('')
-  call s:put('Pairs of colors whose brightness difference is ≥125 can be safely used as a fg/bg combo')
-  call s:put('')
-  for l:type in ['gui', 'term']
-    let l:M = colortemplate#colorspace#brightness_diff_matrix(l:colors[l:type])
-    call s:put('{{{ '.(l:type ==# 'gui' ? 'GUI (exact)' : 'Terminal (approximate)'))
-    call s:put("\t".join(l:labels, "\t"))
-    for l:i in range(len(l:M))
-      call s:put(l:labels[l:i]."\t".join(map(l:M[l:i], { j,v -> j ==# l:i ? '' : printf("%5.01f", v) }), "\t")."\t".l:labels[l:i])
-    endfor
-    call s:put("\t".join(l:labels, "\t"))
-    call s:put('}}}')
-  endfor
-  call s:put('}}} Brightness Difference Matrix')
-endf
-
-fun! s:print_color_info()
-  silent tabnew +setlocal\ buftype=nofile\ foldmethod=marker\ noet\ norl\ noswf\ nowrap
-  set ft=colortemplate-info
-  " Find maximum length of color names (used for formatting)
-  let l:labels = keys(s:palette('dark')) + keys(s:palette('light'))
-  let l:tw = 2 + max(map(l:labels, { _,v -> len(v)}))
-  execute 'setlocal tabstop='.l:tw 'shiftwidth='.l:tw
-
-  call append(0, 'Color information about ' . s:fullname())
-  let l:backgrounds = s:has_dark_and_light() ? ['dark', 'light'] : [s:current_background()]
-  for l:bg in l:backgrounds
-    if s:has_dark_and_light()
-      call s:put('{{{ '.l:bg.' background')
-      call s:put('')
-    endif
-    call s:print_similarity_table(l:bg)
-    call s:put('')
-    call s:print_contrast_matrix(l:bg)
-    call s:put('')
-    call s:print_brightness_difference_matrix(l:bg)
-    call s:put('')
-    call s:print_color_difference_matrix(l:bg)
-    call s:put('')
-    if s:has_dark_and_light()
-      call s:put('}}}')
-    endif
-  endfor
+fun! s:restore_colorscheme()
+  execute 'colorscheme' s:prev_colors
 endf
 " }}}
 " Public interface {{{
+fun! colortemplate#wd()
+  return s:getwd()
+endf
+
+fun! colortemplate#setwd()
+  echo getcwd()
+  let l:newdir = input('Change to: ')
+  if empty(l:newdir)
+    return
+  endif
+  execute "lcd" l:newdir
+endf
+
+fun! colortemplate#quickly_parse_colors(filename) abort
+  call s:init(fnamemodify(a:filename, ":h"))
+  call s:include(a:filename)
+  while s:next_line()
+    try
+      call s:quickly_parse_color()
+    catch /^FATAL/
+      call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
+      throw 'Parse error'
+    catch /.*/
+      call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
+    endtry
+  endwhile
+
+  if !empty(getloclist(0))
+    lopen
+    if !empty(filter(getloclist(0), { i,v -> v['type'] !=# 'W' }))
+      throw 'Parse error'
+    endif
+  else
+    lclose
+  endif
+  echomsg s:guicol
+endf
+
 fun! colortemplate#parse(filename) abort
   call s:init(fnamemodify(a:filename, ":h"))
   call s:include(a:filename)
@@ -1986,11 +1894,32 @@ fun! colortemplate#make(...)
     call s:print_error_msg(v:exception, 0)
     return
   endtry
+endf
 
-  " Stats tab
-  " if !get(g:, 'colortemplate_no_stat', 0)
-  "   call s:print_color_info()
-  " endif
+fun! colortemplate#stats()
+  redraw!
+  try
+    call colortemplate#parse(expand('%:p'))
+  catch /Parse error/
+    let g:colortemplate_exit_status = 1
+    return
+  catch /.*/
+    echoerr '[Colortemplate] Unexpected error: ' v:exception
+    let g:colortemplate_exit_status = 1
+    return
+  endtry
+  call s:print_color_info()
+endf
+
+fun! colortemplate#enable_colorscheme() abort
+  if empty(s:shortname())
+    call colortemplate#parse(expand("%"))
+  endif
+  call s:view_colorscheme(s:shortname())
+endf
+
+fun! colortemplate#disable_colorscheme()
+  call s:restore_colorscheme()
 endf
 
 " Format a dictionary of color name/value pairs in Colortemplate format
@@ -2004,8 +1933,6 @@ endf
 " }}} Public interface
 " TODO {{{
 " - Alias for color names
-" - Toolbar menu
-" - Fix stats
 " - ga for color information
 " - mapping for replacing ~ on the fly
 " - NeoVim keyword

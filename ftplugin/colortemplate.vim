@@ -14,7 +14,7 @@ let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') .
 setlocal commentstring=#%s
 setlocal omnifunc=syntaxcomplete#Complete
 
-command! -buffer -nargs=? -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
+command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
 
 call colortemplate#toolbar#show()
 

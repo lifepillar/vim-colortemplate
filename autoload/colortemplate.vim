@@ -1469,8 +1469,6 @@ fun! s:init(work_dir)
   call s:init_parser()
 endf
 " }}}
-" FIXME: setwd()
-call s:init(expand("%:h"))
 " Checks {{{
 fun! s:assert_valid_normal_hi_group_def(hg)
   if s:fg(a:hg) =~# '\m^\%(fg\|bg\)$' || s:bg(a:hg) =~# '\m^\%(fg\|bg\)$'
@@ -1665,7 +1663,7 @@ fun! s:print_terminal_colors(bufnr)
   endif
   let l:col0_6 = join(map(copy(l:tc[0:6]), { _,c -> "'".c."'" }), ', ')
   let l:col7_15 = join(map(copy(l:tc[7:15]), { _,c -> "'".c."'" }), ', ')
-  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_6)
+  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_6 . ',')
   call s:put(a:bufnr, '\ ' . l:col7_15 . ']')
   " TODO: make NVIM support conditional
   call s:put(a:bufnr, "if has('nvim')")
@@ -1788,41 +1786,25 @@ endf
 " }}}
 " Public interface {{{
 fun! colortemplate#wd()
-  return s:getwd()
+  return get(b:, 'colortemplate_wd', getcwd())
 endf
 
 fun! colortemplate#setwd()
-  echo getcwd()
-  let l:newdir = input('Change to: ')
+  echo colortemplate#wd()
+  let l:newdir = input('Change to: ', '', 'dir')
   if empty(l:newdir)
     return
   endif
-  execute "lcd" l:newdir
-endf
-
-fun! colortemplate#quickly_parse_colors(filename) abort
-  call s:init(fnamemodify(a:filename, ":h"))
-  call s:include(a:filename)
-  while s:next_line()
-    try
-      call s:quickly_parse_color()
-    catch /^FATAL/
-      call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
-      throw 'Parse error'
-    catch /.*/
-      call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
-    endtry
-  endwhile
-
-  if !empty(getloclist(0))
-    lopen
-    if !empty(filter(getloclist(0), { i,v -> v['type'] !=# 'W' }))
-      throw 'Parse error'
-    endif
-  else
-    lclose
+  let l:newdir = fnamemodify(l:newdir, ':p')
+  if !isdirectory(l:newdir)
+    call s:print_error_msg('Directory does not exist', 0)
+    return
+  elseif filewritable(l:newdir) != 2
+    call s:print_error_msg('Directory is not writable', 0)
+    return
   endif
-  echomsg s:guicol
+  let b:colortemplate_wd = l:newdir
+  call colortemplate#toolbar#show()
 endf
 
 fun! colortemplate#parse(filename) abort
@@ -1847,6 +1829,7 @@ fun! colortemplate#parse(filename) abort
     endtry
   endwhile
 
+  " FIXME : re-enable this (including checking for Term Colors):
   " call s:assert_requirements()
 
   if !empty(getloclist(0))
@@ -1862,7 +1845,7 @@ endf
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
 fun! colortemplate#make(...)
-  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : getcwd())
+  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#wd())
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)

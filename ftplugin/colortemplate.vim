@@ -8,8 +8,15 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-let s:undo_ftplugin = "setlocal commentstring< omnifunc<"
+let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_wd"
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
+
+let b:colortemplate_wd = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
+if b:colortemplate_wd =~? '\m\%(color\)\=templates\=$'
+  let b:colortemplate_wd = fnamemodify(b:colortemplate_wd, ':h')
+endif
+
+" TODO: map ctrl-l to show the toolbar
 
 setlocal commentstring=#%s
 setlocal omnifunc=syntaxcomplete#Complete

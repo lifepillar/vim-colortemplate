@@ -1859,6 +1859,11 @@ fun! colortemplate#make(...)
     endif
   endif
 
+  if !empty(getbufvar('%', '&buftype')) || empty(expand('%:p'))
+    call s:print_error_msg("No filename. Please save your document first.", 0)
+    return
+  endif
+
   try
     call colortemplate#parse(expand('%:p'))
   catch /Parse error/

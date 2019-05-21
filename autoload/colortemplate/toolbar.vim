@@ -1,5 +1,5 @@
 fun! colortemplate#toolbar#show()
-  if expand('%:t') !~# '\m^_'
+  if getbufvar('%', '&ft') ==# 'colortemplate' && expand('%:t') !~# '\m^_'
     nunmenu WinBar
     nnoremenu 1.10 WinBar.Build :update<cr>:Colortemplate<cr>
     nnoremenu 1.20 WinBar.Build! :update<cr>:Colortemplate!<cr>

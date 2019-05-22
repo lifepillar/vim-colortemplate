@@ -931,16 +931,29 @@ endf
 " Tokenizer {{{
 " Current token in the currently parsed line
 fun! s:init_tokenizer()
-  return 1
+  call s:token.reset()
 endf
 
-let s:token = { 'spos' :  0, 'pos'  :  0, 'value': '', 'kind' : '' }
+let s:token = { 'line': '', 'spos':  0, 'pos':  0, 'value': '', 'kind': '' }
 
 fun! s:token.reset() dict
+  let self.line = ''
   let self.spos  = 0
   let self.pos   = 0
   let self.value = ''
   let self.kind  = ''
+endf
+
+fun! s:token.getl() dict
+  return self.line
+endf
+
+fun! s:getl()
+  return s:token.getl()
+endf
+
+fun! s:token.setline(l) dict
+  let self.line = a:l
 endf
 
 fun! s:token.next() dict
@@ -983,7 +996,6 @@ fun! s:init_includes()
   let s:path = ''
   let s:linenr = 0
   let s:numlines = 0
-  let s:currline = ''
   let s:cache = {}
 endf
 
@@ -1003,10 +1015,6 @@ fun! s:currfile()
   return s:path
 endf
 
-fun! s:getl()
-  return s:currline
-endf
-
 fun! s:linenr()
   return s:linenr
 endf
@@ -1024,8 +1032,8 @@ fun! s:next_line()
     let s:linenr = l:tt.linenr + 1
     let s:numlines = l:tt.numlines
   endwhile
-  let s:currline = s:pop(s:input_stack)
   call s:token.reset()
+  let s:token.line = s:pop(s:input_stack)
   return 1
 endf
 " }}}

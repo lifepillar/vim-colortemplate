@@ -1918,6 +1918,31 @@ fun! colortemplate#disable_colorscheme()
   call s:restore_colorscheme()
 endf
 
+fun! colortemplate#getinfo(n)
+  call s:init_color_palette()
+  call s:init_colorscheme_definition() " For s:t_Co
+  call s:init_tokenizer()
+  call s:token.setline(getline('.'))
+  if s:token.next().kind != 'WORD' || s:token.value !=? 'color' " Not a Color line
+    ascii
+    return
+  endif
+  try
+    call s:parse_color_def()
+  catch /.*/
+    call s:print_error_msg(v:exception, 0)
+    return
+  endtry
+  let l:name = s:color_names('dark')[0]
+  let l:hexc = s:guicol(l:name)
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
+  let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
+  echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %s',
+        \ l:name, l:r, l:g, l:b, s:guicol(l:name),
+        \ join(l:approx, ', ')
+        \ )
+endf
+
 " Format a dictionary of color name/value pairs in Colortemplate format
 fun! colortemplate#format_palette(colors)
   let l:template = []

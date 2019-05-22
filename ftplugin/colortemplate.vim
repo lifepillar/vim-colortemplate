@@ -16,10 +16,14 @@ if b:colortemplate_wd =~? '\m\%(color\)\=templates\=$'
   let b:colortemplate_wd = fnamemodify(b:colortemplate_wd, ':h')
 endif
 
-" TODO: map ctrl-l to show the toolbar
-
 setlocal commentstring=#%s
 setlocal omnifunc=syntaxcomplete#Complete
+
+if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
+  nnoremap <silent> <buffer> <plug>(Colortemplate_ga) ga
+  nnoremap <silent> <buffer> ga :<c-u>call colortemplate#getinfo(v:count1)<cr>
+  nnoremap <silent> <buffer> <c-l> :<c-u>call colortemplate#toolbar#show()<cr><c-l>
+endif
 
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
 

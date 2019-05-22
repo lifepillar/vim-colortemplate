@@ -11,5 +11,6 @@ fun! colortemplate#toolbar#show()
     execute 'nnoremenu 1.70 WinBar.@'.l:wd ':call colortemplate#setwd()<cr>'
     nnoremenu 1.99 WinBar.✕ :nunmenu WinBar<cr>
   endif
+  return ''
 endf
 

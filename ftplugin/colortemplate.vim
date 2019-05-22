@@ -20,7 +20,6 @@ setlocal commentstring=#%s
 setlocal omnifunc=syntaxcomplete#Complete
 
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
-  nnoremap <silent> <buffer> <plug>(Colortemplate_ga) ga
   nnoremap <silent> <buffer> ga :<c-u>call colortemplate#getinfo(v:count1)<cr>
   nnoremap <silent> <buffer> <c-l> :<c-u>call colortemplate#toolbar#show()<cr><c-l>
 endif

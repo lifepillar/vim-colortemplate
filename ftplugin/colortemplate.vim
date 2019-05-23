@@ -22,6 +22,16 @@ setlocal omnifunc=syntaxcomplete#Complete
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> ga :<c-u>call colortemplate#getinfo(v:count1)<cr>
   nnoremap <silent> <buffer> <c-l> :<c-u>call colortemplate#toolbar#show()<cr><c-l>
+  inoremap <silent> <buffer> <c-k>~~ <c-r>=colortemplate#approx_color(1)<cr>
+  inoremap <silent> <buffer> <c-k>1~ <c-r>=colortemplate#approx_color(1)<cr>
+  inoremap <silent> <buffer> <c-k>2~ <c-r>=colortemplate#approx_color(2)<cr>
+  inoremap <silent> <buffer> <c-k>3~ <c-r>=colortemplate#approx_color(3)<cr>
+  inoremap <silent> <buffer> <c-k>4~ <c-r>=colortemplate#approx_color(4)<cr>
+  inoremap <silent> <buffer> <c-k>5~ <c-r>=colortemplate#approx_color(5)<cr>
+  inoremap <silent> <buffer> <c-k>6~ <c-r>=colortemplate#approx_color(6)<cr>
+  inoremap <silent> <buffer> <c-k>7~ <c-r>=colortemplate#approx_color(7)<cr>
+  inoremap <silent> <buffer> <c-k>8~ <c-r>=colortemplate#approx_color(8)<cr>
+  inoremap <silent> <buffer> <c-k>9~ <c-r>=colortemplate#approx_color(9)<cr>
 endif
 
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")

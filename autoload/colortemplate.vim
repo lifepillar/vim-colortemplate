@@ -1918,22 +1918,27 @@ fun! colortemplate#disable_colorscheme()
   call s:restore_colorscheme()
 endf
 
-fun! colortemplate#getinfo(n)
+fun! s:parse_color_line()
   call s:init_color_palette()
   call s:init_colorscheme_definition() " For s:t_Co
   call s:init_tokenizer()
   call s:token.setline(getline('.'))
   if s:token.next().kind != 'WORD' || s:token.value !=? 'color' " Not a Color line
     ascii
-    return
+    return ''
   endif
   try
     call s:parse_color_def()
   catch /.*/
     call s:print_error_msg(v:exception, 0)
-    return
+    return ''
   endtry
-  let l:name = s:color_names('dark')[0]
+  return s:color_names('dark')[0]
+endf
+
+fun! colortemplate#getinfo(n)
+  let l:name = s:parse_color_line()
+  if empty(l:name) | return | endif
   let l:hexc = s:guicol(l:name)
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
   let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
@@ -1941,6 +1946,13 @@ fun! colortemplate#getinfo(n)
         \ l:name, l:r, l:g, l:b, s:guicol(l:name),
         \ join(l:approx, ', ')
         \ )
+endf
+
+fun! colortemplate#approx_color(n)
+  let l:name = s:parse_color_line()
+  if empty(l:name) | return '~' | endif
+  let l:hexc = s:guicol(l:name)
+  return colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]
 endf
 
 " Format a dictionary of color name/value pairs in Colortemplate format
@@ -1953,9 +1965,6 @@ fun! colortemplate#format_palette(colors)
 endf
 " }}} Public interface
 " TODO {{{
-" - Alias for color names
-" - ga for color information
-" - mapping for replacing ~ on the fly
 " - NeoVim keyword
 " - Validation using Vim script
 " - Fix for Vim background bug

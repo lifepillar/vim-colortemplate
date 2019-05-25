@@ -401,9 +401,13 @@ fun! s:has_gui_attr(hg)
   return !empty(a:hg['gui'])
 endf
 
+fun! s:is_neovim_group(name)
+  return a:name =~? '^TermCursor\%[NC]$'
+endf
+
 fun! s:add_term_attr(hg, attrlist)
   for l:a in a:attrlist
-    if l:a ==? 'italic'
+    if l:a ==? 'italic' && !s:is_neovim_group(s:hi_name(a:hg))
       let a:hg['term_italic'] = 1
     else
       call add(a:hg['term'], l:a)
@@ -414,7 +418,7 @@ endf
 
 fun! s:add_gui_attr(hg, attrlist)
   for l:a in a:attrlist
-    if l:a ==? 'italic'
+    if l:a ==? 'italic' && !s:is_neovim_group(s:hi_name(a:hg))
       let a:hg['gui_italic'] = 1
     else
       call add(a:hg['gui'], l:a)
@@ -531,7 +535,13 @@ fun! s:init_colorscheme_definition()
         \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
         \ '256': { 'dark': [], 'light': [], 'any': [] },
         \ }
+  let s:nvim = {
+        \ 'global' : { 'any': [] },
+        \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
+        \ '256': { 'dark': [], 'light': [], 'any': [] },
+        \ }
   let s:uses_italics = 0
+  let s:supports_neovim = 0
   let s:variants = ['global']
   let s:has_dark = 0
   let s:has_light = 0
@@ -565,6 +575,14 @@ endf
 
 fun! s:has_normal_group(bg)
   return s:has_normal[a:bg]
+endf
+
+fun! s:supports_neovim()
+  return s:supports_neovim
+endf
+
+fun! s:set_supports_neovim()
+  let s:supports_neovim = 1
 endf
 
 fun! s:variants()
@@ -633,17 +651,29 @@ fun! s:add_verbatim(line)
 endf
 
 fun! s:add_linked_group(source, target)
+  if s:is_neovim_group(a:source)
+    for l:d in s:variants()
+      call add(s:nvim[l:d][s:current_bg()], ['link', [a:source, a:target]])
+    endfor
+    return
+  endif
   for l:d in s:variants()
     call add(s:data[l:d][s:current_bg()], ['link', [a:source, a:target]])
   endfor
 endf
 
 fun! s:add_highlight_group(hg)
+  if s:is_preamble()
+    throw "Cannot define highlight group before Variant or Background is set"
+  endif
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
     let s:has_normal[s:current_bg()] = 1
   endif
-  if s:is_preamble()
-    throw "Cannot define highlight group before Variant or Background is set"
+  if s:is_neovim_group(s:hi_name(a:hg))
+    for l:d in s:variants()
+      call add(s:nvim[l:d][s:current_bg()], ['group', a:hg])
+    endfor
+    return
   endif
   for l:d in s:variants()
     call add(s:data[l:d][s:current_bg()], ['group', a:hg])
@@ -671,6 +701,22 @@ fun! s:flush_italics()
     call extend(s:data[l:d][l:bg], s:italics[l:d][l:bg])
     call add(s:data[l:d][l:bg], ['verb', 'endif'])
     let s:italics[l:d][l:bg] = []
+  endfor
+endf
+
+fun! s:flush_neovim()
+  if !s:supports_neovim()
+    return
+  endif
+  for l:d in s:variants()
+    let l:bg = s:current_bg()
+    if empty(s:nvim[l:d][l:bg])
+      continue
+    endif
+    call add(s:data[l:d][l:bg], ['verb', "if has('nvim')"])
+    call extend(s:data[l:d][l:bg], s:nvim[l:d][l:bg])
+    call add(s:data[l:d][l:bg], ['verb', 'endif'])
+    let s:nvim[l:d][l:bg] = []
   endfor
 endf
 " }}}
@@ -1073,7 +1119,8 @@ fun! s:parse_line()
     return s:parse_comment()
   elseif s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
-      call s:flush_italics()
+      call s:flush_italics() " Verbatim blocks act like optimization fences
+      call s:flush_neovim()  " Ditto
       call s:start_verbatim()
       if s:token.next().kind !=# 'EOL'
         throw "Extra characters after 'verbatim'"
@@ -1142,6 +1189,10 @@ fun! s:parse_key_value_pair()
       call s:parse_term_colors(l:val)
     elseif l:key ==# 'include'
       call s:include(l:val)
+    elseif l:key ==# 'neovim'
+      if l:val =~? '\%(y\%[es]\)\|1'
+        call s:set_supports_neovim()
+      endif
     else
       call s:set_info(l:key, l:val)
     endif
@@ -1550,8 +1601,11 @@ fun! s:print_header(bufnr)
   call s:put  (a:bufnr, "let s:t_Co = exists('&t_Co') && !empty(&t_Co) ? &t_Co : 1")
   call s:put  (a:bufnr, "let s:term_256_colors = exists('&t_Co') && &t_Co == 256")
   if s:uses_italics()
-    " FIXME: make nvim conditional
-    call s:put(a:bufnr, "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || (has('gui_running') && !has('iOS')) || has('nvim')")
+    let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || (has('gui_running') && !has('iOS'))"
+    if s:supports_neovim()
+      let l:itcheck .= " || has('nvim')"
+    endif
+    call s:put(a:bufnr, l:itcheck)
   endif
 endf
 
@@ -1571,14 +1625,15 @@ fun! s:print_terminal_colors(bufnr)
   let l:col7_15 = join(map(copy(l:tc[7:15]), { _,c -> "'".c."'" }), ', ')
   call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_6 . ',')
   call s:put(a:bufnr, '\ ' . l:col7_15 . ']')
-  " TODO: make NVIM support conditional
-  call s:put(a:bufnr, "if has('nvim')")
-  let l:n = 0
-  for l:color in l:tc
-    call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".l:color."'")
-    let l:n += 1
-  endfor
-  call s:put(a:bufnr, 'endif')
+  if s:supports_neovim()
+    call s:put(a:bufnr, "if has('nvim')")
+    let l:n = 0
+    for l:color in l:tc
+      call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".l:color."'")
+      let l:n += 1
+    endfor
+    call s:put(a:bufnr, 'endif')
+  endif
 endf
 
 fun! s:finish_endif(bufnr)
@@ -1735,6 +1790,7 @@ fun! colortemplate#parse(filename) abort
   endwhile
 
   call s:flush_italics()
+  call s:flush_neovim()
 
   call s:assert_requirements()
 

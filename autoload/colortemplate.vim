@@ -10,12 +10,9 @@ let s:VERSION = '2.0.0b'
 " <Documentation>             ::= documentation <Anything> enddocumentation
 " <Anything>                  ::= .*
 " <Comment>                   ::= # .*
-" <KeyValuePair>              ::= <PaletteSpec> | <ColorDef> | <Key> : <Value>
+" <KeyValuePair>              ::=  <ColorDef> | <Key> : <Value>
 " <Key>                       ::= Full name | Short name | Author | Background | ...
 " <Value>                     ::= .*
-" <PaletteSpec>               ::= <PaletteName> [<Arg> [<Arg>]*]
-" <PaletteName>               ::= \w\+
-" <Arg>                       ::= number or word
 " <ColorDef>                  ::= Color : <ColorName> <GUIValue> <Base256Value> [ <Base16Value> ]
 " <ColorName>                 ::= [a-z1-9_]+
 " <GUIValue>                  ::= <HexValue> | <RGBValue> | <RGBColorName>
@@ -300,70 +297,6 @@ endf
 fun! s:init_highlight_groups()
   return 1
 endf
-
-let s:default_hi_groups = [
-      \ 'ColorColumn',
-      \ 'Comment',
-      \ 'Conceal',
-      \ 'Constant',
-      \ 'Cursor',
-      \ 'CursorColumn',
-      \ 'CursorLine',
-      \ 'CursorLineNr',
-      \ 'DiffAdd',
-      \ 'DiffChange',
-      \ 'DiffDelete',
-      \ 'DiffText',
-      \ 'Directory',
-      \ 'EndOfBuffer',
-      \ 'Error',
-      \ 'ErrorMsg',
-      \ 'FoldColumn',
-      \ 'Folded',
-      \ 'Identifier',
-      \ 'Ignore',
-      \ 'IncSearch',
-      \ 'LineNr',
-      \ 'MatchParen',
-      \ 'ModeMsg',
-      \ 'MoreMsg',
-      \ 'NonText',
-      \ 'Normal',
-      \ 'Pmenu',
-      \ 'PmenuSbar',
-      \ 'PmenuSel',
-      \ 'PmenuThumb',
-      \ 'PreProc',
-      \ 'Question',
-      \ 'QuickFixLine',
-      \ 'Search',
-      \ 'SignColumn',
-      \ 'Special',
-      \ 'SpecialKey',
-      \ 'SpellBad',
-      \ 'SpellCap',
-      \ 'SpellLocal',
-      \ 'SpellRare',
-      \ 'Statement',
-      \ 'StatusLine',
-      \ 'StatusLineNC',
-      \ 'StatusLineTerm',
-      \ 'StatusLineTermNC',
-      \ 'TabLine',
-      \ 'TabLineFill',
-      \ 'TabLineSel',
-      \ 'Title',
-      \ 'Todo',
-      \ 'ToolbarButton',
-      \ 'ToolbarLine',
-      \ 'Type',
-      \ 'Underlined',
-      \ 'VertSplit',
-      \ 'Visual',
-      \ 'VisualNOS',
-      \ 'WarningMsg',
-      \ 'WildMenu',
-      \ ]
 
 fun! s:new_hi_group(name)
   return {

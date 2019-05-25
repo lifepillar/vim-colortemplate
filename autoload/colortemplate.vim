@@ -1949,6 +1949,6 @@ endf
 " }}} Public interface
 call s:init_data_structures()
 " TODO {{{
-" - NeoVim keyword
 " - Fix for Vim background bug
 " - Fix for https://github.com/lifepillar/vim-colortemplate/issues/13
+" - Support start, stop and font in highlight group definitions

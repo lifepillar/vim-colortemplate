@@ -1,0 +1,14 @@
+language: minimal
+dist: xenial
+services:
+  - docker
+
+before_install:
+  - docker build -t vim-colortemplate .
+
+before_script:
+  - docker run -t vim-colortemplate vim --version
+
+script:
+  - docker run -t vim-colortemplate sh -c 'set -x; cd /vim-colortemplate; mkdir -p /tmp/scratch; vim -E -u NONE -N --cmd "set rtp+=\$PWD modeline hidden | filetype plugin on" templates/default_clone.colortemplate -c "Colortemplate /tmp/scratch" -c "qa!"; ls -l /tmp/scratch/colors/; test -s /tmp/scratch/colors/default_clone.vim'
+

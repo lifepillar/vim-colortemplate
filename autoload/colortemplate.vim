@@ -609,6 +609,7 @@ fun! s:set_variants(defs)
     if !has_key(s:data, l:d)
       let s:data[l:d] = { 'dark': [], 'light': [], 'any': [] }
       let s:italics[l:d] = { 'dark': [], 'light': [], 'any': [] }
+      let s:nvim[l:d] = { 'dark': [], 'light': [], 'any': [] }
       if l:d !=# s:GUI
         call add(s:t_Co, l:d)
       endif

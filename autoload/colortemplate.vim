@@ -707,7 +707,6 @@ endf
 
 fun! s:add_highlight_group(hg)
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
-    call s:assert_valid_normal_hi_group_def(a:hg)
     let s:has_normal[s:current_bg()] = 1
   endif
   if s:is_preamble()
@@ -1484,19 +1483,6 @@ fun! s:init(work_dir)
 endf
 " }}}
 " Checks {{{
-fun! s:assert_valid_normal_hi_group_def(hg)
-  if s:fg(a:hg) =~# '\m^\%(fg\|bg\)$' || s:bg(a:hg) =~# '\m^\%(fg\|bg\)$'
-    throw "The colors for Normal cannot be 'fg' or 'bg'"
-  endif
-  if match(s:term_attr(a:hg), '\%(inv\|rev\)erse') > -1 || match(s:gui_attr(a:hg), '\%(inv\|rev\)erse') > -1
-    throw "Do not use reverse mode for Normal"
-  endif
-  " FIXME: reinstante these
-  " call add(s:normal_colors[l:bg]['fg'], s:fg(a:hg))
-  " call add(s:normal_colors[l:bg]['bg'], (a:hg))
-  " let s:colorscheme['has_normal'][l:bg] = 1
-endf
-
 fun! s:assert_valid_color_name(name)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
     throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
@@ -1528,33 +1514,6 @@ fun! s:assert_requirements()
     call s:add_generic_error('Please define the Normal highlight group for both dark and light background')
   elseif (s:has_light() && !s:has_normal_group('light')) || (s:has_dark() && !s:has_normal_group('dark'))
     call s:add_generic_error('Please define the Normal highlight group')
-  endif
-endf
-
-" Checks to be performed on the generated colorscheme code
-fun! s:postcheck()
-  if get(g:, 'colortemplate_no_warnings', 0)
-    return
-  endif
-  call cursor(1,1)
-  " Check for missing highlight groups
-  for l:hg in s:default_hi_groups
-    if !search('\%(hi\|hi! link\) \<'.l:hg.'\>', 'nW')
-      call s:add_generic_warning('No definition for ' . l:hg . ' highlight group')
-    endif
-  endfor
-  " Were debugPC and debugBreakpoint defined? (They shouldn't: see :h colortemplate-best-practices)
-  for l:hg in ['debugPC', 'debugBreakpoint']
-    if search('\%(hi\|hi! link\) \<'.l:hg.'\>', 'nW')
-      call s:add_generic_warning('A colorscheme should not define plugin-specific highlight groups: ' . l:hg )
-    endif
-  endfor
-  " Is g:terminal_ansi_colors defined?
-  if !search('g:terminal_ansi_colors','nW')
-    call s:add_generic_warning('g:terminal_ansi_colors is not defined (see :help g:terminal_ansi_colors)')
-  endif
-  if !empty(getloclist(0))
-    lopen
   endif
 endf
 " }}}
@@ -1775,7 +1734,6 @@ fun! s:generate_colorscheme(outdir, overwrite)
       execute l:bufnr 'bwipe!'
     endtry
   endif
-  " call s:postcheck() " TODO: move to a 'validate' function that also calls VIm's own check script
 endf
 " }}}
 " Colorscheme switching {{{
@@ -1843,8 +1801,7 @@ fun! colortemplate#parse(filename) abort
     endtry
   endwhile
 
-  " FIXME : re-enable this (including checking for Term Colors):
-  " call s:assert_requirements()
+  call s:assert_requirements()
 
   if !empty(getloclist(0))
     lopen
@@ -1899,7 +1856,7 @@ fun! colortemplate#make(...)
 endf
 
 fun! colortemplate#stats()
-  redraw!
+  " redraw!
   try
     call colortemplate#parse(expand('%:p'))
   catch /Parse error/
@@ -2002,6 +1959,5 @@ endf
 call s:init_data_structures()
 " TODO {{{
 " - NeoVim keyword
-" - Validation using Vim script
 " - Fix for Vim background bug
 " - Fix for https://github.com/lifepillar/vim-colortemplate/issues/13

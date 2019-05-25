@@ -667,9 +667,6 @@ fun! s:add_highlight_group(hg)
   if s:is_preamble()
     throw "Cannot define highlight group before Variant or Background is set"
   endif
-  if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
-    let s:has_normal[s:current_bg()] = 1
-  endif
   if s:is_neovim_group(s:hi_name(a:hg))
     for l:d in s:variants()
       call add(s:nvim[l:d][s:current_bg()], ['group', a:hg])
@@ -679,6 +676,9 @@ fun! s:add_highlight_group(hg)
   for l:d in s:variants()
     call add(s:data[l:d][s:current_bg()], ['group', a:hg])
   endfor
+  if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
+    let s:has_normal[s:current_bg()] = 1
+  endif
   if s:has_term_italic(a:hg)
     let s:uses_italics = 1
     for l:d in s:supported_t_Co()
@@ -1643,6 +1643,29 @@ fun! s:finish_endif(bufnr)
   call s:put(a:bufnr, 'endif')
 endf
 
+" In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of
+" 'background'. This function generates code to reset the background if
+" needed. The function's name is a reference to the original issue report,
+" which had an example using color 234.
+" See https://github.com/lifepillar/vim-colortemplate/issues/13.
+fun! s:check_bug_bg234(bg, item, ncols, bufnr)
+  if a:item[0] ==# 'group' && s:hi_name(a:item[1]) ==? 'Normal'
+    if a:bg ==# 'dark'
+      if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) || s:bg16(a:item[1]) =~# '\m^\%(7\|9\|\d\d\)$'
+        call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
+        call s:put(a:bufnr, 'set background=dark')
+        call s:put(a:bufnr, 'endif')
+      endif
+    else " light background
+      if (a:ncols > 2 && a:ncols <= 16) && (s:bg16(a:item[1]) =~# '\m^\%(0\|1\|2\|3\|4\|5\|6\|8\)$')
+        call s:put(l:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
+        call s:put(l:bufnr, 'set background=light')
+        call s:put(l:bufnr, 'endif')
+      endif
+    endif
+  endif
+endf
+
 fun! s:generate_colorscheme(outdir, overwrite)
   1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
   let l:bufnr = bufnr("%")
@@ -1694,12 +1717,14 @@ fun! s:generate_colorscheme(outdir, overwrite)
       call s:put(l:bufnr, "if &background ==# 'dark'")
       for l:item in s:colorscheme_definition(l:t_Co, 'dark')
         call s:put(l:bufnr, s:eval(l:item, l:ncols))
+        call s:check_bug_bg234('dark', l:item, l:ncols, l:bufnr)
       endfor
       call s:finish_endif(l:bufnr)
       call s:set_active_bg('light')
     endif
     for l:item in s:colorscheme_definition(l:t_Co, s:default_bg())
       call s:put(l:bufnr, s:eval(l:item, l:ncols))
+      call s:check_bug_bg234(s:default_bg(), l:item, l:ncols, l:bufnr)
     endfor
     call s:finish_endif(l:bufnr)
   endfor

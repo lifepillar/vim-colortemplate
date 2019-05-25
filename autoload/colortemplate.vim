@@ -602,6 +602,7 @@ fun! s:init_colorscheme_definition()
   let s:variants = ['global']
   let s:has_dark = 0
   let s:has_light = 0
+  let s:has_normal = { 'dark': 0, 'light': 0 }
   let s:t_Co = ['256']
 endf
 
@@ -627,6 +628,10 @@ endf
 
 fun! s:set_has_light()
   let s:has_light = 1
+endf
+
+fun! s:has_normal_group(bg)
+  return s:has_normal[a:bg]
 endf
 
 fun! s:variants()
@@ -703,6 +708,7 @@ endf
 fun! s:add_highlight_group(hg)
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
     call s:assert_valid_normal_hi_group_def(a:hg)
+    let s:has_normal[s:current_bg()] = 1
   endif
   if s:is_preamble()
     throw "Cannot define highlight group before Variant or Background is set"
@@ -1520,7 +1526,7 @@ fun! s:assert_requirements()
   endif
   if s:has_dark_and_light() && !(s:has_normal_group('dark') && s:has_normal_group('light'))
     call s:add_generic_error('Please define the Normal highlight group for both dark and light background')
-  elseif !s:has_normal_group(s:current_background())
+  elseif (s:has_light() && !s:has_normal_group('light')) || (s:has_dark() && !s:has_normal_group('dark'))
     call s:add_generic_error('Please define the Normal highlight group')
   endif
 endf

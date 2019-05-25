@@ -1913,11 +1913,40 @@ fun! colortemplate#stats()
   call s:print_color_info()
 endf
 
-fun! colortemplate#enable_colorscheme() abort
-  if empty(s:shortname())
-    call colortemplate#parse(expand("%"))
+fun! s:colorscheme_path()
+  let l:name = s:shortname()
+  if empty(l:name)
+    let l:match = matchlist(getbufline('%', 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)')
+    if !empty(l:match)
+      let l:name = l:match[1]
+    endif
   endif
-  call s:view_colorscheme(s:shortname())
+  let l:path = colortemplate#wd() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
+  if empty(l:name) || !filereadable(l:path)
+    call s:print_error_msg('Please build the colorscheme first', 0)
+  endif
+  return l:path
+endf
+
+fun! colortemplate#view_source() abort
+  let l:path = s:colorscheme_path()
+  if empty(l:path) | return 0 | endif
+  execute "split" l:path
+  return 1
+endf
+
+fun! colortemplate#validate() abort
+  if colortemplate#view_source()
+    runtime colors/tools/check_colors.vim
+    call input('[Colortemplate] Press a key to continue')
+  endif
+  wincmd c
+endf
+
+fun! colortemplate#enable_colorscheme() abort
+  let l:path = s:colorscheme_path()
+  if empty(l:path) | return | endif
+  call s:view_colorscheme(fnamemodify(l:path, ':t:r'))
 endf
 
 fun! colortemplate#disable_colorscheme()

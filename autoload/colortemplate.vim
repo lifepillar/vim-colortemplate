@@ -1970,6 +1970,7 @@ fun! colortemplate#format_palette(colors)
   return l:template
 endf
 " }}} Public interface
+call s:init_data_structures()
 " TODO {{{
 " - NeoVim keyword
 " - Validation using Vim script

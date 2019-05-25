@@ -1734,6 +1734,8 @@ fun! colortemplate#parse(filename) abort
     endtry
   endwhile
 
+  call s:flush_italics()
+
   call s:assert_requirements()
 
   if !empty(getloclist(0))

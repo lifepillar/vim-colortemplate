@@ -1080,6 +1080,24 @@ fun! s:add_to_aux_file(line)
 endf
 " }}}
 " Parser {{{
+fun! s:quickly_parse_color_line()
+  call s:init_color_palette()
+  call s:init_colorscheme_definition() " For s:t_Co
+  call s:init_tokenizer()
+  call s:token.setline(getline('.'))
+  if s:token.next().kind != 'WORD' || s:token.value !=? 'color' " Not a Color line
+    ascii
+    return ''
+  endif
+  try
+    call s:parse_color_def()
+  catch /.*/
+    call s:print_error_msg(v:exception, 0)
+    return ''
+  endtry
+  return s:color_names('dark')[0]
+endf
+
 fun! s:parse_verbatim_line()
   if s:getl() =~? '\m^\s*endverbatim'
     call s:stop_verbatim()
@@ -1908,7 +1926,7 @@ fun! colortemplate#stats()
   echo "\r"
 endf
 
-fun! s:colorscheme_path()
+fun! colortemplate#path()
   let l:bufname = fnamemodify(bufname('%'), '%:p:t')
   if l:bufname =~ '\m^[^_].*\.colortemplate$'
     let l:match = matchlist(getbufline('%', 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)')
@@ -1928,7 +1946,7 @@ fun! s:colorscheme_path()
 endf
 
 fun! colortemplate#view_source() abort
-  let l:path = s:colorscheme_path()
+  let l:path = colortemplate#path()
   if empty(l:path) | return 0 | endif
   execute "keepalt split" l:path
   redraw
@@ -1946,7 +1964,7 @@ fun! colortemplate#validate() abort
 endf
 
 fun! colortemplate#enable_colorscheme() abort
-  let l:path = s:colorscheme_path()
+  let l:path = colortemplate#path()
   if empty(l:path) | return | endif
   call s:view_colorscheme(fnamemodify(l:path, ':t:r'))
 endf
@@ -1955,26 +1973,8 @@ fun! colortemplate#disable_colorscheme()
   call s:restore_colorscheme()
 endf
 
-fun! s:parse_color_line()
-  call s:init_color_palette()
-  call s:init_colorscheme_definition() " For s:t_Co
-  call s:init_tokenizer()
-  call s:token.setline(getline('.'))
-  if s:token.next().kind != 'WORD' || s:token.value !=? 'color' " Not a Color line
-    ascii
-    return ''
-  endif
-  try
-    call s:parse_color_def()
-  catch /.*/
-    call s:print_error_msg(v:exception, 0)
-    return ''
-  endtry
-  return s:color_names('dark')[0]
-endf
-
 fun! colortemplate#getinfo(n)
-  let l:name = s:parse_color_line()
+  let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
   let l:hexc = s:guicol(l:name)
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)

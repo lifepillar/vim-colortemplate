@@ -1742,7 +1742,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
       call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)
       redraw
       echo "\r"
-      echomsg "[Colortemplate]" l:outpath
+      echomsg "[Colortemplate] Success!"
     finally
       execute l:bufnr 'bwipe!'
     endtry
@@ -1833,6 +1833,7 @@ endf
 " a:2 is ! when files should be overridden
 " a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
+  echomsg '[Colortemplate] Building colorscheme...'
   let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#wd())
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
@@ -1887,7 +1888,7 @@ fun! colortemplate#build_dir(override)
 endf
 
 fun! colortemplate#stats()
-  " redraw!
+  echomsg '[Colortemplate] Computing color statistics...'
   try
     call setqflist([], 'r') " Reset quickfix list
     call colortemplate#parse(expand('%:p'))
@@ -1932,6 +1933,7 @@ endf
 
 fun! colortemplate#validate() abort
   if colortemplate#view_source()
+    echomsg '[Colortemplate] Validating colorscheme, please wait...'
     runtime colors/tools/check_colors.vim
     call input('[Colortemplate] Press a key to continue')
   endif
@@ -1996,6 +1998,4 @@ endf
 " }}} Public interface
 call s:init_data_structures()
 " TODO {{{
-" - Fix for Vim background bug
-" - Fix for https://github.com/lifepillar/vim-colortemplate/issues/13
 " - Support start, stop and font in highlight group definitions

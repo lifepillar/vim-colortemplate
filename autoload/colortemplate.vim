@@ -447,6 +447,7 @@ fun! s:init_metadata()
   let s:info = {
         \ 'fullname': '',
         \ 'shortname': '',
+        \ 'fullauthor': '',
         \ 'author': '',
         \ 'maintainer': '',
         \ 'website': '',
@@ -503,6 +504,11 @@ fun! s:set_info(key, value)
   if type(a:value) != type('')
     throw "FATAL: key value must be a String (set_info)" " Should never happen
   endif
+  if a:key ==# 'author'
+    let s:info['fullauthor'] = a:value
+    let s:info['author'] = matchstr(a:value, '^[^< ]\+')
+    return
+  endif
   let s:info[a:key] = a:value
   if a:key ==# 'shortname'
     if empty(a:value)
@@ -532,6 +538,10 @@ endf
 
 fun! s:shortname()
   return s:info['shortname']
+endf
+
+fun! s:fullauthor()
+  return s:info['fullauthor']
 endf
 
 fun! s:author()
@@ -1571,7 +1581,7 @@ fun! s:print_header(bufnr)
   if !empty(s:description()                                                    )
     call s:put(a:bufnr,       '" Description:  ' . s:description()             )
   endif
-  call s:put  (a:bufnr,       '" Author:       ' . s:author()                  )
+  call s:put  (a:bufnr,       '" Author:       ' . s:fullauthor()              )
   call s:put  (a:bufnr,       '" Maintainer:   ' . s:maintainer()              )
   if !empty(s:website()                                                        )
     call s:put(a:bufnr,       '" Website:      ' . s:website()                 )

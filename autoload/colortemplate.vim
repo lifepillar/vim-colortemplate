@@ -172,6 +172,17 @@ fun! s:print_error_msg(msg, rethrow)
     echohl None
   endif
 endf
+
+fun! s:show_errors(errmsg)
+  if empty(getqflist())
+    cclose
+  else
+    copen
+    if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
+      throw a:errmsg
+    endif
+  endif
+endf
 " }}}
 " Misc {{{
 if has('nvim')
@@ -1837,17 +1848,8 @@ fun! colortemplate#parse(filename) abort
 
   call s:flush_italics()
   call s:flush_neovim()
-
   call s:assert_requirements()
-
-  if !empty(getqflist())
-    copen
-    if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
-      throw 'Parse error'
-    endif
-  else
-    cclose
-  endif
+  call s:show_errors('Parse error')
 endf
 
 " a:1 is the optional path to an output directory

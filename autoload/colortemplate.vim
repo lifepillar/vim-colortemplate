@@ -1975,6 +1975,11 @@ fun! colortemplate#disable_colorscheme()
   call s:restore_colorscheme()
 endf
 
+fun! colortemplate#colortest()
+  call colortemplate#enable_colorscheme()
+  runtime syntax/colortest.vim
+endf
+
 fun! colortemplate#getinfo(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif

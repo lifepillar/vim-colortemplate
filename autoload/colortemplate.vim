@@ -1899,6 +1899,7 @@ fun! colortemplate#make(...)
 endf
 
 fun! colortemplate#build_dir(override)
+  update
   call setqflist([], 'r') " Reset quickfix list
   let l:wd = colortemplate#wd()
   let l:dirs = join([l:wd, l:wd.'/colortemplate',l:wd.'/template',l:wd.'/templates'], ',')
@@ -1909,6 +1910,7 @@ fun! colortemplate#build_dir(override)
 endf
 
 fun! colortemplate#stats()
+  update
   echomsg '[Colortemplate] Computing color statistics...'
   try
     call setqflist([], 'r') " Reset quickfix list

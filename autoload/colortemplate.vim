@@ -1650,7 +1650,7 @@ fun! s:check_bug_bg234(bg, item, ncols, bufnr)
   if a:item[0] ==# 'group' && s:hi_name(a:item[1]) ==? 'Normal'
     if a:bg ==# 'dark'
       if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) || s:bg16(a:item[1]) =~# '\m^\%(7\|9\|\d\d\)$'
-        call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
+        call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : '') . ' " Fix for Vim bug')
         call s:put(a:bufnr, 'set background=dark')
         call s:put(a:bufnr, 'endif')
       endif

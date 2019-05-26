@@ -1700,6 +1700,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
       call s:put(l:bufnr, s:eval(l:item, str2nr(s:GUI)))
     endfor
     call s:finish_endif(l:bufnr)
+    call s:put(l:bufnr, '" Light background')
     call s:set_active_bg('light')
   endif
   call s:print_terminal_colors(l:bufnr)
@@ -1725,6 +1726,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
         call s:check_bug_bg234('dark', l:item, l:ncols, l:bufnr)
       endfor
       call s:finish_endif(l:bufnr)
+    call s:put(l:bufnr, '" Light background')
       call s:set_active_bg('light')
     endif
     for l:item in s:colorscheme_definition(l:t_Co, s:default_bg())

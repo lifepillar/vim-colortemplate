@@ -442,6 +442,8 @@ endf
 fun! s:init_metadata()
   let s:supports_dark = 0
   let s:supports_light = 0
+  let s:uses_italics = 0
+  let s:supports_neovim = 0
   let s:info = {
         \ 'fullname': '',
         \ 'shortname': '',
@@ -454,15 +456,39 @@ fun! s:init_metadata()
         \ }
 endf
 
-fun! s:supports_dark_and_light()
+fun! s:supports_neovim()
+  return s:supports_neovim
+endf
+
+fun! s:set_supports_neovim()
+  let s:supports_neovim = 1
+endf
+
+fun! s:uses_italics()
+  return s:uses_italics
+endf
+
+fun! s:set_uses_italics()
+  let s:uses_italics = 1
+endf
+
+fun! s:has_dark_and_light()
   return s:supports_dark && s:supports_light
 endf
 
-fun! s:set_supports_dark()
+fun! s:has_dark()
+  return s:supports_dark
+endf
+
+fun! s:has_light()
+  return s:supports_light
+endf
+
+fun! s:set_has_dark()
   let s:supports_dark = 1
 endf
 
-fun! s:set_supports_light()
+fun! s:set_has_light()
   let s:supports_light = 1
 endf
 
@@ -551,11 +577,7 @@ fun! s:init_colorscheme_definition()
         \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
         \ '256': { 'dark': [], 'light': [], 'any': [] },
         \ }
-  let s:uses_italics = 0
-  let s:supports_neovim = 0
   let s:variants = ['global']
-  let s:has_dark = 0
-  let s:has_light = 0
   let s:has_normal = { 'dark': 0, 'light': 0 }
   let s:t_Co = ['256']
 endf
@@ -564,36 +586,8 @@ fun! s:is_preamble()
   return s:variants[0] ==# 'global'
 endf
 
-fun! s:has_dark_and_light()
-  return s:has_dark && s:has_light
-endf
-
-fun! s:has_dark()
-  return s:has_dark
-endf
-
-fun! s:has_light()
-  return s:has_light
-endf
-
-fun! s:set_has_dark()
-  let s:has_dark = 1
-endf
-
-fun! s:set_has_light()
-  let s:has_light = 1
-endf
-
 fun! s:has_normal_group(bg)
   return s:has_normal[a:bg]
-endf
-
-fun! s:supports_neovim()
-  return s:supports_neovim
-endf
-
-fun! s:set_supports_neovim()
-  let s:supports_neovim = 1
 endf
 
 fun! s:variants()
@@ -602,10 +596,6 @@ endf
 
 fun! s:set_default_variants()
   let s:variants = [s:GUI, '256']
-endf
-
-fun! s:uses_italics()
-  return s:uses_italics
 endf
 
 fun! s:set_variants(defs)
@@ -691,13 +681,13 @@ fun! s:add_highlight_group(hg)
     let s:has_normal[s:current_bg()] = 1
   endif
   if s:has_term_italic(a:hg)
-    let s:uses_italics = 1
+    call s:set_uses_italics()
     for l:d in s:supported_t_Co()
       call add(s:italics[l:d][s:current_bg()], ['it', s:hi_name(a:hg)])
     endfor
   endif
   if s:has_gui_italic(a:hg)
-    let s:uses_italics = 1
+    call s:set_uses_italics()
     call add(s:italics[s:GUI][s:current_bg()], ['it', s:hi_name(a:hg)])
   endif
 endf

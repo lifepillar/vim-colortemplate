@@ -74,5 +74,8 @@ fun! RunBabyRun(...)
 
   let s:time_passed = reltimefloat(reltime(l:start_time))
 
+  " Clear window-toolbar
+  nunmenu WinBar
+
   call FinishTesting()
 endf

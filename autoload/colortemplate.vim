@@ -1904,7 +1904,9 @@ endf
 fun! colortemplate#view_source() abort
   let l:path = s:colorscheme_path()
   if empty(l:path) | return 0 | endif
-  execute "split" l:path
+  execute "keepalt split" l:path
+  redraw
+  echo "\r"
   return 1
 endf
 

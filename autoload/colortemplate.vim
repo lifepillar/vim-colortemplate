@@ -905,13 +905,15 @@ endf
 fun! s:interpolate(line, linenr, file)
   let l:t_Co = s:min_t_Co()
   try
-    let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1))',                          'g')
-    let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1))',                         'g')
-    let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),'.l:t_Co.')',             'g')
-    let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1))',                         'g')
-    let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')', 'g')
-    let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2))',             'g')
-    let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                       'g')
+    let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1))',                            'g')
+    let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1))',                           'g')
+    let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),'.l:t_Co.')',               'g')
+    let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1))',                           'g')
+    let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')',   'g')
+    let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2))',               'g')
+    let l:line = substitute(l:line, '@date',                          '\=strftime("%Y %b %d")',                            'g')
+    let l:line = substitute(l:line, '@vimversion',                    '\=string(v:version/100).".".string(v:version%100)', 'g')
+    let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                         'g')
   catch /.*/
     call s:add_error(a:file, a:linenr, 1, 'Undefined @ value')
   endtry

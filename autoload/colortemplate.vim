@@ -1887,12 +1887,16 @@ fun! colortemplate#stats()
 endf
 
 fun! s:colorscheme_path()
-  let l:name = s:shortname()
-  if empty(l:name)
+  let l:bufname = fnamemodify(bufname('%'), '%:p:t')
+  if l:bufname =~ '\m^[^_].*\.colortemplate$'
     let l:match = matchlist(getbufline('%', 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)')
     if !empty(l:match)
       let l:name = l:match[1]
+    else
+      let l:name = fnamemodify(l:bufname, '%:r')
     endif
+  else
+    let l:name = s:shortname()
   endif
   let l:path = colortemplate#wd() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
   if empty(l:name) || !filereadable(l:path)

@@ -1762,7 +1762,9 @@ fun! s:view_colorscheme(colors_name)
   catch /.*/
     call s:print_error_msg(v:exception, 0)
   endtry
-  call add(s:enabled_colors, a:colors_name)
+  if index(s:enabled_colors, a:colors_name) < 0
+    call add(s:enabled_colors, a:colors_name)
+  endif
 endf
 
 fun! s:restore_colorscheme()

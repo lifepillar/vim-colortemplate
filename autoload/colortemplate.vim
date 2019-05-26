@@ -1750,22 +1750,24 @@ fun! s:generate_colorscheme(outdir, overwrite)
 endf
 " }}}
 " Colorscheme switching {{{
+let s:enabled_colors = []
 let s:prev_colors = get(g:, 'colors_name', 'default')
-let s:curr_colors = ''
 
 fun! s:view_colorscheme(colors_name)
-  if a:colors_name ==# get(g:, 'colors_name', 'default')
-    return
+  let l:current_colors = get(g:, 'colors_name', 'default')
+  if index(s:enabled_colors, l:current_colors) < 0
+    let s:prev_colors = l:current_colors
   endif
-  let s:prev_colors = get(g:, 'colors_name', 'default')
   try
     execute 'colorscheme' a:colors_name
   catch /.*/
     call s:print_error_msg(v:exception, 0)
   endtry
+  call add(s:enabled_colors, a:colors_name)
 endf
 
 fun! s:restore_colorscheme()
+  let s:enabled_colors = []
   execute 'colorscheme' s:prev_colors
 endf
 " }}}
@@ -1999,3 +2001,4 @@ endf
 call s:init_data_structures()
 " TODO {{{
 " - Support start, stop and font in highlight group definitions
+" }}}

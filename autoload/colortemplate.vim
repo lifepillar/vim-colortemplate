@@ -906,7 +906,7 @@ fun! s:interpolate(line)
   let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1))',                         'g')
   let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),'.l:t_Co.')',             'g')
   let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1))',                         'g')
-  let l:line = substitute(l:line, '\(term[bf]g=\)@\(\w\+\)',        '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')', 'g')
+  let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')', 'g')
   let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2))',             'g')
   let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                       'g')
   return l:line

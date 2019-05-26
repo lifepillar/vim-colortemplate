@@ -1876,7 +1876,7 @@ fun! colortemplate#build_dir(override)
   update
   call setqflist([], 'r') " Reset quickfix list
   let l:wd = colortemplate#wd()
-  let l:dirs = join([l:wd, l:wd.'/colortemplate',l:wd.'/template',l:wd.'/templates'], ',')
+  let l:dirs = join([l:wd, l:wd.s:slash().'colortemplate',l:wd.s:slash().'template',l:wd.s:slash().'templates'], ',')
   for l:template in globpath(l:dirs, '[^_]*.colortemplate', 1, 1)
     execute "edit" l:template
     call colortemplate#make(colortemplate#wd(), a:override, 0)

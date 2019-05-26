@@ -3,16 +3,18 @@ CONTENTS					*ft-colortemplate*
 
     1. Introduction ......... |colortemplate-intro|
     2. Getting started ...... |colortemplate-getting-started|
-    3. Metadata block ....... |colortemplate-meta|
-    4. Backgrounds .......... |colortemplate-background|
-    5. Color definitions .... |colortemplate-colors|
+    3. Templates' structure . |colortemplate-structure|
+    4. Metadata block ....... |colortemplate-meta|
+    5. Backgrounds .......... |colortemplate-background|
+    6. Variants ............. |colortemplate-variants|
+    4. Color definitions .... |colortemplate-colors|
     6. Predefined palettes .. |colortemplate-palettes|
     7. Highlight groups ..... |colortemplate-hi-groups|
     8. Verbatim blocks ...... |colortemplate-verbatim|
     9. Documentation blocks . |colortemplate-doc-blocks|
    10. Auxiliary files ...... |colortemplate-auxfiles|
    11. Include directive .... |colortemplate-include|
-   12. Colors statistics..... |colortemplate-stat|
+   12. Colors statistics..... |colortemplate-stats|
    13. Options .............. |colortemplate-options|
    14. Commands ............. |colortemplate-commands|
    15. Functions ............ |colortemplate-functions|
@@ -27,7 +29,7 @@ without much effort. It can also be used to create colorschemes suitable for
 distribution with Vim. Colorschemes created using a colortemplate have the
 following features:
 
-- they support 256-color terminals, true color terminals and GUI Vim;
+- they support (at least) 256-color terminals, true color terminals and gVim;
 - they have a consistent structure, they are guaranteed to follow best
   practices and they load quickly;
 - they can be easily customised by the user;
@@ -41,21 +43,32 @@ located in colortemplate's plugin folder, and type:
 >
   :Colortemplate ~/.vim
 <
-By default, this command opens two new tabs. The first tab has one window for
-each generated file (in this example, there will be two windows: one for the
-colorscheme and one for the colorscheme's help file). All the files in the
-first tab are saved into the specified directory (`~/.vim`) (the directory and
-its subdirectories are created by |:Colortemplate| if they do not exist; files
-are not overridden by default). The second tab has one scratch buffer with
-some useful statistics about your colorscheme (see |colortemplate-stat|). If
-you want to suppress this buffer, see |colortemplate-options|. 
+If you use Vim 8.0.1123 or later, you may also execute commands by clicking on
+a window toolbar. Click on `Dir` and set the working directory to `~/.vim`,
+then click on `Build!` to create the colorscheme.
 
-After generating the colorscheme with the command above, you may load it with:
+If there are errors in your template, they are shown in the quickfix window.
+If the template builds successfully, you should see a `Success!` message in
+the command line.
+
+To view the colorscheme, you may use |:colorscheme| or click on `Show` in the
+toolbar (the dark template uses only black and white, so it does not stand out
+as a catchy colorscheme). If you click on `Show` you may switch to the
+original colorscheme with `Hide`. 
+
+You may validate your colorscheme against
+`$VIMRUNTIME/colors/tools/check_colors.vim` with |:ColortemplateValidate| or
+by clicking on `Validate` in the toolbar. If there are no issues, you will
+see this message:
 >
-  :colorscheme dark
+	---------------
+	    colors_name: OK
+	---------------
 <
-(The dark template uses only black and white, so it does not stand out as
-a catchy colorscheme.)
+You may see compute some statistics about the colors used by your theme with
+|:ColortemplateStats| or by clicking on `Stats` in the toolbar. For more
+details, see |colortemplate-stats|. By clicking on `Source` you may open
+a split buffer with the generated colorscheme.
 
 You may use `dark.colortemplate`, `light.colortemplate` or
 `dark_and_light.colortemplate` as starting points for creating your own
@@ -64,18 +77,61 @@ colorscheme. The process is divided in five steps:
 1. start by editing your colorscheme's information;
 2. define a color palette;
 3. define the necessary highlight groups;
-4. document your colorscheme's options;
-5. generate your colorscheme with `:Colortemplate`.
+4. document your colorscheme's options, if any;
+5. generate your colorscheme.
 
 If you want to start from scratch instead of using one of the predefined
 templates (not recommended), set the modeline to
 >
   # vim: ft=colortemplate
-<
-and save your buffer before executing |:Colortemplate|.
 
 ==============================================================================
-Metadata block						*colortemplate-meta*
+Templates' structure				*colortemplate-structure*
+
+A template consists of:
+
+1. metadata;
+2. `Color` definitions;
+3. `Background` and `Variant` directives;
+4. `Include` statements;
+5. `verbatim`/`auxfile`/`documentation` blocks.
+
+Each template has one global section and one or more local sections. The
+global section goes from the beginning of the file until the first
+`Background` or `Variant` directive is encountered. A local section starts
+from a `Background` or `Variant` directive and lasts until the next
+`Background` or `Variant` directive. Each local section contains the highlight
+group definitions and `verbatim` blocks that apply to the current backgrounds
+and variants. A local section may also contain `Color` definitions that apply
+to the current backgrounds. For instance, if a template contains these two
+lines:
+>
+	Variant: gui 256
+        Background: dark
+<
+anything that follows until the next `Variant` or `Background` directive or
+until the end of the file will be applied to the dark version of GUI and
+256-color variants of your colorscheme. `Variant` and `Background` may appear
+several times in the same template. Combining them gives you great
+flexibility, e.g.:
+>
+	Variant: gui
+	Background: any
+	  # Definitions for both backgrounds, apply only to GUI
+	Background: dark
+	  # Definitions for dark background, apply only to GUI
+	Variant: gui 256 16
+	  # Definitions for dark background, apply to GUI, 256 colors
+          # and 16 colors variants
+	Background: any
+	  # Definitions for both backgrounds, apply to GUI, 256 colors
+          # and 16 colors variants
+<
+(Lines starting with `#` are interpreted as comments. Comments are ignored by
+Colortemplate and are not included in the generated colorscheme.)
+
+==============================================================================
+Metadata block					*colortemplate-meta*
 
 Information about a colorscheme consists of the following mandatory and
 optional fields:
@@ -90,39 +146,44 @@ optional fields:
   Website:         http://mysite.org
   Description:     A one line description
   License:         Public domain
-  Terminal Colors: 256
   Option Prefix:   use_shortname_by_default
+  Neovim: no
 <
-All the fields should be self-descriptive, The `Terminal Colors` field is
-discussed further below. When the option prefix is not defined, Colortemplate
-sets it equal to the short name.
-
-Lines starting with `#` are interpreted as comments. Comments are ignored by
-Colortemplate and are not included in the generated colorscheme.
+All the fields should be self-descriptive. When the option prefix is not
+defined, Colortemplate sets it equal to the short name. When `Neovim` is set
+to `yes` or `1` then additional code will be generated to support NeoVim.
 
 ==============================================================================
 Colorscheme background				*colortemplate-background*
 
-You must specify whether a template's highlight group definitions apply to
-a dark or to a light background. You do so with a `Background` directive,
-e.g.:
+You must specify whether color definitions and highlight group definitions
+apply to a dark background, to a light background or to any background. You do
+so with a `Background` directive, which may have one of three values:
 >
   Background: dark
+  Background: light
+  Background: any
 <
-This must appear before the first highlight group is defined. All the
-highlight groups defined after a `Background` directive until the end of the
-file or until another `Background` directive are assumed to refer to the
-specified background. The only allowed values are `dark` and `light` (all
-lowercase).
+All definitions appearing after a `Background` directive until the end of the
+file or another `Background` directive apply to the specified background(s).
 
-If there is only one `Background` directive in the template, the generated
+If the first `Background` directive is not preceded by a `Variant` directive
+(i.e., such `Background` directive ends the global section) then such
+`Background` directive implies:
+>
+	Variant: gui 256
+<
+(See |colortemplate-variants|.) This rule exists mainly for backward
+compatibility: it is recommended to always select variants explicitly.
+
+If only one background is mentioned in the template, the generated
 colorscheme will have a command to set the background accordingly, e.g.:
 >
   set background=dark
 <
-If there are two directives, one for dark and one for light background, the
-generated colorscheme will adapt to the current background, e.g., the
-generated code will be equivalent to:
+If the template uses both backgrounds then the generated colorscheme will
+adapt to the current background, e.g., the generated code will be equivalent
+to:
 >
   if &background ==# 'dark'
     " Dark variant of the colorscheme
@@ -130,6 +191,52 @@ generated code will be equivalent to:
     " Light variant of the colorscheme
   endif
 <
+==============================================================================
+Variants					*colortemplate-variants*
+
+A `Variant` directive declares to which environments the subsequent
+definitions apply. All definitions appearing after a `Variant` directive until
+the end of the file or another `Variant` directive apply to the specified
+variant(s).
+
+The permitted values are `gui` (for GUI versions of Vim or Vim with
+|termguicolors| set) or a number between `1` and `256` specifying the minimum
+|t_Co| required for the following definitions. Multiple values, separated by
+spaces, are allowed.
+
+For example, the following snippet:
+>
+	Color: white #ffffff ~ White
+	Color: black #000000 ~ Black
+	Color: ivory #fafafa ~ LightGray
+	Color: dust  #343436 ~ Brown
+
+	Variant: gui
+	Normal ivory dust
+	Variant: 256 8
+	Normal white black
+<
+will be translated into something similar to this:
+>
+	if (has('termguicolors') && &termguicolors) || has('gui_running')
+	  hi Normal guifg=#fafafa guibg=#343436 guisp=NONE gui=NONE cterm=NONE
+	  finish
+	endif
+	
+	if &t_Co >= 256
+	  hi Normal ctermfg=231 ctermbg=16 cterm=NONE
+	  finish
+	endif
+	
+	if &t_Co >= 8
+	  hi Normal ctermfg=White ctermbg=Black cterm=NONE
+	  finish
+	endif
+
+Text before the first `Variant` directive, but after a `Background` directive
+(i.e., definitions that are not in the global section), applies by default to
+`gui` and `256` color variants.
+
 ==============================================================================
 Color definitions				*colortemplate-colors*
 
@@ -139,56 +246,49 @@ Color definitions consist of lines with the following syntax:
 
 For example:
 >
-  Color: white  #ffffff  206  White
+  Color: red  #e64547  167  DarkRed
 <
 The color name is an arbitrary string (only letters, numbers and underscore
 allowed). Color definitions that appear before a `Background` directive are
 assumed to apply to any background. Color definitions given after
-a `Background` directive apply only to the specified background.
+a `Background` directive apply only to the specified background. So, you may
+have two different colors with the same name for light and dark background.
+You may not have different colors with the same name for different variants,
+though: as far as color definitions are concerned, `Variant` directives are
+ignored.
 
-GUI color specifications may be given as hexadecimal values, as in the example
-above, or as RGB values. Standard color names from `$VIMRUNTIME/rgb.txt` may
-be used, too, although their use is discouraged:
+After the color name comes the GUI color specification, which may be given as
+a hexadecimal value, as in the example above, or as an RGB value. Standard
+color names from `$VIMRUNTIME/rgb.txt` may be used as well, although their use
+is discouraged, e.g.:
 >
   Color: white  rgb(255,255,255)  206  White
   Color: gold   dark goldenrod    136  Brown
 <
 Base-256 or base-16 specifications are used in terminals that do not support
-true colors, or when |termguicolors| is not set. Whether your colorscheme
-supports a base-256 color palette, a base-16 color palette, or both, is
-determined by the value of the `Terminal` `Colors` field. The possible values
-of `Terminal` `Colors` are:
-
-- `256`: the colorscheme falls back to an xterm's 256 color palette when true
-  colors are not available or |termguicolors| is not set. An error will be
-  raised if the environment does not support at least 256 colors.
-- `16`: the colorscheme falls back to a 16 color palette (see |cterm-colors|)
-  when true colors are not available or |termguicolors| is not set. This
-  typically requires tweaking with terminal settings to choose a consistent
-  palette, so this value is not recommended.
-- `256,16`: the colorscheme falls back to a 256 color palette, or to a 16
-  color palette if |t_Co| is less that 256, when true colors are not available
-  or |termguicolors| is not set. The user may force the use of a 16 color
-  palette by setting `g:<option prefix>_use16` to `1`. Similarly, the user may
-  force the use a 256 color palette by setting `g:<option prefix>_use16` to
-  `0`. In the latter case, an error will be raised if the environment does not
-  support at least 256 colors.
-- `16,256`: the colorscheme falls back to a 16 color palette by default, but
-  the user may force the use of a 256 color palette by setting
-  `g:<option prefix>_use16` to `0`. This value is not recommended.
+true colors, or when |termguicolors| is not set. For variants with at least 16
+colors, the base-256 values are used, while variants with less than 16 colors
+will use base-16 values. The color numbers must not exceeed the limits imposed
+by the current variants. For example, if you declare:
+>
+	Variant: 256 88
+<
+then you may use only base-256 colors between `0` and `88`. On the other hand,
+if you declare:
+>
+	Variant: 256 8 4
+<
+you will be able to use all base-256 colors, but only the first four base-16
+colors.
 
 In general, only the GUI value of a color specification is necessary. Base-256
 values may be replaced by a `~` symbol, which means that the color should be
 inferred automatically from the GUI value. Base-16 values may be omitted
-entirely, unless you plan to support the use of a 16 color palette. So,
-a minimal color definition might look as follows:
+entirely, although that is not recommended. So, a minimal color definition
+might look as follows:
 >
   Color: black #000000 ~
 <
-It is recommended that you let Colortemplate compute the best color
-approximations, and override the automatically generated values only if
-necessary.
-
 ==============================================================================
 Predefined palettes				*colortemplate-palettes*
 
@@ -372,7 +472,7 @@ NOTE: beware of cyclic inclusions, which will cause Colortemplate to run into
 an infinite loop!
 
 ==============================================================================
-Colors statistics					*colortemplate-stat*
+Colors statistics					*colortemplate-stats*
 
 When a template is compiled into a colorscheme, Colortemplate computes some
 useful statistics to help you assess the quality of your colorscheme. Such

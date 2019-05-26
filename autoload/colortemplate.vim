@@ -1904,6 +1904,8 @@ fun! colortemplate#stats()
     return
   endtry
   call s:print_color_info()
+  redraw
+  echo "\r"
 endf
 
 fun! s:colorscheme_path()

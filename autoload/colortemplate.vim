@@ -144,12 +144,12 @@ endf
 " }}}
 " Errors and warnings {{{
 fun! s:add_error(path, line, col, msg)
-  call setloclist(0, [{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
+  call setqflist([{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'E'}], 'a')
 endf
 
 fun! s:add_warning(path, line, col, msg)
   if !get(g:, 'colortemplate_no_warnings', 0)
-    call setloclist(0, [{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'W'}], 'a')
+    call setqflist([{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'W'}], 'a')
   endif
 endf
 
@@ -1461,7 +1461,6 @@ endf
 " Initialize state {{{
 fun! s:init(work_dir)
   let g:colortemplate_exit_status = 0
-  call setloclist(0, [], 'r') " Reset location list
   call s:setwd(a:work_dir)
   call s:init_data_structures()
   call s:init_parser()
@@ -1820,13 +1819,13 @@ fun! colortemplate#parse(filename) abort
 
   call s:assert_requirements()
 
-  if !empty(getloclist(0))
-    lopen
-    if !empty(filter(getloclist(0), { i,v -> v['type'] !=# 'W' }))
+  if !empty(getqflist())
+    copen
+    if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
       throw 'Parse error'
     endif
   else
-    lclose
+    cclose
   endif
 endf
 

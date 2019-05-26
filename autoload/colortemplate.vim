@@ -1986,8 +1986,11 @@ fun! colortemplate#getinfo(n)
 endf
 
 fun! colortemplate#approx_color(n)
-  let l:name = s:parse_color_line()
+  let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return '~' | endif
+  " Position the cursor on ~
+  call cursor('.', 1 + match(getline('.'), '\~'))
+  execute "normal r\<space>"
   let l:hexc = s:guicol(l:name)
   return colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]
 endf

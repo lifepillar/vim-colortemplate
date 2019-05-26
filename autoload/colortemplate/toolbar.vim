@@ -1,8 +1,8 @@
 fun! colortemplate#toolbar#show()
   if getbufvar('%', '&ft') ==# 'colortemplate' && expand('%:t') !~# '\m^_'
     nunmenu WinBar
-    nnoremenu <silent> 1.10 WinBar.Build :update<cr>:Colortemplate<cr>
-    nnoremenu <silent> 1.20 WinBar.Build! :update<cr>:Colortemplate!<cr>
+    nnoremenu <silent> 1.10 WinBar.Build :update<cr>:call colortemplate#build_dir('')<cr>
+    nnoremenu <silent> 1.20 WinBar.Build! :update<cr>:call colortemplate#build_dir('!')<cr>
     nnoremenu <silent> 1.30 WinBar.Enable :call colortemplate#enable_colorscheme()<cr>
     nnoremenu <silent> 1.40 WinBar.Disable :call colortemplate#disable_colorscheme()<cr>
     nnoremenu <silent> 1.50 WinBar.Validate :call colortemplate#validate()<cr>

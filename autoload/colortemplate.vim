@@ -1831,6 +1831,7 @@ endf
 
 " a:1 is the optional path to an output directory
 " a:2 is ! when files should be overridden
+" a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
   let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#wd())
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
@@ -1849,6 +1850,10 @@ fun! colortemplate#make(...)
   if !empty(getbufvar('%', '&buftype')) || empty(expand('%:p'))
     call s:print_error_msg("No filename. Please save your document first.", 0)
     return
+  endif
+
+  if get(a:000, 2, 1)
+    call setqflist([], 'r') " Reset quickfix list
   endif
 
   try
@@ -1871,9 +1876,20 @@ fun! colortemplate#make(...)
   endtry
 endf
 
+fun! colortemplate#build_dir(override)
+  call setqflist([], 'r') " Reset quickfix list
+  let l:wd = colortemplate#wd()
+  let l:dirs = join([l:wd, l:wd.'/colortemplate',l:wd.'/template',l:wd.'/templates'], ',')
+  for l:template in globpath(l:dirs, '[^_]*.colortemplate', 1, 1)
+    execute "edit" l:template
+    call colortemplate#make(colortemplate#wd(), a:override, 0)
+  endfor
+endf
+
 fun! colortemplate#stats()
   " redraw!
   try
+    call setqflist([], 'r') " Reset quickfix list
     call colortemplate#parse(expand('%:p'))
   catch /Parse error/
     let g:colortemplate_exit_status = 1

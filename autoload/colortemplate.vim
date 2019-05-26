@@ -1313,12 +1313,12 @@ fun! s:parse_base_256_value()
     return -1
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
-    if l:val < 16
-      throw 'Base-256 color value must be >=16'
-    endif
+    " if l:val < 16
+    "   throw 'Base-256 color value must be >=16'
+    " endif
     let l:t_Co = str2nr(s:min_t_Co())
     if l:t_Co > 16 && l:val + 1 > l:t_Co
-      throw 'Color value is out of range [16,'.string(l:t_Co - 1).']'
+      throw 'Color value is out of range [0,'.string(l:t_Co - 1).']'
     endif
     return l:val
   endif

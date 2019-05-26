@@ -4,8 +4,9 @@ Short name:x
 Author:y
 Maintainer:w
 Background:dark
-# Base-256 colors are out of range:
+# Colors in the range 0-15 are ok in the third argument:
 Color:black rgb(0,0,0) 15 Black
+# Color number is out of range:
 Color:white #ffffff 256 White
 Normal white black
 

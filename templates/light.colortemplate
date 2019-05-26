@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker ts=8
+# vim: ft=colortemplate fdm=marker cc=22,40,58
 
 # Information {{{
 # Mandatory
@@ -10,6 +10,7 @@ Maintainer:  Myself <myself@somewhere.org>
 # Optional
 Website:
 Description: Template for a light colorscheme
+# Prefix for options: short name is used if this key is not present:
 Option Prefix: light
 # }}}
 
@@ -20,34 +21,41 @@ Include: _help.colortemplate
 Background: light
 
 # Color palette {{{
-# Color name                GUI                  Base256    Base16 (optional)
-Color: black                rgb(  0,   0,   0)     ~        Black
-Color: red                  rgb(255,   0,   0)     ~        DarkRed
-Color: green                rgb(  0, 255,   0)     ~        DarkGreen
-Color: yellow               rgb(255, 255,   0)     ~        DarkYellow
-Color: blue                 rgb(  0,   0, 255)     ~        DarkBlue
-Color: magenta              rgb(255,   0, 255)     ~        DarkMagenta
-Color: cyan                 rgb(  0, 255, 255)     ~        DarkCyan
-Color: white                rgb(235, 235, 235)     ~        LightGrey
-Color: brightblack          rgb(210, 210, 210)     ~        DarkGrey
-Color: brightred            rgb(255, 100,   0)     ~        LightRed
-Color: brightgreen          rgb(100, 255,   0)     ~        LightGreen
-Color: brightyellow         rgb(255, 255, 100)     ~        LightYellow
-Color: brightblue           rgb(  0, 100, 255)     ~        LightBlue
-Color: brightmagenta        rgb(255, 100, 255)     ~        LightMagenta
-Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
+# Color name         GUI                     Base256     Base16 (optional)
+Color: black         rgb(  0,   0,   0)        ~         Black
+Color: red           rgb(255,   0,   0)        ~         DarkRed
+Color: green         rgb(  0, 255,   0)        ~         DarkGreen
+Color: yellow        rgb(255, 255,   0)        ~         DarkYellow
+Color: blue          rgb(  0,   0, 255)        ~         DarkBlue
+Color: magenta       rgb(255,   0, 255)        ~         DarkMagenta
+Color: cyan          rgb(  0, 255, 255)        ~         DarkCyan
+Color: white         rgb(235, 235, 235)        ~         LightGrey
+Color: brightblack   rgb(210, 210, 210)        ~         DarkGrey
+Color: brightred     rgb(255, 100,   0)        ~         LightRed
+Color: brightgreen   rgb(100, 255,   0)        ~         LightGreen
+Color: brightyellow  rgb(255, 255, 100)        ~         LightYellow
+Color: brightblue    rgb(  0, 100, 255)        ~         LightBlue
+Color: brightmagenta rgb(255, 100, 255)        ~         LightMagenta
+Color: brightcyan    rgb(100, 255, 255)        ~         LightCyan
 # You may use hexadecimal values, too, and you may provide an explicit base-256 color:
-Color: brightwhite          #ffffff                231      White
+Color: brightwhite   #ffffff                  231        White
+# }}}
+# Terminal colors {{{
+Term colors: black red green yellow blue magenta cyan white
+Term colors: brightblack brightred brightgreen brightyellow
+Term colors: brightblue brightmagenta brightcyan brightwhite
 # }}}
 
-# Default highlight groups {{{
+# Check for transparent background in terminal variants
+Variant: 256 8
+
 verbatim
-if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+if get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
     # Transparent background
     Normal           black             none
     # See `:help terminal-size-color`
-    Terminal         black             white
+    Terminal         black             none
 verbatim
 else
 endverbatim
@@ -58,6 +66,16 @@ verbatim
 endif
 endverbatim
 
+# GUI only
+Variant: gui
+
+    Normal           black             white
+    Terminal         black             white
+
+# Common definitions
+Variant: gui 256 8
+
+# Default highlight groups {{{
 # Group              Foreground        Background        Attributes
 ColorColumn          fg                white
 Conceal              none              none
@@ -109,7 +127,7 @@ WildMenu             black             white
 # Other conventional group names (see `:help group-name`)
 Boolean           -> Constant
 Character         -> Constant
-Comment              black             none
+Comment              black             none              italic
 Conditional       -> Statement
 Constant             black             none
 Define            -> PreProc
@@ -155,25 +173,3 @@ ToolbarButton        black             white             bold
 # Add additional highlight groups here if you want
 # }}}
 
-# Terminal colors {{{
-verbatim
-let g:terminal_ansi_colors = [
-    \ '@guiblack',
-    \ '@guired',
-    \ '@guigreen',
-    \ '@guiyellow',
-    \ '@guiblue',
-    \ '@guimagenta',
-    \ '@guicyan',
-    \ '@guiwhite',
-    \ '@guibrightblack',
-    \ '@guibrightred',
-    \ '@guibrightgreen',
-    \ '@guibrightyellow',
-    \ '@guibrightblue',
-    \ '@guibrightmagenta',
-    \ '@guibrightcyan',
-    \ '@guibrightwhite'
-\ ]
-endverbatim
-# }}}

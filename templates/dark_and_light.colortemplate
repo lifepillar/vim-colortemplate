@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker ts=8
+# vim: ft=colortemplate fdm=marker cc=22,40,58
 
 # Information {{{
 # Mandatory
@@ -10,12 +10,43 @@ Maintainer:  Myself <myself@somewhere.org>
 Website:
 Description: Template for a colorscheme with dark and light variants
 License:
-Terminal Colors: 256
 Option Prefix: dark_and_light
 # }}}
 
 # Documentation {{{
 Include: _help.colortemplate
+# }}}
+
+# Global definitions - put at the top of the colorscheme {{{
+QuickFixLine         ->  Search
+StatusLineTerm       -> StatusLine
+StatusLineTermNC     -> StatusLineNC
+Boolean              -> Constant
+Character            -> Constant
+Conditional          -> Statement
+Define               -> PreProc
+Debug                -> Special
+Delimiter            -> Special
+Exception            -> Statement
+Float                -> Constant
+Function             -> Identifier
+Include              -> PreProc
+Keyword              -> Statement
+Label                -> Statement
+Macro                -> PreProc
+Number               -> Constant
+Operator             -> Statement
+PreCondit            -> PreProc
+Repeat               -> Statement
+SpecialChar          -> Special
+SpecialComment       -> Special
+StorageClass         -> Type
+String               -> Constant
+Structure            -> Type
+Tag                  -> Special
+Typedef              -> Type
+# See `:help lCursor`
+lCursor              -> Cursor
 # }}}
 
 Background: dark
@@ -41,9 +72,17 @@ Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
 Color: brightwhite          #ffffff                231      White
 # }}}
 
-# Default highlight groups {{{
+# Terminal colors for dark variant {{{
+Term colors: black red green yellow blue magenta cyan white
+Term colors: brightblack brightred brightgreen brightyellow
+Term colors: brightblue brightmagenta brightcyan brightwhite
+# }}}
+
+# Check for transparent background in terminal variants {{{
+Variant: 256 8
+
 verbatim
-if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+if get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
     # Transparent background
     Normal           white             none
@@ -58,7 +97,16 @@ endverbatim
 verbatim
 endif
 endverbatim
+# }}}
 
+# Normal and Terminal for GUI only {{{
+Variant: gui
+    Normal           white             black
+    Terminal         white             black
+# }}}
+
+# Definitions common to all variants {{{
+Variant: gui 256 8
 # Group              Foreground        Background        Attributes
 ColorColumn          fg                black
 Conceal              none              none
@@ -86,7 +134,6 @@ PmenuSbar            white             black
 PmenuSel             white             black
 PmenuThumb           white             black
 Question             white             black
-QuickFixLine     ->  Search
 Search               white             black
 SignColumn           white             black
 SpecialKey           white             black
@@ -96,8 +143,6 @@ SpellLocal           white             black             s=magenta
 SpellRare            white             black             s=cyan reverse
 StatusLine           white             black
 StatusLineNC         white             black
-StatusLineTerm    -> StatusLine
-StatusLineTermNC  -> StatusLineNC
 TabLine              white             black
 TabLineFill          white             black
 TabLineSel           white             black
@@ -108,43 +153,17 @@ VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
 # Other conventional group names (see `:help group-name`)
-Boolean           -> Constant
-Character         -> Constant
-Comment              white             none
-Conditional       -> Statement
+Comment              white             none              italic
 Constant             white             none
-Define            -> PreProc
-Debug             -> Special
-Delimiter         -> Special
 Error                white             black             reverse
-Exception         -> Statement
-Float             -> Constant
-Function          -> Identifier
 Identifier           white             none
 Ignore               white             none
-Include           -> PreProc
-Keyword           -> Statement
-Label             -> Statement
-Macro             -> PreProc
-Number            -> Constant
-Operator          -> Statement
-PreCondit         -> PreProc
 PreProc              white             none
-Repeat            -> Statement
 Special              white             none
-SpecialChar       -> Special
-SpecialComment    -> Special
 Statement            white             none
-StorageClass      -> Type
-String            -> Constant
-Structure         -> Type
-Tag               -> Special
 Todo                 white             none
 Type                 white             none
-Typedef           -> Type
 Underlined           white             none
-# See `:help lCursor`
-lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
 # See `:help window-toolbar`
@@ -156,33 +175,9 @@ ToolbarButton        white             black             bold
 # Add additional highlight groups here if you want
 # }}}
 
-# Terminal colors {{{
-verbatim
-let g:terminal_ansi_colors = [
-    \ '@guiblack',
-    \ '@guired',
-    \ '@guigreen',
-    \ '@guiyellow',
-    \ '@guiblue',
-    \ '@guimagenta',
-    \ '@guicyan',
-    \ '@guiwhite',
-    \ '@guibrightblack',
-    \ '@guibrightred',
-    \ '@guibrightgreen',
-    \ '@guibrightyellow',
-    \ '@guibrightblue',
-    \ '@guibrightmagenta',
-    \ '@guibrightcyan',
-    \ '@guibrightwhite'
-\ ]
-endverbatim
-# }}}
-
 Background: light
 
 # Color palette for light variant {{{
-# Comment out (do not delete) the definitions that you want to keep at their default.
 # Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb(  0,   0,   0)     ~        Black
 Color: red                  rgb(255,   0,   0)     ~        DarkRed
@@ -203,9 +198,16 @@ Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
 Color: brightwhite          #ffffff                231      White
 # }}}
 
-# Default highlight groups {{{
+# Terminal colors for light variant {{{
+Term colors: black red green yellow blue magenta cyan white
+Term colors: brightblack brightred brightgreen brightyellow
+Term colors: brightblue brightmagenta brightcyan brightwhite
+# }}}
+
+# Check for transparent background in terminal variants {{{
+Variant: 256 8
 verbatim
-if !has('gui_running') && get(g:, '@optionprefix_transp_bg', 0)
+if get(g:, '@optionprefix_transp_bg', 0)
 endverbatim
     # Transparent background
     Normal           black             none
@@ -220,7 +222,16 @@ endverbatim
 verbatim
 endif
 endverbatim
+# }}}
 
+# Normal and Terminal for GUI only {{{
+Variant: gui
+    Normal           white             black
+    Terminal         white             black
+# }}}
+
+# Definitions common to all variants {{{
+Variant: gui 256 8
 # Group              Foreground        Background        Attributes
 ColorColumn          fg                black
 Conceal              none              none
@@ -248,7 +259,6 @@ PmenuSbar            black             white
 PmenuSel             black             white
 PmenuThumb           black             white
 Question             black             white
-QuickFixLine     ->  Search
 Search               black             white
 SignColumn           black             white
 SpecialKey           black             white
@@ -258,8 +268,6 @@ SpellLocal           black             white             s=magenta
 SpellRare            black             white             s=cyan reverse
 StatusLine           black             white
 StatusLineNC         black             white
-StatusLineTerm    -> StatusLine
-StatusLineTermNC  -> StatusLineNC
 TabLine              black             white
 TabLineFill          black             white
 TabLineSel           black             white
@@ -270,43 +278,17 @@ VisualNOS            black             white
 WarningMsg           black             white
 WildMenu             black             white
 # Other conventional group names (see `:help group-name`)
-Boolean           -> Constant
-Character         -> Constant
-Comment              black             none
-Conditional       -> Statement
+Comment              black             none              italic
 Constant             black             none
-Define            -> PreProc
-Debug             -> Special
-Delimiter         -> Special
 Error                black             white             reverse
-Exception         -> Statement
-Float             -> Constant
-Function          -> Identifier
 Identifier           black             none
 Ignore               black             none
-Include           -> PreProc
-Keyword           -> Statement
-Label             -> Statement
-Macro             -> PreProc
-Number            -> Constant
-Operator          -> Statement
-PreCondit         -> PreProc
 PreProc              black             none
-Repeat            -> Statement
 Special              black             none
-SpecialChar       -> Special
-SpecialComment    -> Special
 Statement            black             none
-StorageClass      -> Type
-String            -> Constant
-Structure         -> Type
-Tag               -> Special
 Todo                 black             none
 Type                 black             none
-Typedef           -> Type
 Underlined           black             none
-# See `:help lCursor`
-lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
 # See `:help window-toolbar`
@@ -318,25 +300,3 @@ ToolbarButton        black             white             bold
 # Add additional highlight groups here if you want
 # }}}
 
-# Terminal colors {{{
-verbatim
-let g:terminal_ansi_colors = [
-    \ '@guiblack',
-    \ '@guired',
-    \ '@guigreen',
-    \ '@guiyellow',
-    \ '@guiblue',
-    \ '@guimagenta',
-    \ '@guicyan',
-    \ '@guiwhite',
-    \ '@guibrightblack',
-    \ '@guibrightred',
-    \ '@guibrightgreen',
-    \ '@guibrightyellow',
-    \ '@guibrightblue',
-    \ '@guibrightmagenta',
-    \ '@guibrightcyan',
-    \ '@guibrightwhite'
-\ ]
-endverbatim
-# }}}

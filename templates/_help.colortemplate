@@ -1,10 +1,18 @@
 # vim: ft=colortemplate fdm=marker noet ts=8 tw=78
 
 documentation
-==============================================================================
-@fullname colorscheme					*@shortname*
+*@shortname.txt*	For Vim version @vimversion	Last change: @date
 
-DOCUMENT YOUR COLORSCHEME'S OPTIONS HERE, IF ANY, AND REMOVE THIS LINE.
+
+		  VIM REFERENCE MANUAL    by @author
+
+
+			@fullname colorscheme			*@shortname*
+
+@fullname, a colorscheme with a unique touch.
+
+==============================================================================
+Colorscheme options					@shortname-options*
 
 						*g:@optionprefix_transp_bg*
 Set to 1 if you want a transparent background. Takes effect only in the
@@ -12,5 +20,8 @@ terminal.
 >
 	let g:@optionprefix_transp_bg = 0
 <
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
+
 enddocumentation
 

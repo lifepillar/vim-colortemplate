@@ -1,3 +1,8 @@
+" Courtesy of Pathogen
+function! s:slash() abort
+  return !exists("+shellslash") || &shellslash ? '/' : '\'
+endfunction
+
 fun! s:hex2rgb(col)
   return map(matchlist(a:col, '^#\?\(..\)\(..\)\(..\)$')[1:3], 'str2nr(v:val,16)')
 endf

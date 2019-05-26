@@ -1656,13 +1656,15 @@ endf
 fun! s:check_bug_bg234(bg, item, ncols, bufnr)
   if a:item[0] ==# 'group' && s:hi_name(a:item[1]) ==? 'Normal'
     if a:bg ==# 'dark'
-      if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) || s:bg16(a:item[1]) =~# '\m^\%(7\|9\|\d\d\)$'
+      if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) ||
+            \ s:bg16(a:item[1]) =~? '\m^\%(7\|9\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
         call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : '') . ' " Fix for Vim bug')
         call s:put(a:bufnr, 'set background=dark')
         call s:put(a:bufnr, 'endif')
       endif
     else " light background
-      if (a:ncols > 2 && a:ncols <= 16) && (s:bg16(a:item[1]) =~# '\m^\%(0\|1\|2\|3\|4\|5\|6\|8\)$')
+      if (a:ncols > 2 && a:ncols <= 16) &&
+            \ (s:bg16(a:item[1]) =~# '\m^\%(0\|1\|2\|3\|4\|5\|6\|8\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$')
         call s:put(l:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
         call s:put(l:bufnr, 'set background=light')
         call s:put(l:bufnr, 'endif')

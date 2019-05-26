@@ -1,5 +1,5 @@
 fun! colortemplate#toolbar#show()
-  if has('patch-8.1.1123') && has('menu') " has window-toolbar
+  if has('patch-8.0.1123') && has('menu') " has window-toolbar
     if getbufvar('%', '&ft') ==# 'colortemplate' && expand('%:t') !~# '\m^_'
       nunmenu WinBar
       nnoremenu <silent> 1.10 WinBar.Build! :Colortemplate!<cr>

@@ -1636,7 +1636,7 @@ fun! s:print_terminal_colors(bufnr)
 endf
 
 fun! s:finish_endif(bufnr)
-  call s:put(a:bufnr, 'unlet s:t_Co s:term_256_colors' . (s:uses_italics() ? ' s:italics' : ''))
+  call s:put(a:bufnr, 'unlet s:t_Co' . (s:uses_italics() ? ' s:italics' : ''))
   call s:put(a:bufnr, 'finish')
   call s:put(a:bufnr, 'endif')
 endf

@@ -754,8 +754,8 @@ fun! s:help_path()
   return s:help_path
 endf
 
-fun! s:add_line_to_aux_file(line, linenr, path)
-  call add(s:auxfiles[a:path], { 'line': a:line, 'linenr': a:linenr })
+fun! s:add_line_to_aux_file(line, linenr, path, sourcefile)
+  call add(s:auxfiles[a:path], { 'line': a:line, 'linenr': a:linenr, 'file': a:sourcefile })
 endf
 
 fun! s:auxfile_paths()
@@ -1081,8 +1081,8 @@ fun! s:stop_help_file()
   let s:current_auxfile = ''
 endf
 
-fun! s:add_to_aux_file(line, linenr)
-  call s:add_line_to_aux_file(a:line, a:linenr, s:current_auxfile)
+fun! s:add_to_aux_file(line, linenr, sourcefile)
+  call s:add_line_to_aux_file(a:line, a:linenr, s:current_auxfile, a:sourcefile)
 endf
 " }}}
 " Parser {{{
@@ -1122,7 +1122,7 @@ fun! s:parse_help_line()
       throw "Extra characters after 'enddocumentation'"
     endif
   else
-    call s:add_to_aux_file(s:getl(), s:linenr())
+    call s:add_to_aux_file(s:getl(), s:linenr(), s:currfile())
   endif
 endf
 
@@ -1133,7 +1133,7 @@ fun! s:parse_auxfile_line()
       throw "Extra characters after 'endauxfile'"
     endif
   else
-    call s:add_to_aux_file(s:getl(), s:linenr())
+    call s:add_to_aux_file(s:getl(), s:linenr(), s:currfile())
   endif
 endf
 
@@ -1507,11 +1507,7 @@ fun! s:generate_aux_files(outdir, overwrite)
     if match(l:path, '^doc' . s:slash()) > -1 && get(g:, 'colortemplate_no_doc', 0)
       continue
     endif
-    try
-      let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate(l['line'], l['linenr'], l:path) })
-    catch /.*/
-      throw 'Error interpolating aux file: '.v:exception
-    endtry
+    let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate(l['line'], l['linenr'], l['file']) })
     call s:write_list(l:lines, l:path, { 'dir': a:outdir }, a:overwrite)
   endfor
 endf

@@ -1224,33 +1224,6 @@ fun! s:parse_key_value_pair()
   endif
 endf
 
-fun! s:quickly_parse_color()
-  if s:is_verbatim()
-    if s:getl() =~? '\m^\s*endverbatim'
-      call s:stop_verbatim()
-    endif
-    return
-  endif
-  if s:is_aux_file()
-    if s:getl() =~? '\m^\s*endauxfile'
-      call s:stop_aux_file()
-    endif
-    return
-  endif
-  if s:is_help_file()
-    if s:getl() =~? '\m^\s*enddocumentation'
-      call s:stop_help_file()
-    endif
-    return
-  endif
-  if s:getl() !~? '\m:'
-    return
-  endif
-  if s:token.next().kind ==# 'WORD' && s:token.value ==? 'color'
-    call s:parse_color_def()
-  endif
-endf
-
 fun! s:parse_color_def()
   if s:token.next().kind !=# ':'
     throw 'Expected colon after Color keyword'

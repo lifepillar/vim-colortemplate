@@ -18,6 +18,38 @@ Option Prefix: dark
 Include: _help.colortemplate
 # }}}
 
+# Common linked groups {{{
+QuickFixLine      -> Search
+StatusLineTerm    -> StatusLine
+StatusLineTermNC  -> StatusLineNC
+Boolean           -> Constant
+Character         -> Constant
+Conditional       -> Statement
+Define            -> PreProc
+Debug             -> Special
+Delimiter         -> Special
+Exception         -> Statement
+Float             -> Constant
+Function          -> Identifier
+Include           -> PreProc
+Keyword           -> Statement
+Label             -> Statement
+Macro             -> PreProc
+Number            -> Constant
+Operator          -> Statement
+PreCondit         -> PreProc
+Repeat            -> Statement
+SpecialChar       -> Special
+SpecialComment    -> Special
+StorageClass      -> Type
+String            -> Constant
+Structure         -> Type
+Tag               -> Special
+Typedef           -> Type
+# See `:help lCursor`
+lCursor           -> Cursor
+# }}}
+
 Background: dark
 
 # Color palette {{{
@@ -46,7 +78,7 @@ Term colors: brightblack brightred brightgreen brightyellow
 Term colors: brightblue brightmagenta brightcyan brightwhite
 # }}}
 
-# Check for transparent background in terminal variants
+# Check for transparent background in terminal variants {{{
 Variant: 256 8
 
 verbatim
@@ -71,6 +103,7 @@ Variant: gui
 
     Normal           white             black
     Terminal         white             black
+# }}}
 
 # Common definitions
 Variant: gui 256 8
@@ -103,7 +136,6 @@ PmenuSbar            white             black
 PmenuSel             white             black
 PmenuThumb           white             black
 Question             white             black
-QuickFixLine     ->  Search
 Search               white             black
 SignColumn           white             black
 SpecialKey           white             black
@@ -113,8 +145,6 @@ SpellLocal           white             black             s=magenta
 SpellRare            white             black             s=cyan reverse
 StatusLine           white             black
 StatusLineNC         white             black
-StatusLineTerm    -> StatusLine
-StatusLineTermNC  -> StatusLineNC
 TabLine              white             black
 TabLineFill          white             black
 TabLineSel           white             black
@@ -125,43 +155,17 @@ VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
 # Other conventional group names (see `:help group-name`)
-Boolean           -> Constant
-Character         -> Constant
 Comment              white             none              italic
-Conditional       -> Statement
 Constant             white             none
-Define            -> PreProc
-Debug             -> Special
-Delimiter         -> Special
 Error                white             black             reverse
-Exception         -> Statement
-Float             -> Constant
-Function          -> Identifier
 Identifier           white             none
 Ignore               white             none
-Include           -> PreProc
-Keyword           -> Statement
-Label             -> Statement
-Macro             -> PreProc
-Number            -> Constant
-Operator          -> Statement
-PreCondit         -> PreProc
 PreProc              white             none
-Repeat            -> Statement
 Special              white             none
-SpecialChar       -> Special
-SpecialComment    -> Special
 Statement            white             none
-StorageClass      -> Type
-String            -> Constant
-Structure         -> Type
-Tag               -> Special
 Todo                 white             none
 Type                 white             none
-Typedef           -> Type
 Underlined           white             none
-# See `:help lCursor`
-lCursor           -> Cursor
 # See `:help CursorIM`
 CursorIM             none              fg
 # See `:help window-toolbar`

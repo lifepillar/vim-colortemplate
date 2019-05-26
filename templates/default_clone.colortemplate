@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker ts=8
+# vim: ft=colortemplate fdm=marker cc=22,40,58
 
 # Information {{{
 Full name:   Default Clone
@@ -67,12 +67,48 @@ Color: yellow               Yellow                11        Yellow
 Color: yellowstatement      #ffff60               11        Yellow
 # }}}
 
+# Terminal colors {{{
+# Term colors: Vim by default does not define g:terminal_colors
+# }}}
+
+# Common linked groups {{{
+EndOfBuffer       -> NonText
+QuickFixLine      -> Search
+Boolean           -> Constant
+Character         -> Constant
+Conditional       -> Statement
+Define            -> PreProc
+Debug             -> Special
+Delimiter         -> Special
+Exception         -> Statement
+Float             -> Number
+Function          -> Identifier
+Include           -> PreProc
+Keyword           -> Statement
+Label             -> Statement
+Macro             -> PreProc
+Number            -> Constant
+Operator          -> Statement
+PreCondit         -> PreProc
+Repeat            -> Statement
+SpecialChar       -> Special
+SpecialComment    -> Special
+StorageClass      -> Type
+String            -> Constant
+Structure         -> Type
+Tag               -> Special
+Typedef           -> Type
+# }}}
+
 Background: light
 
 # Default highlight groups for light variant {{{
+
+Variant: 256 8
+
 # NOTE: Vim's default does not define Normal
 verbatim
-if has('gui_running') || !get(g:, '@optionprefix_transp_bg', 1)
+if !get(g:, '@optionprefix_transp_bg', 1)
 endverbatim
     # Opaque background
     Normal           black             white
@@ -87,22 +123,51 @@ verbatim
 endif
 endverbatim
 
+CursorLine           none              none              underline
+Pmenu                black             lightmagenta
+PmenuSel             black             lightgrey
+SpellBad             none              lightred
+SpellCap             none              lightblue
+SpellLocal           none              cyan
+SpellRare            none              lightmagenta
+StatusLineTerm       white             darkgreen         bold
+StatusLineTermNC     white             darkgreen
+TabLine              black             lightgrey         underline
+Ignore               white             none
+Todo                 black             yellow
+
+Variant: gui
+
+    Normal           white             white
+    Terminal         white             white
+
+CursorLine           none              lightgrey90
+Pmenu                none              lightmagenta
+PmenuSel             none              grey
+SpellBad             none              none              undercurl s=red
+SpellCap             none              none              undercurl s=blue
+SpellLocal           none              none              undercurl s=darkcyan
+SpellRare            none              none              undercurl s=magenta
+StatusLineTerm       bg                darkgreen         bold
+StatusLineTermNC     bg                darkgreen
+TabLine              none              lightgrey         underline
+Ignore               bg                none
+Todo                 blue              yellow
+
+Variant: gui 256 8
+
 # Group              Foreground        Background        Attributes
 ColorColumn          none              lightred
 Conceal              lightgrey         darkgrey
 # NOTE: Vim's default does not define Cursor/lCursor in the terminal
 Cursor               white             fg
 CursorColumn         none              lightgrey90
-verbatim
-hi CursorLine ctermfg=NONE ctermbg=NONE cterm=underline guifg=NONE guibg=Grey90 gui=NONE guisp=NONE
-endverbatim
 CursorLineNr         brown             none              g=bold
 DiffAdd              none              lightblue
 DiffChange           none              lightmagenta
 DiffDelete           blue              lightcyan         g=bold
 DiffText             none              red               bold
 Directory            bluedarkblue      none
-EndOfBuffer       -> NonText
 ErrorMsg             white             reddarkred
 FoldColumn           darkblue          grey
 Folded               darkblue          lightgreygrey
@@ -112,34 +177,14 @@ MatchParen           none              cyan
 ModeMsg              none              none              bold
 MoreMsg              seagreen          none              g=bold
 NonText              blue              none              g=bold
-verbatim
-hi Pmenu ctermfg=@black ctermbg=@lightmagenta cterm=NONE guifg=NONE guibg=@lightmagenta gui=NONE guisp=NONE
-endverbatim
 PmenuSbar            none              grey
-verbatim
-hi PmenuSel ctermfg=@black ctermbg=@lightgrey cterm=NONE guifg=NONE guibg=@grey gui=NONE guisp=NONE
-endverbatim
 PmenuThumb           none              black
 Question             seagreen          none              g=bold
-QuickFixLine     ->  Search
 Search               none              yellow
 SignColumn           darkblue          grey
 SpecialKey           bluedarkblue      none
-verbatim
-hi SpellBad ctermfg=NONE ctermbg=@lightred cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@red
-hi SpellCap ctermfg=NONE ctermbg=@lightblue cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@blue
-hi SpellLocal ctermfg=NONE ctermbg=@cyan cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@darkcyan
-hi SpellRare ctermfg=NONE ctermbg=@lightmagenta cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@magenta
-endverbatim
 StatusLine           none              none              reverse,bold
 StatusLineNC         none              none              reverse
-verbatim
-hi StatusLineTerm ctermfg=@white ctermbg=@darkgreen cterm=NONE,bold guifg=bg guibg=@darkgreen gui=NONE,bold guisp=NONE
-hi StatusLineTermNC ctermfg=@white ctermbg=@darkgreen cterm=NONE guifg=bg guibg=@darkgreen gui=NONE guisp=NONE
-endverbatim
-verbatim
-hi TabLine ctermfg=@black ctermbg=@lightgrey cterm=NONE,underline guifg=NONE guibg=@lightgrey gui=NONE,underline guisp=NONE
-endverbatim
 TabLineFill          none              none              reverse
 TabLineSel           none              none              bold
 Title                magentadarkmagenta none             g=bold
@@ -149,44 +194,14 @@ VisualNOS            none              none              underline,bold
 WarningMsg           reddarkred        none
 WildMenu             black             yellow
 # Other conventional group names (see `:help group-name`)
-Boolean           -> Constant
-Character         -> Constant
 Comment              bluedarkblue      none
-Conditional       -> Statement
 Constant             magentadarkred    none
-Define            -> PreProc
-Debug             -> Special
-Delimiter         -> Special
 Error                white             red
-Exception         -> Statement
-Float             -> Number
-Function          -> Identifier
 Identifier           darkcyan          none
-verbatim
-hi Ignore ctermfg=@white ctermbg=NONE cterm=NONE guifg=bg guibg=NONE gui=NONE guisp=NONE
-endverbatim
-Include           -> PreProc
-Keyword           -> Statement
-Label             -> Statement
-Macro             -> PreProc
-Number            -> Constant
-Operator          -> Statement
-PreCondit         -> PreProc
 PreProc              purple            none
-Repeat            -> Statement
 Special              slateblue         none
-SpecialChar       -> Special
-SpecialComment    -> Special
 Statement            brown             none              g=bold
-StorageClass      -> Type
-String            -> Constant
-Structure         -> Type
-Tag               -> Special
-verbatim
-hi Todo ctermfg=@black ctermbg=@yellow cterm=NONE guifg=@blue guibg=@yellow gui=NONE guisp=NONE
-endverbatim
 Type                 seagreen          none              g=bold
-Typedef           -> Type
 Underlined           slateblue         none              underline
 # See `:help lCursor`
 lCursor              white             fg
@@ -199,8 +214,11 @@ Background: dark
 
 # Default highlight groups for dark variant {{{
 # NOTE: Vim's default does not define Normal
+
+Variant: 256 8
+
 verbatim
-if has('gui_running') || !get(g:, '@optionprefix_transp_bg', 1)
+if !get(g:, '@optionprefix_transp_bg', 1)
 endverbatim
     # Opaque background
     Normal           white             black
@@ -215,22 +233,48 @@ verbatim
 endif
 endverbatim
 
+CursorLine           none              none              underline
+Pmenu                black             magenta
+PmenuSel             darkgrey          black
+SpellBad             none              red
+SpellCap             none              blue
+SpellLocal           none              cyan
+SpellRare            none              magenta
+StatusLineTerm       black             lightgreen        bold
+StatusLineNC         black             lightgreen
+TabLine              white231          darkgrey          underline
+Todo                 black             yellow
+
+Variant: gui
+
+Normal               white             black
+Terminal             white             black
+CursorLine           none              grey40
+Pmenu                none              magenta
+PmenuSel             none              darkgrey
+SpellBad             none              none              undercurl s=red
+SpellCap             none              none              undercurl s=blue
+SpellLocal           none              none              undercurl s=cyan
+SpellRare            none              none              undercurl s=magenta
+StatusLineTerm       bg                lightgreen        bold
+StatusLineTermNC     bg                lightgreen
+TabLine              none              darkgrey          underline
+Todo                 blue              yellow
+
+Variant: gui 256 8
+
 # Group              Foreground        Background        Attributes
 ColorColumn          none              darkred
 Conceal              lightgrey         darkgrey
 # NOTE: Vim's default does not define Cursor/lCursor in the terminal
 Cursor               black             fg
 CursorColumn         none              grey40
-verbatim
-hi CursorLine ctermfg=NONE ctermbg=NONE cterm=underline guifg=NONE guibg=Grey40 gui=NONE guisp=NONE
-endverbatim
 CursorLineNr         yellow            none              g=bold
 DiffAdd              none              darkblue
 DiffChange           none              darkmagenta
 DiffDelete           blue              darkcyan          g=bold
 DiffText             none              red               bold
 Directory            cyanlightcyan     none
-EndOfBuffer       -> NonText
 ErrorMsg             white             reddarkred
 FoldColumn           cyan              greydarkgrey
 Folded               cyan              darkgrey
@@ -240,34 +284,14 @@ MatchParen           none              darkcyan
 ModeMsg              none              none              bold
 MoreMsg              lightseagreen     none              g=bold
 NonText              blue              none              g=bold
-verbatim
-hi Pmenu ctermfg=@black ctermbg=@magenta cterm=NONE guifg=NONE guibg=@magenta gui=NONE guisp=NONE
-endverbatim
 PmenuSbar            none              grey
-verbatim
-hi PmenuSel ctermfg=@darkgrey ctermbg=@black cterm=NONE guifg=NONE guibg=@darkgrey gui=NONE guisp=NONE
-endverbatim
 PmenuThumb           none              white231
 Question             greenlightgreen   none              g=bold
-QuickFixLine     ->  Search
 Search               black             yellow
 SignColumn           cyan              greydarkgrey
 SpecialKey           cyanlightblue     none
-verbatim
-hi SpellBad ctermfg=NONE ctermbg=@red cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@red
-hi SpellCap ctermfg=NONE ctermbg=@blue cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@blue
-hi SpellLocal ctermfg=NONE ctermbg=@cyan cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@cyan
-hi SpellRare ctermfg=NONE ctermbg=@magenta cterm=NONE guifg=NONE guibg=NONE gui=NONE,undercurl guisp=@magenta
-endverbatim
 StatusLine           none              none              reverse,bold
 StatusLineNC         none              none              reverse
-verbatim
-hi StatusLineTerm ctermfg=@black ctermbg=@lightgreen cterm=NONE,bold guifg=bg guibg=@lightgreen gui=NONE,bold guisp=NONE
-hi StatusLineTermNC ctermfg=@black ctermbg=@lightgreen cterm=NONE guifg=bg guibg=@lightgreen gui=NONE guisp=NONE
-endverbatim
-verbatim
-hi TabLine ctermfg=@white231 ctermbg=@darkgrey cterm=NONE,underline guifg=NONE guibg=@darkgrey gui=NONE,underline guisp=NONE
-endverbatim
 TabLineFill          none              none              reverse
 TabLineSel           none              none              bold
 Title                magentalightmagenta none            g=bold
@@ -277,42 +301,15 @@ VisualNOS            none              none              underline,bold
 WarningMsg           redlightred       none
 WildMenu             black             yellow
 # Other conventional group names (see `:help group-name`)
-Boolean           -> Constant
-Character         -> Constant
 Comment              cyancomment       none
-Conditional       -> Statement
 Constant             magentaconstant   none
-Define            -> PreProc
-Debug             -> Special
-Delimiter         -> Special
 Error                white231          red
-Exception         -> Statement
-Float             -> Number
-Function          -> Identifier
 Identifier           cyanidentifier    none              t=bold
 Ignore               black             none
-Include           -> PreProc
-Keyword           -> Statement
-Label             -> Statement
-Macro             -> PreProc
-Number            -> Constant
-Operator          -> Statement
-PreCondit         -> PreProc
 PreProc              lightbluepreproc  none
-Repeat            -> Statement
 Special              orange            none
-SpecialChar       -> Special
-SpecialComment    -> Special
 Statement            yellowstatement   none              g=bold
-StorageClass      -> Type
-String            -> Constant
-Structure         -> Type
-Tag               -> Special
-verbatim
-hi Todo ctermfg=@black ctermbg=@yellow guifg=@blue guibg=@yellow
-endverbatim
 Type                 lightseagreentype none              g=bold
-Typedef           -> Type
 Underlined           lightblueunderlined none            underline
 # See `:help lCursor`
 lCursor           -> Cursor

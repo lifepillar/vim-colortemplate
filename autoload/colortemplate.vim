@@ -646,9 +646,10 @@ fun! s:min_t_Co()
   return min(s:t_Co)
 endf
 
-fun! s:add_verbatim(line)
+fun! s:add_verbatim(line, linenr, file)
   for l:d in s:variants()
-    call add(s:data[l:d][s:current_bg()], ['verb', a:line])
+    call add(s:data[l:d][s:current_bg()],
+          \ ['verb', { 'line': a:line, 'linenr': a:linenr, 'file': a:file }])
   endfor
 endf
 
@@ -699,9 +700,9 @@ fun! s:flush_italics()
     if empty(s:italics[l:d][l:bg])
       continue
     endif
-    call add(s:data[l:d][l:bg], ['verb', 'if s:italics'])
+    call add(s:data[l:d][l:bg], ['raw', 'if s:italics'])
     call extend(s:data[l:d][l:bg], s:italics[l:d][l:bg])
-    call add(s:data[l:d][l:bg], ['verb', 'endif'])
+    call add(s:data[l:d][l:bg], ['raw', 'endif'])
     let s:italics[l:d][l:bg] = []
   endfor
 endf
@@ -715,9 +716,9 @@ fun! s:flush_neovim()
     if empty(s:nvim[l:d][l:bg])
       continue
     endif
-    call add(s:data[l:d][l:bg], ['verb', "if has('nvim')"])
+    call add(s:data[l:d][l:bg], ['raw', "if has('nvim')"])
     call extend(s:data[l:d][l:bg], s:nvim[l:d][l:bg])
-    call add(s:data[l:d][l:bg], ['verb', 'endif'])
+    call add(s:data[l:d][l:bg], ['raw', 'endif'])
     let s:nvim[l:d][l:bg] = []
   endfor
 endf
@@ -753,8 +754,8 @@ fun! s:help_path()
   return s:help_path
 endf
 
-fun! s:add_line_to_aux_file(line, path)
-  call add(s:auxfiles[a:path], a:line)
+fun! s:add_line_to_aux_file(line, linenr, path)
+  call add(s:auxfiles[a:path], { 'line': a:line, 'linenr': a:linenr })
 endf
 
 fun! s:auxfile_paths()
@@ -901,15 +902,19 @@ fun! s:print_color_info()
 endf
 " }}}
 " Interpolation {{{
-fun! s:interpolate(line)
+fun! s:interpolate(line, linenr, file)
   let l:t_Co = s:min_t_Co()
-  let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1))',                          'g')
-  let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1))',                         'g')
-  let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),'.l:t_Co.')',             'g')
-  let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1))',                         'g')
-  let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')', 'g')
-  let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2))',             'g')
-  let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                       'g')
+  try
+    let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1))',                          'g')
+    let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1))',                         'g')
+    let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),'.l:t_Co.')',             'g')
+    let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1))',                         'g')
+    let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')', 'g')
+    let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2))',             'g')
+    let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                       'g')
+  catch /.*/
+    call s:add_error(a:file, a:linenr, 1, 'Undefined @ value')
+  endtry
   return l:line
 endf
 " }}}
@@ -1076,8 +1081,8 @@ fun! s:stop_help_file()
   let s:current_auxfile = ''
 endf
 
-fun! s:add_to_aux_file(line)
-  call s:add_line_to_aux_file(a:line, s:current_auxfile)
+fun! s:add_to_aux_file(line, linenr)
+  call s:add_line_to_aux_file(a:line, a:linenr, s:current_auxfile)
 endf
 " }}}
 " Parser {{{
@@ -1106,7 +1111,7 @@ fun! s:parse_verbatim_line()
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    call s:add_verbatim(s:getl())
+    call s:add_verbatim(s:getl(), s:linenr(), s:currfile())
   endif
 endf
 
@@ -1117,7 +1122,7 @@ fun! s:parse_help_line()
       throw "Extra characters after 'enddocumentation'"
     endif
   else
-    call s:add_to_aux_file(s:getl())
+    call s:add_to_aux_file(s:getl(), s:linenr())
   endif
 endf
 
@@ -1128,7 +1133,7 @@ fun! s:parse_auxfile_line()
       throw "Extra characters after 'endauxfile'"
     endif
   else
-    call s:add_to_aux_file(s:getl())
+    call s:add_to_aux_file(s:getl(), s:linenr())
   endif
 endf
 
@@ -1150,7 +1155,7 @@ fun! s:parse_line()
       if empty(l:path)
         throw 'Missing path'
       endif
-      call s:start_aux_file(s:interpolate(l:path))
+      call s:start_aux_file(s:interpolate(l:path, s:linenr(), s:currfile()))
     elseif s:token.value ==? 'documentation'
       call s:start_help_file()
     elseif s:getl() =~? '\m:' " Look ahead
@@ -1530,7 +1535,7 @@ fun! s:generate_aux_files(outdir, overwrite)
       continue
     endif
     try
-      let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate(l) })
+      let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate(l['line'], l['linenr'], l:path) })
     catch /.*/
       throw 'Error interpolating aux file: '.v:exception
     endtry
@@ -1539,11 +1544,7 @@ fun! s:generate_aux_files(outdir, overwrite)
 endf
 
 fun! s:eval(item, col)
-  if a:item[0] ==# 'verb'
-    return s:interpolate(a:item[1])
-  elseif a:item[0] ==# 'link'
-    return 'hi! link ' . a:item[1][0] . ' ' . a:item[1][1]
-  elseif a:item[0] ==# 'group'
+  if a:item[0] ==# 'group'
     let l:hg = a:item[1]
     if a:col > 256
       return 'hi ' . s:hi_name(l:hg)
@@ -1572,6 +1573,12 @@ fun! s:eval(item, col)
             \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
             \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['start'])
     endif
+  elseif a:item[0] ==# 'link'
+    return 'hi! link ' . a:item[1][0] . ' ' . a:item[1][1]
+  elseif a:item[0] ==# 'verb'
+    return s:interpolate(a:item[1]['line'], a:item[1]['linenr'], a:item[1]['file'])
+  elseif a:item[0] ==# 'raw'
+    return a:item[1]
   elseif a:item[0] ==# 'it'
     if a:col > 256
       return 'hi ' . a:item[1] . ' gui=italic'
@@ -1884,7 +1891,9 @@ fun! colortemplate#make(...)
   try
     call s:generate_colorscheme(l:outdir, l:overwrite)
     call s:generate_aux_files(l:outdir, l:overwrite)
+    call s:show_errors('Build error')
   catch /.*/
+    let g:colortemplate_exit_status = 1
     call s:print_error_msg(v:exception, 0)
     return
   endtry

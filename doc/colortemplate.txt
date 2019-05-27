@@ -26,19 +26,20 @@ CONTENTS					*ft-colortemplate*
     5. Backgrounds .......... |colortemplate-background|
     6. Variants ............. |colortemplate-variants|
     7. Color definitions .... |colortemplate-colors|
-    8. Highlight groups ..... |colortemplate-hi-groups|
-    9. Verbatim blocks ...... |colortemplate-verbatim|
-   10. Documentation blocks . |colortemplate-doc-blocks|
-   11. Auxiliary files ...... |colortemplate-auxfiles|
-   12. Include directive .... |colortemplate-include|
-   13. Colors statistics..... |colortemplate-stats|
-   14. Mappings ............. |colortemplate-mappings|
-   15. Options .............. |colortemplate-options|
-   16. Commands ............. |colortemplate-commands|
-   17. Window toolbar ....... |colortemplate-toolbar|
-   18. Functions ............ |colortemplate-functions|
-   19. Best practices ....... |colortemplate-best-practices|
-   20. Providing feedback ... |colortemplate-feedback|
+    8. Terminal colors ...... |colortemplate-termcolors|
+    9. Highlight groups ..... |colortemplate-hi-groups|
+   10. Verbatim blocks ...... |colortemplate-verbatim|
+   11. Documentation blocks . |colortemplate-doc-blocks|
+   12. Auxiliary files ...... |colortemplate-auxfiles|
+   13. Include directive .... |colortemplate-include|
+   14. Colors statistics..... |colortemplate-stats|
+   15. Mappings ............. |colortemplate-mappings|
+   16. Options .............. |colortemplate-options|
+   17. Commands ............. |colortemplate-commands|
+   18. Window toolbar ....... |colortemplate-toolbar|
+   19. Functions ............ |colortemplate-functions|
+   20. Best practices ....... |colortemplate-best-practices|
+   21. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
 Color templates					*colortemplate-intro*
@@ -115,7 +116,7 @@ Templates' structure				*colortemplate-structure*
 A template consists of:
 
 1. metadata;
-2. `Color` definitions;
+2. `Color` and `Term colors` definitions;
 3. `Background` and `Variant` directives;
 4. `Include` statements;
 5. verbatim blocks (`verbatim`/`auxfile`/`documentation`).
@@ -314,6 +315,20 @@ used. So, a minimal color definition looks as follows:
 >
 	Color: black #000000 ~
 <
+==============================================================================
+Terminal colors					*colortemplate-termcolors*
+
+The 16 ASCII colors for Vim terminal windows should be specified using
+a `Term colors` directive:
+>
+	Term colors: myblack myred mygreen myyellow
+        Term colors: myblue mymagenta mycyan mywhite
+	Term colors: mybrightblack mybrightred mybrightgreen mybrightyellow
+	Term colors: mybrightblue mybrightmagenta mybrightcyan mybrightwhite
+<
+The directive may be repeated, but it must define 16 colors in total, in the
+order in which they should be assigned to the terminal.
+
 ==============================================================================
 Highlight group definitions			*colortemplate-hi-groups*
 

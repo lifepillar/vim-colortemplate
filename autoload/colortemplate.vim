@@ -1785,12 +1785,12 @@ fun! s:restore_colorscheme()
 endf
 " }}}
 " Public interface {{{
-fun! colortemplate#wd()
-  return get(b:, 'colortemplate_wd', getcwd())
+fun! colortemplate#outdir()
+  return get(b:, 'colortemplate_outdir', getcwd())
 endf
 
-fun! colortemplate#setwd()
-  echo colortemplate#wd()
+fun! colortemplate#setoutdir()
+  echo colortemplate#outdir()
   let l:newdir = input('Change to: ', '', 'dir')
   if empty(l:newdir)
     return
@@ -1803,7 +1803,7 @@ fun! colortemplate#setwd()
     call s:print_error_msg('Directory is not writable', 0)
     return
   endif
-  let b:colortemplate_wd = l:newdir
+  let b:colortemplate_outdir = l:newdir
   call colortemplate#toolbar#show()
 endf
 
@@ -1840,7 +1840,7 @@ endf
 " a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
   echomsg '[Colortemplate] Building colorscheme...'
-  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#wd())
+  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)
@@ -1885,14 +1885,22 @@ fun! colortemplate#make(...)
   endtry
 endf
 
-fun! colortemplate#build_dir(override)
-  update
+" a:1 is the optional path to an output directory
+" a:2 is ! when files should be overwritten
+fun! colortemplate#build_dir(...)
   call setqflist([], 'r') " Reset quickfix list
-  let l:wd = colortemplate#wd()
-  let l:dirs = join([l:wd, l:wd.s:slash().'colortemplate',l:wd.s:slash().'template',l:wd.s:slash().'templates'], ',')
-  for l:template in globpath(l:dirs, '[^_]*.colortemplate', 1, 1)
+
+  let l:wd = expand('%:p:h')
+
+  if !empty(getbufvar('%', '&buftype')) || empty(l:wd)
+    call s:print_error_msg("No filename. Please save your document first.", 0)
+    return
+  endif
+
+  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
+  for l:template in glob(l:wd.s:slash().'[^_]*.colortemplate', 1, 1, 1)
     execute "edit" l:template
-    call colortemplate#make(colortemplate#wd(), a:override, 0)
+    call colortemplate#make(l:outdir, get(a:000, 1, ''), 0)
   endfor
 endf
 
@@ -1927,7 +1935,7 @@ fun! colortemplate#path()
   else
     let l:name = s:shortname()
   endif
-  let l:path = colortemplate#wd() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
+  let l:path = colortemplate#outdir() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
   if empty(l:name) || !filereadable(l:path)
     call s:print_error_msg('Please build the colorscheme first', 0)
   endif

@@ -8,12 +8,12 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_wd"
+let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_outdir"
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
 
-let b:colortemplate_wd = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
-if b:colortemplate_wd =~? '\m\%(color\)\=templates\=$'
-  let b:colortemplate_wd = fnamemodify(b:colortemplate_wd, ':h')
+let b:colortemplate_outdir = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
+if b:colortemplate_outdir =~? '\m\%(color\)\=templates\=$'
+  let b:colortemplate_outdir = fnamemodify(b:colortemplate_outdir, ':h')
 endif
 
 setlocal commentstring=#%s
@@ -35,10 +35,10 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
 endif
 
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
-command! -buffer -nargs=? -bar -bang               ColortemplateDir call colortemplate#build_dir("<bang>")
+command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll call colortemplate#build_dir(<q-args>, "<bang>")
+command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#setoutdir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 command! -buffer -nargs=0 -bar                     ColortemplateValidate call colortemplate#validate()
-command! -buffer -nargs=0                          ColortemplateSetwd call colortemplate#setwd()
 
 call colortemplate#toolbar#show()
 

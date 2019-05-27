@@ -26,8 +26,8 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> gy    :<c-u>call colortemplate#nearby_colors(v:count1)<cr>
 endif
 
-command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate call colortemplate#make(<q-args>, "<bang>")
-command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll call colortemplate#build_dir(<q-args>, "<bang>")
+command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate silent call colortemplate#make(<q-args>, "<bang>")
+command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll silent call colortemplate#build_dir(<q-args>, "<bang>")
 command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#setoutdir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 command! -buffer -nargs=0 -bar                     ColortemplateValidate call colortemplate#validate()

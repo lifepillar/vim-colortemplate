@@ -1809,7 +1809,6 @@ fun! s:generate_colorscheme(outdir, overwrite)
       call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)
       redraw
       echo "\r"
-      echomsg "[Colortemplate] Success!"
     finally
       call s:destroy_buffer(l:bufnr)
     endtry
@@ -1943,6 +1942,7 @@ fun! colortemplate#make(...)
     call s:print_error_msg(v:exception, 0)
     return
   endtry
+  unsilent echomsg "[Colortemplate] Success!"
 endf
 
 " a:1 is the optional path to an output directory

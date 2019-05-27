@@ -173,7 +173,7 @@ fun! s:write_buffer(bufnr, path, env, overwrite)
     if a:overwrite
       execute "bdelete" bufname(a:path)
     else
-      throw "Buffer " . l:path . " exists. Use ! to override."
+      throw "Buffer " . l:path . " exists. Use ! to overwrite."
     endif
   endif
   if a:overwrite || !filereadable(l:path)
@@ -1888,7 +1888,7 @@ fun! colortemplate#parse(filename) abort
 endf
 
 " a:1 is the optional path to an output directory
-" a:2 is ! when files should be overridden
+" a:2 is ! when files should be overwritten
 " a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
   update

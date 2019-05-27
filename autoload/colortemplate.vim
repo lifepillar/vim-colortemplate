@@ -1903,6 +1903,7 @@ endf
 " a:2 is ! when files should be overridden
 " a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
+  update
   echomsg '[Colortemplate] Building colorscheme...'
   let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)

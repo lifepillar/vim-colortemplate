@@ -736,17 +736,32 @@ fun! s:add_linked_group(source, target)
   endfor
 endf
 
+" Here we use the fact that str2nr() applied to a String returns 0 and not an
+" error. So strn2nr('gui') returns an ok value, and stuff like s:fg16('Black')
+" does not cause out of range errors. Ugly, but it works.
+fun! s:check_color_range(hg, variant)
+  let l:t_co = str2nr(a:variant)
+  if l:t_co > 0 && (
+        \ (l:t_co <= 16 && (s:fg16(a:hg) >= l:t_co || s:bg16(a:hg) >= l:t_co))
+        \ || (l:t_co > 16 && (s:fg256(a:hg) >= l:t_co || s:bg256(a:hg) >= l:t_co))
+        \ )
+    throw printf('Color out of range for %d-color variant: %s', l:t_co, s:hi_name(a:hg))
+  endif
+endf
+
 fun! s:add_highlight_group(hg)
   if s:is_preamble()
     throw "Cannot define highlight group before Variant or Background is set"
   endif
   if s:is_neovim_group(s:hi_name(a:hg))
     for l:d in s:variants()
+      call s:check_color_range(a:hg, l:d)
       call add(s:nvim[l:d][s:current_bg()], ['group', a:hg])
     endfor
     return
   endif
   for l:d in s:variants()
+    call s:check_color_range(a:hg, l:d)
     call add(s:data[l:d][s:current_bg()], ['group', a:hg])
   endfor
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
@@ -1377,12 +1392,8 @@ fun! s:parse_base_256_value()
     return -1
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
-    " if l:val < 16
-    "   throw 'Base-256 color value must be >=16'
-    " endif
-    let l:t_Co = str2nr(s:min_t_Co())
-    if l:t_Co > 16 && l:val + 1 > l:t_Co
-      throw 'Color value is out of range [0,'.string(l:t_Co - 1).']'
+    if l:val > 255 || l:val < 0
+      throw 'Color value is out of range [0,255]'
     endif
     return l:val
   endif
@@ -1394,9 +1405,8 @@ fun! s:parse_base_16_value()
     return 'Black' " Just a placeholder: we assume that base-16 colors are not used
   elseif s:token.kind ==# 'NUM'
     let l:val = str2nr(s:token.value)
-    let l:b = min([16, str2nr(s:min_t_Co())])
-    if l:val + 1 > l:b || l:val < 0
-      throw 'Color value is out of range [0,'.string(l:b - 1).']'
+    if l:val > 15 || l:val < 0
+      throw 'Color value is out of range [0,15]'
     endif
     return l:val
   elseif s:token.kind ==# 'WORD'

@@ -1,3 +1,21 @@
+*colortemplate.txt*	For Vim version 8.1	Last change: 2019 May 27
+
+	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
+	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~
+	[[[        ,[[     \[[, [[[     ,[[     \[[,[[[,/[[['     [[ ~
+	$$$        $$$,     $$$ $$'     $$$,     $$$$$$$$$c       $$ ~
+	`88bo,__,o,"888,_ _,88Po88oo,.__"888,_ _,88P888b "88bo,   88, ~
+	  "YUMMMMMP" "YMMMMMP" """"YUMMM  "YMMMMMP" MMMM   "W"    MMM ~
+	.,::::::  .        :::::::::::. :::      :::. ::::::::::::.,:::::: ~
+	;;;;''''  ;;,.    ;;;`;;;```.;;;;;;      ;;`;;;;;;;;;;'''';;;;'''' ~
+	 [[cccc   [[[[, ,[[[[,`]]nnn]]' [[[     ,[[ '[[,   [[      [[cccc ~
+	 $$""""   $$$$$$$$"$$$ $$$""    $$'    c$$$cc$$$c  $$      $$"""" ~
+	 888oo,__ 888 Y88" 888o888o    o88oo,.__888   888, 88,     888oo,__ ~
+	 """"YUMMMMMM  M'  "MMMYMMMb   """"YUMMMYMM   ""`  MMM     """"YUMMM ~
+
+	The Toolkit for Color Scheme Designers!
+	Author:  Lifepillar <https://github.com/lifepillar>
+	License: Same terms as Vim itself (see |license|)
 ==============================================================================
 CONTENTS					*ft-colortemplate*
 

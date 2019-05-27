@@ -29,6 +29,7 @@ colortemplate-structure	colortemplate.txt	/*colortemplate-structure*
 colortemplate-toolbar	colortemplate.txt	/*colortemplate-toolbar*
 colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
+colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
 dark	dark.txt	/*dark*
 dark.txt	dark.txt	/*dark.txt*
 dark_and_light	dark_and_light.txt	/*dark_and_light*

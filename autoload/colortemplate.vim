@@ -1972,6 +1972,8 @@ endf
 fun! colortemplate#stats()
   update
   echomsg '[Colortemplate] Computing color statistics...'
+  let l:old_warning_pref = get(g:, 'colortemplate_no_warnings', -1)
+  let g:colortemplate_no_warnings = 1
   try
     call setqflist([], 'r') " Reset quickfix list
     call colortemplate#parse(expand('%:p'))
@@ -1982,6 +1984,12 @@ fun! colortemplate#stats()
     echoerr '[Colortemplate] Unexpected error: ' v:exception
     let g:colortemplate_exit_status = 1
     return
+  finally
+    if l:old_warning_pref < 0
+      unlet! g:colortemplate_no_warnings
+    else
+      let g:colortemplate_no_warnings = l:old_warning_pref
+    endif
   endtry
   call s:print_color_info()
   redraw

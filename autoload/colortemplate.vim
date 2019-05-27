@@ -1575,13 +1575,78 @@ fun! s:eval(item, col)
   endif
 endf
 
+if has('patch-8.0.1039')
+
+  fun! s:getbufline(bufnr, start, stop)
+    return getbufline(a:bufnr, a:start, a:stop)
+  endf
+
+  fun! s:setbufline(bufnr, linenr, line)
+    call setbufline(a:bufnr, a:linenr, a:line)
+  endf
+
+  fun! s:appendbufline(bufnr, linenr, line)
+    call appendbufline(a:bufnr, a:linenr, a:line)
+  endf
+
+  fun! s:new_work_buffer()
+    1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
+    let l:bufnr = bufnr("%")
+    wincmd c
+    return l:bufnr
+  endf
+
+  fun! s:reindent_buffer(bufnr)
+    silent execute a:bufnr "bufdo norm gg=G"
+    silent buffer #
+  endf
+
+  fun! s:finalize_build(bufnr)
+    if get(g:, 'colortemplate_quiet', 1)
+      execute a:bufnr 'bwipe!'
+    else " Show the generated color scheme
+      execute 'split' bufname(a:bufnr)
+    endif
+  endf
+
+else
+
+  fun! s:getbufline(bufnr, start, stop)
+    return getline(a:start, a:stop)
+  endf
+
+  fun! s:setbufline(bufnr, linenr, line)
+    call setline(a:linenr, a:line)
+  endf
+
+  fun! s:appendbufline(bufnr, linenr, line)
+    call append(a:linenr, a:line)
+  endf
+
+  fun! s:new_work_buffer()
+    new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
+    return bufnr("%")
+  endf
+
+  fun! s:reindent_buffer(bufnr)
+    silent execute a:bufnr "bufdo norm gg=G"
+  endf
+
+  fun! s:finalize_build(bufnr)
+    if get(g:, 'colortemplate_quiet', 1)
+      execute a:bufnr 'bwipe!'
+    endif
+  endf
+
+endif
+
 " Append a String to the end of the current buffer.
 fun! s:put(bufnr, line)
-  call appendbufline(a:bufnr, '$', a:line)
+  call s:appendbufline(a:bufnr, '$', a:line)
 endf
 
 fun! s:print_header(bufnr)
-  call setbufline(a:bufnr, 1, '" Name:         ' . s:fullname()                )
+  call s:setbufline(a:bufnr, 1, '" Name:         ' . s:fullname()              )
   if !empty(s:description()                                                    )
     call s:put(a:bufnr,       '" Description:  ' . s:description()             )
   endif
@@ -1678,9 +1743,7 @@ fun! s:check_bug_bg234(bg, item, ncols, bufnr)
 endf
 
 fun! s:generate_colorscheme(outdir, overwrite)
-  1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
-  let l:bufnr = bufnr("%")
-  wincmd c
+  let l:bufnr = s:new_work_buffer()
   call s:set_active_bg(s:has_dark() ? 'dark' : 'light')
   call s:print_header(l:bufnr)
 
@@ -1747,9 +1810,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
   for l:line in s:source_lines()
     call s:put(l:bufnr, '" '.l:line)
   endfor
-  " Reindent
-  silent execute l:bufnr "bufdo norm gg=G"
-  silent buffer #
+  call s:reindent_buffer(l:bufnr)
   if !empty(a:outdir)
     let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'
     try
@@ -1758,7 +1819,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
       echo "\r"
       echomsg "[Colortemplate] Success!"
     finally
-      execute l:bufnr 'bwipe!'
+      call s:finalize_build(l:bufnr)
     endtry
   endif
 endf

@@ -590,7 +590,7 @@ Colortemplate options				*colortemplate-options*
 The directory for the generated color scheme and optional auxiliary files.
 This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
-with |:ColortemplateOutdir|.
+with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
 						*g:colortemplate_no_aux_files*
 Set to 1 if you do not want to generate any auxiliary file (including the help

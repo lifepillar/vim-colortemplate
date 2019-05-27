@@ -145,7 +145,7 @@ fun! Test_CT_unknown_key()
   Colortemplate!
   let l:qflist = getqflist()
   call assert_equal(2, len(l:qflist))
-  call assert_equal('Unknown key: xyz', l:qflist[0]['text'])
+  call assert_equal('Metadata value cannot be empty', l:qflist[0]['text'])
   call assert_equal(5, l:qflist[0]['lnum'])
   call assert_equal(4, l:qflist[0]['col'])
   call assert_equal('Unknown key: abcdef', l:qflist[1]['text'])
@@ -411,7 +411,7 @@ fun! Test_CT_empty_short_name()
   Colortemplate!
   let l:qflist = getqflist()
   call assert_equal(2, len(l:qflist))
-  call assert_equal("Missing value for short name key", l:qflist[0]['text'])
+  call assert_equal("Metadata value cannot be empty", l:qflist[0]['text'])
   call assert_equal("Please specify the short name of your color scheme", l:qflist[1]['text'])
   cclose
   bwipe test31.txt

@@ -1201,7 +1201,10 @@ fun! s:parse_key_value_pair()
       call add(l:key_tokens, s:token.value)
     endwhile
     let l:key = tolower(join(l:key_tokens, ''))
-    let l:val = matchstr(s:getl(), '\s*\zs.*$', s:token.pos)
+    let l:val = matchstr(s:getl(), '\s*\zs.\{-}\s*$', s:token.pos)
+    if empty(l:val)
+      throw 'Metadata value cannot be empty'
+    endif
     if l:key ==# 'background'
       call s:add_source_line(s:getl())
       if s:is_preamble()

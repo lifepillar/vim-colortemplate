@@ -452,7 +452,7 @@ fun! s:init_metadata()
         \ 'maintainer': '',
         \ 'website': '',
         \ 'description': '',
-        \ 'license': '',
+        \ 'license': 'Vim License (see `:help license`)',
         \ 'optionprefix': ''
         \ }
 endf
@@ -550,6 +550,10 @@ endf
 
 fun! s:maintainer()
   return s:info['maintainer']
+endf
+
+fun! s:set_default_maintainer()
+  let s:info['maintainer'] = s:info['fullauthor']
 endf
 
 fun! s:description()
@@ -1495,13 +1499,10 @@ fun! s:assert_requirements()
     call s:add_generic_error('Please specify the short name of your color scheme')
   endif
   if empty(s:author())
-    call s:add_generic_error('Please specify an author and the corresponding email')
+    call s:add_generic_error("Please add 'Author: name <email>'")
   endif
   if empty(s:maintainer())
-    call s:add_generic_error('Please specify a maintainer and the corresponding email')
-  endif
-  if empty(s:license())
-    let s:info['license'] = 'Vim License (see `:help license`)'
+    call s:set_default_maintainer()
   endif
   if s:has_dark_and_light() && !(s:has_normal_group('dark') && s:has_normal_group('light'))
     call s:add_generic_error('Please define the Normal highlight group for both dark and light background')

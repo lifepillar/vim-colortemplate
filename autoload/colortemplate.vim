@@ -230,13 +230,10 @@ fun! s:print_error_msg(msg, rethrow)
 endf
 
 fun! s:show_errors(errmsg)
-  if empty(getqflist())
-    cclose
-  else
-    botright copen
-    if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
-      throw a:errmsg
-    endif
+  botright cwindow
+  wincmd p
+  if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
+    throw a:errmsg
   endif
 endf
 " }}}

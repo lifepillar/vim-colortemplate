@@ -177,7 +177,7 @@ fun! s:show_errors(errmsg)
   if empty(getqflist())
     cclose
   else
-    copen
+    botright copen
     if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
       throw a:errmsg
     endif

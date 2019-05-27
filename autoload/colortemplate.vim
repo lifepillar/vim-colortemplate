@@ -661,8 +661,14 @@ fun! s:has_normal_group(bg)
   return s:has_normal[a:bg]
 endf
 
+" Currently active variants
 fun! s:variants()
   return s:variants
+endf
+
+" Currently active variants, except GUI
+fun! s:term_variants()
+  return filter(copy(s:variants), { _,v -> v != s:GUI  && v != 'global' })
 endf
 
 fun! s:set_default_variants()
@@ -709,6 +715,7 @@ fun! s:supported_backgrounds()
   return (s:has_dark() ? ['dark'] : []) + (s:has_light() ? ['light'] : [])
 endf
 
+" All supported variants, except GUI
 fun! s:supported_t_Co()
   return reverse(sort(s:t_Co, 'N'))
 endf
@@ -773,7 +780,7 @@ fun! s:add_highlight_group(hg)
   endif
   if s:has_term_italic(a:hg)
     call s:set_uses_italics()
-    for l:d in s:supported_t_Co()
+    for l:d in s:term_variants()
       call add(s:italics[l:d][s:current_bg()], ['it', s:hi_name(a:hg)])
     endfor
   endif

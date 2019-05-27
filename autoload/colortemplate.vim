@@ -127,7 +127,8 @@ if has('patch-8.0.1039')
   fun! s:new_work_buffer()
     botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
     let l:bufnr = bufnr("%")
-    wincmd c
+    wincmd p
+    execute winnr('#') 'wincmd c'
     return l:bufnr
   endf
 
@@ -231,7 +232,9 @@ endf
 
 fun! s:show_errors(errmsg)
   botright cwindow
-  wincmd p
+  if getbufvar('', '&ft', '') ==# 'qf'
+    wincmd p
+  endif
   if !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
     throw a:errmsg
   endif

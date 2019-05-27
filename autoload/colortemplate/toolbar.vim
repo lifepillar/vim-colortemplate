@@ -17,3 +17,9 @@ fun! colortemplate#toolbar#show()
   return ''
 endf
 
+fun! colortemplate#toolbar#hide()
+  if getbufvar('%', '&ft') ==# 'colortemplate'
+    nunmenu WinBar
+  endif
+endf
+

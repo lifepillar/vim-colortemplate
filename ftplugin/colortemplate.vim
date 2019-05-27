@@ -32,6 +32,14 @@ command! -buffer -nargs=0                          ColortemplateOutdir call colo
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 command! -buffer -nargs=0 -bar                     ColortemplateValidate call colortemplate#validate()
 
+if get(g:, 'colortemplate_toolbar', 1)
+  augroup colortemplate
+    autocmd!
+    autocmd BufEnter,WinEnter *.colortemplate call colortemplate#toolbar#show()
+    autocmd BufLeave,WinLeave *.colortemplate call colortemplate#toolbar#hide()
+  augroup END
+endif
+
 call colortemplate#toolbar#show()
 
 " vim: foldmethod=marker nowrap

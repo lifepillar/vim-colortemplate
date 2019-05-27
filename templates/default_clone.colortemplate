@@ -5,7 +5,7 @@ Full name:   Default Clone
 Short name:  default_clone
 Author:      Bram Moolenaar <Bram@vim.org>
 Maintainer:  Lifepillar <lifepillar@lifepillar.me>
-Website: https://github.com/vim/vim/blob/master/src/syntax.c
+Website:     https://github.com/vim/vim/blob/master/src/syntax.c
 Description: A nearly exact clone of Vim's default colorscheme
 # }}}
 

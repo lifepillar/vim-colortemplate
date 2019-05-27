@@ -2,14 +2,14 @@
 
 # Information {{{
 # Mandatory
-License:
-Full name:   Light
-Short name:  light
-Author:      Myself <myself@somewhere.org>
-Maintainer:  Myself <myself@somewhere.org>
+Full name:     Light
+Short name:    light
+Author:        Myself <myself@somewhere.org>
 # Optional
-Website:
-Description: Template for a light colorscheme
+Maintainer:    Myself <myself@somewhere.org>
+Website:       https://me.org
+Description:   Template for a light colorscheme
+License:       Public domain
 # Prefix for options: short name is used if this key is not present:
 Option Prefix: light
 # }}}

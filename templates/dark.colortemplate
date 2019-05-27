@@ -2,14 +2,14 @@
 
 # Information {{{
 # Mandatory
-Full name:   Dark
-Short name:  dark
-Author:      Myself <myself@somewhere.org>
-Maintainer:  Myself <myself@somewhere.org>
+Full name:     Dark
+Short name:    dark
+Author:        Myself <myself@somewhere.org>
 # Optional
-Website:
-Description: Template for dark colorscheme
-License:
+Maintainer:    Myself <myself@somewhere.org>
+Website:       https://me.org
+Description:   Template for dark colorscheme
+License:       Public domain
 # Prefix for options: short name is used if this key is not present:
 Option Prefix: dark
 # }}}

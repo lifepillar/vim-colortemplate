@@ -2,14 +2,14 @@
 
 # Information {{{
 # Mandatory
-Full name:   Dark and Light
-Short name:  dark_and_light
-Author:      Myself <myself@somewhere.org>
-Maintainer:  Myself <myself@somewhere.org>
+Full name:     Dark and Light
+Short name:    dark_and_light
+Author:        Myself <myself@somewhere.org>
 # Optional
-Website:
-Description: Template for a colorscheme with dark and light variants
-License:
+Maintainer:    Myself <myself@somewhere.org>
+Website:       https://me.org
+Description:   Template for a colorscheme with dark and light variants
+License:       Public domain
 Option Prefix: dark_and_light
 # }}}
 

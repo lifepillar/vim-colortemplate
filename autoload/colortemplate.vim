@@ -59,7 +59,7 @@ fun! s:top(S)
   return a:S[-1]
 endf
 " }}}
-" Path manipulation {{{
+" File and Path manipulation {{{
 fun! s:slash() abort " Code borrowed from Pathogen (thanks T. Pope!)
   return !exists("+shellslash") || &shellslash ? '/' : '\'
 endf
@@ -108,6 +108,62 @@ fun! s:make_dir(dirpath)
     throw 'Could not create directory: ' . l:dirpath
   endtry
 endf
+" }}}
+" Buffer and file manipulation {{{
+if has('patch-8.0.1039')
+
+  fun! s:getbufline(bufnr, start, stop)
+    return getbufline(a:bufnr, a:start, a:stop)
+  endf
+
+  fun! s:setbufline(bufnr, linenr, line)
+    call setbufline(a:bufnr, a:linenr, a:line)
+  endf
+
+  fun! s:appendbufline(bufnr, linenr, line)
+    call appendbufline(a:bufnr, a:linenr, a:line)
+  endf
+
+  fun! s:new_work_buffer()
+    botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
+    let l:bufnr = bufnr("%")
+    wincmd c
+    return l:bufnr
+  endf
+
+  fun! s:reindent_buffer(bufnr)
+    silent execute a:bufnr "bufdo norm gg=G"
+    silent buffer #
+  endf
+
+else
+
+  fun! s:getbufline(bufnr, start, stop)
+    return getline(a:start, a:stop)
+  endf
+
+  fun! s:setbufline(bufnr, linenr, line)
+    call setline(a:linenr, a:line)
+  endf
+
+  fun! s:appendbufline(bufnr, linenr, line)
+    call append(a:linenr, a:line)
+  endf
+
+  fun! s:new_work_buffer()
+    botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
+    return bufnr("%")
+  endf
+
+  fun! s:reindent_buffer(bufnr)
+    silent execute a:bufnr "bufdo norm gg=G"
+  endf
+
+endif
+
+fun! s:destroy_buffer(bufnr)
+  execute a:bufnr 'bwipe!'
+endf
 
 " Write the specified buffer into path. The path must be inside env['dir'].
 fun! s:write_buffer(bufnr, path, env, overwrite)
@@ -121,7 +177,7 @@ fun! s:write_buffer(bufnr, path, env, overwrite)
     endif
   endif
   if a:overwrite || !filereadable(l:path)
-    if writefile(getbufline(a:bufnr, 1, "$"), l:path) < 0
+    if writefile(s:getbufline(a:bufnr, 1, "$"), l:path) < 0
       throw 'Could not write ' . l:path . ': ' . v:exception
     endif
   else
@@ -1575,71 +1631,6 @@ fun! s:eval(item, col)
   endif
 endf
 
-if has('patch-8.0.1039')
-
-  fun! s:getbufline(bufnr, start, stop)
-    return getbufline(a:bufnr, a:start, a:stop)
-  endf
-
-  fun! s:setbufline(bufnr, linenr, line)
-    call setbufline(a:bufnr, a:linenr, a:line)
-  endf
-
-  fun! s:appendbufline(bufnr, linenr, line)
-    call appendbufline(a:bufnr, a:linenr, a:line)
-  endf
-
-  fun! s:new_work_buffer()
-    1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
-    let l:bufnr = bufnr("%")
-    wincmd c
-    return l:bufnr
-  endf
-
-  fun! s:reindent_buffer(bufnr)
-    silent execute a:bufnr "bufdo norm gg=G"
-    silent buffer #
-  endf
-
-  fun! s:finalize_build(bufnr)
-    if get(g:, 'colortemplate_quiet', 1)
-      execute a:bufnr 'bwipe!'
-    else " Show the generated color scheme
-      execute 'split' bufname(a:bufnr)
-    endif
-  endf
-
-else
-
-  fun! s:getbufline(bufnr, start, stop)
-    return getline(a:start, a:stop)
-  endf
-
-  fun! s:setbufline(bufnr, linenr, line)
-    call setline(a:linenr, a:line)
-  endf
-
-  fun! s:appendbufline(bufnr, linenr, line)
-    call append(a:linenr, a:line)
-  endf
-
-  fun! s:new_work_buffer()
-    new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
-    return bufnr("%")
-  endf
-
-  fun! s:reindent_buffer(bufnr)
-    silent execute a:bufnr "bufdo norm gg=G"
-  endf
-
-  fun! s:finalize_build(bufnr)
-    if get(g:, 'colortemplate_quiet', 1)
-      execute a:bufnr 'bwipe!'
-    endif
-  endf
-
-endif
-
 " Append a String to the end of the current buffer.
 fun! s:put(bufnr, line)
   call s:appendbufline(a:bufnr, '$', a:line)
@@ -1819,7 +1810,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
       echo "\r"
       echomsg "[Colortemplate] Success!"
     finally
-      call s:finalize_build(l:bufnr)
+      call s:destroy_buffer(l:bufnr)
     endtry
   endif
 endf
@@ -1943,6 +1934,9 @@ fun! colortemplate#make(...)
     call s:generate_colorscheme(l:outdir, l:overwrite)
     call s:generate_aux_files(l:outdir, l:overwrite)
     call s:show_errors('Build error')
+    if !get(g:, 'colortemplate_quiet', 1)
+      call colortemplate#view_source()
+    endif
   catch /.*/
     let g:colortemplate_exit_status = 1
     call s:print_error_msg(v:exception, 0)

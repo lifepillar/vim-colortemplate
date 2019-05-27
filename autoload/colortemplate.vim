@@ -133,8 +133,9 @@ if has('patch-8.0.1039')
   endf
 
   fun! s:reindent_buffer(bufnr)
-    silent execute a:bufnr "bufdo norm gg=G"
-    silent buffer #
+    execute '1split +'.a:bufnr.'buffer'
+    normal gg=G
+    wincmd c
   endf
 
 else

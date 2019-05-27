@@ -4,10 +4,7 @@ documentation
 *@shortname.txt*	For Vim version @vimversion	Last change: @date
 
 
-		  VIM REFERENCE MANUAL    by @author
-
-
-			@fullname colorscheme			*@shortname*
+		  @fullname color scheme    by @author
 
 @fullname, a colorscheme with a unique touch.
 

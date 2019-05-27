@@ -1980,21 +1980,32 @@ fun! colortemplate#getinfo(n)
   if empty(l:name) | return | endif
   let l:hexc = s:guicol(l:name)
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
-  let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
-  echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %s',
+  if a:n <= 1
+    let l:best = colortemplate#colorspace#approx(l:hexc)
+    echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %d [%f]',
+          \ l:name, l:r, l:g, l:b, s:guicol(l:name),
+          \ l:best['index'], l:best['delta']
+          \ )
+  else
+    let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
+    echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %s',
         \ l:name, l:r, l:g, l:b, s:guicol(l:name),
         \ join(l:approx, ', ')
         \ )
+  endif
 endf
 
 fun! colortemplate#approx_color(n)
   let l:name = s:quickly_parse_color_line()
-  if empty(l:name) | return '~' | endif
-  " Position the cursor on ~
-  call cursor('.', 1 + match(getline('.'), '\~'))
-  execute "normal r\<space>"
-  let l:hexc = s:guicol(l:name)
-  return colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]
+  if empty(l:name) | return | endif
+  let l:col = colortemplate#colorspace#k_neighbours(s:guicol(l:name), a:n)[-1]
+  call setline('.', substitute(getline('.'), '\~', l:col, ''))
+endf
+
+fun! colortemplate#nearby_colors(n)
+  let l:name = s:quickly_parse_color_line()
+  if empty(l:name) | return | endif
+  echo colortemplate#colorspace#colors_within(a:n, s:guicol(l:name))
 endf
 
 " Format a dictionary of color name/value pairs in Colortemplate format

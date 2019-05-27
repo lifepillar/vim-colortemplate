@@ -1566,7 +1566,7 @@ fun! s:eval(item, col)
     return a:item[1]
   elseif a:item[0] ==# 'it'
     if a:col > 256
-      return 'hi ' . a:item[1] . ' gui=italic'
+      return 'hi ' . a:item[1] . ' gui=italic cterm=italic' " Need to set even for termguicolors (see https://github.com/vim/vim/issues/1740)
     else
       return 'hi ' . a:item[1] . (a:col > 2 ? ' c' : ' ') . 'term=italic'
     endif

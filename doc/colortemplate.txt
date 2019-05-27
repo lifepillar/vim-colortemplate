@@ -613,6 +613,11 @@ Set to 1 if you want Colortemplate to report only errors (not recommended).
 >
 	let g:colortemplate_no_warnings = 0
 <
+						*g:colortemplate_toolbar*
+Set to 0 if you do not want to the toolbar to be visible.
+>
+	let g:colortemplate_toolbar = 1
+<
 						*g:colortemplate_quiet*
 Set to 0 if you want Colortemplate to open the generated color scheme in
 a split window automatically after building it.

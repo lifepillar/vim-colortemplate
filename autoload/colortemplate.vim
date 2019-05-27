@@ -713,8 +713,12 @@ fun! s:supported_t_Co()
   return reverse(sort(s:t_Co, 'N'))
 endf
 
+" Return the minimum t_Co for the *currently active* variants.
+" In the global section or for the GUi returns 256. This is used for
+" interpolating @term colors with the common denominator.
 fun! s:min_t_Co()
-  return min(s:t_Co)
+  let l:min = min(filter(copy(s:variants), { _,v -> v !=# 'gui' && v !=# 'global' }))
+  return l:min == 0 ? 256 : l:min
 endf
 
 fun! s:add_verbatim(line, linenr, file)

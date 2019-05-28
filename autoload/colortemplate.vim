@@ -220,8 +220,7 @@ fun! s:add_generic_warning(msg)
 endf
 
 fun! s:print_error_msg(msg, rethrow)
-  redraw
-  echo "\r"
+  call s:clearscreen()
   if a:rethrow
     unsilent echoerr '[Colortemplate]' a:msg
   else
@@ -232,9 +231,13 @@ fun! s:print_error_msg(msg, rethrow)
 endf
 
 fun! s:print_notice(msg)
+  call s:clearscreen()
+  unsilent echomsg '[Colortemplate]' a:msg
+endf
+
+fun! s:clearscreen()
   redraw
   echo "\r"
-  unsilent echomsg '[Colortemplate]' a:msg
 endf
 
 fun! s:show_errors(errmsg)
@@ -1876,8 +1879,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
     let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'
     try
       call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)
-      redraw
-      echo "\r"
+      call s:clearscreen()
     finally
       call s:destroy_buffer(l:bufnr)
     endtry
@@ -2064,8 +2066,7 @@ fun! colortemplate#stats()
     endif
   endtry
   call s:print_color_info()
-  redraw
-  echo "\r"
+  call s:clearscreen()
 endf
 
 fun! colortemplate#path()
@@ -2091,8 +2092,7 @@ fun! colortemplate#view_source() abort
   let l:path = colortemplate#path()
   if empty(l:path) | return 0 | endif
   execute "keepalt split" l:path
-  redraw
-  echo "\r"
+  call s:clearscreen()
   return 1
 endf
 

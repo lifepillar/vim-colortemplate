@@ -457,6 +457,10 @@ fun! s:has_term_attr(hg)
   return !empty(a:hg['term'])
 endf
 
+fun! s:has_italics(hg)
+  return a:hg['term_italic'] || a:hg['gui_italic']
+endf
+
 fun! s:has_term_italic(hg)
   return a:hg['term_italic']
 endf
@@ -479,9 +483,9 @@ fun! s:add_term_attr(hg, attrlist)
       let a:hg['term_italic'] = 1
     else
       call add(a:hg['term'], l:a)
+      call uniq(sort(a:hg['term'])) " TODO: do this lazily
     endif
   endfor
-  call uniq(sort(a:hg['term']))
 endf
 
 fun! s:add_gui_attr(hg, attrlist)
@@ -490,9 +494,9 @@ fun! s:add_gui_attr(hg, attrlist)
       let a:hg['gui_italic'] = 1
     else
       call add(a:hg['gui'], l:a)
+      call uniq(sort(a:hg['gui'])) " TODO: ditto
     endif
   endfor
-  call uniq(sort(a:hg['gui']))
 endf
 " }}}
 " Colorscheme metadata {{{
@@ -548,6 +552,10 @@ endf
 
 fun! s:set_has_light()
   let s:supports_light = 1
+endf
+
+fun! s:supported_backgrounds()
+  return (s:has_dark() ? ['dark'] : []) + (s:has_light() ? ['light'] : [])
 endf
 
 fun! s:get_info(key)
@@ -648,49 +656,42 @@ fun! s:init_colorscheme_definition()
         \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
         \ '256': { 'dark': [], 'light': [], 'any': [] },
         \ }
-  let s:variants = ['global']
+  let s:active_variants = ['global']
+  let s:supported_variants = [s:GUI, '256']
   let s:has_normal = { 'dark': 0, 'light': 0 }
-  let s:t_Co = ['256']
 endf
 
 fun! s:is_preamble()
-  return s:variants[0] ==# 'global'
+  return index(s:active_variants, 'global') > -1
 endf
 
 fun! s:has_normal_group(bg)
   return s:has_normal[a:bg]
 endf
 
+fun! s:supported_variants()
+  return reverse(uniq(sort(s:supported_variants, 'N')))
+endf
+
 " Currently active variants
-fun! s:variants()
-  return s:variants
+fun! s:active_variants()
+  return s:active_variants
 endf
 
-" Currently active variants, except GUI
-fun! s:term_variants()
-  return filter(copy(s:variants), { _,v -> v != s:GUI  && v != 'global' })
-endf
-
-fun! s:set_default_variants()
-  let s:variants = [s:GUI, '256']
-endf
-
-fun! s:set_variants(defs)
-  let s:variants = []
-  for l:d in a:defs
-    if l:d ==# 'gui' || str2nr(l:d) > 256
-      let l:d = s:GUI
-    elseif str2nr(l:d) < 1
+fun! s:set_active_variants(variants)
+  let s:active_variants = []
+  for l:v in a:variants
+    if l:v ==# 'gui' || str2nr(l:v) > 256
+      let l:v = s:GUI
+    elseif str2nr(l:v) < 1
       throw "Expected number or the keyword 'gui'"
     endif
-    call add(s:variants, l:d)
-    if !has_key(s:data, l:d)
-      let s:data[l:d] = { 'dark': [], 'light': [], 'any': [] }
-      let s:italics[l:d] = { 'dark': [], 'light': [], 'any': [] }
-      let s:nvim[l:d] = { 'dark': [], 'light': [], 'any': [] }
-      if l:d !=# s:GUI
-        call add(s:t_Co, l:d)
-      endif
+    call add(s:active_variants, l:v)
+    call add(s:supported_variants, l:v)
+    if !has_key(s:data, l:v)
+      let s:data[l:v] = { 'dark': [], 'light': [], 'any': [] }
+      let s:italics[l:v] = { 'dark': [], 'light': [], 'any': [] }
+      let s:nvim[l:v] = { 'dark': [], 'light': [], 'any': [] }
     endif
   endfor
 endf
@@ -699,51 +700,46 @@ fun! s:global_preamble()
   return s:data['global']['any']
 endf
 
-fun! s:gui_preamble()
-  return s:data[s:GUI]['any']
+fun! s:preamble(variant)
+  return s:data[a:variant]['any']
 endf
 
-fun! s:preamble(col)
-  return s:data[a:col]['any']
+fun! s:colorscheme_definitions(variant, background)
+  return s:data[a:variant][a:background]
 endf
 
-fun! s:colorscheme_definition(col, background)
-  return s:data[a:col][a:background]
+fun! s:italics_definitions(variant, background)
+  return s:italics[a:variant][a:background]
 endf
 
-fun! s:supported_backgrounds()
-  return (s:has_dark() ? ['dark'] : []) + (s:has_light() ? ['light'] : [])
-endf
-
-" All supported variants, except GUI
-fun! s:supported_t_Co()
-  return reverse(sort(s:t_Co, 'N'))
+fun! s:neovim_definitions(variant, background)
+  return s:nvim[a:variant][a:background]
 endf
 
 " Return the minimum t_Co for the *currently active* variants.
 " In the global section or for the GUi returns 256. This is used for
 " interpolating @term colors with the common denominator.
 fun! s:min_t_Co()
-  let l:min = min(filter(copy(s:variants), { _,v -> v !=# 'gui' && v !=# 'global' }))
+  let l:min = min(filter(copy(s:active_variants), { _,v -> v !=# 'gui' }))
   return l:min == 0 ? 256 : l:min
 endf
 
 fun! s:add_verbatim(line, linenr, file)
-  for l:d in s:variants()
-    call add(s:data[l:d][s:current_bg()],
+  for l:v in s:active_variants()
+    call add(s:data[l:v][s:current_bg()],
           \ ['verb', { 'line': a:line, 'linenr': a:linenr, 'file': a:file }])
   endfor
 endf
 
 fun! s:add_linked_group(source, target)
   if s:is_neovim_group(a:source)
-    for l:d in s:variants()
-      call add(s:nvim[l:d][s:current_bg()], ['link', [a:source, a:target]])
+    for l:v in s:active_variants()
+      call add(s:nvim[l:v][s:current_bg()], ['link', [a:source, a:target]])
     endfor
     return
   endif
-  for l:d in s:variants()
-    call add(s:data[l:d][s:current_bg()], ['link', [a:source, a:target]])
+  for l:v in s:active_variants()
+    call add(s:data[l:v][s:current_bg()], ['link', [a:source, a:target]])
   endfor
 endf
 
@@ -765,42 +761,38 @@ fun! s:add_highlight_group(hg)
     throw "Cannot define highlight group before Variant or Background is set"
   endif
   if s:is_neovim_group(s:hi_name(a:hg))
-    for l:d in s:variants()
-      call s:check_color_range(a:hg, l:d)
-      call add(s:nvim[l:d][s:current_bg()], ['group', a:hg])
+    for l:v in s:active_variants()
+      call s:check_color_range(a:hg, l:v)
+      call add(s:nvim[l:v][s:current_bg()], ['group', a:hg])
     endfor
     return
   endif
-  for l:d in s:variants()
-    call s:check_color_range(a:hg, l:d)
-    call add(s:data[l:d][s:current_bg()], ['group', a:hg])
+  for l:v in s:active_variants()
+    call s:check_color_range(a:hg, l:v)
+    call add(s:data[l:v][s:current_bg()], ['group', a:hg])
   endfor
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
     let s:has_normal[s:current_bg()] = 1
   endif
-  if s:has_term_italic(a:hg)
+  if s:has_italics(a:hg)
     call s:set_uses_italics()
-    for l:d in s:term_variants()
-      call add(s:italics[l:d][s:current_bg()], ['it', s:hi_name(a:hg)])
+    for l:v in s:active_variants()
+      call add(s:italics[l:v][s:current_bg()], ['it', s:hi_name(a:hg)])
     endfor
-  endif
-  if s:has_gui_italic(a:hg)
-    call s:set_uses_italics()
-    call add(s:italics[s:GUI][s:current_bg()], ['it', s:hi_name(a:hg)])
   endif
 endf
 
 " Add italics definitions accumulated so far to the colorscheme at the current point
 fun! s:flush_italics()
-  for l:d in s:variants()
-    let l:bg = s:current_bg()
-    if empty(s:italics[l:d][l:bg])
+  let l:bg = s:current_bg()
+  for l:v in s:active_variants()
+    if empty(s:italics[l:v][l:bg])
       continue
     endif
-    call add(s:data[l:d][l:bg], ['raw', 'if s:italics'])
-    call extend(s:data[l:d][l:bg], s:italics[l:d][l:bg])
-    call add(s:data[l:d][l:bg], ['raw', 'endif'])
-    let s:italics[l:d][l:bg] = []
+    call add(s:data[l:v][l:bg], ['raw', 'if s:italics'])
+    call extend(s:data[l:v][l:bg], s:italics[l:v][l:bg])
+    call add(s:data[l:v][l:bg], ['raw', 'endif'])
+    let s:italics[l:v][l:bg] = []
   endfor
 endf
 
@@ -808,15 +800,15 @@ fun! s:flush_neovim()
   if !s:supports_neovim()
     return
   endif
-  for l:d in s:variants()
-    let l:bg = s:current_bg()
-    if empty(s:nvim[l:d][l:bg])
+  let l:bg = s:current_bg()
+  for l:v in s:active_variants()
+    if empty(s:nvim[l:v][l:bg])
       continue
     endif
-    call add(s:data[l:d][l:bg], ['raw', "if has('nvim')"])
-    call extend(s:data[l:d][l:bg], s:nvim[l:d][l:bg])
-    call add(s:data[l:d][l:bg], ['raw', 'endif'])
-    let s:nvim[l:d][l:bg] = []
+    call add(s:data[l:v][l:bg], ['raw', "if has('nvim')"])
+    call extend(s:data[l:v][l:bg], s:nvim[l:v][l:bg])
+    call add(s:data[l:v][l:bg], ['raw', 'endif'])
+    let s:nvim[l:v][l:bg] = []
   endfor
 endf
 " }}}
@@ -1290,8 +1282,8 @@ fun! s:parse_key_value_pair()
     endif
     if l:key ==# 'background'
       call s:add_source_line(s:getl())
-      if s:is_preamble()
-        call s:set_default_variants()
+      if s:is_preamble() " Background in preamble implies Variant: gui 256
+        call s:set_active_variants([s:GUI, '256'])
       endif
       if l:val =~? '\m^dark\s*$'
         call s:set_active_bg('dark')
@@ -1306,8 +1298,8 @@ fun! s:parse_key_value_pair()
       endif
     elseif l:key ==# 'variant'
       call s:add_source_line(s:getl())
-      let l:defs = split(tolower(l:val))
-      call s:set_variants(l:defs)
+      let l:variants = split(tolower(l:val))
+      call s:set_active_variants(l:variants)
     elseif l:key ==# 'terminalcolors'
       call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
             \ "The 'Terminal colors' key has been deprecated and is a no-op now")
@@ -1644,7 +1636,8 @@ fun! s:eval(item, col)
     return a:item[1]
   elseif a:item[0] ==# 'it'
     if a:col > 256
-      return 'hi ' . a:item[1] . ' gui=italic cterm=italic' " Need to set even for termguicolors (see https://github.com/vim/vim/issues/1740)
+      " Need to set cterm even for termguicolors (see https://github.com/vim/vim/issues/1740)
+      return 'hi ' . a:item[1] . ' gui=italic cterm=italic'
     else
       return 'hi ' . a:item[1] . (a:col > 2 ? ' c' : ' ') . 'term=italic'
     endif
@@ -1735,7 +1728,7 @@ endf
 " needed. The function's name is a reference to the original issue report,
 " which had an example using color 234.
 " See https://github.com/lifepillar/vim-colortemplate/issues/13.
-fun! s:check_bug_bg234(bg, item, ncols, bufnr)
+fun! s:check_bug_bg234(bufnr, bg, item, ncols)
   if a:item[0] ==# 'group' && s:hi_name(a:item[1]) ==? 'Normal'
     if a:bg ==# 'dark'
       if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) ||
@@ -1755,67 +1748,104 @@ fun! s:check_bug_bg234(bg, item, ncols, bufnr)
   endif
 endf
 
-fun! s:generate_colorscheme(outdir, overwrite)
-  let l:bufnr = s:new_work_buffer()
-  call s:set_active_bg(s:has_dark() ? 'dark' : 'light')
-  call s:print_header(l:bufnr)
-
-  " Preamble
+fun! s:print_global_preamble(bufnr)
   if !empty(s:global_preamble())
-    call s:put(l:bufnr, '')
+    call s:put(a:bufnr, '')
     for l:item in s:global_preamble()
-      call s:put(l:bufnr, s:eval(l:item, 0))
+      call s:put(a:bufnr, s:eval(l:item, 0)) " TODO: check 0 (what about verbatim interpolation?)
     endfor
   endif
+endf
 
-  " GUI colors
-  call s:put(l:bufnr, '')
-  call s:put(l:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
-  for l:item in s:gui_preamble()
-    call s:put(l:bufnr, s:eval(l:item, str2nr(s:GUI)))
+fun! s:print_local_preamble(bufnr, variant)
+  call s:put(a:bufnr, '')
+  if a:variant ==# s:GUI
+    call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
+  else
+    call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
+  endif
+  let l:ncols = str2nr(a:variant)
+  for l:item in s:preamble(a:variant)
+    call s:put(a:bufnr, s:eval(l:item, l:ncols))
   endfor
+endf
+
+fun! s:print_gui_colorscheme_defs(bufnr, bg)
+  let l:ncols = str2nr(s:GUI)
+  for l:item in s:colorscheme_definitions(s:GUI, a:bg)
+    call s:put(a:bufnr, s:eval(l:item, l:ncols))
+  endfor
+endf
+
+fun! s:print_term_colorscheme_defs(bufnr, variant, bg)
+  let l:ncols = str2nr(a:variant)
+  for l:item in s:colorscheme_definitions(a:variant, a:bg)
+    call s:put(a:bufnr, s:eval(l:item, l:ncols))
+    call s:check_bug_bg234(a:bufnr, a:bg, l:item, l:ncols)
+  endfor
+endf
+
+fun! s:print_italics_defs(bufnr, variant, bg)
+  let l:ncols = str2nr(a:variant)
+  call s:put(a:bufnr, 'if s:italics')
+  for l:item in s:italics_definitions(a:variant, a:bg)
+    call s:put(a:bufnr, s:eval(l:item, l:ncols))
+  endfor
+  call s:put(a:bufnr, 'endif')
+endf
+
+fun! s:print_neovim_defs(bufnr, variant, bg)
+  if !s:supports_neovim()
+    return
+  endif
+  let l:nvim_defs = s:neovim_definitions(a:variant, a:bg)
+  if empty(l:nvim_defs)
+    return
+  endif
+  let l:ncols = str2nr(a:variant)
+  call s:put(a:bufnr, "if has('nvim')")
+  for l:item in l:nvim_defs
+    call s:put(a:bufnr, s:eval(l:item, l:ncols))
+  endfor
+  call s:put(a:bufnr, 'endif')
+endf
+
+fun! s:print_colorscheme(bufnr, variant)
+  call s:print_local_preamble(a:bufnr, a:variant)
   if s:has_dark_and_light()
     call s:set_active_bg('dark')
-    call s:put(l:bufnr, "if &background ==# 'dark'")
-    call s:print_terminal_colors(l:bufnr)
-    for l:item in s:colorscheme_definition(s:GUI, 'dark')
-      call s:put(l:bufnr, s:eval(l:item, str2nr(s:GUI)))
-    endfor
-    call s:finish_endif(l:bufnr)
-    call s:put(l:bufnr, '" Light background')
+    call s:put(a:bufnr, "if &background ==# 'dark'")
+    if a:variant ==# s:GUI
+      call s:print_terminal_colors(a:bufnr)
+      call s:print_gui_colorscheme_defs(a:bufnr, 'dark')
+    else
+      call s:print_term_colorscheme_defs(a:bufnr, a:variant, 'dark')
+    endif
+    call s:print_italics_defs(a:bufnr, a:variant, 'dark')
+    call s:print_neovim_defs(a:bufnr, a:variant, 'dark')
+    call s:finish_endif(a:bufnr)
+    call s:put(a:bufnr, '" Light background')
     call s:set_active_bg('light')
   endif
-  call s:print_terminal_colors(l:bufnr)
-  for l:item in s:colorscheme_definition(s:GUI, s:default_bg())
-    call s:put(l:bufnr, s:eval(l:item, str2nr(s:GUI)))
-  endfor
-  call s:finish_endif(l:bufnr)
+  if a:variant ==# s:GUI
+    call s:print_terminal_colors(a:bufnr)
+    call s:print_gui_colorscheme_defs(a:bufnr, s:default_bg())
+  else
+    call s:print_term_colorscheme_defs(a:bufnr, a:variant, s:default_bg())
+  endif
+  call s:print_italics_defs(a:bufnr, a:variant, s:default_bg())
+  call s:print_neovim_defs(a:bufnr, a:variant, s:default_bg())
+  call s:finish_endif(a:bufnr)
+endf
 
-  " Terminal colors
+fun! s:generate_colorscheme(outdir, overwrite)
+  let l:bufnr = s:new_work_buffer()
+
   call s:set_active_bg(s:has_dark() ? 'dark' : 'light')
-  for l:t_Co in s:supported_t_Co()
-    let l:ncols = str2nr(l:t_Co)
-    call s:put(l:bufnr, '')
-    call s:put(l:bufnr, 'if s:t_Co >= ' . l:t_Co)
-    for l:item in s:preamble(l:t_Co)
-      call s:put(l:bufnr, s:eval(l:item, l:ncols))
-    endfor
-    if s:has_dark_and_light()
-      call s:set_active_bg('dark')
-      call s:put(l:bufnr, "if &background ==# 'dark'")
-      for l:item in s:colorscheme_definition(l:t_Co, 'dark')
-        call s:put(l:bufnr, s:eval(l:item, l:ncols))
-        call s:check_bug_bg234('dark', l:item, l:ncols, l:bufnr)
-      endfor
-      call s:finish_endif(l:bufnr)
-    call s:put(l:bufnr, '" Light background')
-      call s:set_active_bg('light')
-    endif
-    for l:item in s:colorscheme_definition(l:t_Co, s:default_bg())
-      call s:put(l:bufnr, s:eval(l:item, l:ncols))
-      call s:check_bug_bg234(s:default_bg(), l:item, l:ncols, l:bufnr)
-    endfor
-    call s:finish_endif(l:bufnr)
+  call s:print_header(l:bufnr)
+  call s:print_global_preamble(l:bufnr)
+  for l:variant in s:supported_variants()
+    call s:print_colorscheme(l:bufnr, l:variant)
   endfor
   call s:put(l:bufnr, '')
 
@@ -1833,6 +1863,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
     finally
       call s:destroy_buffer(l:bufnr)
     endtry
+    return l:outpath
   endif
 endf
 " }}}
@@ -1905,8 +1936,6 @@ fun! colortemplate#parse(filename) abort
     endtry
   endwhile
 
-  call s:flush_italics()
-  call s:flush_neovim()
   call s:assert_requirements()
   call s:show_errors('Parse error')
 endf
@@ -1916,7 +1945,6 @@ endf
 " a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
   update
-  echomsg '[Colortemplate] Building colorscheme...'
   let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
@@ -1941,7 +1969,11 @@ fun! colortemplate#make(...)
   endif
 
   try
-    call colortemplate#parse(expand('%:p'))
+    let l:inpath = expand('%:p')
+    echo "\r"
+    redraw
+    unsilent echomsg '[Colortemplate] Building '.l:inpath.'...'
+    call colortemplate#parse(l:inpath)
   catch /Parse error/
     let g:colortemplate_exit_status = 1
     return
@@ -1952,18 +1984,20 @@ fun! colortemplate#make(...)
   endtry
 
   try
-    call s:generate_colorscheme(l:outdir, l:overwrite)
+    let l:outpath = s:generate_colorscheme(l:outdir, l:overwrite)
     call s:generate_aux_files(l:outdir, l:overwrite)
     call s:show_errors('Build error')
     if !get(g:, 'colortemplate_quiet', 1)
       call colortemplate#view_source()
     endif
+    echo "\r"
+    redraw
+    unsilent echomsg '[Colortemplate] Success! [' . l:outpath . ' created]'
   catch /.*/
     let g:colortemplate_exit_status = 1
-    call s:print_error_msg(v:exception, 0)
+    unsilent call s:print_error_msg(v:exception, 0)
     return
   endtry
-  unsilent echomsg "[Colortemplate] Success!"
 endf
 
 " a:1 is the optional path to an output directory
@@ -1978,11 +2012,16 @@ fun! colortemplate#build_dir(...)
     return
   endif
 
+  let l:n = 0
   let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
   for l:template in glob(l:wd.s:slash().'[^_]*.colortemplate', 1, 1, 1)
     execute "edit" l:template
     call colortemplate#make(l:outdir, get(a:000, 1, ''), 0)
+    let l:n += 1
   endfor
+  echo "\r"
+  redraw
+  unsilent echomsg '[Colortemplate] Success! ['.string(l:n).' color schemes created]'
 endf
 
 fun! colortemplate#stats()

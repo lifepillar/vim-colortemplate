@@ -223,12 +223,18 @@ fun! s:print_error_msg(msg, rethrow)
   redraw
   echo "\r"
   if a:rethrow
-    echoerr '[Colortemplate]' a:msg
+    unsilent echoerr '[Colortemplate]' a:msg
   else
     echohl Error
-    echomsg '[Colortemplate]' a:msg
+    unsilent echomsg '[Colortemplate]' a:msg
     echohl None
   endif
+endf
+
+fun! s:print_notice(msg)
+  redraw
+  echo "\r"
+  unsilent echomsg '[Colortemplate]' a:msg
 endf
 
 fun! s:show_errors(errmsg)
@@ -1982,15 +1988,14 @@ fun! colortemplate#make(...)
 
   try
     let l:inpath = expand('%:p')
-    echo "\r"
-    redraw
-    unsilent echomsg '[Colortemplate] Building '.l:inpath.'...'
+    call s:print_notice('[Colortemplate] Building '.l:inpath.'...')
     call colortemplate#parse(l:inpath)
   catch /Parse error/
+    call s:print_error_msg('Parse error', 0)
     let g:colortemplate_exit_status = 1
     return g:colortemplate_exit_status
   catch /.*/
-    echoerr '[Colortemplate] Unexpected error: ' v:exception
+    call s:print_error_msg('[Colortemplate] Unexpected error: ' . v:exception, 0)
     let g:colortemplate_exit_status = 1
     return g:colortemplate_exit_status
   endtry
@@ -2002,12 +2007,10 @@ fun! colortemplate#make(...)
     if !get(g:, 'colortemplate_quiet', 1)
       call colortemplate#view_source()
     endif
-    echo "\r"
-    redraw
-    unsilent echomsg '[Colortemplate] Success! [' . l:outpath . ' created]'
+    call s:print_notice('[Colortemplate] Success! [' . l:outpath . ' created]')
   catch /.*/
     let g:colortemplate_exit_status = 1
-    unsilent call s:print_error_msg(v:exception, 0)
+    call s:print_error_msg(v:exception, 0)
     return g:colortemplate_exit_status
   endtry
 endf
@@ -2031,9 +2034,11 @@ fun! colortemplate#build_dir(...)
     call colortemplate#make(l:outdir, get(a:000, 1, ''), 0)
     let l:n += 1
   endfor
-  echo "\r"
-  redraw
-  unsilent echomsg '[Colortemplate] Success! ['.string(l:n).' color schemes created]'
+  if g:colortemplate_exit_status
+    call s:print_error_msg('Build failed. See :messages', 0)
+  else
+    call s:print_notice('[Colortemplate] Success! ['.string(l:n).' color schemes created]')
+  endif
 endf
 
 fun! colortemplate#stats()

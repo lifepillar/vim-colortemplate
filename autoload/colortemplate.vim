@@ -1715,10 +1715,12 @@ fun! s:print_terminal_colors(bufnr)
   if len(l:tc) > 16
     throw 'Too many terminal ANSI colors (' . s:default_bg() . ' background)'
   endif
-  let l:col0_6 = join(map(copy(l:tc[0:6]), { _,c -> "'".c."'" }), ', ')
-  let l:col7_15 = join(map(copy(l:tc[7:15]), { _,c -> "'".c."'" }), ', ')
-  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_6 . ',')
-  call s:put(a:bufnr, '\ ' . l:col7_15 . ']')
+  let l:col0_3 = join(map(copy(l:tc[0:3]), { _,c -> "'".c."'" }), ', ')
+  let l:col4_9 = join(map(copy(l:tc[4:9]), { _,c -> "'".c."'" }), ', ')
+  let l:col10_15 = join(map(copy(l:tc[10:15]), { _,c -> "'".c."'" }), ', ')
+  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_3 . ',')
+  call s:put(a:bufnr, '\ ' . l:col4_9 . ',')
+  call s:put(a:bufnr, '\ ' . l:col10_15 . ']')
 endf
 
 fun! s:finish_endif(bufnr)

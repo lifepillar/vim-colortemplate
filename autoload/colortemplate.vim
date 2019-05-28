@@ -1719,15 +1719,6 @@ fun! s:print_terminal_colors(bufnr)
   let l:col7_15 = join(map(copy(l:tc[7:15]), { _,c -> "'".c."'" }), ', ')
   call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_6 . ',')
   call s:put(a:bufnr, '\ ' . l:col7_15 . ']')
-  if s:supports_neovim()
-    call s:put(a:bufnr, "if has('nvim')")
-    let l:n = 0
-    for l:color in l:tc
-      call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".l:color."'")
-      let l:n += 1
-    endfor
-    call s:put(a:bufnr, 'endif')
-  endif
 endf
 
 fun! s:finish_endif(bufnr)
@@ -1808,8 +1799,12 @@ endf
 
 fun! s:print_italics_defs(bufnr, variant, bg)
   let l:ncols = str2nr(a:variant)
+  let l:defs = s:italics_definitions(a:variant, a:bg)
+  if empty(l:defs)
+    return
+  endif
   call s:put(a:bufnr, 'if s:italics')
-  for l:item in s:italics_definitions(a:variant, a:bg)
+  for l:item in l:defs
     call s:put(a:bufnr, s:eval(l:item, l:ncols))
   endfor
   call s:put(a:bufnr, 'endif')
@@ -1820,14 +1815,26 @@ fun! s:print_neovim_defs(bufnr, variant, bg)
     return
   endif
   let l:nvim_defs = s:neovim_definitions(a:variant, a:bg)
-  if empty(l:nvim_defs)
+  if empty(l:nvim_defs) && a:variant !=# s:GUI
     return
   endif
-  let l:ncols = str2nr(a:variant)
   call s:put(a:bufnr, "if has('nvim')")
-  for l:item in l:nvim_defs
-    call s:put(a:bufnr, s:eval(l:item, l:ncols))
-  endfor
+  if !empty(l:nvim_defs)
+    let l:ncols = str2nr(a:variant)
+    for l:item in l:nvim_defs
+      call s:put(a:bufnr, s:eval(l:item, l:ncols))
+    endfor
+  endif
+  if a:variant ==# s:GUI
+    if empty(l:nvim_defs)
+      call s:put(a:bufnr, "if has('nvim')")
+    endif
+    let l:n = 0
+    for l:color in s:term_colors()
+      call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".l:color."'")
+      let l:n += 1
+    endfor
+  endif
   call s:put(a:bufnr, 'endif')
 endf
 
@@ -1837,8 +1844,8 @@ fun! s:print_colorscheme(bufnr, variant)
     call s:set_active_bg('dark')
     call s:put(a:bufnr, "if &background ==# 'dark'")
     if a:variant ==# s:GUI
-      call s:print_terminal_colors(a:bufnr)
       call s:print_gui_colorscheme_defs(a:bufnr, 'dark')
+      call s:print_terminal_colors(a:bufnr)
     else
       call s:print_term_colorscheme_defs(a:bufnr, a:variant, 'dark')
     endif
@@ -1849,8 +1856,8 @@ fun! s:print_colorscheme(bufnr, variant)
     call s:set_active_bg('light')
   endif
   if a:variant ==# s:GUI
-    call s:print_terminal_colors(a:bufnr)
     call s:print_gui_colorscheme_defs(a:bufnr, s:default_bg())
+    call s:print_terminal_colors(a:bufnr)
   else
     call s:print_term_colorscheme_defs(a:bufnr, a:variant, s:default_bg())
   endif

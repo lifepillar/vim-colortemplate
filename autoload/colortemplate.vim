@@ -1988,14 +1988,14 @@ fun! colortemplate#make(...)
 
   try
     let l:inpath = expand('%:p')
-    call s:print_notice('[Colortemplate] Building '.l:inpath.'...')
+    call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
     call colortemplate#parse(l:inpath)
   catch /Parse error/
     call s:print_error_msg('Parse error', 0)
     let g:colortemplate_exit_status = 1
     return g:colortemplate_exit_status
   catch /.*/
-    call s:print_error_msg('[Colortemplate] Unexpected error: ' . v:exception, 0)
+    call s:print_error_msg('Unexpected error: ' . v:exception, 0)
     let g:colortemplate_exit_status = 1
     return g:colortemplate_exit_status
   endtry
@@ -2007,7 +2007,7 @@ fun! colortemplate#make(...)
     if !get(g:, 'colortemplate_quiet', 1)
       call colortemplate#view_source()
     endif
-    call s:print_notice('[Colortemplate] Success! [' . l:outpath . ' created]')
+    call s:print_notice('Success! [' . fnamemodify(l:outpath, ':t') . ' created]')
   catch /.*/
     let g:colortemplate_exit_status = 1
     call s:print_error_msg(v:exception, 0)
@@ -2037,13 +2037,13 @@ fun! colortemplate#build_dir(...)
   if g:colortemplate_exit_status
     call s:print_error_msg('Build failed. See :messages', 0)
   else
-    call s:print_notice('[Colortemplate] Success! ['.string(l:n).' color schemes created]')
+    call s:print_notice('Success! ['.string(l:n).' color schemes created]')
   endif
 endf
 
 fun! colortemplate#stats()
   update
-  echomsg '[Colortemplate] Computing color statistics...'
+  call s:print_notice('Computing color statistics...')
   let l:old_warning_pref = get(g:, 'colortemplate_no_warnings', -1)
   let g:colortemplate_no_warnings = 1
   try
@@ -2053,7 +2053,7 @@ fun! colortemplate#stats()
     let g:colortemplate_exit_status = 1
     return
   catch /.*/
-    echoerr '[Colortemplate] Unexpected error: ' v:exception
+    call s:print_error_msg('Unexpected error: ' . v:exception)
     let g:colortemplate_exit_status = 1
     return
   finally
@@ -2098,7 +2098,7 @@ endf
 
 fun! colortemplate#validate() abort
   if colortemplate#view_source()
-    echomsg '[Colortemplate] Validating colorscheme, please wait...'
+    call s:print_notice('Validating colorscheme, please wait...')
     runtime colors/tools/check_colors.vim
     call input('[Colortemplate] Press a key to continue')
   endif

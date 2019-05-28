@@ -1963,17 +1963,17 @@ fun! colortemplate#make(...)
     if !isdirectory(l:outdir)
       call s:print_error_msg("Path is not a directory: " . l:outdir, 0)
       let g:colortemplate_exit_status = 1
-      return
+      return g:colortemplate_exit_status
     elseif filewritable(l:outdir) != 2
       call s:print_error_msg("Directory is not writable: " . l:outdir, 0)
       let g:colortemplate_exit_status = 1
-      return
+      return g:colortemplate_exit_status
     endif
   endif
 
   if !empty(getbufvar('%', '&buftype')) || empty(expand('%:p'))
     call s:print_error_msg("No filename. Please save your document first.", 0)
-    return
+    return g:colortemplate_exit_status
   endif
 
   if get(a:000, 2, 1)
@@ -1988,11 +1988,11 @@ fun! colortemplate#make(...)
     call colortemplate#parse(l:inpath)
   catch /Parse error/
     let g:colortemplate_exit_status = 1
-    return
+    return g:colortemplate_exit_status
   catch /.*/
     echoerr '[Colortemplate] Unexpected error: ' v:exception
     let g:colortemplate_exit_status = 1
-    return
+    return g:colortemplate_exit_status
   endtry
 
   try
@@ -2008,7 +2008,7 @@ fun! colortemplate#make(...)
   catch /.*/
     let g:colortemplate_exit_status = 1
     unsilent call s:print_error_msg(v:exception, 0)
-    return
+    return g:colortemplate_exit_status
   endtry
 endf
 

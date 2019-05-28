@@ -2069,13 +2069,13 @@ fun! colortemplate#stats()
 endf
 
 fun! colortemplate#path()
-  let l:bufname = fnamemodify(bufname('%'), '%:p:t')
+  let l:bufname = fnamemodify(bufname('%'), ':p:t')
   if l:bufname =~ '\m^[^_].*\.colortemplate$'
     let l:match = matchlist(getbufline('%', 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)')
     if !empty(l:match)
       let l:name = l:match[1]
     else
-      let l:name = fnamemodify(l:bufname, '%:r')
+      let l:name = fnamemodify(l:bufname, ':r')
     endif
   else
     let l:name = s:shortname()

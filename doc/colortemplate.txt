@@ -576,7 +576,7 @@ gx			If the cursor is on a `Color` line, replace `~` with
 			the [count]th best xterm approximation of the color.
 
 							*gy*
-gy			If the cursor is on a `Color` line, prints the xterm
+gy			If the cursor is on a `Color` line, print the xterm
 			approximations of the color at distance at most 
                         [count] from the GUI value.
 

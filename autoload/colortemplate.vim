@@ -700,6 +700,10 @@ fun! s:global_preamble()
   return s:data['global']['any']
 endf
 
+fun! s:neovim_preamble()
+  return s:nvim['global']['any']
+endf
+
 fun! s:preamble(variant)
   return s:data[a:variant]['any']
 endf
@@ -1754,6 +1758,14 @@ fun! s:print_global_preamble(bufnr)
     for l:item in s:global_preamble()
       call s:put(a:bufnr, s:eval(l:item, 0)) " TODO: check 0 (what about verbatim interpolation?)
     endfor
+  endif
+  if s:supports_neovim() && !empty(s:neovim_preamble())
+    call s:put(a:bufnr, '')
+    call s:put(a:bufnr, "if has('nvim')")
+    for l:item in s:neovim_preamble()
+      call s:put(a:bufnr, s:eval(l:item, 0)) " TODO: check 0 (what about verbatim interpolation?)
+    endfor
+    call s:put(a:bufnr, 'endif')
   endif
 endf
 

@@ -1815,7 +1815,8 @@ fun! s:print_neovim_defs(bufnr, variant, bg)
     return
   endif
   let l:nvim_defs = s:neovim_definitions(a:variant, a:bg)
-  if empty(l:nvim_defs) && a:variant !=# s:GUI
+  let l:colors = s:term_colors()
+  if empty(l:nvim_defs) && (a:variant !=# s:GUI || empty(l:colors))
     return
   endif
   call s:put(a:bufnr, "if has('nvim')")
@@ -1825,12 +1826,9 @@ fun! s:print_neovim_defs(bufnr, variant, bg)
       call s:put(a:bufnr, s:eval(l:item, l:ncols))
     endfor
   endif
-  if a:variant ==# s:GUI
-    if empty(l:nvim_defs)
-      call s:put(a:bufnr, "if has('nvim')")
-    endif
+  if a:variant ==# s:GUI && !empty(l:colors)
     let l:n = 0
-    for l:color in s:term_colors()
+    for l:color in l:colors
       call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".l:color."'")
       let l:n += 1
     endfor

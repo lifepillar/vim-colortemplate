@@ -757,10 +757,9 @@ fun! s:add_linked_group(source, target)
 endf
 
 " Here we use the fact that str2nr() applied to a String returns 0 and not an
-" error. So strn2nr('gui') returns an ok value, and stuff like s:fg16('Black')
-" does not cause out of range errors. Ugly, but it works.
+" error. So stuff like s:fg16('Black') does not cause out of range errors.
+" Ugly, but it works.
 fun! s:check_color_range(hg, variant)
-  return
   let l:t_co = str2nr(a:variant)
   if l:t_co > 0 && (
         \ (l:t_co <= 16 && (s:fg16(a:hg) >= l:t_co || s:bg16(a:hg) >= l:t_co))

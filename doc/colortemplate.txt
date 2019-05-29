@@ -613,6 +613,12 @@ Set to 1 if you want Colortemplate to report only errors (not recommended).
 >
 	let g:colortemplate_no_warnings = 0
 <
+						*g:colortemplate_source_comment*
+Set to 0 if you want Colortemplate not to append the source template as
+comments as the end of the generated color scheme.
+>
+	let g:colortemplate_source_comment = 1
+<
 						*g:colortemplate_toolbar*
 Set to 0 if you do not want to the toolbar to be visible.
 >

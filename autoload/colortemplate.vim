@@ -1851,6 +1851,15 @@ fun! s:print_neovim_defs(bufnr, variant, bg)
   call s:put(a:bufnr, 'endif')
 endf
 
+" Prints source as comment, for provenance
+fun! s:print_source_code(bufnr)
+  if get(g:, 'colortemplate_source_comment', 1)
+    for l:line in s:source_lines()
+      call s:put(a:bufnr, '" '.l:line)
+    endfor
+  endif
+endf
+
 fun! s:print_colorscheme(bufnr, variant)
   call s:print_local_preamble(a:bufnr, a:variant)
   if s:has_dark_and_light()
@@ -1881,7 +1890,6 @@ endf
 
 fun! s:generate_colorscheme(outdir, overwrite)
   let l:bufnr = s:new_work_buffer()
-
   call s:set_active_bg(s:has_dark() ? 'dark' : 'light')
   call s:print_header(l:bufnr)
   call s:print_global_preamble(l:bufnr)
@@ -1889,11 +1897,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
     call s:print_colorscheme(l:bufnr, l:variant)
   endfor
   call s:put(l:bufnr, '')
-
-  " Print source as comment, for provenance
-  for l:line in s:source_lines()
-    call s:put(l:bufnr, '" '.l:line)
-  endfor
+  call s:print_source_code(l:bufnr)
   call s:reindent_buffer(l:bufnr)
   if !empty(a:outdir)
     let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'

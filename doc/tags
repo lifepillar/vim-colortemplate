@@ -38,6 +38,7 @@ g:colortemplate_no_doc	colortemplate.txt	/*g:colortemplate_no_doc*
 g:colortemplate_no_mappings	colortemplate.txt	/*g:colortemplate_no_mappings*
 g:colortemplate_no_warnings	colortemplate.txt	/*g:colortemplate_no_warnings*
 g:colortemplate_quiet	colortemplate.txt	/*g:colortemplate_quiet*
+g:colortemplate_source_comment	colortemplate.txt	/*g:colortemplate_source_comment*
 g:colortemplate_toolbar	colortemplate.txt	/*g:colortemplate_toolbar*
 ga	colortemplate.txt	/*ga*
 gx	colortemplate.txt	/*gx*

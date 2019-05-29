@@ -1057,6 +1057,7 @@ fun! s:token.next() dict
   if empty(l:char)
     let self.kind = 'EOL'
     let self.spos = len(s:getl()) - 1 " For correct error location
+    let self.pos = len(s:getl()) " Makes next() at eol idempotent
   elseif l:char =~? '\m\a'
     let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '\w\+', self.pos - 1)
     let self.kind = 'WORD'
@@ -1070,8 +1071,9 @@ fun! s:token.next() dict
     else
       let self.value = '#'
       let self.kind = 'COMMENT'
+      let self.pos = len(s:getl())
     endif
-  elseif match(l:char, "[:=.,>~)(-]") > -1
+  elseif match(l:char, "[*:=.,>~)(-]") > -1
     let self.value = l:char
     let self.kind = l:char
   else
@@ -1341,6 +1343,10 @@ fun! s:parse_color_def()
   let l:col_256   = s:parse_base_256_value()
   let l:col_16    = s:parse_base_16_value()
   call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16)
+  let l:t = s:token.next().kind
+  if l:t !=# 'EOL' && l:t !=# 'COMMENT'
+    throw 'Spurious characters at end of line'
+  endif
 endf
 
 fun! s:parse_color_name()
@@ -1421,9 +1427,15 @@ fun! s:parse_base_16_value()
   if s:token.next().kind ==# 'EOL' || s:token.kind ==# 'COMMENT'
     return 'Black' " Just a placeholder: we assume that base-16 colors are not used
   elseif s:token.kind ==# 'NUM'
-    let l:val = str2nr(s:token.value)
-    if l:val > 15 || l:val < 0
+    let l:val = s:token.value
+    if str2nr(l:val) > 15 || str2nr(l:val) < 0
       throw 'Color value is out of range [0,15]'
+    endif
+    if s:token.next().kind ==# '*'
+      if str2nr(l:val) > 7
+        throw 'Color value is out of range [0,7]'
+      endif
+      return l:val.'*'
     endif
     return l:val
   elseif s:token.kind ==# 'WORD'
@@ -1739,14 +1751,14 @@ fun! s:check_bug_bg234(bufnr, bg, item, ncols)
   if a:item[0] ==# 'group' && s:hi_name(a:item[1]) ==? 'Normal'
     if a:bg ==# 'dark'
       if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) ||
-            \ s:bg16(a:item[1]) =~? '\m^\%(7\|9\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
+            \ s:bg16(a:item[1]) =~? '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
         call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : '') . ' " Fix for Vim bug')
         call s:put(a:bufnr, 'set background=dark')
         call s:put(a:bufnr, 'endif')
       endif
     else " light background
       if (a:ncols > 2 && a:ncols <= 16) &&
-            \ (s:bg16(a:item[1]) =~# '\m^\%(0\|1\|2\|3\|4\|5\|6\|8\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$')
+            \ (s:bg16(a:item[1]) =~# '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$')
         call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
         call s:put(a:bufnr, 'set background=light')
         call s:put(a:bufnr, 'endif')

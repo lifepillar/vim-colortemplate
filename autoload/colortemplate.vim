@@ -1897,11 +1897,13 @@ endf
 " Colorscheme switching {{{
 let s:enabled_colors = []
 let s:prev_colors = get(g:, 'colors_name', 'default')
+let s:prev_background = &background
 
 fun! s:view_colorscheme(colors_name)
   let l:current_colors = get(g:, 'colors_name', 'default')
   if index(s:enabled_colors, l:current_colors) < 0
     let s:prev_colors = l:current_colors
+    let s:prev_background = &background
   endif
   try
     execute 'colorscheme' a:colors_name
@@ -1915,6 +1917,7 @@ endf
 
 fun! s:restore_colorscheme()
   let s:enabled_colors = []
+  let &background = s:prev_background
   execute 'colorscheme' s:prev_colors
 endf
 " }}}
@@ -2172,4 +2175,5 @@ endf
 call s:init_data_structures()
 " TODO {{{
 " - Support start, stop and font in highlight group definitions
+" - Option for using/disabling Unicode chars and customising the toolbar
 " }}}

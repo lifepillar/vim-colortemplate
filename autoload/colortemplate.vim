@@ -760,6 +760,7 @@ endf
 " error. So strn2nr('gui') returns an ok value, and stuff like s:fg16('Black')
 " does not cause out of range errors. Ugly, but it works.
 fun! s:check_color_range(hg, variant)
+  return
   let l:t_co = str2nr(a:variant)
   if l:t_co > 0 && (
         \ (l:t_co <= 16 && (s:fg16(a:hg) >= l:t_co || s:bg16(a:hg) >= l:t_co))
@@ -1746,9 +1747,9 @@ fun! s:check_bug_bg234(bufnr, bg, item, ncols)
     else " light background
       if (a:ncols > 2 && a:ncols <= 16) &&
             \ (s:bg16(a:item[1]) =~# '\m^\%(0\|1\|2\|3\|4\|5\|6\|8\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$')
-        call s:put(l:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
-        call s:put(l:bufnr, 'set background=light')
-        call s:put(l:bufnr, 'endif')
+        call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
+        call s:put(a:bufnr, 'set background=light')
+        call s:put(a:bufnr, 'endif')
       endif
     endif
   endif

@@ -382,8 +382,6 @@ fun! s:new_hi_group(name)
         \ 'bg': '',
         \ 'sp': 'none',
         \ 'term': [],
-        \ 'term_italic': 0,
-        \ 'gui_italic': 0,
         \ 'gui': [],
         \ 'start': '',
         \ 'stop': '',
@@ -450,6 +448,16 @@ fun! s:gui_attr(hg)
   return empty(a:hg['gui']) ? 'NONE' : join(a:hg['gui'], ',')
 endf
 
+fun! s:term_attr_no_italics(hg)
+  let l:attr = filter(copy(a:hg['term']), { _,v -> v !=# 'italic' })
+  return empty(l:attr) ? 'NONE' : join(l:attr, ',')
+endf
+
+fun! s:gui_attr_no_italics(hg)
+  let l:attr = filter(copy(a:hg['gui']), { _,v -> v !=# 'italic' })
+  return empty(l:attr) ? 'NONE' : join(l:attr, ',')
+endf
+
 fun! s:set_fg(hg, colorname)
   let a:hg['fg'] = a:colorname
 endf
@@ -466,20 +474,16 @@ fun! s:has_term_attr(hg)
   return !empty(a:hg['term'])
 endf
 
-fun! s:has_italics(hg)
-  return a:hg['term_italic'] || a:hg['gui_italic']
-endf
-
-fun! s:has_term_italic(hg)
-  return a:hg['term_italic']
-endf
-
-fun! s:has_gui_italic(hg)
-  return a:hg['gui_italic']
+fun! s:has_term_italics(hg)
+  return index(a:hg['term'], 'italic') > -1
 endf
 
 fun! s:has_gui_attr(hg)
   return !empty(a:hg['gui'])
+endf
+
+fun! s:has_gui_italics(hg)
+  return index(a:hg['gui'], 'italic') > -1
 endf
 
 fun! s:is_neovim_group(name)
@@ -487,25 +491,13 @@ fun! s:is_neovim_group(name)
 endf
 
 fun! s:add_term_attr(hg, attrlist)
-  for l:a in a:attrlist
-    if l:a ==? 'italic' && !s:is_neovim_group(s:hi_name(a:hg))
-      let a:hg['term_italic'] = 1
-    else
-      call add(a:hg['term'], l:a)
-      call uniq(sort(a:hg['term'])) " TODO: do this lazily
-    endif
-  endfor
+  call extend(a:hg['term'], a:attrlist)
+  call uniq(sort(a:hg['term']))
 endf
 
 fun! s:add_gui_attr(hg, attrlist)
-  for l:a in a:attrlist
-    if l:a ==? 'italic' && !s:is_neovim_group(s:hi_name(a:hg))
-      let a:hg['gui_italic'] = 1
-    else
-      call add(a:hg['gui'], l:a)
-      call uniq(sort(a:hg['gui'])) " TODO: ditto
-    endif
-  endfor
+  call extend(a:hg['gui'], a:attrlist)
+  call uniq(sort(a:hg['gui']))
 endf
 " }}}
 " Colorscheme metadata {{{
@@ -780,19 +772,22 @@ fun! s:add_highlight_group(hg)
     endfor
     return
   endif
-  for l:v in s:active_variants()
-    call s:check_color_range(a:hg, l:v)
-    call add(s:data[l:v][s:current_bg()], ['group', a:hg])
-  endfor
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
     let s:has_normal[s:current_bg()] = 1
   endif
-  if s:has_italics(a:hg)
-    call s:set_uses_italics()
-    for l:v in s:active_variants()
-      call add(s:italics[l:v][s:current_bg()], ['it', s:hi_name(a:hg)])
-    endfor
-  endif
+  for l:v in s:active_variants()
+    call s:check_color_range(a:hg, l:v)
+    call add(s:data[l:v][s:current_bg()], ['group', a:hg])
+    if l:v ==# s:GUI
+      if s:has_gui_italics(a:hg)
+        call s:set_uses_italics()
+        call add(s:italics[l:v][s:current_bg()], ['it', a:hg])
+      endif
+    elseif s:has_term_italics(a:hg)
+      call s:set_uses_italics()
+      call add(s:italics[l:v][s:current_bg()], ['it', a:hg])
+    endif
+  endfor
 endf
 
 " Add italics definitions accumulated so far to the colorscheme at the current point
@@ -802,7 +797,7 @@ fun! s:flush_italics()
     if empty(s:italics[l:v][l:bg])
       continue
     endif
-    call add(s:data[l:v][l:bg], ['raw', 'if s:italics'])
+    call add(s:data[l:v][l:bg], ['raw', 'if !s:italics'])
     call extend(s:data[l:v][l:bg], s:italics[l:v][l:bg])
     call add(s:data[l:v][l:bg], ['raw', 'endif'])
     let s:italics[l:v][l:bg] = []
@@ -1661,10 +1656,12 @@ fun! s:eval(item, col)
     return a:item[1]
   elseif a:item[0] ==# 'it'
     if a:col > 256
+      let l:attr = s:gui_attr_no_italics(a:item[1])
       " Need to set cterm even for termguicolors (see https://github.com/vim/vim/issues/1740)
-      return 'hi ' . a:item[1] . ' gui=italic cterm=italic'
+      return 'hi ' . s:hi_name(a:item[1]) . ' gui='.l:attr . ' cterm='.l:attr
     else
-      return 'hi ' . a:item[1] . (a:col > 2 ? ' c' : ' ') . 'term=italic'
+      let l:attr = s:term_attr_no_italics(a:item[1])
+      return 'hi ' . s:hi_name(a:item[1]) . (a:col > 2 ? ' c' : ' ') . 'term='.l:attr
     endif
   else
     throw 'FATAL: unknown item type' " This should never happen!
@@ -1817,7 +1814,7 @@ fun! s:print_italics_defs(bufnr, variant, bg)
   if empty(l:defs)
     return
   endif
-  call s:put(a:bufnr, 'if s:italics')
+  call s:put(a:bufnr, 'if !s:italics')
   for l:item in l:defs
     call s:put(a:bufnr, s:eval(l:item, l:ncols))
   endfor

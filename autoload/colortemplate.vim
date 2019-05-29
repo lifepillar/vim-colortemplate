@@ -765,7 +765,7 @@ fun! s:check_color_range(hg, variant)
         \ (l:t_co <= 16 && (s:fg16(a:hg) >= l:t_co || s:bg16(a:hg) >= l:t_co))
         \ || (l:t_co > 16 && (s:fg256(a:hg) >= l:t_co || s:bg256(a:hg) >= l:t_co))
         \ )
-    throw printf('Color out of range for %d-color variant: %s', l:t_co, s:hi_name(a:hg))
+    throw printf('Color out of range for %d-color variant used in: %s', l:t_co, s:hi_name(a:hg))
   endif
 endf
 

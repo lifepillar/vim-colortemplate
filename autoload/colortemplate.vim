@@ -1633,7 +1633,7 @@ fun! s:eval(item, col)
             \ . ' guibg='.s:guibg(l:hg)
             \ . ' guisp='.s:guisp(l:hg)
             \ . ' gui='.s:gui_attr(l:hg)
-            \ . ' cterm='.s:term_attr(l:hg) " See https://github.com/vim/vim/issues/1740
+            \ . ' cterm='.s:gui_attr(l:hg) " See https://github.com/vim/vim/issues/1740
     elseif a:col > 16
       return 'hi ' . s:hi_name(l:hg)
             \ . ' ctermfg='.s:fg256(l:hg)

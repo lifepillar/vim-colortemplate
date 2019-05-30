@@ -695,6 +695,10 @@ fun! s:set_active_variants(variants)
   endfor
 endf
 
+fun! s:has_active_term_variant()
+  return len(s:active_variants) > 1 || s:active_variants[0] != s:GUI
+endf
+
 fun! s:global_preamble()
   return s:data['global']['any']
 endf
@@ -1485,7 +1489,7 @@ fun! s:parse_hi_group_def()
     throw 'Foreground color name missing'
   endif
   let l:colorname = s:parse_color_value()
-  if l:colorname ==# 'bg'
+  if l:colorname ==# 'bg' && s:has_active_term_variant()
     call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
           \ "Using 'bg' may cause an error with transparent backgrounds")
   endif
@@ -1495,7 +1499,7 @@ fun! s:parse_hi_group_def()
     throw 'Background color name missing'
   endif
   let l:colorname = s:parse_color_value()
-  if l:colorname ==# 'bg'
+  if l:colorname ==# 'bg' && s:has_active_term_variant()
     call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
           \ "Using 'bg' may cause an error with transparent backgrounds")
   endif

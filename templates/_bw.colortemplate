@@ -1,0 +1,70 @@
+# vim: ft=colortemplate fdm=marker cc=22
+
+# Template for black & white terminals
+Variant: 2
+
+Color: unused #000000 0
+
+# Default highlight groups {{{
+# Group              Unused   Unused   term
+ColorColumn          unused unused reverse
+Conceal              unused unused
+Cursor               unused unused
+CursorColumn         unused unused reverse
+CursorLine           unused unused underline
+CursorLineNr         unused unused reverse,italic,bold,underline
+DiffAdd              unused unused reverse
+DiffChange           unused unused reverse
+DiffDelete           unused unused reverse
+DiffText             unused unused bold,reverse
+Directory            unused unused
+EndOfBuffer          unused unused
+ErrorMsg             unused unused bold,reverse,italic
+FoldColumn           unused unused
+Folded               unused unused italic
+IncSearch            unused unused reverse
+LineNr               unused unused reverse
+MatchParen           unused unused
+ModeMsg              unused unused
+MoreMsg              unused unused
+NonText              unused unused
+Pmenu                unused unused reverse
+PmenuSbar            unused unused
+PmenuSel             unused unused
+PmenuThumb           unused unused
+Question             unused unused
+Search               unused unused
+SignColumn           unused unused
+SpecialKey           unused unused
+SpellBad             unused unused reverse,bold,italic
+SpellCap             unused unused reverse,bold,italic
+SpellLocal           unused unused reverse,bold,italic
+SpellRare            unused unused underline
+StatusLine           unused unused reverse,bold
+StatusLineNC         unused unused reverse
+TabLine              unused unused reverse,underline,italic
+TabLineFill          unused unused reverse,underline
+TabLineSel           unused unused bold
+Title                unused unused bold
+VertSplit            unused unused reverse
+Visual               unused unused reverse
+VisualNOS            unused unused
+WarningMsg           unused unused
+WildMenu             unused unused
+# Other conventional group names (see `:help group-name`)
+Comment              unused unused italic
+Constant             unused unused bold,italic
+Error                unused unused reverse
+Identifier           unused unused italic
+Ignore               unused unused
+PreProc              unused unused underline
+Special              unused unused
+Statement            unused unused bold
+Todo                 unused unused bold,underline
+Type                 unused unused bold
+Underlined           unused unused underline
+CursorIM             unused unused
+ToolbarLine          unused unused
+ToolbarButton        unused unused bold
+# }}}
+

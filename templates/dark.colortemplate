@@ -177,3 +177,6 @@ ToolbarButton        white             black             bold
 # Add additional highlight groups here if you want
 # }}}
 
+# B/W variant {{{
+Include: _bw.colortemplate
+# }}}

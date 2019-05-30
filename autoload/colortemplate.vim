@@ -2191,6 +2191,11 @@ fun! colortemplate#colortest()
   runtime syntax/colortest.vim
 endf
 
+fun! colortemplate#highlighttest()
+  call colortemplate#enable_colorscheme()
+  runtime syntax/hitest.vim
+endf
+
 fun! colortemplate#getinfo(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
@@ -2235,6 +2240,7 @@ endf
 " }}} Public interface
 call s:init_data_structures()
 " TODO {{{
-" - Support start, stop and font in highlight group definitions
+" - Support for font in highlight group definitions?
 " - Option for using/disabling Unicode chars and customising the toolbar
+" - Disable validation with old script
 " }}}

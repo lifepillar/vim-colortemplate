@@ -9,6 +9,7 @@ fun! colortemplate#toolbar#show()
       nnoremenu <silent> 1.50 WinBar.Validate :ColortemplateValidate<cr>
       nnoremenu <silent> 1.60 WinBar.Stats :ColortemplateStats<cr>
       nnoremenu <silent> 1.70 WinBar.Source :call colortemplate#view_source()<cr>
+      nnoremenu <silent> 1.75 WinBar.HiTest :call colortemplate#highlighttest()<cr>
       " nnoremenu <silent> 1.80 WinBar.Colortest :call colortemplate#colortest()<cr>
       nnoremenu          1.90 WinBar.OutDir :ColortemplateOutdir<cr>
       nnoremenu 1.99 WinBar.✕ :nunmenu WinBar<cr>

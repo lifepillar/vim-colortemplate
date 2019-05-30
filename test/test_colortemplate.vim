@@ -134,8 +134,9 @@ fun! Test_CT_invalid_background()
   edit test12.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(1, len(l:qflist))
+  call assert_equal(2, len(l:qflist))
   call assert_equal("Background can only be 'dark', 'light' or 'any'", l:qflist[0]['text'])
+  call assert_equal("Cannot define highlight group before Variant or Background is set", l:qflist[1]['text'])
   cclose
   bwipe test12.txt
 endf
@@ -567,9 +568,10 @@ fun! Test_CT_multiple_nested_inclusions()
   Colortemplate!
   let l:qflist = getqflist()
   call assert_equal(2, len(l:qflist))
-  call assert_equal("Invalid token", l:qflist[0]['text'])
+  call assert_equal("Unexpected token at start of line", l:qflist[0]['text'])
   call assert_equal(4, l:qflist[0]['lnum'])
   call assert_equal(3, l:qflist[0]['col'])
+  call assert_equal("Unexpected token at start of line", l:qflist[1]['text'])
   call assert_equal(9, l:qflist[1]['lnum'])
   call assert_equal(6, l:qflist[1]['col'])
   cclose
@@ -581,7 +583,7 @@ fun! Test_CT_sequential_inclusions()
   Colortemplate!
   let l:qflist = getqflist()
   call assert_equal(1, len(l:qflist))
-  call assert_equal("Invalid token", l:qflist[0]['text'])
+  call assert_equal("Unexpected token at start of line", l:qflist[0]['text'])
   call assert_equal(10, l:qflist[0]['lnum'])
   call assert_equal(6, l:qflist[0]['col'])
   cclose
@@ -627,6 +629,13 @@ fun! Test_CT_out_of_range_base256_colors()
   call assert_equal("Please define the Normal highlight group", l:qflist[2]['text'])
   cclose
   bwipe test52.txt
+endf
+
+fun! Test_CT_colon_in_comment_is_not_kv_pair()
+  edit test53.txt
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  bwipe test53.txt
 endf
 
 let s:old = get(g:, 'colortemplate_no_warnings', 0)

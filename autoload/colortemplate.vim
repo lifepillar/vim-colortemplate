@@ -684,8 +684,6 @@ fun! s:set_active_variants(variants)
   for l:v in a:variants
     if l:v ==# 'gui' || str2nr(l:v) > 256
       let l:v = s:GUI
-    elseif str2nr(l:v) < 1
-      throw "Expected number or the keyword 'gui'"
     endif
     call add(s:active_variants, l:v)
     call add(s:supported_variants, l:v)
@@ -1080,6 +1078,10 @@ fun! s:token.peek() dict
   let l:token = copy(self)
   return l:token.next()
 endf
+
+fun! s:token.is_edible() dict
+  return s:token.kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
+endf
 " }}}
 " Included files {{{
 fun! s:init_includes()
@@ -1238,10 +1240,8 @@ fun! s:parse_auxfile_line()
 endf
 
 fun! s:parse_line()
-  if s:token.next().kind ==# 'EOL' " Empty line
+  if !s:token.next().is_edible() " Empty line or comment
     return
-  elseif s:token.kind ==# 'COMMENT'
-    return s:parse_comment()
   elseif s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
       call s:flush_italics() " Verbatim blocks act like optimization fences
@@ -1257,8 +1257,11 @@ fun! s:parse_line()
       endif
       call s:start_aux_file(s:interpolate(l:path, s:linenr(), s:currfile()))
     elseif s:token.value ==? 'documentation'
+      if s:token.next().is_edible()
+        throw "Extra characters after 'documentation'"
+      endif
       call s:start_help_file()
-    elseif s:getl() =~? '\m:' " Look ahead
+    elseif s:getl() =~# '\m^[^#]*:' " Look ahead
       call s:parse_key_value_pair()
     else
       call s:parse_hi_group_def()
@@ -1268,63 +1271,82 @@ fun! s:parse_line()
   endif
 endf
 
-fun! s:parse_comment()
-  " Nothing to do here
-endf
-
 fun! s:parse_key_value_pair()
   if s:token.value ==? 'color'
     call s:add_source_line(s:getl())
     call s:parse_color_def()
-  else " Generic key-value pair
-    let l:key_tokens = [s:token.value]
-    while s:token.next().kind !=# ':'
-      if s:token.kind !=# 'WORD' || s:token.value !~? '\m^\h\+$'
-        throw 'Only letters from a to z and underscores are allowed in keys'
-      endif
-      call add(l:key_tokens, s:token.value)
-    endwhile
-    let l:key = tolower(join(l:key_tokens, ''))
+    return
+  endif
+  " Generic key-value pair
+  let l:key_tokens = [s:token.value]
+  while s:token.next().is_edible() && s:token.kind !=# ':'
+    if s:token.kind !=# 'WORD' || s:token.value !~? '\m^\h\+$'
+      throw 'Only letters from a to z and underscores are allowed in keys'
+    endif
+    call add(l:key_tokens, s:token.value)
+  endwhile
+  if s:token.kind !=# ':'
+    throw 'Missing colon'
+  endif
+  let l:key = tolower(join(l:key_tokens, ''))
+  if l:key ==# 'background'
+    call s:parse_background_directive()
+  elseif l:key ==# 'variant'
+    call s:parse_variant_directive()
+  elseif l:key ==# 'terminalcolors'
+    call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
+          \ "The 'Terminal colors' key has been deprecated and is a no-op now")
+  elseif l:key ==# 'termcolors'
+    call s:add_source_line(s:getl())
+    call s:parse_term_colors()
+  elseif l:key ==# 'neovim'
+    if s:token.next().value !~# '\m^y\%[es]\|n\%[o]\|1\|0$'
+      throw "Neovim key can only be 'yes' or 'no'"
+    endif
+    call s:set_supports_neovim()
+  else " Assume that the value is a path and may contain any characters
     let l:val = matchstr(s:getl(), '\s*\zs.\{-}\s*$', s:token.pos)
     if empty(l:val)
       throw 'Metadata value cannot be empty'
     endif
-    if l:key ==# 'background'
-      call s:add_source_line(s:getl())
-      if s:is_preamble() " Background in preamble implies Variant: gui 256
-        call s:set_active_variants([s:GUI, '256'])
-      endif
-      if l:val =~? '\m^dark\s*$'
-        call s:set_active_bg('dark')
-        call s:set_has_dark()
-      elseif l:val =~? '\m^light\s*$'
-        call s:set_active_bg('light')
-        call s:set_has_light()
-      elseif l:val =~? '\m^any\s*$'
-        call s:reset_backgrounds()
-      else
-        throw "Background can only be 'dark', 'light' or 'any'"
-      endif
-    elseif l:key ==# 'variant'
-      call s:add_source_line(s:getl())
-      let l:variants = split(tolower(l:val))
-      call s:set_active_variants(l:variants)
-    elseif l:key ==# 'terminalcolors'
-      call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
-            \ "The 'Terminal colors' key has been deprecated and is a no-op now")
-    elseif l:key ==# 'termcolors'
-      call s:add_source_line(s:getl())
-      call s:parse_term_colors(l:val)
-    elseif l:key ==# 'include'
+    if l:key ==# 'include'
       call s:include(l:val)
-    elseif l:key ==# 'neovim'
-      if l:val =~? '\%(y\%[es]\)\|1'
-        call s:set_supports_neovim()
-      endif
     else
       call s:set_info(l:key, l:val)
     endif
   endif
+endf
+
+fun! s:parse_background_directive()
+  if s:token.next().kind !=# 'WORD' || s:token.value !~# '\m^\%(dark\|light\|any\)$'
+    throw "Background can only be 'dark', 'light' or 'any'"
+  endif
+  call s:add_source_line(s:getl())
+  if s:is_preamble() " Background in preamble implies Variant: gui 256
+    call s:set_active_variants([s:GUI, '256'])
+  endif
+  if s:token.value ==# 'dark'
+    call s:set_active_bg('dark')
+    call s:set_has_dark()
+  elseif s:token.value ==# 'light'
+    call s:set_active_bg('light')
+    call s:set_has_light()
+  else
+    call s:reset_backgrounds()
+  endif
+endf
+
+fun! s:parse_variant_directive()
+  call s:add_source_line(s:getl())
+  let l:variants = []
+  while s:token.next().is_edible()
+    if (s:token.kind ==# 'WORD' && s:token.value ==# 'gui') || (s:token.kind ==# 'NUM')
+      call add(l:variants, s:token.value)
+    else
+      throw "Expected number or the keyword 'gui'"
+    endif
+  endwhile
+  call s:set_active_variants(l:variants)
 endf
 
 fun! s:parse_color_def()
@@ -1336,9 +1358,8 @@ fun! s:parse_color_def()
   let l:col_256   = s:parse_base_256_value()
   let l:col_16    = s:parse_base_16_value()
   call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16)
-  let l:t = s:token.next().kind
-  if l:t !=# 'EOL' && l:t !=# 'COMMENT'
-    throw 'Spurious characters at end of line'
+  if s:token.next().is_edible()
+    throw 'Extra characters at end of line'
   endif
 endf
 
@@ -1417,7 +1438,7 @@ fun! s:parse_base_256_value()
 endf
 
 fun! s:parse_base_16_value()
-  if s:token.next().kind ==# 'EOL' || s:token.kind ==# 'COMMENT'
+  if !s:token.next().is_edible()
     return 'Black' " Just a placeholder: we assume that base-16 colors are not used
   elseif s:token.kind ==# 'NUM'
     let l:val = s:token.value
@@ -1441,14 +1462,13 @@ fun! s:parse_base_16_value()
   endif
 endf
 
-fun! s:parse_term_colors(colors)
-  let l:colors = split(a:colors)
-  for l:color in l:colors
-    if !s:is_color_defined(l:color)
-      throw 'Undefined color name: ' . l:color
+fun! s:parse_term_colors()
+  while s:token.next().is_edible()
+    if !s:is_color_defined(s:token.value)
+      throw 'Undefined color name: ' . s:token.value
     endif
-    call s:add_term_ansi_color(s:guicol(l:color))
-  endfor
+    call s:add_term_ansi_color(s:guicol(s:token.value))
+  endwhile
 endf
 
 fun! s:parse_hi_group_def()
@@ -1493,7 +1513,7 @@ fun! s:parse_color_value()
 endf
 
 fun! s:parse_attributes(hg)
-  while s:token.next().kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
+  while s:token.next().is_edible()
     if s:token.kind !=# 'WORD'
       throw 'Invalid attributes'
     endif

@@ -410,7 +410,7 @@ a terminal value by using `@gui<color>` or `@term<color>`, respectively, where
 >
 	let g:terminal_color_@termblack = '@guiblack'
 <
-might be replaced by something like:
+might generate the following code:
 >
 	let g:terminal_color_16 = '#000000'
 <
@@ -468,10 +468,10 @@ may put the content of each file into a separate `auxfile` block. For example:
 
 This will write the content of the auxfile block into the specified file
 (creating the intermediate directories if necessary). The path is mandatory
-and must be a relative path (relative to the output directory). The content of
-an `auxfile` block is interpolated as in verbatim blocks. You mau suppress the
-generation of all auxiliary files (include the help file) with
-|g:colortemplate_no_aux_files|.
+and must be a relative path (relative to the output directory). No comment may
+appear in an `auxline` line. The content of an `auxfile` block is interpolated
+as in verbatim blocks. You mau suppress the generation of all auxiliary files
+(include the help file) with |g:colortemplate_no_aux_files|.
 
 ==============================================================================
 Include directive		       		*colortemplate-include*

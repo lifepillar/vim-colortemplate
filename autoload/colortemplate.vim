@@ -2173,8 +2173,8 @@ fun! colortemplate#validate() abort
     call s:print_notice('Validating colorscheme, please wait...')
     runtime colors/tools/check_colors.vim
     call input('[Colortemplate] Press a key to continue')
+    wincmd c
   endif
-  wincmd c
 endf
 
 fun! colortemplate#enable_colorscheme() abort

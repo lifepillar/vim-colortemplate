@@ -6,7 +6,7 @@ fun! colortemplate#toolbar#show()
       nnoremenu <silent> 1.20 WinBar.BuildAll! :ColortemplateAll!<cr>
       nnoremenu <silent> 1.30 WinBar.Show :call colortemplate#enable_colorscheme()<cr>
       nnoremenu <silent> 1.40 WinBar.Hide :call colortemplate#disable_colorscheme()<cr>
-      nnoremenu <silent> 1.50 WinBar.Check :ColortemplateValidate<cr>
+      nnoremenu <silent> 1.50 WinBar.Check :ColortemplateCheck<cr>
       nnoremenu <silent> 1.60 WinBar.Stats :ColortemplateStats<cr>
       nnoremenu <silent> 1.70 WinBar.Source :call colortemplate#view_source()<cr>
       nnoremenu <silent> 1.75 WinBar.HiTest :call colortemplate#highlighttest()<cr>

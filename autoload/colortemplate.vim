@@ -1189,7 +1189,6 @@ endf
 " Parser {{{
 fun! s:quickly_parse_color_line()
   call s:init_color_palette()
-  call s:init_colorscheme_definition() " For s:t_Co
   call s:init_tokenizer()
   call s:token.setline(getline('.'))
   if s:token.next().kind != 'WORD' || s:token.value !=? 'color' " Not a Color line

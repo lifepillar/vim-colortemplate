@@ -638,6 +638,18 @@ fun! Test_CT_colon_in_comment_is_not_kv_pair()
   bwipe test53.txt
 endf
 
+fun! Test_CT_color_typo()
+  edit test54.txt
+  Colortemplate!
+  let l:qflist = getqflist()
+  call assert_equal(1, len(l:qflist))
+  call assert_equal('Invalid attribute', l:qflist[0]['text'])
+  call assert_equal(17, l:qflist[0]['lnum'])
+  call assert_equal(25, l:qflist[0]['col'])
+  cclose
+  bwipe test54.txt
+endf
+
 let s:old = get(g:, 'colortemplate_no_warnings', 0)
 let g:colortemplate_no_warnings = 1
 call RunBabyRun('CT')

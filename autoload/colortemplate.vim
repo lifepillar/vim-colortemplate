@@ -1561,13 +1561,17 @@ fun! s:parse_attributes(hg)
   return a:hg
 endf
 
+fun! s:valid_attribute(name)
+  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\)$')
+endf
+
 fun! s:parse_attr_list()
-  if s:token.kind !=# 'WORD'
+  if s:token.kind !=# 'WORD' || !s:valid_attribute(s:token.value)
     throw 'Invalid attribute'
   endif
   let l:attrlist = [s:token.value]
   while s:token.peek().kind ==# ','
-    if s:token.next().next().kind !=# 'WORD'
+    if s:token.next().next().kind !=# 'WORD' || !s:valid_attribute(s:token.value)
       throw 'Invalid attribute list'
     endif
     call add(l:attrlist, s:token.value)

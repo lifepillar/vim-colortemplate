@@ -1,0 +1,18 @@
+# vim: ft=colortemplate
+Full name:X
+Short name:x
+Author:y
+Background:dark
+Color:black rgb(0,0,0) 16 Black
+Color:white #ffffff 255 White
+Normal      white black bold
+ColorColumn white black italic
+LineNr      white black underline
+CursorLine  white black undercurl
+PreProc     white black strikethrough
+Statement   white black reverse
+Identifier  white black inverse
+String      white black standout
+Type        white black nocombine
+Error       white black idontexist
+

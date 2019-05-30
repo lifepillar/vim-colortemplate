@@ -82,9 +82,9 @@ white, so it does not stand out as a catchy color scheme). If you click on
 "Show" you may switch back to the original color scheme with "Hide". 
 
 You may validate your color scheme against
-`$VIMRUNTIME/colors/tools/check_colors.vim` with |:ColortemplateValidate| or
-by clicking on "Validate" in the toolbar. If there are no issues, you will see
-this message:
+`$VIMRUNTIME/colors/tools/check_colors.vim` with |:ColortemplateCheck| or by
+clicking on "Check" in the toolbar. If there are no issues, you will see this
+message:
 >
 	---------------
 	    colors_name: OK
@@ -653,6 +653,11 @@ color schemes at once. If used without arguments, the output is written in
 alternative path to a directory where the output should be saved. If `!` is
 present, any existing files will be overwritten.
 
+						*:ColortemplateCheck*
+
+Runs a series of checks on the generated color scheme using Vim's validation
+script `$VIMRUNTIME/colors/tools/check_colors.vim`.
+
 						*:ColortemplateOutdir*
 
 Prints the current value of |b:colortemplate_outdir| and prompts for a new
@@ -663,11 +668,6 @@ the path.
 
 Computes some color statistics and shows them in a scratch buffer.
 See |colortemplate-stats| for more information.
-
-						*:ColortemplateValidate*
-
-Runs a series of checks on the generated color scheme using Vim's validation
-script `$VIMRUNTIME/colors/tools/check_colors.vim`.
 
 ==============================================================================
 Window toolbar		       			*colortemplate-toolbar*
@@ -698,8 +698,8 @@ Enables the color scheme corresponding to the template in the current buffer.
 Hide ~
 Switches back to the original color scheme.
 
-Validate ~
-Executes |:ColortemplateValidate|.
+Check ~
+Executes |:ColortemplateCheck|.
 
 Stats ~
 Executes |:ColortemplateStats|.

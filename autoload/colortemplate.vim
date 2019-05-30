@@ -2155,6 +2155,7 @@ fun! colortemplate#path()
   let l:path = colortemplate#outdir() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
   if empty(l:name) || !filereadable(l:path)
     call s:print_error_msg('Please build the colorscheme first', 0)
+    return ''
   endif
   return l:path
 endf

@@ -470,6 +470,11 @@ fun! s:set_sp(hg, colorname)
   let a:hg['sp'] = a:colorname
 endf
 
+" type can be only 'start' or 'stop'
+fun! s:set_terminal_code(hg, type, value)
+  let a:hg[a:type] = a:value
+endf
+
 fun! s:has_term_attr(hg)
   return !empty(a:hg['term'])
 endf
@@ -1083,6 +1088,10 @@ fun! s:token.peek() dict
   return l:token.next()
 endf
 
+fun! s:token.skip(newpos) dict
+  let self.pos = a:newpos
+endf
+
 fun! s:token.is_edible() dict
   return s:token.kind !=# 'EOL' && s:token.kind !=# 'COMMENT'
 endf
@@ -1534,14 +1543,14 @@ fun! s:parse_attributes(hg)
       endif
       call s:token.next()
       call s:add_gui_attr(a:hg, s:parse_attr_list())
+    elseif s:token.value ==? 'start' || s:token.value ==? 'stop'
+      call s:add_terminal_code(a:hg, s:token.value)
     elseif s:token.value ==? 's' || s:token.value ==? 'guisp'
       if s:token.next().kind !=# '='
         throw "Expected = symbol after 'guisp'"
       endif
       call s:token.next()
       call s:set_sp(a:hg, s:parse_color_value())
-    elseif s:token.value ==? 'start' || s:token.value ==? 'stop'
-      " TODO: parse value
     else
       let l:attrlist = s:parse_attr_list()
       call s:add_term_attr(a:hg, l:attrlist)
@@ -1564,6 +1573,18 @@ fun! s:parse_attr_list()
     call add(l:attrlist, s:token.value)
   endwhile
   return l:attrlist
+endf
+
+fun! s:add_terminal_code(hg, type)
+  if s:token.next().kind !=# '='
+    throw "Expected = symbol after '".a:type."'"
+  endif
+  let [l:val, _, l:end] = matchstrpos(s:getl(), '\zs\S*', s:token.pos)
+  call s:token.skip(l:end)
+  if empty(l:val)
+    throw 'Missing value after ='
+  endif
+  call s:set_terminal_code(a:hg, a:type, l:val)
 endf
 
 fun! s:parse_linked_group_def()
@@ -1655,21 +1676,21 @@ fun! s:eval(item, col)
       return 'hi ' . s:hi_name(l:hg)
             \ . ' ctermfg='.s:fg256(l:hg)
             \ . ' ctermbg='.s:bg256(l:hg)
-            \ . ' cterm='.s:term_attr(l:hg) " Need to set even for termguicolors (see https://github.com/vim/vim/issues/1740)
+            \ . ' cterm='.s:term_attr(l:hg)
             \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
-            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['start'])
+            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['stop'])
     elseif a:col > 2
       return 'hi ' . s:hi_name(l:hg)
             \ . ' ctermfg='.s:fg16(l:hg)
             \ . ' ctermbg='.s:bg16(l:hg)
             \ . ' cterm='.s:term_attr(l:hg)
             \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
-            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['start'])
+            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['stop'])
     elseif a:col > 0
       return 'hi ' . s:hi_name(l:hg)
             \ . ' term='.s:term_attr(l:hg)
             \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
-            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['start'])
+            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['stop'])
     endif
   elseif a:item[0] ==# 'link'
     return 'hi! link ' . a:item[1][0] . ' ' . a:item[1][1]

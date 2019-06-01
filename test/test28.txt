@@ -8,7 +8,15 @@ Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Normal white black
 verbatim
+let x = '@date'
+let v = '@vimversion'
+let z = '@fullname'
+let z = '@shortname'
+let z = '@author'
+let z = '@maintainer'
 let g:foo = [
+    \ @term16white
+    \ @term256black
     \ @guiwhite
     \ @termblack]
 " xxxx yyyy

@@ -9,13 +9,14 @@ Color:black rgb 0,0,0) 0 Black
 Color:black rgb(-1,0,0) 0 Black
 Color:black rgb(256,0,0) 0 Black
 Color:black rgb(0:0,0) 0 Black
+Variant:88
 Color:black rgb(0,,0) 0 Black
 Color:black rgb(0,256,0) 0 Black
 Color:black rgb(0,0-0) 0 Black
 Color:black rgb(0,0,x0) 0 Black
 Color:black rgb(0,0,256) 0 Black
 Color:black rgb(0,0,0 0 Black
-Normal white black
+Normal white black # black is undefined, so is Normal
 
 
 

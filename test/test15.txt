@@ -3,6 +3,7 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
+Variant:16
 Background:dark
 Color: #000000 0 Black
 Color:white #ffffff 255 White

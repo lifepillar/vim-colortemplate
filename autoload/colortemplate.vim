@@ -279,95 +279,80 @@ endf
 " }}}
 " Color palette {{{
 fun! s:init_color_palette()
-  let s:guicol = { 'dark': {'fg':'fg', 'bg':'bg', 'none': 'NONE'}, 'light': {'fg':'fg', 'bg':'bg', 'none': 'NONE'} }
-  let s:col256 = { 'dark': {'fg':'fg', 'bg':'bg', 'none': 'NONE'}, 'light': {'fg':'fg', 'bg':'bg', 'none': 'NONE'} }
-  let s:col16  = { 'dark': {'fg':'fg', 'bg':'bg', 'none': 'NONE'}, 'light': {'fg':'fg', 'bg':'bg', 'none': 'NONE'} }
-  call s:reset_backgrounds()
+  let s:guicol = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \        }
+  let s:col256 = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \        }
+  let s:col16  = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+        \        }
+  let s:term_colors = { 'dark': [], 'light': [], 'preamble': [] } " 16 ASCII colors
 endf
 
-fun! s:reset_backgrounds()
-  let s:active_bg = ['dark', 'light']
-  let s:bg_set = 0
-endf
-
-fun! s:set_active_bg(v)
-  let s:active_bg = [a:v]
-  let s:bg_set = 1
-endf
-
-" Returns 'dark' or 'light'
-fun! s:default_bg()
-  return s:active_bg[0]
-endf
-
-" Returns 'dark', 'light' or 'any'
-fun! s:current_bg()
-  return len(s:active_bg) == 1 ? s:active_bg[0] : 'any'
-endf
-
-fun! s:active_backgrounds()
-  return s:active_bg
-endf
-
-fun! s:background_is_set()
-  return s:bg_set
-endf
-
+" section: 'preamble, 'dark' or 'light'
 " name: color name as defined by the user
 " gui: GUI value (either a hex value or a standard name)
 " base256: a numeric value between 16 and 255 or -1 (=infer the value)
 " base16: a numeric value between 0 and 15
-fun! s:add_color(name, gui, base256, base16)
+fun! s:add_color(section, name, gui, base256, base16)
   " If the GUI color is given by name, quote it if the name contains spaces
   let l:gui = match(a:gui, '\s') > - 1 ? "'".a:gui."'" : a:gui
-  for l:bg in s:active_backgrounds()
-    let s:guicol[l:bg][a:name] = l:gui
-    let s:col256[l:bg][a:name] = a:base256
-    let  s:col16[l:bg][a:name] = a:base16
-  endfor
-endf
-
-fun! s:col16(name)
-  return s:col16[s:default_bg()][a:name]
-endf
-
-fun! s:col256(name)
-  if s:col256[s:default_bg()][a:name] == -1 " Infer the value from GUI color
-    let s:col256[s:default_bg()][a:name] =
-          \ colortemplate#colorspace#approx(s:guicol[s:default_bg()][a:name])['index']
+  let s:guicol[a:section][a:name] = l:gui
+  let s:col256[a:section][a:name] = a:base256
+  let  s:col16[a:section][a:name] = a:base16
+  if a:section ==# 'preamble'
+    let s:guicol['dark'][a:name] = l:gui
+    let s:col256['dark'][a:name] = a:base256
+    let  s:col16['dark'][a:name] = a:base16
+    let s:guicol['light'][a:name]  = l:gui
+    let s:col256['light'][a:name] = a:base256
+    let  s:col16['light'][a:name] = a:base16
   endif
-  return s:col256[s:default_bg()][a:name]
 endf
 
-fun! s:termcol(name, t_Co)
-  return a:t_Co <= 16 ? s:col16(a:name) : s:col256(a:name)
+fun! s:add_term_ansi_color(name, section)
+  call add(s:term_colors[a:section], a:name)
+  if a:section ==# 'preamble'
+    call add(s:term_colors['dark'], a:name)
+    call add(s:term_colors['light'], a:name)
+  endif
 endf
 
-fun! s:guicol(name)
-  return s:guicol[s:default_bg()][a:name]
+fun! s:col16(name, section)
+  return s:col16[a:section][a:name]
 endf
 
-fun! s:is_color_defined(name)
-  return has_key(s:guicol[s:default_bg()], a:name)
+fun! s:col256(name, section)
+  if s:col256[a:section][a:name] == -1 " Infer the value from GUI color
+    let s:col256[a:section][a:name] =
+          \ colortemplate#colorspace#approx(s:guicol[a:section][a:name])['index']
+  endif
+  return s:col256[a:section][a:name]
 endf
 
-fun! s:color_names(bg)
-  return filter(copy(keys(s:guicol[a:bg])), { _,v -> v !=# 'fg' && v !=# 'bg' && v !=# 'none' })
-endf
-" }}}
-" Terminal ANSI colors {{{
-fun! s:init_term_colors()
-  let s:term_colors = { 'dark': [], 'light': [] }
+fun! s:termcol(name, section, t_Co)
+  return a:t_Co <= 16 ? s:col16(a:name, a:section) : s:col256(a:name, a:section)
 endf
 
-fun! s:add_term_ansi_color(color)
-  for l:bg in s:active_backgrounds()
-    call add(s:term_colors[l:bg], a:color)
-  endfor
+fun! s:guicol(name, section)
+  return s:guicol[a:section][a:name]
 endf
 
-fun! s:term_colors()
-  return s:term_colors[s:default_bg()]
+fun! s:is_color_defined(name, section)
+  return has_key(s:guicol[a:section], a:name)
+endf
+
+fun! s:term_colors(section)
+  return s:term_colors[a:section]
+endf
+
+fun! s:color_names(section)
+  return filter(copy(keys(s:guicol[a:section])), { _,v -> v !=# 'fg' && v !=# 'bg' && v !=# 'none' })
 endf
 " }}}
 " Highlight groups {{{
@@ -412,32 +397,32 @@ fun! s:gui_attr_list(hg)
   return a:hg['gui']
 endf
 
-fun! s:fg16(hg)
-  return s:col16(a:hg['fg'])
+fun! s:fg16(hg, section)
+  return s:col16(a:hg['fg'], a:section)
 endf
 
-fun! s:bg16(hg)
-  return s:col16(a:hg['bg'])
+fun! s:bg16(hg, section)
+  return s:col16(a:hg['bg'], a:section)
 endf
 
-fun! s:fg256(hg)
-  return s:col256(a:hg['fg'])
+fun! s:fg256(hg, section)
+  return s:col256(a:hg['fg'], a:section)
 endf
 
-fun! s:bg256(hg)
-  return s:col256(a:hg['bg'])
+fun! s:bg256(hg, section)
+  return s:col256(a:hg['bg'], a:section)
 endf
 
-fun! s:guifg(hg)
-  return s:guicol(a:hg['fg'])
+fun! s:guifg(hg, section)
+  return s:guicol(a:hg['fg'], a:section)
 endf
 
-fun! s:guibg(hg)
-  return s:guicol(a:hg['bg'])
+fun! s:guibg(hg, section)
+  return s:guicol(a:hg['bg'], a:section)
 endf
 
-fun! s:guisp(hg)
-  return s:guicol(a:hg['sp'])
+fun! s:guisp(hg, section)
+  return s:guicol(a:hg['sp'], a:section)
 endf
 
 fun! s:term_attr(hg)
@@ -511,6 +496,7 @@ fun! s:init_metadata()
   let s:supports_light = 0
   let s:uses_italics = 0
   let s:supports_neovim = 0
+  let s:supported_variants = []
   let s:info = {
         \ 'fullname': '',
         \ 'shortname': '',
@@ -562,6 +548,19 @@ endf
 
 fun! s:supported_backgrounds()
   return (s:has_dark() ? ['dark'] : []) + (s:has_light() ? ['light'] : [])
+endf
+
+fun! s:supported_variants()
+  return s:supported_variants
+endf
+
+fun! s:has_variant(v)
+  return index(s:supported_variants, a:v) > -1
+endf
+
+fun! s:add_variant(variant)
+  call add(s:supported_variants, a:variant)
+  call reverse(uniq(sort(s:supported_variants, 'N')))
 endf
 
 fun! s:get_info(key)
@@ -647,184 +646,184 @@ endf
 let s:GUI = '65536' " GUI or termguicolors
 
 fun! s:init_colorscheme_definition()
-  let s:data = {
-        \ 'global': { 'any': [] },
-        \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
-        \ '256': { 'dark': [], 'light': [], 'any': [] },
-        \ }
-  let s:italics = {
-        \ 'global' : { 'any': [] },
-        \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
-        \ '256': { 'dark': [], 'light': [], 'any': [] },
-        \ }
-  let s:nvim = {
-        \ 'global' : { 'any': [] },
-        \ s:GUI: { 'dark': [], 'light': [], 'any': [] },
-        \ '256': { 'dark': [], 'light': [], 'any': [] },
-        \ }
-  let s:active_variants = ['global']
-  let s:supported_variants = [s:GUI, '256']
-  let s:has_normal = { 'dark': 0, 'light': 0 }
+  let s:data = { 'global': { 'preamble': [] } }
+  let s:italics = { }
+  let s:nvim = { 'global' : { 'preamble': [] } }
+  let s:has_normal = { }
 endf
 
-fun! s:is_preamble()
-  return index(s:active_variants, 'global') > -1
+fun! s:add_colorscheme_variant(v)
+  call s:add_variant(a:v)
+  if !has_key(s:data, a:v)
+    let s:data[a:v]       = { 'preamble': [], 'dark': [], 'light': [] }
+    let s:italics[a:v]    = { 'preamble': [], 'dark': [], 'light': [] }
+    let s:nvim[a:v]       = { 'preamble': [], 'dark': [], 'light': [] }
+    let s:has_normal[a:v] = { 'preamble': 0,  'dark': 0,  'light': 0  }
+  endif
 endf
 
-fun! s:has_normal_group(bg)
-  return s:has_normal[a:bg]
+fun! s:has_normal(variant, section)
+  return s:has_normal[a:variant][a:section]
 endf
 
-fun! s:supported_variants()
-  return reverse(uniq(sort(s:supported_variants, 'N')))
+fun! s:set_has_normal(variant, section)
+  let s:has_normal[a:variant][a:section] = 1
+  if a:section ==# 'preamble'
+    let s:has_normal[a:variant]['dark'] = 1
+    let s:has_normal[a:variant]['light'] = 1
+  endif
 endf
 
-" Currently active variants
-fun! s:active_variants()
-  return s:active_variants
+fun! s:make_item(item, type)
+  return [a:type, a:item]
 endf
 
-fun! s:set_active_variants(variants)
-  let s:active_variants = []
-  for l:v in a:variants
-    if l:v ==# 'gui' || str2nr(l:v) > 256
-      let l:v = s:GUI
+fun! s:is_raw_type(item)
+  return a:item[0] ==# 'raw'
+endf
+
+fun! s:is_verb_type(item)
+  return a:item[0] ==# 'verb'
+endf
+
+fun! s:is_higroup_type(item)
+  return a:item[0] ==# 'group'
+endf
+
+fun! s:is_linked_type(item)
+  return a:item[0] ==# 'link'
+endf
+
+fun! s:is_italic_type(item)
+  return a:item[0] ==# 'it'
+endf
+
+fun! s:item_type(item)
+  return a:item[0]
+endf
+
+fun! s:item_value(item)
+  return a:item[1]
+endf
+
+fun! s:add_item(variant, section, item, type)
+  call add(s:data[a:variant][a:section], s:make_item(a:item, a:type))
+endf
+
+fun! s:add_raw_item(variant, section, item)
+  call s:add_item(a:variant, a:section, a:item, 'raw')
+endf
+
+fun! s:add_verbatim_item(variant, section, item)
+  call s:add_item(a:variant, a:section, a:item, 'verb')
+endf
+
+fun! s:add_higroup_item(variant, section, hg)
+  if s:is_neovim_group(s:hi_name(a:hg))
+    call s:add_neovim_higroup_item(a:variant, a:section, a:hg)
+    return
+  endif
+  call s:add_item(a:variant, a:section, a:hg, 'group')
+  if a:variant ==# s:GUI
+    if s:has_gui_italics(a:hg)
+      call s:set_uses_italics()
+      call add(s:italics[a:variant][a:section], s:make_item(a:hg, 'it'))
     endif
-    call add(s:active_variants, l:v)
-    call add(s:supported_variants, l:v)
-    if !has_key(s:data, l:v)
-      let s:data[l:v] = { 'dark': [], 'light': [], 'any': [] }
-      let s:italics[l:v] = { 'dark': [], 'light': [], 'any': [] }
-      let s:nvim[l:v] = { 'dark': [], 'light': [], 'any': [] }
-    endif
-  endfor
+  elseif s:has_term_italics(a:hg)
+    call s:set_uses_italics()
+    call add(s:italics[a:variant][a:section], s:make_item(a:hg, 'it'))
+  endif
 endf
 
-fun! s:has_active_term_variant()
-  return len(s:active_variants) > 1 || s:active_variants[0] != s:GUI
+fun! s:add_neovim_higroup_item(variant, section, item)
+  call add(s:nvim[a:variant][a:section], s:make_item(a:item, 'group'))
+endf
+
+fun! s:add_linked_item(variant, section, source, target)
+  if s:is_neovim_group(a:source)
+    call add(s:nvim[a:variant][a:section], s:make_item([a:source, a:target], 'link'))
+  else
+    call s:add_item(a:variant, a:section, [a:source, a:target], 'link')
+  endif
+endf
+
+fun! s:add_italic_item(variant, section, item)
+  call s:add_item(a:variant, a:section, a:item, 'it')
 endf
 
 fun! s:global_preamble()
-  return s:data['global']['any']
-endf
-
-fun! s:neovim_preamble()
-  return s:nvim['global']['any']
-endf
-
-fun! s:preamble(variant)
-  return s:data[a:variant]['any']
-endf
-
-fun! s:colorscheme_definitions(variant, background)
-  return s:data[a:variant][a:background]
-endf
-
-fun! s:italics_definitions(variant, background)
-  return s:italics[a:variant][a:background]
-endf
-
-fun! s:neovim_definitions(variant, background)
-  return s:nvim[a:variant][a:background]
-endf
-
-" Return the minimum t_Co for the *currently active* variants.
-" In the global section or for the GUi returns 256. This is used for
-" interpolating @term colors with the common denominator.
-fun! s:min_t_Co()
-  let l:min = min(filter(copy(s:active_variants), { _,v -> v !=# 'gui' }))
-  return l:min == 0 ? 256 : l:min
-endf
-
-fun! s:add_verbatim(line, linenr, file)
-  for l:v in s:active_variants()
-    call add(s:data[l:v][s:current_bg()],
-          \ ['verb', { 'line': a:line, 'linenr': a:linenr, 'file': a:file }])
-  endfor
-endf
-
-fun! s:add_linked_group(source, target)
-  if s:is_neovim_group(a:source)
-    for l:v in s:active_variants()
-      call add(s:nvim[l:v][s:current_bg()], ['link', [a:source, a:target]])
-    endfor
-    return
-  endif
-  for l:v in s:active_variants()
-    call add(s:data[l:v][s:current_bg()], ['link', [a:source, a:target]])
-  endfor
-endf
-
-" Here we use the fact that str2nr() applied to a String returns 0 and not an
-" error. So stuff like s:fg16('Black') does not cause out of range errors.
-" Ugly, but it works.
-fun! s:check_color_range(hg, variant)
-  let l:t_co = str2nr(a:variant)
-  if l:t_co > 0 && (
-        \ (l:t_co <= 16 && (s:fg16(a:hg) >= l:t_co || s:bg16(a:hg) >= l:t_co))
-        \ || (l:t_co > 16 && (s:fg256(a:hg) >= l:t_co || s:bg256(a:hg) >= l:t_co))
-        \ )
-    throw printf('Color out of range for %d-color variant used in: %s', l:t_co, s:hi_name(a:hg))
-  endif
-endf
-
-fun! s:add_highlight_group(hg)
-  if s:is_preamble()
-    throw "Cannot define highlight group before Variant or Background is set"
-  endif
-  if s:is_neovim_group(s:hi_name(a:hg))
-    for l:v in s:active_variants()
-      call s:check_color_range(a:hg, l:v)
-      call add(s:nvim[l:v][s:current_bg()], ['group', a:hg])
-    endfor
-    return
-  endif
-  if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
-    let s:has_normal[s:current_bg()] = 1
-  endif
-  for l:v in s:active_variants()
-    call s:check_color_range(a:hg, l:v)
-    call add(s:data[l:v][s:current_bg()], ['group', a:hg])
-    if l:v ==# s:GUI
-      if s:has_gui_italics(a:hg)
-        call s:set_uses_italics()
-        call add(s:italics[l:v][s:current_bg()], ['it', a:hg])
-      endif
-    elseif s:has_term_italics(a:hg)
-      call s:set_uses_italics()
-      call add(s:italics[l:v][s:current_bg()], ['it', a:hg])
-    endif
-  endfor
+  return s:data['global']['preamble']
+        \ + (s:supports_neovim() && !empty(s:nvim['global']['preamble'])
+        \   ? [['raw', "if has('nvim')"]] + s:nvim['global']['preamble'] + [['raw', 'endif']]
+        \   : []
+        \   )
 endf
 
 " Add italics definitions accumulated so far to the colorscheme at the current point
-fun! s:flush_italics()
-  let l:bg = s:current_bg()
-  for l:v in s:active_variants()
-    if empty(s:italics[l:v][l:bg])
-      continue
-    endif
-    call add(s:data[l:v][l:bg], ['raw', 'if !s:italics'])
-    call extend(s:data[l:v][l:bg], s:italics[l:v][l:bg])
-    call add(s:data[l:v][l:bg], ['raw', 'endif'])
-    let s:italics[l:v][l:bg] = []
-  endfor
+fun! s:flush_italics(variant, section)
+  if empty(s:italics[a:variant][a:section])
+    return
+  endif
+  call s:add_raw_item(a:variant, a:section,  'if !s:italics')
+  call extend(s:data[a:variant][a:section], s:italics[a:variant][a:section])
+  call s:add_raw_item(a:variant, a:section, 'endif')
+  let s:italics[a:variant][a:section] = []
 endf
 
-fun! s:flush_neovim()
+fun! s:flush_terminal_colors(variant, section)
+  if a:section ==# 'preamble' || !s:has_variant(s:GUI) || empty(s:term_colors(a:section))
+    return
+  endif
+  let l:tc = s:term_colors(a:section)
+  let l:col0_3 = join(map(copy(l:tc[0:3]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
+  let l:col4_9 = join(map(copy(l:tc[4:9]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
+  let l:col10_15 = join(map(copy(l:tc[10:15]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
+  call s:add_raw_item(s:GUI, a:section, 'let g:terminal_ansi_colors = ['.l:col0_3.',')
+  call s:add_raw_item(s:GUI, a:section, '\ '.l:col4_9.',')
+  call s:add_raw_item(s:GUI, a:section, '\ '.l:col10_15.']')
+endf
+
+fun! s:flush_neovim(variant, section, flush_terminal)
   if !s:supports_neovim()
     return
   endif
-  let l:bg = s:current_bg()
-  for l:v in s:active_variants()
-    if empty(s:nvim[l:v][l:bg])
-      continue
-    endif
-    call add(s:data[l:v][l:bg], ['raw', "if has('nvim')"])
-    call extend(s:data[l:v][l:bg], s:nvim[l:v][l:bg])
-    call add(s:data[l:v][l:bg], ['raw', 'endif'])
-    let s:nvim[l:v][l:bg] = []
-  endfor
+  if empty(s:nvim[a:variant][a:section]) &&
+        \ (s:is_term(a:variant) || !a:flush_terminal || empty(s:term_colors(a:section)))
+    return
+  endif
+  call s:add_raw_item(a:variant, a:section,  "if has('nvim')")
+  call extend(s:data[a:variant][a:section], s:nvim[a:variant][a:section])
+  if s:is_gui(a:variant) && a:flush_terminal
+    let l:n = 0
+    for l:color in s:term_colors(a:section)
+      call s:add_raw_item(a:variant, a:section,
+            \ "let g:terminal_color_".string(l:n)." = '".s:guicol(l:color, a:section)."'")
+      let l:n += 1
+    endfor
+  endif
+  call s:add_raw_item(a:variant, a:section, 'endif')
+  let s:nvim[a:variant][a:section] = []
+endf
+
+fun! s:is_gui(variant)
+  return a:variant ==# s:GUI
+endf
+
+fun! s:is_term(variant)
+  return a:variant !=# s:GUI
+endf
+
+fun! s:colorscheme_definitions(variant, section)
+  call s:flush_italics(a:variant, a:section)
+  call s:flush_terminal_colors(a:variant, a:section)
+  call s:flush_neovim(a:variant, a:section, a:section !=# 'preamble')
+  return s:data[a:variant][a:section]
+endf
+
+" FIXME
+fun! s:has_colorscheme_definitions(variant)
+  return !empty(s:data[a:variant]['dark']) || !empty(s:data[a:variant]['light']) ||
+        \ (s:supports_neovim() && (!empty(s:nvim[a:variant]['dark']) || !empty(s:nvim[a:variant]['light'])))
 endf
 " }}}
 " Aux files {{{
@@ -874,7 +873,6 @@ endf
 fun! s:init_data_structures()
   call s:init_source_code()
   call s:init_color_palette()
-  call s:init_term_colors()
   call s:init_highlight_groups()
   call s:init_metadata()
   call s:init_colorscheme_definition()
@@ -885,27 +883,32 @@ endf
 " Color stats {{{
 " Print details about the color palette for the specified background
 fun! s:print_similarity_table(bg, bufnr)
-  call s:set_active_bg(a:bg)
-  let l:colnames = s:color_names(a:bg)
-  if empty(l:colnames)
+  let l:colors = s:color_names(a:bg)
+  if empty(l:colors)
     return
   endif
-  " Find maximum length of color names (used for formatting)
-  let l:len = max(map(copy(l:colnames), { _,v -> len(v)}))
   let l:delta = {}
-  for l:c in l:colnames
+  let l:colnames = []
+  for l:c in l:colors
+    " Skip color names and ASCII colors (0-15)
+    if s:guicol(l:c, a:bg) !~# '\m^#' || s:col256(l:c, a:bg) < 16
+      continue
+    endif
+    call add(l:colnames, l:c)
     let l:delta[l:c] = colortemplate#colorspace#hex_delta_e(
-          \ s:guicol(l:c),
-          \ colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c))
+          \ s:guicol(l:c, a:bg),
+          \ colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c, a:bg))
           \ )
   endfor
+  " Find maximum length of color names (used for formatting)
+  let l:len = max(map(copy(l:colnames), { _,v -> len(v)}))
   " Sort colors by increasing delta
   call sort(l:colnames, { c1,c2 -> l:delta[c1] < l:delta[c2] ? -1 : 1 })
   call s:put(a:bufnr, '{{{ Color Similarity Table (' . a:bg . ' background)')
   for l:c in l:colnames
-    let l:colgui = s:guicol(l:c)
+    let l:colgui = s:guicol(l:c, a:bg)
     let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
-    let l:col256 = s:col256(l:c)
+    let l:col256 = s:col256(l:c, a:bg)
     let l:d  = l:delta[l:c]
     if l:col256 > 15 && l:col256 < 256
       let l:hex256 = g:colortemplate#colorspace#xterm256[l:col256 - 16]
@@ -966,15 +969,18 @@ endf
 
 " Adds the contrast matrix for the specified background to the current buffer.
 fun! s:print_color_matrices(bg, bufnr)
-  call s:set_active_bg(a:bg)
   let l:colnames = sort(s:color_names(a:bg))
   if empty(l:colnames)
     return
   endif
   let l:values = { 'gui': [], 'term': [] }
   for l:c in l:colnames
-    call add(l:values['gui'], s:guicol(l:c))
-    call add(l:values['term'], colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c)))
+    " Skip color names and ASCII colors (0-15)
+    if s:guicol(l:c, a:bg) !~# '\m^#' || s:col256(l:c, a:bg) < 16
+      continue
+    endif
+    call add(l:values['gui'], s:guicol(l:c, a:bg))
+    call add(l:values['term'], colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c, a:bg)))
   endfor
   call s:print_contrast_ratio_matrices(a:bufnr, l:values, l:colnames, a:bg)
   call s:print_colordiff_matrix(a:bufnr, l:values, l:colnames, a:bg)
@@ -1006,22 +1012,22 @@ fun! s:print_color_info()
 endf
 " }}}
 " Interpolation {{{
-fun! s:interpolate(line, linenr, file)
-  let l:t_Co = s:min_t_Co()
+fun! s:interpolate(variant, section, line, linenr, file)
+  let l:t_Co = s:is_gui(a:variant) ? 256 : a:variant
   try
-    let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1))',                            'g')
-    let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1))',                           'g')
-    let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),'.l:t_Co.')',               'g')
-    let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1))',                           'g')
-    let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),'.l:t_Co.')',   'g')
-    let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2))',               'g')
-    let l:line = substitute(l:line, '@date',                          '\=strftime("%Y %b %d")',                            'g')
-    let l:line = substitute(l:line, '@vimversion',                    '\=string(v:version/100).".".string(v:version%100)', 'g')
-    let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                         'g')
+    let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1),"'.a:section.'")',                            'g')
+    let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1),"'.a:section.'")',                           'g')
+    let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),"'.a:section.'","'.l:t_Co.'")',             'g')
+    let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1),"'.a:section.'")',                           'g')
+    let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),"'.a:section.'","'.l:t_Co.'")', 'g')
+    let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2),"'.a:section.'")',               'g')
+    let l:line = substitute(l:line, '@date',                          '\=strftime("%Y %b %d")',                                            'g')
+    let l:line = substitute(l:line, '@vimversion',                    '\=string(v:version/100).".".string(v:version%100)',                 'g')
+    let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                                         'g')
+    return l:line
   catch /.*/
     call s:add_error(a:file, a:linenr, 1, 'Undefined @ value')
   endtry
-  return l:line
 endf
 " }}}
 " Parsing {{{
@@ -1144,12 +1150,94 @@ fun! s:next_line()
   return 1
 endf
 " }}}
+" Active section {{{
+fun! s:init_active_section()
+  let s:active_section = 'preamble'
+endf
+
+fun! s:active_section()
+  return s:active_section
+endf
+
+fun! s:set_active_section(v)
+  let s:active_section = a:v
+endf
+" }}}
+" Active variants {{{
+fun! s:init_variants()
+  let s:active_variants = ['global']
+endf
+
+fun! s:active_variants()
+  return s:active_variants
+endf
+
+fun! s:has_active_term_variant()
+  return len(s:active_variants) > 1 || s:active_variants[0] != s:GUI
+endf
+
+fun! s:set_active_variants(variants)
+  let s:active_variants = []
+  for l:v in a:variants
+    if l:v ==# 'gui' || str2nr(l:v) > 256
+      let l:v = s:GUI
+    endif
+    if !s:has_variant(l:v)
+      call s:add_colorscheme_variant(l:v)
+    endif
+    call add(s:active_variants, l:v)
+  endfor
+  call uniq(sort(s:active_variants))
+endf
+
+fun! s:is_global_preamble()
+  return s:active_variants ==# ['global']
+endf
+
+" Here we use the fact that str2nr() applied to a String returns 0 and not an
+" error. So stuff like s:fg16('Black', bg) does not cause out of range errors.
+" Ugly, but it works.
+fun! s:check_color_range(variant, section, hg)
+  if a:variant ==# s:GUI
+    return
+  endif
+  let l:t_co = str2nr(a:variant)
+  if l:t_co > 0 && (
+        \ (l:t_co <= 16 && (s:fg16(a:hg, a:section) >= l:t_co || s:bg16(a:hg, a:section) >= l:t_co))
+        \ || (l:t_co > 16 && (s:fg256(a:hg, a:section) >= l:t_co || s:bg256(a:hg, a:section) >= l:t_co))
+        \ )
+    throw printf('Color out of range for %d-color variant used in: %s', l:t_co, s:hi_name(a:hg))
+  endif
+endf
+
+fun! s:add_highlight_group(hg)
+  if s:is_global_preamble()
+    throw "Cannot define highlight group before Variant or Background is set"
+  endif
+  if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
+    for l:v in s:active_variants()
+      call s:set_has_normal(l:v, s:active_section())
+    endfor
+  endif
+  for l:v in s:active_variants()
+    call s:check_color_range(l:v, s:active_section(), a:hg)
+    call s:add_higroup_item(l:v, s:active_section(), a:hg)
+  endfor
+endf
+" }}}
 " Verbatim {{{
 fun! s:init_verbatim()
   let s:verb_block = 0
 endf
 
 fun! s:start_verbatim()
+  " Verbatim blocks act like optimization fences: since we don't know what the
+  " code in a verbatim block does, we need to flush definitions collected so
+  " far.
+  for l:v in s:active_variants()
+    call s:flush_italics(l:v, s:active_section())
+    call s:flush_neovim(l:v, s:active_section(), 0)
+  endfor
   let s:verb_block = 1
 endf
 
@@ -1205,6 +1293,9 @@ endf
 fun! s:quickly_parse_color_line()
   call s:init_color_palette()
   call s:init_tokenizer()
+  " FIXME
+  call s:init_active_section()
+  call s:init_variants()
   call s:token.setline(getline('.'))
   if s:token.next().kind != 'WORD' || s:token.value !=? 'color' " Not a Color line
     ascii
@@ -1226,7 +1317,10 @@ fun! s:parse_verbatim_line()
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    call s:add_verbatim(s:getl(), s:linenr(), s:currfile())
+  for l:v in s:active_variants()
+    call s:add_verbatim_item(l:v, s:active_section(),
+          \ { 'line': s:getl(), 'linenr': s:linenr(), 'file': s:currfile() })
+  endfor
   endif
 endf
 
@@ -1255,10 +1349,9 @@ endf
 fun! s:parse_line()
   if !s:token.next().is_edible() " Empty line or comment
     return
-  elseif s:token.kind ==# 'WORD'
+  endif
+  if s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
-      call s:flush_italics() " Verbatim blocks act like optimization fences
-      call s:flush_neovim()  " Ditto
       call s:start_verbatim()
       if s:token.next().kind !=# 'EOL'
         throw "Extra characters after 'verbatim'"
@@ -1268,7 +1361,7 @@ fun! s:parse_line()
       if empty(l:path)
         throw 'Missing path'
       endif
-      call s:start_aux_file(s:interpolate(l:path, s:linenr(), s:currfile()))
+      call s:start_aux_file(s:interpolate(min(s:active_variants()), s:active_section(), l:path, s:linenr(), s:currfile()))
     elseif s:token.value ==? 'documentation'
       if s:token.next().is_edible()
         throw "Extra characters after 'documentation'"
@@ -1335,17 +1428,19 @@ fun! s:parse_background_directive()
     throw "Background can only be 'dark', 'light' or 'any'"
   endif
   call s:add_source_line(s:getl())
-  if s:is_preamble() " Background in preamble implies Variant: gui 256
+  if s:is_global_preamble() " Background in preamble implies Variant: gui 256
     call s:set_active_variants([s:GUI, '256'])
   endif
   if s:token.value ==# 'dark'
-    call s:set_active_bg('dark')
+    call s:set_active_section('dark')
     call s:set_has_dark()
   elseif s:token.value ==# 'light'
-    call s:set_active_bg('light')
+    call s:set_active_section('light')
     call s:set_has_light()
-  else
-    call s:reset_backgrounds()
+  else " any
+    call s:set_active_section('preamble')
+    call s:set_has_dark()
+    call s:set_has_light()
   endif
 endf
 
@@ -1370,7 +1465,7 @@ fun! s:parse_color_def()
   let l:col_gui   = s:parse_gui_value()
   let l:col_256   = s:parse_base_256_value()
   let l:col_16    = s:parse_base_16_value()
-  call s:add_color(l:colorname, l:col_gui, l:col_256, l:col_16)
+  call s:add_color(s:active_section(), l:colorname, l:col_gui, l:col_256, l:col_16)
   if s:token.next().is_edible()
     throw 'Extra characters at end of line'
   endif
@@ -1477,10 +1572,10 @@ endf
 
 fun! s:parse_term_colors()
   while s:token.next().is_edible()
-    if !s:is_color_defined(s:token.value)
+    if !s:is_color_defined(s:token.value, s:active_section())
       throw 'Undefined color name: ' . s:token.value
     endif
-    call s:add_term_ansi_color(s:guicol(s:token.value))
+    call s:add_term_ansi_color(s:token.value, s:active_section())
   endwhile
 endf
 
@@ -1519,7 +1614,7 @@ endf
 
 fun! s:parse_color_value()
   let l:color = s:token.value
-  if !s:is_color_defined(l:color) && l:color !~# '^\(fg\|bg\|none\)$'
+  if !s:is_color_defined(l:color, s:active_section()) && l:color !~# '^\(fg\|bg\|none\)$'
     throw 'Undefined color name: ' . l:color
   endif
   return l:color
@@ -1599,14 +1694,17 @@ fun! s:parse_linked_group_def()
   if s:token.next().kind !=# 'WORD'
     throw 'Expected highlight group name'
   endif
-  " call s:add_linked_group_def(l:source_group, s:token.value)
-  call s:add_linked_group(l:source_group, s:token.value)
+  for l:v in s:active_variants()
+    call s:add_linked_item(l:v, s:active_section(), l:source_group, s:token.value)
+  endfor
 endf
 " }}} Parser
 " Init parser {{{
 fun! s:init_parser()
   call s:init_tokenizer()
   call s:init_includes()
+  call s:init_active_section()
+  call s:init_variants()
   call s:init_verbatim()
   call s:init_auxfiles_parsing()
 endf
@@ -1625,8 +1723,8 @@ fun! s:assert_valid_color_name(name)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
     throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
   endif
-  if s:is_color_defined(a:name)
-    throw "Color already defined for " . s:default_bg() . " background"
+  if s:is_color_defined(a:name, s:active_section())
+    throw "Color already defined for " . s:active_section() . " background"
   endif
   " TODO: check that color name starts with alphabetic char?
   return 1
@@ -1645,11 +1743,22 @@ fun! s:assert_requirements()
   if empty(s:maintainer())
     call s:set_default_maintainer()
   endif
-  if s:has_dark_and_light() && !(s:has_normal_group('dark') && s:has_normal_group('light'))
-    call s:add_generic_error('Please define the Normal highlight group for both dark and light background')
-  elseif (s:has_light() && !s:has_normal_group('light')) || (s:has_dark() && !s:has_normal_group('dark'))
-    call s:add_generic_error('Please define the Normal highlight group')
-  endif
+  for l:v in s:supported_variants()
+    if (s:has_dark() && !s:has_normal(l:v, 'dark')) || (s:has_light() && !s:has_normal(l:v, 'light'))
+      call s:add_generic_error('Please define the Normal highlight group for '
+            \ .(s:is_gui(l:v) ? 'true' : l:v).'-color variant')
+    endif
+  endfor
+  for l:section in ['dark', 'light']
+    let l:tc = s:term_colors(l:section)
+    if empty(l:tc)
+      call s:add_generic_warning("'Term Colors' key missing for " . l:section . ' background')
+    elseif len(l:tc) < 16
+      throw 'Too few terminal ANSI colors (' . l:section . ' background)'
+    elseif len(l:tc) > 16
+      throw 'Too many terminal ANSI colors (' . l:section . ' background)'
+    endif
+  endfor
 endf
 " }}}
 " Colorscheme generation {{{
@@ -1661,55 +1770,55 @@ fun! s:generate_aux_files(outdir, overwrite)
     if match(l:path, '^doc' . s:slash()) > -1 && get(g:, 'colortemplate_no_doc', 0)
       continue
     endif
-    let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate(l['line'], l['linenr'], l['file']) })
+    let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate('256', 'dark', l['line'], l['linenr'], l['file']) }) " FIXME FIXME
     call s:write_list(l:lines, l:path, { 'dir': a:outdir }, a:overwrite)
   endfor
 endf
 
-fun! s:eval(item, col)
-  if a:item[0] ==# 'group'
-    let l:hg = a:item[1]
+fun! s:eval(item, col, section)
+  let l:v = s:item_value(a:item)
+  if s:is_higroup_type(a:item)
     if a:col > 256
-      return 'hi ' . s:hi_name(l:hg)
-            \ . ' guifg='.s:guifg(l:hg)
-            \ . ' guibg='.s:guibg(l:hg)
-            \ . ' guisp='.s:guisp(l:hg)
-            \ . ' gui='.s:gui_attr(l:hg)
-            \ . ' cterm='.s:gui_attr(l:hg) " See https://github.com/vim/vim/issues/1740
+      return 'hi ' . s:hi_name(l:v)
+            \ . ' guifg='.s:guifg(l:v, a:section)
+            \ . ' guibg='.s:guibg(l:v, a:section)
+            \ . ' guisp='.s:guisp(l:v, a:section)
+            \ . ' gui='.s:gui_attr(l:v)
+            \ . ' cterm='.s:gui_attr(l:v) " See https://github.com/vim/vim/issues/1740
     elseif a:col > 16
-      return 'hi ' . s:hi_name(l:hg)
-            \ . ' ctermfg='.s:fg256(l:hg)
-            \ . ' ctermbg='.s:bg256(l:hg)
-            \ . ' cterm='.s:term_attr(l:hg)
-            \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
-            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['stop'])
+      return 'hi ' . s:hi_name(l:v)
+            \ . ' ctermfg='.s:fg256(l:v, a:section)
+            \ . ' ctermbg='.s:bg256(l:v, a:section)
+            \ . ' cterm='.s:term_attr(l:v)
+            \ . (empty(l:v['start']) ? '' : ' start='.l:v['start'])
+            \ . (empty(l:v['stop']) ? '' : ' stop='.l:v['stop'])
     elseif a:col > 2
-      return 'hi ' . s:hi_name(l:hg)
-            \ . ' ctermfg='.s:fg16(l:hg)
-            \ . ' ctermbg='.s:bg16(l:hg)
-            \ . ' cterm='.s:term_attr(l:hg)
-            \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
-            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['stop'])
+      return 'hi ' . s:hi_name(l:v)
+            \ . ' ctermfg='.s:fg16(l:v, a:section)
+            \ . ' ctermbg='.s:bg16(l:v, a:section)
+            \ . ' cterm='.s:term_attr(l:v)
+            \ . (empty(l:v['start']) ? '' : ' start='.l:v['start'])
+            \ . (empty(l:v['stop']) ? '' : ' stop='.l:v['stop'])
     elseif a:col > 0
-      return 'hi ' . s:hi_name(l:hg)
-            \ . ' term='.s:term_attr(l:hg)
-            \ . (empty(l:hg['start']) ? '' : ' start='.l:hg['start'])
-            \ . (empty(l:hg['stop']) ? '' : ' stop='.l:hg['stop'])
+      return 'hi ' . s:hi_name(l:v)
+            \ . ' term='.s:term_attr(l:v)
+            \ . (empty(l:v['start']) ? '' : ' start='.l:v['start'])
+            \ . (empty(l:v['stop']) ? '' : ' stop='.l:v['stop'])
     endif
-  elseif a:item[0] ==# 'link'
-    return 'hi! link ' . a:item[1][0] . ' ' . a:item[1][1]
-  elseif a:item[0] ==# 'verb'
-    return s:interpolate(a:item[1]['line'], a:item[1]['linenr'], a:item[1]['file'])
-  elseif a:item[0] ==# 'raw'
-    return a:item[1]
-  elseif a:item[0] ==# 'it'
+  elseif s:is_linked_type(a:item)
+    return 'hi! link ' . l:v[0] . ' ' . l:v[1]
+  elseif s:is_verb_type(a:item)
+    return s:interpolate(string(a:col), a:section, l:v['line'], l:v['linenr'], l:v['file'])
+  elseif s:is_raw_type(a:item)
+    return l:v
+  elseif s:is_italic_type(a:item)
     if a:col > 256
-      let l:attr = s:gui_attr_no_italics(a:item[1])
+      let l:attr = s:gui_attr_no_italics(l:v)
       " Need to set cterm even for termguicolors (see https://github.com/vim/vim/issues/1740)
-      return 'hi ' . s:hi_name(a:item[1]) . ' gui='.l:attr . ' cterm='.l:attr
+      return 'hi ' . s:hi_name(l:v) . ' gui='.l:attr . ' cterm='.l:attr
     else
-      let l:attr = s:term_attr_no_italics(a:item[1])
-      return 'hi ' . s:hi_name(a:item[1]) . (a:col > 2 ? ' c' : ' ') . 'term='.l:attr
+      let l:attr = s:term_attr_no_italics(l:v)
+      return 'hi ' . s:hi_name(l:v) . (a:col > 2 ? ' c' : ' ') . 'term='.l:attr
     endif
   else
     throw 'FATAL: unknown item type' " This should never happen!
@@ -1760,26 +1869,6 @@ fun! s:print_header(bufnr)
   endif
 endf
 
-fun! s:print_terminal_colors(bufnr)
-  let l:tc = s:term_colors()
-  if empty(l:tc)
-    call s:add_generic_warning("'Term Colors' key missing for " . s:default_bg() . ' background')
-    return
-  endif
-  if len(l:tc) < 16
-    throw 'Too few terminal ANSI colors (' . s:default_bg() . ' background)'
-  endif
-  if len(l:tc) > 16
-    throw 'Too many terminal ANSI colors (' . s:default_bg() . ' background)'
-  endif
-  let l:col0_3 = join(map(copy(l:tc[0:3]), { _,c -> "'".c."'" }), ', ')
-  let l:col4_9 = join(map(copy(l:tc[4:9]), { _,c -> "'".c."'" }), ', ')
-  let l:col10_15 = join(map(copy(l:tc[10:15]), { _,c -> "'".c."'" }), ', ')
-  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' . l:col0_3 . ',')
-  call s:put(a:bufnr, '\ ' . l:col4_9 . ',')
-  call s:put(a:bufnr, '\ ' . l:col10_15 . ']')
-endf
-
 fun! s:finish_endif(bufnr)
   call s:put(a:bufnr, 'unlet s:t_Co' . (s:uses_italics() ? ' s:italics' : ''))
   call s:put(a:bufnr, 'finish')
@@ -1792,17 +1881,18 @@ endf
 " which had an example using color 234.
 " See https://github.com/lifepillar/vim-colortemplate/issues/13.
 fun! s:check_bug_bg234(bufnr, bg, item, ncols)
-  if a:item[0] ==# 'group' && s:hi_name(a:item[1]) ==? 'Normal'
+  if s:is_higroup_type(a:item) && s:hi_name(s:item_value(a:item)) ==? 'Normal'
+    let l:v = s:item_value(a:item)
     if a:bg ==# 'dark'
-      if (a:ncols > 16 && (s:bg256(a:item[1]) !=# 'NONE')) ||
-            \ s:bg16(a:item[1]) =~? '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
+      if (a:ncols > 16 && (s:bg256(l:v, a:bg) !=# 'NONE')) ||
+            \ s:bg16(l:v, a:bg) =~? '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
         call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : '') . ' " Fix for Vim bug')
         call s:put(a:bufnr, 'set background=dark')
         call s:put(a:bufnr, 'endif')
       endif
     else " light background
       if (a:ncols > 2 && a:ncols <= 16) &&
-            \ (s:bg16(a:item[1]) =~# '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$')
+            \ (s:bg16(l:v, a:bg) =~# '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$')
         call s:put(a:bufnr, "if !has('patch-8.0.0616')" . (s:supports_neovim() ? " && !has('nvim')" : ''))
         call s:put(a:bufnr, 'set background=light')
         call s:put(a:bufnr, 'endif')
@@ -1815,84 +1905,19 @@ fun! s:print_global_preamble(bufnr)
   if !empty(s:global_preamble())
     call s:put(a:bufnr, '')
     for l:item in s:global_preamble()
-      call s:put(a:bufnr, s:eval(l:item, 0)) " TODO: check 0 (what about verbatim interpolation?)
+      call s:put(a:bufnr, s:eval(l:item, 0, 'preamble')) " TODO: check 0 (what about verbatim interpolation?)
     endfor
-  endif
-  if s:supports_neovim() && !empty(s:neovim_preamble())
-    call s:put(a:bufnr, '')
-    call s:put(a:bufnr, "if has('nvim')")
-    for l:item in s:neovim_preamble()
-      call s:put(a:bufnr, s:eval(l:item, 0)) " TODO: check 0 (what about verbatim interpolation?)
-    endfor
-    call s:put(a:bufnr, 'endif')
   endif
 endf
 
-fun! s:print_local_preamble(bufnr, variant)
-  call s:put(a:bufnr, '')
-  if a:variant ==# s:GUI
-    call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
-  else
-    call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
-  endif
+fun! s:print_colorscheme_defs(bufnr, variant, section)
   let l:ncols = str2nr(a:variant)
-  for l:item in s:preamble(a:variant)
-    call s:put(a:bufnr, s:eval(l:item, l:ncols))
+  for l:item in s:colorscheme_definitions(a:variant, a:section)
+    call s:put(a:bufnr, s:eval(l:item, l:ncols, a:section))
+    if !s:is_gui(a:variant)
+      call s:check_bug_bg234(a:bufnr, a:section, l:item, l:ncols)
+    endif
   endfor
-endf
-
-fun! s:print_gui_colorscheme_defs(bufnr, bg)
-  let l:ncols = str2nr(s:GUI)
-  for l:item in s:colorscheme_definitions(s:GUI, a:bg)
-    call s:put(a:bufnr, s:eval(l:item, l:ncols))
-  endfor
-endf
-
-fun! s:print_term_colorscheme_defs(bufnr, variant, bg)
-  let l:ncols = str2nr(a:variant)
-  for l:item in s:colorscheme_definitions(a:variant, a:bg)
-    call s:put(a:bufnr, s:eval(l:item, l:ncols))
-    call s:check_bug_bg234(a:bufnr, a:bg, l:item, l:ncols)
-  endfor
-endf
-
-fun! s:print_italics_defs(bufnr, variant, bg)
-  let l:ncols = str2nr(a:variant)
-  let l:defs = s:italics_definitions(a:variant, a:bg)
-  if empty(l:defs)
-    return
-  endif
-  call s:put(a:bufnr, 'if !s:italics')
-  for l:item in l:defs
-    call s:put(a:bufnr, s:eval(l:item, l:ncols))
-  endfor
-  call s:put(a:bufnr, 'endif')
-endf
-
-fun! s:print_neovim_defs(bufnr, variant, bg)
-  if !s:supports_neovim()
-    return
-  endif
-  let l:nvim_defs = s:neovim_definitions(a:variant, a:bg)
-  let l:colors = s:term_colors()
-  if empty(l:nvim_defs) && (a:variant !=# s:GUI || empty(l:colors))
-    return
-  endif
-  call s:put(a:bufnr, "if has('nvim')")
-  if !empty(l:nvim_defs)
-    let l:ncols = str2nr(a:variant)
-    for l:item in l:nvim_defs
-      call s:put(a:bufnr, s:eval(l:item, l:ncols))
-    endfor
-  endif
-  if a:variant ==# s:GUI && !empty(l:colors)
-    let l:n = 0
-    for l:color in l:colors
-      call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".l:color."'")
-      let l:n += 1
-    endfor
-  endif
-  call s:put(a:bufnr, 'endif')
 endf
 
 " Prints source as comment, for provenance
@@ -1905,36 +1930,28 @@ fun! s:print_source_code(bufnr)
 endf
 
 fun! s:print_colorscheme(bufnr, variant)
-  call s:print_local_preamble(a:bufnr, a:variant)
-  if s:has_dark_and_light()
-    call s:set_active_bg('dark')
-    call s:put(a:bufnr, "if &background ==# 'dark'")
-    if a:variant ==# s:GUI
-      call s:print_gui_colorscheme_defs(a:bufnr, 'dark')
-      call s:print_terminal_colors(a:bufnr)
-    else
-      call s:print_term_colorscheme_defs(a:bufnr, a:variant, 'dark')
-    endif
-    call s:print_italics_defs(a:bufnr, a:variant, 'dark')
-    call s:print_neovim_defs(a:bufnr, a:variant, 'dark')
-    call s:finish_endif(a:bufnr)
-    call s:put(a:bufnr, '" Light background')
-    call s:set_active_bg('light')
-  endif
-  if a:variant ==# s:GUI
-    call s:print_gui_colorscheme_defs(a:bufnr, s:default_bg())
-    call s:print_terminal_colors(a:bufnr)
+  call s:put(a:bufnr, '')
+  if s:is_gui(a:variant)
+    call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
   else
-    call s:print_term_colorscheme_defs(a:bufnr, a:variant, s:default_bg())
+    call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
   endif
-  call s:print_italics_defs(a:bufnr, a:variant, s:default_bg())
-  call s:print_neovim_defs(a:bufnr, a:variant, s:default_bg())
+  call s:print_colorscheme_defs(a:bufnr, a:variant, 'preamble')
+  if s:has_dark_and_light()
+    call s:put(a:bufnr, "if &background ==# 'dark'")
+    call s:print_colorscheme_defs(a:bufnr, a:variant, 'dark')
+    call s:finish_endif(a:bufnr) " if &background
+    call s:put(a:bufnr, '" Light background')
+    let l:background = 'light'
+  else
+    let l:background = s:has_dark() ? 'dark' : 'light'
+  endif
+  call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
   call s:finish_endif(a:bufnr)
 endf
 
 fun! s:generate_colorscheme(outdir, overwrite)
   let l:bufnr = s:new_work_buffer()
-  call s:set_active_bg(s:has_dark() ? 'dark' : 'light')
   call s:print_header(l:bufnr)
   call s:print_global_preamble(l:bufnr)
   for l:variant in s:supported_variants()
@@ -2211,9 +2228,9 @@ fun! colortemplate#getinfo(n)
   else
     let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
     echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %s',
-        \ l:name, l:r, l:g, l:b, s:guicol(l:name),
-        \ join(l:approx, ', ')
-        \ )
+          \ l:name, l:r, l:g, l:b, s:guicol(l:name),
+          \ join(l:approx, ', ')
+          \ )
   endif
 endf
 

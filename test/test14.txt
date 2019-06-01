@@ -3,6 +3,7 @@ Full name:X
 Short name:x
 Author:y
 Maintainer:w
+Variant:gui
 Background:dark
 Color black : rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White

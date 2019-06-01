@@ -4,7 +4,8 @@ Short name:x
 Author:y
 Maintainer:w
 Background:dark
-Color:black (0,0,0) 0 Black
+Color:black (0,0,0) 0 Black  # WRONG
 Color:white #ffffff 255 White
-Normal white black
+Variant:2
+Normal white black # will be undefined
 

@@ -60,11 +60,12 @@ fun! Test_CT_Normal_alt_background()
   edit test6.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(2, len(l:qflist))
+  call assert_equal(3, len(l:qflist))
   call assert_equal("Invalid token", l:qflist[0]['text'])
   call assert_equal(9, l:qflist[0]['lnum'])
   call assert_equal(19, l:qflist[0]['col'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[1]['text'])
+  call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[1]['text'])
+  call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[2]['text'])
   cclose
   bwipe test6.txt
 endf
@@ -162,10 +163,10 @@ fun! Test_CT_colon_after_color_key()
   let l:qflist = getqflist()
   call assert_equal(3, len(l:qflist))
   call assert_equal('Expected colon after Color keyword', l:qflist[0]['text'])
-  call assert_equal(7, l:qflist[0]['lnum'])
+  call assert_equal(8, l:qflist[0]['lnum'])
   call assert_equal("Undefined color name: black", l:qflist[1]['text'])
-  call assert_equal(9, l:qflist[1]['lnum'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[2]['text'])
+  call assert_equal(10, l:qflist[1]['lnum'])
+  call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[2]['text'])
   cclose
   bwipe test14.txt
 endf
@@ -176,11 +177,12 @@ fun! Test_CT_invalid_color_name()
   let l:qflist = getqflist()
   call assert_equal(3, len(l:qflist))
   call assert_equal('Invalid color name', l:qflist[0]['text'])
-  call assert_equal(7, l:qflist[0]['lnum'])
+  call assert_equal(8, l:qflist[0]['lnum'])
   call assert_equal(8, l:qflist[0]['col'])
   call assert_equal("Undefined color name: black", l:qflist[1]['text'])
-  call assert_equal(9, l:qflist[1]['lnum'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[2]['text'])
+  call assert_equal(10, l:qflist[1]['lnum'])
+  call assert_equal(14, l:qflist[1]['col'])
+  call assert_equal("Please define the Normal highlight group for 16-color variant", l:qflist[2]['text'])
   cclose
   bwipe test15.txt
 endf
@@ -189,13 +191,15 @@ fun! Test_CT_invalid_gui_value()
   edit test16.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(3, len(l:qflist))
+  call assert_equal(5, len(l:qflist))
   call assert_equal('Invalid GUI color value', l:qflist[0]['text'])
   call assert_equal(7, l:qflist[0]['lnum'])
   call assert_equal(13, l:qflist[0]['col'])
   call assert_equal("Undefined color name: black", l:qflist[1]['text'])
-  call assert_equal(9, l:qflist[1]['lnum'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[2]['text'])
+  call assert_equal(10, l:qflist[1]['lnum'])
+  call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[2]['text'])
+  call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[3]['text'])
+  call assert_equal("Please define the Normal highlight group for 2-color variant", l:qflist[4]['text'])
   cclose
   bwipe test16.txt
 endf
@@ -204,13 +208,16 @@ fun! Test_CT_invalid_gui_value_bis()
   edit test17.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(3, len(l:qflist))
+  call assert_equal(5, len(l:qflist))
   call assert_equal('Unknown RGB color name: cmyk', l:qflist[0]['text'])
-  call assert_equal(7, l:qflist[0]['lnum'])
+  call assert_equal(8, l:qflist[0]['lnum'])
   call assert_equal(13, l:qflist[0]['col'])
   call assert_equal("Undefined color name: black", l:qflist[1]['text'])
-  call assert_equal(9, l:qflist[1]['lnum'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[2]['text'])
+  call assert_equal(10, l:qflist[1]['lnum'])
+  call assert_equal(14, l:qflist[1]['col'])
+  call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[2]['text'])
+  call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[3]['text'])
+  call assert_equal("Please define the Normal highlight group for 8-color variant", l:qflist[4]['text'])
   cclose
   bwipe test17.txt
 endf
@@ -219,7 +226,7 @@ fun! Test_CT_invalid_rgb_values()
   edit test18.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(12, len(l:qflist))
+  call assert_equal(14, len(l:qflist))
   call assert_equal('Missing opening parenthesis', l:qflist[0]['text'])
   call assert_equal(8, l:qflist[0]['lnum'])
   call assert_equal(17, l:qflist[0]['col'])
@@ -233,26 +240,29 @@ fun! Test_CT_invalid_rgb_values()
   call assert_equal(11, l:qflist[3]['lnum'])
   call assert_equal(18, l:qflist[3]['col'])
   call assert_equal('Expected number', l:qflist[4]['text'])
-  call assert_equal(12, l:qflist[4]['lnum'])
+  call assert_equal(13, l:qflist[4]['lnum'])
   call assert_equal(19, l:qflist[4]['col'])
   call assert_equal('RGB green component value is out of range', l:qflist[5]['text'])
-  call assert_equal(13, l:qflist[5]['lnum'])
+  call assert_equal(14, l:qflist[5]['lnum'])
   call assert_equal(19, l:qflist[5]['col'])
   call assert_equal('Missing comma', l:qflist[6]['text'])
-  call assert_equal(14, l:qflist[6]['lnum'])
+  call assert_equal(15, l:qflist[6]['lnum'])
   call assert_equal(20, l:qflist[6]['col'])
   call assert_equal('Expected number', l:qflist[7]['text'])
-  call assert_equal(15, l:qflist[7]['lnum'])
+  call assert_equal(16, l:qflist[7]['lnum'])
   call assert_equal(21, l:qflist[7]['col'])
   call assert_equal('RGB blue component value is out of range', l:qflist[8]['text'])
-  call assert_equal(16, l:qflist[8]['lnum'])
+  call assert_equal(17, l:qflist[8]['lnum'])
   call assert_equal(21, l:qflist[8]['col'])
   call assert_equal('Missing closing parenthesis', l:qflist[9]['text'])
-  call assert_equal(17, l:qflist[9]['lnum'])
+  call assert_equal(18, l:qflist[9]['lnum'])
   call assert_equal(23, l:qflist[9]['col'])
   call assert_equal("Undefined color name: black", l:qflist[10]['text'])
-  call assert_equal(18, l:qflist[10]['lnum'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[11]['text'])
+  call assert_equal(19, l:qflist[10]['lnum'])
+  call assert_equal(14, l:qflist[10]['col'])
+  call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[11]['text'])
+  call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[12]['text'])
+  call assert_equal("Please define the Normal highlight group for 88-color variant", l:qflist[13]['text'])
   cclose
   bwipe test18.txt
 endf
@@ -263,15 +273,15 @@ fun! Test_CT_base_256_value()
   let l:qflist = getqflist()
   call assert_equal(4, len(l:qflist))
   call assert_equal('Color value is out of range [0,255]', l:qflist[0]['text'])
-  call assert_equal(8, l:qflist[0]['lnum'])
+  call assert_equal(9, l:qflist[0]['lnum'])
   call assert_equal(21, l:qflist[0]['col'])
   call assert_equal('Expected number or tilde', l:qflist[1]['text'])
-  call assert_equal(9, l:qflist[1]['lnum'])
+  call assert_equal(10, l:qflist[1]['lnum'])
   call assert_equal(21, l:qflist[1]['col'])
   call assert_equal("Undefined color name: white", l:qflist[2]['text'])
-  call assert_equal(10, l:qflist[2]['lnum'])
+  call assert_equal(11, l:qflist[2]['lnum'])
   call assert_equal(8, l:qflist[2]['col'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[3]['text'])
+  call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[3]['text'])
   cclose
   bwipe test19.txt
 endf
@@ -382,7 +392,7 @@ fun! Test_CT_minimal()
 endf
 
 fun! Test_CT_verbatim_interpolation()
-  edit test28.txt
+  edi test28.txt
   Colortemplate!
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   bwipe test28.txt
@@ -619,14 +629,15 @@ fun! Test_CT_out_of_range_base256_colors()
   edit test52.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(3, len(l:qflist))
+  call assert_equal(4, len(l:qflist))
   call assert_equal("Color value is out of range [0,255]", l:qflist[0]['text'])
   call assert_equal(10, l:qflist[0]['lnum'])
   call assert_equal(21, l:qflist[0]['col'])
   call assert_equal("Undefined color name: white", l:qflist[1]['text'])
   call assert_equal(11, l:qflist[1]['lnum'])
   call assert_equal(8, l:qflist[1]['col'])
-  call assert_equal("Please define the Normal highlight group", l:qflist[2]['text'])
+  call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[2]['text'])
+  call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[3]['text'])
   cclose
   bwipe test52.txt
 endf

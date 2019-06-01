@@ -823,10 +823,8 @@ fun! s:colorscheme_definitions(variant, section)
   return s:data[a:variant][a:section]
 endf
 
-" FIXME
-fun! s:has_colorscheme_definitions(variant)
-  return !empty(s:data[a:variant]['dark']) || !empty(s:data[a:variant]['light']) ||
-        \ (s:supports_neovim() && (!empty(s:nvim[a:variant]['dark']) || !empty(s:nvim[a:variant]['light'])))
+fun! s:has_colorscheme_definitions(variant, section)
+  return !empty(s:data[a:variant][a:section])
 endf
 " }}}
 " Aux files {{{
@@ -1941,15 +1939,22 @@ fun! s:print_colorscheme(bufnr, variant)
   endif
   call s:print_colorscheme_defs(a:bufnr, a:variant, 'preamble')
   if s:has_dark_and_light()
-    call s:put(a:bufnr, "if &background ==# 'dark'")
-    call s:print_colorscheme_defs(a:bufnr, a:variant, 'dark')
-    call s:finish_endif(a:bufnr) " if &background
-    call s:put(a:bufnr, '" Light background')
-    let l:background = 'light'
-  else
+    if s:has_colorscheme_definitions(a:variant, 'dark')
+      call s:put(a:bufnr, "if &background ==# 'dark'")
+      call s:print_colorscheme_defs(a:bufnr, a:variant, 'dark')
+      call s:finish_endif(a:bufnr) " if &background
+    endif
+    if s:has_colorscheme_definitions(a:variant, 'light')
+      call s:put(a:bufnr, '" Light background')
+      let l:background = 'light'
+      call s:print_colorscheme_defs(a:bufnr, a:variant, 'light')
+    endif
+  else " One background
     let l:background = s:has_dark() ? 'dark' : 'light'
+    if s:has_colorscheme_definitions(a:variant, l:background)
+      call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
+    endif
   endif
-  call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
   call s:finish_endif(a:bufnr)
 endf
 

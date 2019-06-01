@@ -1946,14 +1946,11 @@ fun! s:print_colorscheme(bufnr, variant)
     endif
     if s:has_colorscheme_definitions(a:variant, 'light')
       call s:put(a:bufnr, '" Light background')
-      let l:background = 'light'
       call s:print_colorscheme_defs(a:bufnr, a:variant, 'light')
     endif
   else " One background
     let l:background = s:has_dark() ? 'dark' : 'light'
-    if s:has_colorscheme_definitions(a:variant, l:background)
-      call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
-    endif
+    call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
   endif
   call s:finish_endif(a:bufnr)
 endf

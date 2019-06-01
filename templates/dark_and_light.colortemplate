@@ -300,3 +300,6 @@ ToolbarButton        black             white             bold
 # Add additional highlight groups here if you want
 # }}}
 
+Background: any
+Include: _bw.colortemplate
+

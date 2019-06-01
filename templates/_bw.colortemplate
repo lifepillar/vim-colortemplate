@@ -7,6 +7,7 @@ Color: unused #000000 0
 
 # Default highlight groups {{{
 # Group              Unused   Unused   term
+Normal               unused unused
 ColorColumn          unused unused reverse
 Conceal              unused unused
 Cursor               unused unused
@@ -64,7 +65,7 @@ Todo                 unused unused bold,underline
 Type                 unused unused bold
 Underlined           unused unused underline
 CursorIM             unused unused
-ToolbarLine          unused unused
-ToolbarButton        unused unused bold
+ToolbarLine          unused unused reverse
+ToolbarButton        unused unused bold,reverse
 # }}}
 

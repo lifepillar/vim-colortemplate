@@ -1750,7 +1750,7 @@ fun! s:assert_requirements()
             \ .(s:is_gui(l:v) ? 'true' : l:v).'-color variant')
     endif
   endfor
-  for l:section in ['dark', 'light']
+  for l:section in s:supported_backgrounds()
     let l:tc = s:term_colors(l:section)
     if empty(l:tc)
       call s:add_generic_warning("'Term Colors' key missing for " . l:section . ' background')

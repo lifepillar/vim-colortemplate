@@ -771,7 +771,7 @@ fun! s:flush_italics(variant, section)
 endf
 
 fun! s:flush_terminal_colors(variant, section)
-  if a:section ==# 'preamble' || !s:has_variant(s:GUI) || empty(s:term_colors(a:section))
+  if a:section ==# 'preamble' || !s:is_gui(a:variant) || empty(s:term_colors(a:section))
     return
   endif
   let l:tc = s:term_colors(a:section)

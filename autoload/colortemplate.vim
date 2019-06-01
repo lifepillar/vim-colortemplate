@@ -813,10 +813,13 @@ fun! s:is_term(variant)
   return a:variant !=# s:GUI
 endf
 
-fun! s:colorscheme_definitions(variant, section)
+fun! s:flush_definitions(variant, section)
   call s:flush_italics(a:variant, a:section)
   call s:flush_terminal_colors(a:variant, a:section)
   call s:flush_neovim(a:variant, a:section, a:section !=# 'preamble')
+endf
+
+fun! s:colorscheme_definitions(variant, section)
   return s:data[a:variant][a:section]
 endf
 
@@ -2043,7 +2046,11 @@ fun! colortemplate#parse(filename) abort
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
     endtry
   endwhile
-
+  for l:v in s:supported_variants()
+    for l:s in ['preamble', 'dark', 'light']
+      call s:flush_definitions(l:v, l:s)
+    endfor
+  endfor
   call s:assert_requirements()
   call s:show_errors('Parse error')
 endf

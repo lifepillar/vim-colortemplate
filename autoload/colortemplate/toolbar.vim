@@ -1,17 +1,45 @@
+fun! s:init_toolbar()
+  let g:colortemplate_toolbar_items = get(g:, 'colortemplate_toolbar_item', [
+        \ 'Build!',
+        \ 'BuildAll!',
+        \ 'Show',
+        \ 'Hide',
+        \ 'Check',
+        \ 'Stats',
+        \ 'Source',
+        \ 'HiTest',
+        \ 'OutDir',
+        \ ])
+
+  let g:colortemplate_toolbar_actions = extend({
+        \ 'Build!':    ':Colortemplate!<cr>',
+        \ 'BuildAll!': ':ColortemplateAll!<cr>',
+        \ 'Check':     ':ColortemplateCheck<cr>',
+        \ 'Colortest': ':call colortemplate#colortest()<cr>',
+        \ 'HiTest':    ':call colortemplate#highlighttest()<cr>',
+        \ 'Hide':      ':call colortemplate#disable_colorscheme()<cr>',
+        \ 'OutDir':    ':ColortemplateOutdir<cr>',
+        \ 'Show':      ':call colortemplate#enable_colorscheme()<cr>',
+        \ 'Source':    ':call colortemplate#view_source()<cr>',
+        \ 'Stats':     ':ColortemplateStats<cr>',
+        \ }, get(g:, 'colortemplate_toolbar_actions', {}))
+endf
+
 fun! colortemplate#toolbar#show()
-  if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu')) " has window-toolbar
+  if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu')) " does it have window-toolbar?
     if getbufvar('%', '&ft') ==# 'colortemplate' && expand('%:t') !~# '\m^_'
       nunmenu WinBar
-      nnoremenu <silent> 1.10 WinBar.Build! :Colortemplate!<cr>
-      nnoremenu <silent> 1.20 WinBar.BuildAll! :ColortemplateAll!<cr>
-      nnoremenu <silent> 1.30 WinBar.Show :call colortemplate#enable_colorscheme()<cr>
-      nnoremenu <silent> 1.40 WinBar.Hide :call colortemplate#disable_colorscheme()<cr>
-      nnoremenu <silent> 1.50 WinBar.Check :ColortemplateCheck<cr>
-      nnoremenu <silent> 1.60 WinBar.Stats :ColortemplateStats<cr>
-      nnoremenu <silent> 1.70 WinBar.Source :call colortemplate#view_source()<cr>
-      nnoremenu <silent> 1.75 WinBar.HiTest :call colortemplate#highlighttest()<cr>
-      " nnoremenu <silent> 1.80 WinBar.Colortest :call colortemplate#colortest()<cr>
-      nnoremenu          1.90 WinBar.OutDir :ColortemplateOutdir<cr>
+      if !exists('g:colortemplate_toolbar_items')
+        call s:init_toolbar()
+      endif
+      let l:n = 1
+      for l:entry in g:colortemplate_toolbar_items
+        if has_key(g:colortemplate_toolbar_actions, l:entry)
+          execute 'nnoremenu <silent> 1.'.string(l:n).' WinBar.'.escape(l:entry, '@\/ ')
+                \ g:colortemplate_toolbar_actions[l:entry]
+          let l:n += 1
+        endif
+      endfor
       nnoremenu 1.99 WinBar.✕ :nunmenu WinBar<cr>
     endif
   endif

@@ -1061,6 +1061,7 @@ fun! s:interpolate(variant, section, line, linenr, file)
     return l:line
   catch /.*/
     call s:add_error(a:file, a:linenr, 1, 'Undefined @ value')
+    return a:line
   endtry
 endf
 " }}}

@@ -269,6 +269,10 @@ fun! s:init_source_code()
   let s:source = [] " Keep the source lines here
 endf
 
+fun! s:destroy_source_code()
+  unlet! s:source
+endf
+
 fun! s:add_source_line(line)
   call add(s:source, a:line)
 endf
@@ -292,6 +296,10 @@ fun! s:init_color_palette()
         \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
         \        }
   let s:term_colors = { 'dark': [], 'light': [], 'preamble': [] } " 16 ASCII colors
+endf
+
+fun! s:destroy_color_palette()
+  unlet! g:guicol s:col256 s:col16 s:term_colors
 endf
 
 " section: 'preamble, 'dark' or 'light'
@@ -357,7 +365,9 @@ endf
 " }}}
 " Highlight groups {{{
 fun! s:init_highlight_groups()
-  return 1
+endf
+
+fun! s:destroy_highlight_groups()
 endf
 
 fun! s:new_hi_group(name)
@@ -510,6 +520,11 @@ fun! s:init_metadata()
         \ }
 endf
 
+fun! s:destroy_metadata()
+  unlet! s:supports_dark s:supports_light s:uses_italics
+        \ s:supports_neovim s:supported_variants s:info
+endf
+
 fun! s:supports_neovim()
   return s:supports_neovim
 endf
@@ -650,6 +665,10 @@ fun! s:init_colorscheme_definition()
   let s:italics = { }
   let s:nvim = { 'global' : { 'preamble': [] } }
   let s:has_normal = { }
+endf
+
+fun! s:destroy_colorscheme_definition()
+  unlet! s:data s:italics s:nvim s:has_normal
 endf
 
 fun! s:add_colorscheme_variant(v)
@@ -833,6 +852,10 @@ fun! s:init_aux_files()
   let s:help_path = ''
 endf
 
+fun! s:destroy_aux_files()
+  unlet! s:auxfiles s:help_path
+endf
+
 " path: path of the aux file as specified in the template
 fun! s:register_aux_file(path)
   if !has_key(s:auxfiles, a:path)
@@ -870,7 +893,7 @@ fun! s:auxfile(path)
   return s:auxfiles[a:path]
 endf
 " }}}
-" Init data structures {{{
+" Init/clear data structures {{{
 fun! s:init_data_structures()
   call s:init_source_code()
   call s:init_color_palette()
@@ -878,6 +901,15 @@ fun! s:init_data_structures()
   call s:init_metadata()
   call s:init_colorscheme_definition()
   call s:init_aux_files()
+endf
+
+fun! s:destroy_data_structures()
+  call s:destroy_source_code()
+  call s:destroy_color_palette()
+  call s:destroy_highlight_groups()
+  call s:destroy_metadata()
+  call s:destroy_colorscheme_definition()
+  call s:destroy_aux_files()
 endf
 " }}}
 " }}}
@@ -1034,11 +1066,14 @@ endf
 " Parsing {{{
 " Tokenizer {{{
 " Current token in the currently parsed line
+let s:token = { 'line': '', 'spos':  0, 'pos':  0, 'value': '', 'kind': '' }
+
 fun! s:init_tokenizer()
   call s:token.reset()
 endf
 
-let s:token = { 'line': '', 'spos':  0, 'pos':  0, 'value': '', 'kind': '' }
+fun! s:destroy_tokenizer()
+endf
 
 fun! s:token.reset() dict
   let self.line = ''
@@ -1113,6 +1148,10 @@ fun! s:init_includes()
   let s:cache = {}
 endf
 
+fun! s:destroy_includes()
+  unlet! s:input_stack s:includes_stack s:path s:linenr s:numlines s:cache
+endf
+
 fun! s:include(path)
   " Save current position in the stack
   call s:push(s:includes_stack, { 'path': s:path, 'linenr': s:linenr, 'numlines': s:numlines })
@@ -1156,6 +1195,10 @@ fun! s:init_active_section()
   let s:active_section = 'preamble'
 endf
 
+fun! s:destroy_active_section()
+  unlet! s:active_section
+endf
+
 fun! s:active_section()
   return s:active_section
 endf
@@ -1167,6 +1210,10 @@ endf
 " Active variants {{{
 fun! s:init_variants()
   let s:active_variants = ['global']
+endf
+
+fun! s:destroy_variants()
+  unlet! s:active_variants
 endf
 
 fun! s:active_variants()
@@ -1231,6 +1278,10 @@ fun! s:init_verbatim()
   let s:verb_block = 0
 endf
 
+fun! s:destroy_verbatim()
+  unlet! s:verb_block
+endf
+
 fun! s:start_verbatim()
   " Verbatim blocks act like optimization fences: since we don't know what the
   " code in a verbatim block does, we need to flush definitions collected so
@@ -1255,6 +1306,10 @@ fun! s:init_auxfiles_parsing()
   let s:is_aux = 0
   let s:is_help = 0
   let s:current_auxfile = ''
+endf
+
+fun! s:destroy_auxfiles_parsing()
+  unlet! s:is_aux s:is_help s:current_auxfile
 endf
 
 " path: path of the aux file as specified in the template
@@ -1700,8 +1755,9 @@ fun! s:parse_linked_group_def()
   endfor
 endf
 " }}} Parser
-" Init parser {{{
+" Init/clear parser {{{
 fun! s:init_parser()
+  let g:colortemplate_exit_status = 0
   call s:init_tokenizer()
   call s:init_includes()
   call s:init_active_section()
@@ -1709,14 +1765,28 @@ fun! s:init_parser()
   call s:init_verbatim()
   call s:init_auxfiles_parsing()
 endf
+
+fun! s:destroy_parser()
+  call s:destroy_tokenizer()
+  call s:destroy_includes()
+  call s:destroy_active_section()
+  call s:destroy_variants()
+  call s:destroy_verbatim()
+  call s:destroy_auxfiles_parsing()
+endf
 " }}}
 " }}}
-" Initialize state {{{
+" Initialize/clear state {{{
 fun! s:init(work_dir)
   let g:colortemplate_exit_status = 0
   call s:setwd(a:work_dir)
   call s:init_data_structures()
   call s:init_parser()
+endf
+
+fun! s:destroy()
+  call s:destroy_parser()
+  call s:destroy_data_structures()
 endf
 " }}}
 " Checks {{{
@@ -2043,6 +2113,7 @@ fun! colortemplate#parse(filename) abort
       endif
     catch /^FATAL/
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
+      call s:destroy()
       throw 'Parse error'
     catch /.*/
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
@@ -2055,6 +2126,7 @@ fun! colortemplate#parse(filename) abort
   endfor
   call s:assert_requirements()
   call s:show_errors('Parse error')
+  call s:destroy_parser()
 endf
 
 " a:1 is the optional path to an output directory
@@ -2085,16 +2157,18 @@ fun! colortemplate#make(...)
     call setqflist([], 'r') " Reset quickfix list
   endif
 
+  let l:inpath = expand('%:p')
+  call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
   try
-    let l:inpath = expand('%:p')
-    call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
     call colortemplate#parse(l:inpath)
   catch /Parse error/
     call s:print_error_msg('Parse error', 0)
+    call s:destroy_data_structures()
     let g:colortemplate_exit_status = 1
     return g:colortemplate_exit_status
   catch /.*/
     call s:print_error_msg('Unexpected error: ' . v:exception, 0)
+    call s:destroy_data_structures()
     let g:colortemplate_exit_status = 1
     return g:colortemplate_exit_status
   endtry
@@ -2106,12 +2180,14 @@ fun! colortemplate#make(...)
     if !get(g:, 'colortemplate_quiet', 1)
       call colortemplate#view_source()
     endif
-    call s:print_notice('Success! [' . fnamemodify(l:outpath, ':t') . ' created]')
   catch /.*/
     let g:colortemplate_exit_status = 1
     call s:print_error_msg(v:exception, 0)
     return g:colortemplate_exit_status
+  finally
+    call s:destroy_data_structures()
   endtry
+  call s:print_notice('Success! [' . fnamemodify(l:outpath, ':t') . ' created]')
 endf
 
 " a:1 is the optional path to an output directory
@@ -2149,10 +2225,12 @@ fun! colortemplate#stats()
     call setqflist([], 'r') " Reset quickfix list
     call colortemplate#parse(expand('%:p'))
   catch /Parse error/
+    call s:destroy_data_structures()
     let g:colortemplate_exit_status = 1
     return
   catch /.*/
     call s:print_error_msg('Unexpected error: ' . v:exception)
+    call s:destroy_data_structures()
     let g:colortemplate_exit_status = 1
     return
   finally
@@ -2268,6 +2346,5 @@ endf
 call s:init_data_structures()
 " TODO {{{
 " - Support for font in highlight group definitions?
-" - Option for using/disabling Unicode chars and customising the toolbar
 " - Disable validation with old script
 " }}}

@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker cc=22,40,58
+# vim: ft=colortemplate fdm=marker cc=22,42,60
 
 # Information {{{
 Full name:   Default Clone
@@ -7,10 +7,6 @@ Author:      Bram Moolenaar <Bram@vim.org>
 Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 Website:     https://github.com/vim/vim/blob/master/src/syntax.c
 Description: A nearly exact clone of Vim's default colorscheme
-# }}}
-
-# Documentation {{{
-Include: _help.colortemplate
 # }}}
 
 # Color palette {{{
@@ -27,7 +23,7 @@ Color: cyanlightcyan        Cyan                 159        LightCyan
 Color: darkblue             DarkBlue               4        DarkBlue
 Color: darkcyan             DarkCyan               6        DarkCyan
 Color: darkgreen            DarkGreen              2        DarkGreen
-Color: darkgrey             DarkGrey             242        DarkGrey
+Color: darkgrey242          DarkGrey             242        DarkGrey
 Color: darkmagenta          DarkMagenta            5        DarkMagenta
 Color: darkred              DarkRed                1        DarkRed
 Color: green                Green                 10        Green
@@ -65,10 +61,14 @@ Color: white                White                 15        White
 Color: white231             White                231        White
 Color: yellow               Yellow                11        Yellow
 Color: yellowstatement      #ffff60               11        Yellow
+Color: darkyellow           DarkYellow             3        DarkYellow
+Color: darkgrey             DarkGrey               8        DarkGrey
 # }}}
 
 # Terminal colors {{{
-# Term colors: Vim by default does not define g:terminal_colors
+# Vim by default does not define g:terminal_ansi_colors
+Term Colors: black darkred darkgreen darkyellow darkblue darkmagenta darkcyan lightgrey
+Term Colors: darkgrey red green yellow blue magenta cyan white
 # }}}
 
 # Common linked groups {{{
@@ -107,215 +107,186 @@ Background: light
 Variant: 256 8
 
 # NOTE: Vim's default does not define Normal
-verbatim
-if !get(g:, '@optionprefix_transp_bg', 1)
-endverbatim
-    # Opaque background
-    Normal           black             white
-    Terminal         black             white
-verbatim
-else
-endverbatim
-    # Transparent background
-    Normal           white             none
-    Terminal         white             none
-verbatim
-endif
-endverbatim
-
-CursorLine           none              none              underline
-Pmenu                black             lightmagenta
-PmenuSel             black             lightgrey
-SpellBad             none              lightred
-SpellCap             none              lightblue
-SpellLocal           none              cyan
-SpellRare            none              lightmagenta
-StatusLineTerm       white             darkgreen         bold
-StatusLineTermNC     white             darkgreen
-TabLine              black             lightgrey         underline
-Ignore               white             none
-Todo                 black             yellow
+Normal               white               none
+Terminal             white               none
+CursorLine           none                none              underline
+Pmenu                black               lightmagenta
+PmenuSel             black               lightgrey
+SpellBad             none                lightred
+SpellCap             none                lightblue
+SpellLocal           none                cyan
+SpellRare            none                lightmagenta
+StatusLineTerm       white               darkgreen         bold
+StatusLineTermNC     white               darkgreen
+TabLine              black               lightgrey         underline
+Ignore               white               none
+Todo                 black               yellow
 
 Variant: gui
 
-Normal               white             white
-Terminal             white             white
-
-CursorLine           none              lightgrey90
-Pmenu                none              lightmagenta
-PmenuSel             none              grey
-SpellBad             none              none              undercurl s=red
-SpellCap             none              none              undercurl s=blue
-SpellLocal           none              none              undercurl s=darkcyan
-SpellRare            none              none              undercurl s=magenta
-StatusLineTerm       bg                darkgreen         bold
-StatusLineTermNC     bg                darkgreen
-TabLine              none              lightgrey         underline
-Ignore               bg                none
-Todo                 blue              yellow
+Normal               white               white
+Terminal             white               white
+CursorLine           none                lightgrey90
+Pmenu                none                lightmagenta
+PmenuSel             none                grey
+SpellBad             none                none              undercurl s=red
+SpellCap             none                none              undercurl s=blue
+SpellLocal           none                none              undercurl s=darkcyan
+SpellRare            none                none              undercurl s=magenta
+StatusLineTerm       bg                  darkgreen         bold
+StatusLineTermNC     bg                  darkgreen
+TabLine              none                lightgrey         underline
+Ignore               bg                  none
+Todo                 blue                yellow
 
 Variant: gui 256 8
 
-# Group              Foreground        Background        Attributes
-ColorColumn          none              lightred
-Conceal              lightgrey         darkgrey
+# Group              Foreground          Background        Attributes
+ColorColumn          none                lightred
+Conceal              lightgrey           darkgrey242
 # NOTE: Vim's default does not define Cursor/lCursor in the terminal
-Cursor               white             fg
-CursorColumn         none              lightgrey90
-CursorLineNr         brown             none              g=bold
-DiffAdd              none              lightblue
-DiffChange           none              lightmagenta
-DiffDelete           blue              lightcyan         g=bold
-DiffText             none              red               bold
-Directory            bluedarkblue      none
-ErrorMsg             white             reddarkred
-FoldColumn           darkblue          grey
-Folded               darkblue          lightgreygrey
-IncSearch            none              none              reverse
-LineNr               brown             none
-MatchParen           none              cyan
-ModeMsg              none              none              bold
-MoreMsg              seagreen          none              g=bold
-NonText              blue              none              g=bold
-PmenuSbar            none              grey
-PmenuThumb           none              black
-Question             seagreen          none              g=bold
-Search               none              yellow
-SignColumn           darkblue          grey
-SpecialKey           bluedarkblue      none
-StatusLine           none              none              reverse,bold
-StatusLineNC         none              none              reverse
-TabLineFill          none              none              reverse
-TabLineSel           none              none              bold
-Title                magentadarkmagenta none             g=bold
-VertSplit            none              none              reverse
-Visual               none              lightgrey
-VisualNOS            none              none              underline,bold
-WarningMsg           reddarkred        none
-WildMenu             black             yellow
+Cursor               white               fg
+CursorColumn         none                lightgrey90
+CursorLineNr         brown               none              g=bold
+DiffAdd              none                lightblue
+DiffChange           none                lightmagenta
+DiffDelete           blue                lightcyan         g=bold
+DiffText             none                red               bold
+Directory            bluedarkblue        none
+ErrorMsg             white               reddarkred
+FoldColumn           darkblue            grey
+Folded               darkblue            lightgreygrey
+IncSearch            none                none              reverse
+LineNr               brown               none
+MatchParen           none                cyan
+ModeMsg              none                none              bold
+MoreMsg              seagreen            none              g=bold
+NonText              blue                none              g=bold
+PmenuSbar            none                grey
+PmenuThumb           none                black
+Question             seagreen            none              g=bold
+Search               none                yellow
+SignColumn           darkblue            grey
+SpecialKey           bluedarkblue        none
+StatusLine           none                none              reverse,bold
+StatusLineNC         none                none              reverse
+TabLineFill          none                none              reverse
+TabLineSel           none                none              bold
+Title                magentadarkmagenta  none              g=bold
+VertSplit            none                none              reverse
+Visual               none                lightgrey
+VisualNOS            none                none              underline,bold
+WarningMsg           reddarkred          none
+WildMenu             black               yellow
 # Other conventional group names (see `:help group-name`)
-Comment              bluedarkblue      none
-Constant             magentadarkred    none
-Error                white             red
-Identifier           darkcyan          none
-PreProc              purple            none
-Special              slateblue         none
-Statement            brown             none              g=bold
-Type                 seagreen          none              g=bold
-Underlined           slateblue         none              underline
+Comment              bluedarkblue        none
+Constant             magentadarkred      none
+Error                white               red
+Identifier           darkcyan            none
+PreProc              purple              none
+Special              slateblue           none
+Statement            brown               none              g=bold
+Type                 seagreen            none              g=bold
+Underlined           slateblue           none              underline
 # See `:help lCursor`
-lCursor              white             fg
+lCursor              white               fg
 # See `:help window-toolbar`
-ToolbarLine          none              lightgrey
-ToolbarButton        white             grey40            bold
+ToolbarLine          none                lightgrey
+ToolbarButton        white               grey40            bold
 # }}}
 
 Background: dark
 
 # Default highlight groups for dark variant {{{
-# NOTE: Vim's default does not define Normal
 
 Variant: 256 8
 
-verbatim
-if !get(g:, '@optionprefix_transp_bg', 1)
-endverbatim
-    # Opaque background
-    Normal           white             black
-    Terminal         white             black
-verbatim
-else
-endverbatim
-    # Transparent background
-    Normal           white             none
-    Terminal         white             black
-verbatim
-endif
-endverbatim
-
-CursorLine           none              none              underline
-Pmenu                black             magenta
-PmenuSel             darkgrey          black
-SpellBad             none              red
-SpellCap             none              blue
-SpellLocal           none              cyan
-SpellRare            none              magenta
-StatusLineTerm       black             lightgreen        bold
-StatusLineNC         black             lightgreen
-TabLine              white231          darkgrey          underline
-Todo                 black             yellow
+# NOTE: Vim's default does not define Normal
+Normal               white               none
+Terminal             white               black
+CursorLine           none                none              underline
+Pmenu                black               magenta
+PmenuSel             darkgrey242         black
+SpellBad             none                red
+SpellCap             none                blue
+SpellLocal           none                cyan
+SpellRare            none                magenta
+StatusLineTerm       black               lightgreen        bold
+StatusLineNC         black               lightgreen
+TabLine              white231            darkgrey242       underline
+Todo                 black               yellow
 
 Variant: gui
 
-Normal               white             black
-Terminal             white             black
-CursorLine           none              grey40
-Pmenu                none              magenta
-PmenuSel             none              darkgrey
-SpellBad             none              none              undercurl s=red
-SpellCap             none              none              undercurl s=blue
-SpellLocal           none              none              undercurl s=cyan
-SpellRare            none              none              undercurl s=magenta
-StatusLineTerm       bg                lightgreen        bold
-StatusLineTermNC     bg                lightgreen
-TabLine              none              darkgrey          underline
-Todo                 blue              yellow
+Normal               white               black
+Terminal             white               black
+CursorLine           none                grey40
+Pmenu                none                magenta
+PmenuSel             none                darkgrey242
+SpellBad             none                none              undercurl s=red
+SpellCap             none                none              undercurl s=blue
+SpellLocal           none                none              undercurl s=cyan
+SpellRare            none                none              undercurl s=magenta
+StatusLineTerm       bg                  lightgreen        bold
+StatusLineTermNC     bg                  lightgreen
+TabLine              none                darkgrey242       underline
+Todo                 blue                yellow
 
 Variant: gui 256 8
 
-# Group              Foreground        Background        Attributes
-ColorColumn          none              darkred
-Conceal              lightgrey         darkgrey
+# Group              Foreground          Background        Attributes
+ColorColumn          none                darkred
+Conceal              lightgrey           darkgrey242
 # NOTE: Vim's default does not define Cursor/lCursor in the terminal
-Cursor               black             fg
-CursorColumn         none              grey40
-CursorLineNr         yellow            none              g=bold
-DiffAdd              none              darkblue
-DiffChange           none              darkmagenta
-DiffDelete           blue              darkcyan          g=bold
-DiffText             none              red               bold
-Directory            cyanlightcyan     none
-ErrorMsg             white             reddarkred
-FoldColumn           cyan              greydarkgrey
-Folded               cyan              darkgrey
-IncSearch            none              none              reverse
-LineNr               yellow            none
-MatchParen           none              darkcyan
-ModeMsg              none              none              bold
-MoreMsg              lightseagreen     none              g=bold
-NonText              blue              none              g=bold
-PmenuSbar            none              grey
-PmenuThumb           none              white231
-Question             greenlightgreen   none              g=bold
-Search               black             yellow
-SignColumn           cyan              greydarkgrey
-SpecialKey           cyanlightblue     none
-StatusLine           none              none              reverse,bold
-StatusLineNC         none              none              reverse
-TabLineFill          none              none              reverse
-TabLineSel           none              none              bold
-Title                magentalightmagenta none            g=bold
-VertSplit            none              none              reverse
-Visual               none              darkgrey
-VisualNOS            none              none              underline,bold
-WarningMsg           redlightred       none
-WildMenu             black             yellow
+Cursor               black               fg
+CursorColumn         none                grey40
+CursorLineNr         yellow              none              g=bold
+DiffAdd              none                darkblue
+DiffChange           none                darkmagenta
+DiffDelete           blue                darkcyan          g=bold
+DiffText             none                red               bold
+Directory            cyanlightcyan       none
+ErrorMsg             white               reddarkred
+FoldColumn           cyan                greydarkgrey
+Folded               cyan                darkgrey242
+IncSearch            none                none              reverse
+LineNr               yellow              none
+MatchParen           none                darkcyan
+ModeMsg              none                none              bold
+MoreMsg              lightseagreen       none              g=bold
+NonText              blue                none              g=bold
+PmenuSbar            none                grey
+PmenuThumb           none                white231
+Question             greenlightgreen     none              g=bold
+Search               black               yellow
+SignColumn           cyan                greydarkgrey
+SpecialKey           cyanlightblue       none
+StatusLine           none                none              reverse,bold
+StatusLineNC         none                none              reverse
+TabLineFill          none                none              reverse
+TabLineSel           none                none              bold
+Title                magentalightmagenta none              g=bold
+VertSplit            none                none              reverse
+Visual               none                darkgrey242
+VisualNOS            none                none              underline,bold
+WarningMsg           redlightred         none
+WildMenu             black               yellow
 # Other conventional group names (see `:help group-name`)
-Comment              cyancomment       none
-Constant             magentaconstant   none
-Error                white231          red
-Identifier           cyanidentifier    none              t=bold
-Ignore               black             none
-PreProc              lightbluepreproc  none
-Special              orange            none
-Statement            yellowstatement   none              g=bold
-Type                 lightseagreentype none              g=bold
-Underlined           lightblueunderlined none            underline
+Comment              cyancomment         none
+Constant             magentaconstant     none
+Error                white231            red
+Identifier           cyanidentifier      none              t=bold
+Ignore               black               none
+PreProc              lightbluepreproc    none
+Special              orange              none
+Statement            yellowstatement     none              g=bold
+Type                 lightseagreentype   none              g=bold
+Underlined           lightblueunderlined none              underline
 # See `:help lCursor`
 lCursor           -> Cursor
 # See `:help window-toolbar`
-ToolbarLine          none              grey50
-ToolbarButton        black             lightgrey         bold
+ToolbarLine          none                grey50
+ToolbarButton        black               lightgrey         bold
 # }}}
 
 # Black&White variant {{{

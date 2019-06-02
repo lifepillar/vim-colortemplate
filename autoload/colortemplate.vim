@@ -2072,14 +2072,8 @@ fun! colortemplate#outdir()
   return get(b:, 'colortemplate_outdir', getcwd())
 endf
 
-fun! colortemplate#setoutdir()
-  echo colortemplate#outdir()
-  let l:newdir = input('Change to: ', '', 'dir')
-  redraw! " See https://github.com/vim/vim/issues/4473
-  if empty(l:newdir)
-    return
-  endif
-  let l:newdir = fnamemodify(l:newdir, ':p')
+fun! colortemplate#setoutdir(newdir)
+  let l:newdir = simplify(fnamemodify(a:newdir, ':p'))
   if !isdirectory(l:newdir)
     call s:print_error_msg('Directory does not exist', 0)
     return
@@ -2088,6 +2082,16 @@ fun! colortemplate#setoutdir()
     return
   endif
   let b:colortemplate_outdir = l:newdir
+endf
+
+fun! colortemplate#askoutdir()
+  echo colortemplate#outdir()
+  let l:newdir = input('Change to: ', '', 'dir')
+  redraw! " See https://github.com/vim/vim/issues/4473
+  if empty(l:newdir)
+    return
+  endif
+  call colortemplate#setoutdir(l:newdir)
   call colortemplate#toolbar#show()
 endf
 
@@ -2131,7 +2135,10 @@ endf
 " a:3 is 0 when the quickfix should not be cleared
 fun! colortemplate#make(...)
   update
-  let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
+  if a:0 > 0 && !empty(a:1)
+    call colortemplate#setoutdir(a:1)
+  endif
+  let l:outdir = colortemplate#outdir()
   let l:overwrite = (a:0 > 1 ? (a:2 == '!') : 0)
   if !empty(l:outdir)
     if !isdirectory(l:outdir)

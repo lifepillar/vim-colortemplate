@@ -38,7 +38,7 @@ endif
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate silent call colortemplate#make(<q-args>, "<bang>")
 command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll silent call colortemplate#build_dir(<q-args>, "<bang>")
 command! -buffer -nargs=0 -bar                     ColortemplateCheck call colortemplate#validate()
-command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#setoutdir()
+command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#askoutdir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 
 if get(g:, 'colortemplate_toolbar', 1)

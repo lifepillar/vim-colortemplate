@@ -4,10 +4,18 @@ let s:docdir = s:testdir . '/doc'
 execute 'lcd' s:testdir
 execute 'source' s:testdir.'/test.vim'
 
+fun! s:verify(f)
+  let l:fail = assert_equalfile(s:testdir.'/expected/'.a:f.'.vim', s:testdir.'/colors/'.a:f.'.vim')
+  if !l:fail
+    call delete(s:testdir.'/colors/'.a:f.'.vim')
+  endif
+endf
+
 fun! Test_CT_fine()
   edit test1.txt
   Colortemplate!
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call s:verify('test1')
   bwipe test1.txt
 endf
 
@@ -661,17 +669,38 @@ fun! Test_CT_color_typo()
   bwipe test54.txt
 endf
 
-let s:old_warnings = get(g:, 'colortemplate_warnings', -1)
-let g:colortemplate_warnings = 0
+let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
+let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
+let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)
+let s:old_comment   = get(g:, 'colortemplate_source_comment', -1)
+let g:colortemplate_warnings       = 0
+let g:colortemplate_timestamp      = 0
+let g:colortemplate_creator        = 0
+let g:colortemplate_source_comment = 0
+
 call RunBabyRun('CT')
-let g:colortemplate_no_warnings = s:old
-unlet s:old
+
 if s:old_warnings == -1
   unlet g:colortemplate_warnings
 else
   let g:colortemplate_warnings = s:old_warnings
 endif
-" Clean up temporary directories
-call delete(s:colordir, 'rf')
-call delete(s:docdir, 'rf')
+if s:old_creator == -1
+  unlet g:colortemplate_creator
+else
+  let g:colortemplate_creator = s:old_creator
+endif
+if s:old_timestamp == -1
+  unlet g:colortemplate_timestamp
+else
+  let g:colortemplate_timestamp = s:old_timestamp
+endif
+if s:old_comment == -1
+  unlet g:colortemplate_source_comment
+else
+  let g:colortemplate_source_comment = s:old_comment
+endif
+unlet s:old_warnings s:old_creator s:old_timestamp s:old_comment
+
+call delete(s:colordir, "d") " Delete if empty
 

@@ -2071,6 +2071,7 @@ endf
 fun! colortemplate#setoutdir()
   echo colortemplate#outdir()
   let l:newdir = input('Change to: ', '', 'dir')
+  redraw! " See https://github.com/vim/vim/issues/4473
   if empty(l:newdir)
     return
   endif

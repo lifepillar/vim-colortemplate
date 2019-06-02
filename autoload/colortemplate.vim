@@ -206,7 +206,7 @@ fun! s:add_error(path, line, col, msg)
 endf
 
 fun! s:add_warning(path, line, col, msg)
-  if !get(g:, 'colortemplate_no_warnings', 0)
+  if get(g:, 'colortemplate_warnings', 1)
     call setqflist([{'filename': a:path, 'lnum' : a:line, 'col': a:col, 'text' : a:msg, 'type' : 'W'}], 'a')
   endif
 endf
@@ -2213,8 +2213,8 @@ endf
 fun! colortemplate#stats()
   update
   call s:print_notice('Computing color statistics...')
-  let l:old_warning_pref = get(g:, 'colortemplate_no_warnings', -1)
-  let g:colortemplate_no_warnings = 1
+  let l:old_warning_pref = get(g:, 'colortemplate_warnings', -1)
+  let g:colortemplate_warnings = 0
   try
     call setqflist([], 'r') " Reset quickfix list
     call colortemplate#parse(expand('%:p'))
@@ -2229,9 +2229,9 @@ fun! colortemplate#stats()
     return
   finally
     if l:old_warning_pref < 0
-      unlet! g:colortemplate_no_warnings
+      unlet! g:colortemplate_warnings
     else
-      let g:colortemplate_no_warnings = l:old_warning_pref
+      let g:colortemplate_warnings = l:old_warning_pref
     endif
   endtry
   call s:print_color_info()

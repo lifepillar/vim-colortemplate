@@ -661,11 +661,16 @@ fun! Test_CT_color_typo()
   bwipe test54.txt
 endf
 
-let s:old = get(g:, 'colortemplate_no_warnings', 0)
-let g:colortemplate_no_warnings = 1
+let s:old_warnings = get(g:, 'colortemplate_warnings', -1)
+let g:colortemplate_warnings = 0
 call RunBabyRun('CT')
 let g:colortemplate_no_warnings = s:old
 unlet s:old
+if s:old_warnings == -1
+  unlet g:colortemplate_warnings
+else
+  let g:colortemplate_warnings = s:old_warnings
+endif
 " Clean up temporary directories
 call delete(s:colordir, 'rf')
 call delete(s:docdir, 'rf')

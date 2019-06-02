@@ -94,7 +94,7 @@ following must be taken into account:
   to be “in global scope” and put at the start of the generated color scheme.
   You may put setup stuff in `verbatim` blocks there, or linked group
   definitions that apply to all variants.
-- Validation is now performed with `$VIMRUNTIME/syntax/check_colors.vim`
+- Validation is now performed with `$VIMRUNTIME/colors/tools/check_colors.vim`
   (`:ColortemplateCheck` command or Check menu entry in the toolbar).
 - Statistics are generated separately from the color scheme
   (`:ColortemplateStats` or Stats menu entry in the toolbar).

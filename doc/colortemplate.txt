@@ -79,7 +79,7 @@ in the command line.
 To view how the generated color scheme looks like, you may use |:colorscheme|
 or click on "Show" in the toolbar (the dark template uses only black and
 white, so it does not stand out as a catchy color scheme). If you click on
-"Show" you may switch back to the original color scheme with "Hide". 
+"Show" you may switch back to the original color scheme with "Hide".
 
 You may validate your color scheme against
 `$VIMRUNTIME/colors/tools/check_colors.vim` with |:ColortemplateCheck| or by
@@ -173,7 +173,7 @@ optional fields:
 	Full name:       A unique and attractive name
 	Short name:      all_lowercase_with_no_spaces
 	Author:          Myself <myself@somewhere.org>
-	
+
 	# Optional information
 	Maintainer:      [Uses Author's value by default]
 	Website:         [Empty]
@@ -227,7 +227,7 @@ specified variant(s).
 The permitted values are `gui` (for GUI versions of Vim or Vim with
 |termguicolors| set) or a number between `1` and `256` specifying the minimum
 |t_Co| required for the following definitions. Multiple values in the same
-directive are allowed, separated by spaces. 
+directive are allowed, separated by spaces.
 
 For example, consider the following snippet:
 >
@@ -247,12 +247,12 @@ This will be translated into something similar to this:
 	  hi Normal guifg=#ebebeb guibg=#343436 guisp=NONE gui=NONE cterm=NONE
 	  finish
 	endif
-	
+
 	if &t_Co >= 256
 	  hi Normal ctermfg=231 ctermbg=16 cterm=NONE
 	  finish
 	endif
-	
+
 	if &t_Co >= 8
 	  hi Normal ctermfg=LightGray ctermbg=Brown cterm=NONE
 	  finish
@@ -566,7 +566,7 @@ Colortemplate to define any mapping, set |g:colortemplate_no_mappings|.
 Colortemplate also honours |g:no_plugin_maps|.
 
 							*ga*
-ga 
+ga
                         If the cursor is on a `Color` line, display some
                         information about the given color, including [count]
                         best xterm approximations for the color.
@@ -577,7 +577,7 @@ gx			If the cursor is on a `Color` line, replace `~` with
 
 							*gy*
 gy			If the cursor is on a `Color` line, print the xterm
-			approximations of the color at distance at most 
+			approximations of the color at distance at most
                         [count] from the GUI value.
 
 							*CTRL-L*
@@ -700,16 +700,17 @@ See |colortemplate-stats| for more information.
 Window toolbar		       			*colortemplate-toolbar*
 
 The window toolbar (|WinBar|) is available in Vim 8.0.1123 or later and
-provides a quick way to execute the most common task, streamlining your
+provides a quick way to execute the most common tasks, streamlining your
 workflow. The toolbar appears automaticaly when you open a template file whose
 name does not start with an underscore.
 
-Note: the window toolbar is window-specific, not buffer-specific. If you
-switch to another buffer, the toolbar will stay open. A close button is
-present at the rightmost end of the toolbar if you wish to close it. To show
-a hidden toolbar, press CTRL-L.
+A close button is present at the rightmost end of the toolbar if you wish to
+close it. To show a hidden toolbar or refresh the current toolbar, press
+CTRL-L. If you do not want the toolbar, unset |g:colortemplate_toolbar|.
 
-The window toolbar has the following menu entries:
+The menu entries and the corresponding actions may be customised with
+|g:colortemplate_toolbar_items| and |g:colortemplate_toolbar_actions|. By
+default, the window toolbar has the following menu entries:
 
 Build! ~
 Executes |:Colortemplate!| in the current buffer and writes the output inside
@@ -734,8 +735,8 @@ Executes |:ColortemplateStats|.
 Source ~
 Edits the generated color scheme in a split window.
 
-Colortest ~
-Enables the color scheme and executes `runtime` `syntax/colortest.vim`.
+HiTest ~
+Enables the color scheme and executes `runtime` `syntax/hitest.vim`.
 
 OutDir ~
 Shows the current output directory and allows you to change it. See
@@ -794,11 +795,13 @@ Here are some guidelines to develop outstanding hackable color schemes:
 - Give each of your colors a short distinctive name.
 
 - Provide support for all terminals, including those with few colors. You
-  should define at least three variants: `gui`, `256`, and `16` (or `8`).
+  should define at least three variants: `gui`, `256`, and `8` (or `16`). You
+  may add support for black and white terminals with minimal effort by
+  including `templates/_bw.colortemplate` in your own templates.
 
 - Do not use too many colors. For maximum portability, you should define eight
   or sixteen colors that map nicely to terminal ANSI colors (black, red,
-  green, yellow, blue, magenta, cyan, white, and their bright variant).
+  green, yellow, blue, magenta, cyan, white, and their bright variants).
 
 - For base-16 colors, prefer color names to numbers for maximum portability
   (see |cterm-colors|).

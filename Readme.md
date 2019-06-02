@@ -56,7 +56,7 @@ Normal white black
 If you want to get a flavor of how Colortemplate can be used in the real world,
 take a look at some color schemes created with it:
 [WWDC16](https://github.com/lifepillar/vim-wwdc16-theme) and
-[WWCDC17](https://github.com/lifepillar/vim-wwdc17-theme) (simple), or
+[WWDC17](https://github.com/lifepillar/vim-wwdc17-theme) (simple), or
 [Gruvbox 8](https://github.com/lifepillar/vim-gruvbox8) and
 [Solarized 8](https://github.com/lifepillar/vim-solarized8) (complex).
 

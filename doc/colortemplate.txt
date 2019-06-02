@@ -127,7 +127,10 @@ global section goes from the beginning of the file until the first
 contain anything except highlight group definitions (linked group definitions
 are allowed, though). When translated, linked group definitions and verbatim
 blocks in the global section appear at the start of the generated color
-scheme.
+scheme. This is useful if you need to set up your color scheme in some way or
+override some variables. For example, Colortemplate defines two script
+variables inside color schemes, called `s:t_Co` and `s:italics`. If you want
+to override their default value, you may do so in the global section.
 
 A local section starts at a `Background` or `Variant` directive and lasts
 until the next `Background` or `Variant` directive. Each local section
@@ -661,7 +664,7 @@ entry to actually be visible in the toolbar, it must be listed in
 Set to 0 if you want Colortemplate to open the generated color scheme in
 a split window automatically after building it.
 >
-	let g:colortemplate_quiet = 0
+	let g:colortemplate_quiet = 1
 <
 						*g:colortemplate_warnings*
 Set to 0 if you want Colortemplate to report only errors (not recommended).

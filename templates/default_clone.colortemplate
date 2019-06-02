@@ -317,3 +317,74 @@ lCursor           -> Cursor
 ToolbarLine          none              grey50
 ToolbarButton        black             lightgrey         bold
 # }}}
+
+# Black&White variant {{{
+Variant: 2
+Background: any
+
+Color: unused #000000 0
+
+# Default highlight groups {{{
+# Group              Unused   Unused   term
+Normal               unused unused
+ColorColumn          unused unused reverse
+Conceal              unused unused
+Cursor               unused unused
+CursorColumn         unused unused reverse
+CursorLine           unused unused underline
+CursorLineNr         unused unused bold
+DiffAdd              unused unused bold
+DiffChange           unused unused bold
+DiffDelete           unused unused bold
+DiffText             unused unused reverse
+Directory            unused unused bold
+EndOfBuffer          unused unused
+ErrorMsg             unused unused standout
+FoldColumn           unused unused standout
+Folded               unused unused standout
+IncSearch            unused unused reverse
+LineNr               unused unused underline
+MatchParen           unused unused reverse
+ModeMsg              unused unused bold
+MoreMsg              unused unused bold
+NonText              unused unused bold
+Pmenu                unused unused
+PmenuSbar            unused unused
+PmenuSel             unused unused
+PmenuThumb           unused unused
+Question             unused unused standout
+Search               unused unused reverse
+SignColumn           unused unused standout
+SpecialKey           unused unused bold
+SpellBad             unused unused reverse
+SpellCap             unused unused reverse
+SpellLocal           unused unused underline
+SpellRare            unused unused reverse
+StatusLine           unused unused reverse,bold
+StatusLineNC         unused unused reverse
+TabLine              unused unused underline
+TabLineFill          unused unused reverse
+TabLineSel           unused unused bold
+Title                unused unused bold
+VertSplit            unused unused reverse
+Visual               unused unused reverse
+VisualNOS            unused unused bold,underline
+WarningMsg           unused unused standout
+WildMenu             unused unused standout
+# Other conventional group names (see `:help group-name`)
+Comment              unused unused bold
+Constant             unused unused underline
+Error                unused unused reverse
+Identifier           unused unused underline
+Ignore               unused unused
+PreProc              unused unused underline
+Special              unused unused bold
+Statement            unused unused bold
+Todo                 unused unused standout
+Type                 unused unused underline
+Underlined           unused unused underline
+CursorIM             unused unused
+ToolbarLine          unused unused underline
+ToolbarButton        unused unused bold
+# }}}
+# }}}

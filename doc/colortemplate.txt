@@ -624,6 +624,33 @@ Set to 0 if you do not want to the toolbar to be visible.
 >
 	let g:colortemplate_toolbar = 1
 <
+						*g:colortemplate_toolbar_items*
+A List with the names of menu entries to be used in the window toolbar. Each
+menu entry must be defined in |g:colortemplate_toolbar_actions|.
+>
+	let g:colortemplate_toolbar_items = [
+	      \ 'Build!',
+	      \ 'BuildAll!',
+	      \ 'Show',
+	      \ 'Hide',
+	      \ 'Check',
+	      \ 'Stats',
+	      \ 'Source',
+	      \ 'HiTest',
+	      \ 'OutDir',
+	      \ ])
+<
+						*g:colortemplate_toolbar_actions*
+A Dictionary mapping menu entries to the corresponding commands. For instance:
+>
+	let g:colortemplate_toolbar_actions = {
+             \ 'Build!': ':Colortemplate!<cr>'
+             \ }
+<
+This options only defines the actions associated to each label. For a menu
+entry to actually be visible in the toolbar, it must be listed in
+|g:colortemplate_toolbar_items| as well.
+
 						*g:colortemplate_quiet*
 Set to 0 if you want Colortemplate to open the generated color scheme in
 a split window automatically after building it.

@@ -31,7 +31,6 @@ colortemplate-toolbar	colortemplate.txt	/*colortemplate-toolbar*
 colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
-dark_and_light.txt	dark_and_light.txt	/*dark_and_light.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_transp_bg	colortemplate.txt	/*g:@shortname_transp_bg*
 g:colortemplate_no_aux_files	colortemplate.txt	/*g:colortemplate_no_aux_files*
@@ -41,7 +40,8 @@ g:colortemplate_no_warnings	colortemplate.txt	/*g:colortemplate_no_warnings*
 g:colortemplate_quiet	colortemplate.txt	/*g:colortemplate_quiet*
 g:colortemplate_source_comment	colortemplate.txt	/*g:colortemplate_source_comment*
 g:colortemplate_toolbar	colortemplate.txt	/*g:colortemplate_toolbar*
-g:dark_and_light_transp_bg	dark_and_light.txt	/*g:dark_and_light_transp_bg*
+g:colortemplate_toolbar_actions	colortemplate.txt	/*g:colortemplate_toolbar_actions*
+g:colortemplate_toolbar_items	colortemplate.txt	/*g:colortemplate_toolbar_items*
 ga	colortemplate.txt	/*ga*
 gx	colortemplate.txt	/*gx*
 gy	colortemplate.txt	/*gy*

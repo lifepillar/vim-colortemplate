@@ -895,6 +895,7 @@ endf
 " }}}
 " Init/clear data structures {{{
 fun! s:init_data_structures()
+  let g:colortemplate_exit_status = 0
   call s:init_source_code()
   call s:init_color_palette()
   call s:init_highlight_groups()
@@ -1776,19 +1777,6 @@ fun! s:destroy_parser()
 endf
 " }}}
 " }}}
-" Initialize/clear state {{{
-fun! s:init(work_dir)
-  let g:colortemplate_exit_status = 0
-  call s:setwd(a:work_dir)
-  call s:init_data_structures()
-  call s:init_parser()
-endf
-
-fun! s:destroy()
-  call s:destroy_parser()
-  call s:destroy_data_structures()
-endf
-" }}}
 " Checks {{{
 fun! s:assert_valid_color_name(name)
   if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
@@ -2098,7 +2086,9 @@ fun! colortemplate#setoutdir()
 endf
 
 fun! colortemplate#parse(filename) abort
-  call s:init(fnamemodify(a:filename, ":h"))
+  call s:init_data_structures()
+  call s:init_parser()
+  call s:setwd(fnamemodify(a:filename, ":h"))
   call s:include(a:filename)
   while s:next_line()
     try
@@ -2113,7 +2103,8 @@ fun! colortemplate#parse(filename) abort
       endif
     catch /^FATAL/
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
-      call s:destroy()
+      call s:destroy_parser()
+      call s:destroy_data_structures()
       throw 'Parse error'
     catch /.*/
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
@@ -2159,6 +2150,7 @@ fun! colortemplate#make(...)
 
   let l:inpath = expand('%:p')
   call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
+  call s:init_data_structures()
   try
     call colortemplate#parse(l:inpath)
   catch /Parse error/
@@ -2253,8 +2245,6 @@ fun! colortemplate#path()
     else
       let l:name = fnamemodify(l:bufname, ':r')
     endif
-  else
-    let l:name = s:shortname()
   endif
   let l:path = colortemplate#outdir() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
   if empty(l:name) || !filereadable(l:path)
@@ -2343,7 +2333,6 @@ fun! colortemplate#format_palette(colors)
   return l:template
 endf
 " }}} Public interface
-call s:init_data_structures()
 " TODO {{{
 " - Support for font in highlight group definitions?
 " - Disable validation with old script

@@ -1351,7 +1351,6 @@ endf
 fun! s:quickly_parse_color_line()
   call s:init_color_palette()
   call s:init_tokenizer()
-  " FIXME
   call s:init_active_section()
   call s:init_variants()
   call s:token.setline(getline('.'))
@@ -2309,18 +2308,18 @@ endf
 fun! colortemplate#getinfo(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
-  let l:hexc = s:guicol(l:name)
+  let l:hexc = s:guicol(l:name, 'dark') " 2nd arg doesn't matter
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
   if a:n <= 1
     let l:best = colortemplate#colorspace#approx(l:hexc)
     echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %d [%f]',
-          \ l:name, l:r, l:g, l:b, s:guicol(l:name),
+          \ l:name, l:r, l:g, l:b, l:hexc,
           \ l:best['index'], l:best['delta']
           \ )
   else
     let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
     echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %s',
-          \ l:name, l:r, l:g, l:b, s:guicol(l:name),
+          \ l:name, l:r, l:g, l:b, l:hexc,
           \ join(l:approx, ', ')
           \ )
   endif
@@ -2329,14 +2328,15 @@ endf
 fun! colortemplate#approx_color(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
-  let l:col = colortemplate#colorspace#k_neighbours(s:guicol(l:name), a:n)[-1]
+  let l:hexc = s:guicol(l:name, 'dark') " 2nd arg doesn't matter
+  let l:col = colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]
   call setline('.', substitute(getline('.'), '\~', l:col, ''))
 endf
 
 fun! colortemplate#nearby_colors(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
-  echo colortemplate#colorspace#colors_within(a:n, s:guicol(l:name))
+  echo colortemplate#colorspace#colors_within(a:n, s:guicol(l:name, 'dark'))
 endf
 
 " Format a dictionary of color name/value pairs in Colortemplate format

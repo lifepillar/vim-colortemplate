@@ -2219,7 +2219,7 @@ fun! colortemplate#build_dir(...)
   if g:colortemplate_exit_status
     call s:print_error_msg('Build failed. See :messages', 0)
   else
-    call s:print_notice('Success! ['.string(l:n).' color schemes created]')
+    call s:print_notice('Success! ['.string(l:n).' color scheme'.(l:n > 1 ? 's' : '').' created]')
   endif
 endf
 

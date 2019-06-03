@@ -2087,7 +2087,9 @@ endf
 fun! colortemplate#askoutdir()
   echo colortemplate#outdir()
   let l:newdir = input('Change to: ', '', 'dir')
-  redraw! " See https://github.com/vim/vim/issues/4473
+  if !has('patch-8.1.1456')
+    redraw! " See https://github.com/vim/vim/issues/4473
+  endif
   if empty(l:newdir)
     return
   endif

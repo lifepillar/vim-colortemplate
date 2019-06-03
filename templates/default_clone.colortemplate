@@ -289,9 +289,10 @@ ToolbarLine          none                grey50
 ToolbarButton        black               lightgrey         bold
 # }}}
 
+Background: any
+
 # Black&White variant {{{
 Variant: 2
-Background: any
 
 Color: unused #000000 0
 

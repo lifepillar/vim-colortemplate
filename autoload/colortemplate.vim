@@ -2252,13 +2252,15 @@ endf
 
 fun! colortemplate#path()
   let l:bufname = fnamemodify(bufname('%'), ':p:t')
-  if l:bufname =~ '\m^[^_].*\.colortemplate$'
+  if getbufvar('%', '&ft', '') ==# 'colortemplate'
     let l:match = matchlist(getbufline('%', 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)')
-    if !empty(l:match)
-      let l:name = l:match[1]
-    else
+    if empty(l:match)
       let l:name = fnamemodify(l:bufname, ':r')
+    else
+      let l:name = l:match[1]
     endif
+  else
+    return ''
   endif
   let l:path = colortemplate#outdir() . s:slash() . 'colors' . s:slash() . l:name . '.vim'
   if empty(l:name) || !filereadable(l:path)

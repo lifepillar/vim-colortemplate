@@ -119,7 +119,7 @@ A template consists of:
 2. `Color` and `Term colors` definitions;
 3. `Background` and `Variant` directives;
 4. `Include` statements;
-5. verbatim blocks (`verbatim`/`auxfile`/`documentation`).
+5. verbatim blocks (`verbatim`/`auxfile`/`documentation`, `#if`, `#let`, ...).
 
 Each template has one global section and one or more local sections. The
 global section goes from the beginning of the file until the first
@@ -430,6 +430,25 @@ Other values may be interpolated: metadata keywords, converted to lower cases
 and without spaces (e.g., `@shortname` may be used to insert the value of
 `Short name`); `@date` (to insert the current date) and `@vimversion` (to
 insert the current Vim version).
+
+Verbatim blocks are most often used for conditionals or to set and get
+variables. Therefore, Colortemplate provides convenient shortcuts for such
+cases. When `#if`, `#else`, `#elseif`, `#endif`, `#let` and `#unlet` appear at
+the start of a line, they act as one-line verbatim blocks. Such directives are
+replaced by the corresponding Vim commands and what follows is copied verbatim
+(but interpolated). So, for instance, this template:
+>
+	#if get(g:, 'some_option', 0)
+          #let s:color = '@guiMyColor'
+        #endif
+<
+is translated into
+>
+	if get(g:, 'some_option, '0)
+          let s:color  = '#abcef'
+        endif
+<
+assuming `MyColor` is a color with GUI value `#abcdef`.
 
 ==============================================================================
 Documentation blocks				*colortemplate-doc-blocks*

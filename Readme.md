@@ -88,6 +88,8 @@ following must be taken into account:
   them: Colortemplate v2 deals with the `italic` attribute automatically. Just
   define your highlight groups as if italics is available, and let Colortemplate
   do the rest.
+- Many `verbatim` blocks may now be replaced with `#if`, `#let`, …, commands
+  (see `:help colortemplate-verbatim`).
 - Colortemplate v2 does not generate any help file by default any more (color
   schemes have no settings by default). You may need to adjust your help
   templates (see `templates/_help.colortemplate`).

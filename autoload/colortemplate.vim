@@ -1880,11 +1880,16 @@ fun! s:eval(item, col, section)
   let l:v = s:item_value(a:item)
   if s:is_higroup_type(a:item)
     if a:col > 256
+      let l:fg = s:guifg(l:v, a:section)
+      let l:bg = s:guibg(l:v, a:section)
+      " When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg/ctermbg
+      " See https://github.com/lifepillar/vim-colortemplate/issues/15.
       return 'hi ' . s:hi_name(l:v)
-            \ . ' guifg='.s:guifg(l:v, a:section)
-            \ . ' guibg='.s:guibg(l:v, a:section)
+            \ . ' guifg='.l:fg
+            \ . ' guibg='.l:bg
             \ . ' guisp='.s:guisp(l:v, a:section)
             \ . ' gui='.s:gui_attr(l:v)
+            \ . (l:fg ==# 'NONE' && l:bg ==# 'NONE' ? ' ctermfg=NONE ctermbg=NONE' : '')
             \ . ' cterm='.s:gui_attr(l:v) " See https://github.com/vim/vim/issues/1740
     elseif a:col > 16
       return 'hi ' . s:hi_name(l:v)

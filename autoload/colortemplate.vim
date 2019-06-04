@@ -1283,10 +1283,12 @@ endf
 " Verbatim {{{
 fun! s:init_verbatim()
   let s:verb_block = 0
+  let s:if_stack = 0
 endf
 
 fun! s:destroy_verbatim()
   unlet! s:verb_block
+  unlet! s:if_stack
 endf
 
 fun! s:start_verbatim()
@@ -1306,6 +1308,21 @@ endf
 
 fun! s:is_verbatim()
   return s:verb_block
+endf
+
+fun! s:start_if()
+  let s:if_stack += 1
+endf
+
+fun! s:stop_if()
+  if s:if_stack == 0
+    throw 'endif without if'
+  endif
+  let s:if_stack -= 1
+endf
+
+fun! s:is_if()
+  return s:if_stack > 0
 endf
 " }}}
 " Aux files {{{
@@ -1765,6 +1782,13 @@ endf
 
 fun! s:parse_command(cmd)
   call s:start_verbatim()
+  if a:cmd =~# '\m^if$'
+    call s:start_if()
+  elseif a:cmd =~# '\m^endif$'
+    call s:stop_if()
+  elseif a:cmd =~# '\m^else' && !s:is_if()
+    throw a:cmd.' without if'
+  endif
   let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
   for l:v in s:active_variants()
     call s:add_verbatim_item(l:v, s:active_section(),
@@ -1835,6 +1859,9 @@ fun! s:assert_requirements()
       call s:add_generic_error('Too many terminal ANSI colors (' . l:section . ' background)')
     endif
   endfor
+  if s:is_if()
+    call s:add_generic_error('#if without #endif')
+  endif
 endf
 " }}}
 " Colorscheme generation {{{

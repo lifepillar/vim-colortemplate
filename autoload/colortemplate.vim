@@ -2297,8 +2297,11 @@ endf
 
 fun! colortemplate#validate() abort
   if colortemplate#view_source()
-    call s:print_notice('Validating colorscheme, please wait...')
+      call s:print_notice('Validating color scheme, please wait...')
     runtime colors/tools/check_colors.vim
+    if !has('patch-8.1.1406') " Approximates when colors/tools/check_colors.vim was updated
+      echo ('[Colortemplate] Warnings about missing fg may be ignored')
+    endif
     call input('[Colortemplate] Press a key to continue')
     wincmd c
   endif

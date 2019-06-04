@@ -681,6 +681,14 @@ fun! Test_CT_color_typo()
   bwipe test57.txt
 endf
 
+fun! Test_CT_conditional_commands()
+  edit test58.txt
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call s:verify('test58')
+  bwipe test58.txt
+endf
+
 let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
 let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
 let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)

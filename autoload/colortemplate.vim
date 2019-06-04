@@ -1,9 +1,10 @@
 " vim: foldmethod=marker nowrap
 let s:VERSION = '2.0.0b1'
-" Grammar {{{
+" Informal grammar {{{
 " <Template>                  ::= <Line>*
 " <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> |
-"                                 <VerbatimText>  | <AuxFile> | <Documentation>
+"                                 <VerbatimText>  | <Command> | <AuxFile> | <Documentation>
+" <Command>                   ::= #if <Anything> | #elseif <Anything> | #else | #endif
 " <VerbatimText>              ::= verbatim <Anything> endverbatim
 " <AuxFile>                   ::= auxfile <Path> <Anything> endauxfile
 " <Path>                      ::= .+
@@ -1110,7 +1111,11 @@ fun! s:token.next() dict
     let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '\d\+', self.pos - 1)
     let self.kind = 'NUM'
   elseif l:char ==# '#'
-    if match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
+    " Commands are recognized only at the start of a line
+    if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\)\>', 0) > -1
+      let self.kind = 'CMD'
+      let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\)\>', 0)
+    elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
       let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
     else
@@ -1429,6 +1434,8 @@ fun! s:parse_line()
     else
       call s:parse_hi_group_def()
     endif
+  elseif s:token.kind ==# 'CMD'
+    call s:parse_command(s:token.value)
   else
     throw 'Unexpected token at start of line'
   endif
@@ -1753,6 +1760,14 @@ fun! s:parse_linked_group_def()
   endif
   for l:v in s:active_variants()
     call s:add_linked_item(l:v, s:active_section(), l:source_group, s:token.value)
+  endfor
+endf
+
+fun! s:parse_command(cmd)
+  let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
+  for l:v in s:active_variants()
+    call s:add_verbatim_item(l:v, s:active_section(),
+          \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })
   endfor
 endf
 " }}} Parser

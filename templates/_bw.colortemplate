@@ -14,18 +14,18 @@ Cursor               unused unused
 CursorColumn         unused unused reverse
 CursorLine           unused unused underline
 CursorLineNr         unused unused reverse,italic,bold,underline
-DiffAdd              unused unused reverse
-DiffChange           unused unused reverse
-DiffDelete           unused unused reverse
-DiffText             unused unused bold,reverse
+DiffAdd              unused unused reverse,underline
+DiffChange           unused unused reverse,underline
+DiffDelete           unused unused reverse,underline
+DiffText             unused unused bold,reverse,underline
 Directory            unused unused
 EndOfBuffer          unused unused
 ErrorMsg             unused unused bold,reverse,italic
-FoldColumn           unused unused
-Folded               unused unused italic
-IncSearch            unused unused reverse
+FoldColumn           unused unused reverse
+Folded               unused unused italic,reverse,underline
+IncSearch            unused unused reverse,bold,italic
 LineNr               unused unused reverse
-MatchParen           unused unused
+MatchParen           unused unused bold,underline
 ModeMsg              unused unused
 MoreMsg              unused unused
 NonText              unused unused
@@ -33,14 +33,14 @@ Pmenu                unused unused reverse
 PmenuSbar            unused unused
 PmenuSel             unused unused
 PmenuThumb           unused unused
-Question             unused unused
-Search               unused unused
-SignColumn           unused unused
-SpecialKey           unused unused
-SpellBad             unused unused reverse,bold,italic
-SpellCap             unused unused reverse,bold,italic
-SpellLocal           unused unused reverse,bold,italic
-SpellRare            unused unused underline
+Question             unused unused standout
+Search               unused unused underline,italic
+SignColumn           unused unused reverse
+SpecialKey           unused unused bold
+SpellBad             unused unused underline,italic
+SpellCap             unused unused underline,italic
+SpellLocal           unused unused underline,italic
+SpellRare            unused unused underline,italic
 StatusLine           unused unused reverse,bold
 StatusLineNC         unused unused reverse
 TabLine              unused unused reverse,underline,italic
@@ -50,16 +50,16 @@ Title                unused unused bold
 VertSplit            unused unused reverse
 Visual               unused unused reverse
 VisualNOS            unused unused
-WarningMsg           unused unused
-WildMenu             unused unused
+WarningMsg           unused unused standout
+WildMenu             unused unused bold
 # Other conventional group names (see `:help group-name`)
 Comment              unused unused italic
 Constant             unused unused bold,italic
 Error                unused unused reverse
 Identifier           unused unused italic
 Ignore               unused unused
-PreProc              unused unused underline
-Special              unused unused
+PreProc              unused unused italic
+Special              unused unused bold,italic
 Statement            unused unused bold
 Todo                 unused unused bold,underline
 Type                 unused unused bold

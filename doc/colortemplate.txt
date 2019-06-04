@@ -423,11 +423,12 @@ and without spaces (e.g., `@shortname` may be used to insert the value of
 insert the current Vim version).
 
 Verbatim blocks are most often used for conditionals or to set and get
-variables. Therefore, Colortemplate provides convenient shortcuts for such
-cases. When `#if`, `#else`, `#elseif`, `#endif`, `#let` and `#unlet` appear at
-the start of a line, they act as one-line verbatim blocks. Such directives are
-replaced by the corresponding Vim commands and what follows is copied verbatim
-(but interpolated). So, for instance, this template:
+variables or to invoke functions. Therefore, Colortemplate provides convenient
+shortcuts for such cases. When `#if`, `#else`, `#elseif`, `#endif`, `#let`,
+`#unlet` and `#call` appear at the start of a line, they act as one-line
+verbatim blocks. Such directives are replaced by the corresponding Vim
+commands and what follows is copied verbatim (but interpolated). So, for
+instance, this template:
 >
 	#if get(g:, 'some_option', 0)
           #let s:color = '@guiMyColor'

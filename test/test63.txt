@@ -1,0 +1,12 @@
+# vim: ft=colortemplate
+Full name:Test 63
+Short name:test63
+Author:y
+#call foo()
+Variant:256
+#call bar()
+Background:light
+Color:black #000000 16 Black
+Normal black black
+#call foobar()
+

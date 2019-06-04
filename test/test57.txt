@@ -1,0 +1,9 @@
+# vim: ft=colortemplate
+Full name:Test 57
+Short name:test57
+Author:me
+Color:skyblue #ffffff ~
+Color:nightblue #000000 ~
+verbatim
+endverbatim
+Normal skyblue nightblue

@@ -669,6 +669,18 @@ fun! Test_CT_color_typo()
   bwipe test54.txt
 endf
 
+fun! Test_CT_color_typo()
+  edit test57.txt
+  Colortemplate!
+  let l:qflist = getqflist()
+  call assert_equal(1, len(l:qflist))
+  call assert_equal('Cannot define highlight group before Variant or Background is set', l:qflist[0]['text'])
+  call assert_equal(9, l:qflist[0]['lnum'])
+  call assert_equal(24, l:qflist[0]['col'])
+  cclose
+  bwipe test57.txt
+endf
+
 let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
 let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
 let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)

@@ -661,9 +661,9 @@ endf
 let s:GUI = '65536' " GUI or termguicolors
 
 fun! s:init_colorscheme_definition()
-  let s:data = { 'global': { 'preamble': [] } }
-  let s:italics = { }
-  let s:nvim = { 'global' : { 'preamble': [] } }
+  let s:data       = { 'global': { 'preamble': [] } }
+  let s:italics    = { 'global': {'preamble': [] } } " Global is never used for italics
+  let s:nvim       = { 'global': { 'preamble': [] } }
   let s:has_normal = { }
 endf
 
@@ -780,7 +780,7 @@ endf
 
 " Add italics definitions accumulated so far to the colorscheme at the current point
 fun! s:flush_italics(variant, section)
-  if empty(s:italics[a:variant][a:section])
+  if s:is_global_preamble() || empty(s:italics[a:variant][a:section])
     return
   endif
   call s:add_raw_item(a:variant, a:section,  'if !s:italics')

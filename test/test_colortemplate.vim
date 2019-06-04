@@ -689,6 +689,14 @@ fun! Test_CT_conditional_commands()
   bwipe test58.txt
 endf
 
+fun! Test_CT_italic_is_flushed_before_command()
+  edit test59.txt
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call s:verify('test59')
+  bwipe test59.txt
+endf
+
 let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
 let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
 let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)

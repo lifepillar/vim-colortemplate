@@ -1764,11 +1764,13 @@ fun! s:parse_linked_group_def()
 endf
 
 fun! s:parse_command(cmd)
+  call s:start_verbatim()
   let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
   for l:v in s:active_variants()
     call s:add_verbatim_item(l:v, s:active_section(),
           \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })
   endfor
+  call s:stop_verbatim()
 endf
 " }}} Parser
 " Init/clear parser {{{

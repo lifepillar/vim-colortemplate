@@ -14,7 +14,10 @@ color schemes for Vim!
 :colorscheme default_clone
 ```
 
-The generated color scheme replicates Vim's `default` color scheme.
+The resulting color scheme will be written into `~/.vim/colors`.
+The generated color scheme replicates Vim's `default` color scheme. Look inside
+the `templates` folder for other templates.
+
 
 ## Features
 

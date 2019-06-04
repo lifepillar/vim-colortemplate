@@ -1830,9 +1830,9 @@ fun! s:assert_requirements()
     if empty(l:tc)
       call s:add_generic_warning("'Term Colors' key missing for " . l:section . ' background')
     elseif len(l:tc) < 16
-      throw 'Too few terminal ANSI colors (' . l:section . ' background)'
+      call s:add_generic_error('Too few terminal ANSI colors (' . l:section . ' background)')
     elseif len(l:tc) > 16
-      throw 'Too many terminal ANSI colors (' . l:section . ' background)'
+      call s:add_generic_error('Too many terminal ANSI colors (' . l:section . ' background)')
     endif
   endfor
 endf

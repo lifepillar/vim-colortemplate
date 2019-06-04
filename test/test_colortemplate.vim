@@ -747,4 +747,5 @@ endif
 unlet s:old_warnings s:old_creator s:old_timestamp s:old_comment
 
 call delete(s:colordir, "d") " Delete if empty
+call delete(s:docdir, "rf")
 

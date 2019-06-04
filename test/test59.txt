@@ -9,5 +9,5 @@ Color:white #ffffff 255
 Normal white black italic # italic must be flushed
 #if 1 " some condition
 LineNr white black italic # ditto
-#endif " end some condition (@termwhite)
+#endif " end some condition (@term256white)
 

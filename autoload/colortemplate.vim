@@ -1048,11 +1048,10 @@ endf
 " }}}
 " Interpolation {{{
 fun! s:interpolate(variant, section, line, linenr, file)
-  let l:t_Co = s:is_gui(a:variant) ? 256 : a:variant
+  let l:t_Co = (s:is_gui(a:variant) || a:variant ==# 'global') ? 256 : a:variant
   try
     let l:line = substitute(a:line, '@term16\(\w\+\)',                '\=s:col16(submatch(1),"'.a:section.'")',                            'g')
     let l:line = substitute(l:line, '@term256\(\w\+\)',               '\=s:col256(submatch(1),"'.a:section.'")',                           'g')
-    let l:line = substitute(l:line, '@term\(\w\+\)',                  '\=s:termcol(submatch(1),"'.a:section.'","'.l:t_Co.'")',             'g')
     let l:line = substitute(l:line, '@gui\(\w\+\)',                   '\=s:guicol(submatch(1),"'.a:section.'")',                           'g')
     let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),"'.a:section.'","'.l:t_Co.'")', 'g')
     let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2),"'.a:section.'")',               'g')
@@ -1826,7 +1825,6 @@ fun! s:assert_valid_color_name(name)
   if s:is_color_defined(a:name, s:active_section())
     throw "Color already defined for " . s:active_section() . " background"
   endif
-  " TODO: check that color name starts with alphabetic char?
   return 1
 endf
 
@@ -1873,7 +1871,7 @@ fun! s:generate_aux_files(outdir, overwrite)
     if match(l:path, '^doc' . s:slash()) > -1 && get(g:, 'colortemplate_no_doc', 0)
       continue
     endif
-    let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate('256', 'dark', l['line'], l['linenr'], l['file']) }) " FIXME FIXME
+    let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate('256', 'dark', l['line'], l['linenr'], l['file']) })
     call s:write_list(l:lines, l:path, { 'dir': a:outdir }, a:overwrite)
   endfor
 endf
@@ -2012,7 +2010,7 @@ fun! s:print_global_preamble(bufnr)
   if !empty(s:global_preamble())
     call s:put(a:bufnr, '')
     for l:item in s:global_preamble()
-      call s:put(a:bufnr, s:eval(l:item, 0, 'preamble')) " TODO: check 0 (what about verbatim interpolation?)
+      call s:put(a:bufnr, s:eval(l:item, 256, 'preamble'))
     endfor
   endif
 endf

@@ -66,12 +66,14 @@ take a look at some color schemes created with it:
 
 ## Migrating from v1
 
-Users of Colortemplate v1 should still be able to build their color schemes,
-with just a couple of additional warnings. Anyway, to fully migrate to v2, the
-following must be taken into account:
+Users of Colortemplate v1 in most cases will still be able to build their color
+schemes, with just a couple of additional warnings. Anyway, to fully migrate to
+v2, the following must be taken into account:
 
 - The `Terminal Colors` directive has been deprecated in favor of the much more
   flexible mechanism of *variants* (see below).
+- The ambiguous `@term<color>` interpolation pattern has been removed: use
+  `@term16<color>` or `@term256<color>` instead.
 - There is a new `Term Colors` key, which allows you specify the 16 ASCII colors
   to be used in Vim terminal windows. If you were using `verbatim` blocks for
   this, you should remove them: Colortemplate v2 automatically defines

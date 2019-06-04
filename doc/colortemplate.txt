@@ -408,25 +408,16 @@ might be translated into something like:
 <
 If you need to interpolate a color that does not occur in a highlight group
 definition, you must specify whether you want to interpolate a GUI value or
-a terminal value by using `@gui<color>` or `@term<color>`, respectively, where
-`<color>` is a color name. For example:
+a terminal value by using `@gui<color>`, `@term16<color>`, or
+`@term256<color>`, where `<color>` is a color name. For example:
 >
-	let g:terminal_color_@termblack = '@guiblack'
+	let g:terminal_color_@term16black = '@guiblack'
 <
 might generate the following code:
 >
-	let g:terminal_color_16 = '#000000'
+	let g:terminal_color_0 = '#000000'
 <
-The value of `@term<color>` is determined by the least capable of the current
-variants. For example, if a verbatim block is in the scope of
->
-	Variant: 256 8
-<
-then `@term<color>` is translated using base-16 values rather than base-256
-values. If you need to refer to a specific colorspace, use `@term16<color>` or
-`@term256<color>` instead.
-
-Other values may be interpolated: metadata keywords, converted to lower cases
+Other values may be interpolated: metadata keywords, converted to lower case
 and without spaces (e.g., `@shortname` may be used to insert the value of
 `Short name`); `@date` (to insert the current date) and `@vimversion` (to
 insert the current Vim version).

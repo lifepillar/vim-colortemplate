@@ -400,7 +400,7 @@ fun! Test_CT_minimal()
 endf
 
 fun! Test_CT_verbatim_interpolation()
-  edi test28.txt
+  edit test28.txt
   Colortemplate!
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   bwipe test28.txt
@@ -703,6 +703,14 @@ fun! Test_CT_let_unlet()
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call s:verify('test60')
   bwipe test60.txt
+endf
+
+fun! Test_CT_global_interpolation()
+  edit test61.txt
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call s:verify('test61')
+  bwipe test61.txt
 endf
 
 let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)

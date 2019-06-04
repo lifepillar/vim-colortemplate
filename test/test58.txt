@@ -12,5 +12,5 @@ Normal white black #if here is treated as comment
 Normal black white #else ditto
 #else " A comment
 Normal black black #elseif ditto
-#endif " end some condition (@termwhite)
+#endif " end some condition (@term256white)
 

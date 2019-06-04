@@ -3,7 +3,6 @@
 " Maintainer:   w
 " License:      Vim License (see `:help license`)
 
-
 set background=dark
 
 hi clear

@@ -1112,7 +1112,7 @@ fun! s:token.next() dict
     let self.kind = 'NUM'
   elseif l:char ==# '#'
     " Commands are recognized only at the start of a line
-    if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\)\>', 0) > -1
+    if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\)\>', 0) > -1
       let self.kind = 'CMD'
       let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\)\>', 0)
     elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1

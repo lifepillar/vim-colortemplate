@@ -1,0 +1,11 @@
+# vim: ft=colortemplate
+Full name:Test 60
+Short name:test60
+Author:y
+Variant:256
+Background:light
+Color:black #000000 16
+Color:white #ffffff 255
+#let black = '@guiblack'
+Normal white black
+

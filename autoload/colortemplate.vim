@@ -2432,5 +2432,5 @@ endf
 " }}} Public interface
 " TODO {{{
 " - Support for font in highlight group definitions?
-" - Disable validation with old script
+" - Check that the appended source code permits reconstruction of the template
 " }}}

@@ -799,37 +799,12 @@ fun! s:flush_italics(variant, section)
   let s:italics[a:variant][a:section] = []
 endf
 
-fun! s:flush_terminal_colors(variant, section)
-  if a:section ==# 'preamble' || !s:is_gui(a:variant) || empty(s:term_colors(a:section))
-    return
-  endif
-  let l:tc = s:term_colors(a:section)
-  let l:col0_3 = join(map(copy(l:tc[0:3]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
-  let l:col4_9 = join(map(copy(l:tc[4:9]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
-  let l:col10_15 = join(map(copy(l:tc[10:15]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
-  call s:add_raw_item(s:GUI, a:section, 'let g:terminal_ansi_colors = ['.l:col0_3.',')
-  call s:add_raw_item(s:GUI, a:section, '\ '.l:col4_9.',')
-  call s:add_raw_item(s:GUI, a:section, '\ '.l:col10_15.']')
-endf
-
-fun! s:flush_neovim(variant, section, flush_terminal)
-  if !s:supports_neovim()
-    return
-  endif
-  if empty(s:nvim[a:variant][a:section]) &&
-        \ (s:is_term(a:variant) || !a:flush_terminal || empty(s:term_colors(a:section)))
+fun! s:flush_neovim(variant, section)
+  if !s:supports_neovim() || empty(s:nvim[a:variant][a:section])
     return
   endif
   call s:add_raw_item(a:variant, a:section,  "if has('nvim')")
   call extend(s:data[a:variant][a:section], s:nvim[a:variant][a:section])
-  if s:is_gui(a:variant) && a:flush_terminal
-    let l:n = 0
-    for l:color in s:term_colors(a:section)
-      call s:add_raw_item(a:variant, a:section,
-            \ "let g:terminal_color_".string(l:n)." = '".s:guicol(l:color, a:section)."'")
-      let l:n += 1
-    endfor
-  endif
   call s:add_raw_item(a:variant, a:section, 'endif')
   let s:nvim[a:variant][a:section] = []
 endf
@@ -844,8 +819,7 @@ endf
 
 fun! s:flush_definitions(variant, section)
   call s:flush_italics(a:variant, a:section)
-  call s:flush_terminal_colors(a:variant, a:section)
-  call s:flush_neovim(a:variant, a:section, a:section !=# 'preamble')
+  call s:flush_neovim(a:variant, a:section)
 endf
 
 fun! s:colorscheme_definitions(variant, section)
@@ -1305,7 +1279,7 @@ fun! s:start_verbatim()
   " far.
   for l:v in s:active_variants()
     call s:flush_italics(l:v, s:active_section())
-    call s:flush_neovim(l:v, s:active_section(), 0)
+    call s:flush_neovim(l:v, s:active_section())
   endfor
   let s:verb_block = 1
 endf
@@ -2050,7 +2024,30 @@ fun! s:print_global_preamble(bufnr)
   endif
 endf
 
+fun! s:print_terminal_colors(bufnr, variant, section)
+  if a:section ==# 'preamble' || !s:is_gui(a:variant) || len(s:term_colors(a:section)) != 16
+    return
+  endif
+  let l:tc = s:term_colors(a:section)
+  let l:col0_3 = join(map(copy(l:tc[0:3]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
+  let l:col4_9 = join(map(copy(l:tc[4:9]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
+  let l:col10_15 = join(map(copy(l:tc[10:15]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
+  call s:put(a:bufnr, 'let g:terminal_ansi_colors = ['.l:col0_3.',')
+  call s:put(a:bufnr, '\ '.l:col4_9.',')
+  call s:put(a:bufnr, '\ '.l:col10_15.']')
+  if s:supports_neovim()
+    let l:n = 0
+    call s:put(a:bufnr, "if has('nvim')")
+    for l:color in l:tc
+      call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".s:guicol(l:color, a:section)."'")
+      let l:n += 1
+    endfor
+    call s:put(a:bufnr, 'endif')
+  endif
+endf
+
 fun! s:print_colorscheme_defs(bufnr, variant, section)
+  call s:print_terminal_colors(a:bufnr, a:variant, a:section)
   let l:ncols = str2nr(a:variant)
   for l:item in s:colorscheme_definitions(a:variant, a:section)
     call s:put(a:bufnr, s:eval(l:item, l:ncols, a:section))

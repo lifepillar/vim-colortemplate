@@ -674,7 +674,6 @@ fun! s:init_colorscheme_definition()
   let s:data       = { 'global': { 'preamble': [] } }
   let s:italics    = { 'global': {'preamble': [] } } " Global is never used for italics
   let s:nvim       = { 'global': { 'preamble': [] } }
-  let s:cleanup    = { 'global': { 'preamble': [] } }
   let s:has_normal = { }
 endf
 
@@ -688,7 +687,6 @@ fun! s:add_colorscheme_variant(v)
     let s:data[a:v]       = { 'preamble': [], 'dark': [], 'light': [] }
     let s:italics[a:v]    = { 'preamble': [], 'dark': [], 'light': [] }
     let s:nvim[a:v]       = { 'preamble': [], 'dark': [], 'light': [] }
-    let s:cleanup[a:v]    = { 'preamble': [], 'dark': [], 'light': [] }
     let s:has_normal[a:v] = { 'preamble': 0,  'dark': 0,  'light': 0  }
   endif
 endf
@@ -782,10 +780,6 @@ fun! s:add_italic_item(variant, section, item)
   call s:add_item(a:variant, a:section, a:item, 'it')
 endf
 
-fun! s:add_cleanup_item(variant, section, item)
-  call add(s:cleanup[a:variant][a:section], s:make_item(a:item, 'verb'))
-endf
-
 fun! s:global_preamble()
   return s:data['global']['preamble']
         \ + (s:supports_neovim() && !empty(s:nvim['global']['preamble'])
@@ -840,11 +834,6 @@ fun! s:flush_neovim(variant, section, flush_terminal)
   let s:nvim[a:variant][a:section] = []
 endf
 
-fun! s:flush_cleanup(variant, section)
-  call extend(s:data[a:variant][a:section], s:cleanup[a:variant][a:section])
-  let s:cleanup[a:variant][a:section] = []
-endf
-
 fun! s:is_gui(variant)
   return a:variant ==# s:GUI
 endf
@@ -857,7 +846,6 @@ fun! s:flush_definitions(variant, section)
   call s:flush_italics(a:variant, a:section)
   call s:flush_terminal_colors(a:variant, a:section)
   call s:flush_neovim(a:variant, a:section, a:section !=# 'preamble')
-  call s:flush_cleanup(a:variant, a:section)
 endf
 
 fun! s:colorscheme_definitions(variant, section)
@@ -1132,9 +1120,9 @@ fun! s:token.next() dict
     let self.kind = 'NUM'
   elseif l:char ==# '#'
     " Commands are recognized only at the start of a line
-    if match(s:getl(), '^\s*#\%[finish]\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>', 0) > -1
+    if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>', 0) > -1
       let self.kind = 'CMD'
-      let self.value = matchstr(s:getl(), '^\s*#\zs\%[finish]\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>', 0)
+      let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\)\>', 0)
     elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
       let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
@@ -1832,17 +1820,6 @@ fun! s:parse_linked_group_def()
 endf
 
 fun! s:parse_command(cmd)
-  if a:cmd =~# '\m^finish'
-    if s:is_global_preamble()
-      throw 'Finish command cannot appear in global preamble'
-    endif
-    let l:text = matchstr(s:getl(), '^\s*#finish\zs.\{-}\s*$')
-    for l:v in s:active_variants()
-      call s:add_cleanup_item(l:v, s:active_section(),
-          \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })
-    endfor
-    return
-  endif
   call s:start_verbatim()
   if a:cmd =~# '\m^if$'
     call s:start_if()

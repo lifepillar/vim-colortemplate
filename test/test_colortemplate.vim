@@ -469,7 +469,7 @@ fun! Test_CT_color_already_defined()
   call assert_equal(1, len(l:qflist))
   call assert_equal("Color already defined for dark background", l:qflist[0]['text'])
   call assert_equal(9, l:qflist[0]['lnum'])
-  call assert_equal(7, l:qflist[0]['col'])
+  call assert_equal(25, l:qflist[0]['col'])
   cclose
   bwipe test35.txt
 endf

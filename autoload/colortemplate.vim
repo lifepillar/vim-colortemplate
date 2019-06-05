@@ -311,14 +311,23 @@ endf
 fun! s:add_color(section, name, gui, base256, base16)
   " If the GUI color is given by name, quote it if the name contains spaces
   let l:gui = match(a:gui, '\s') > - 1 ? "'".a:gui."'" : a:gui
+  if s:is_color_defined(a:name, a:section)
+    throw "Color already defined for " . a:section . " background"
+  endif
   let s:guicol[a:section][a:name] = l:gui
   let s:col256[a:section][a:name] = a:base256
   let  s:col16[a:section][a:name] = a:base16
   if a:section ==# 'preamble'
+    if s:is_color_defined(a:name, 'dark')
+      throw "Color already defined for dark background"
+    endif
     let s:guicol['dark'][a:name] = l:gui
     let s:col256['dark'][a:name] = a:base256
     let  s:col16['dark'][a:name] = a:base16
-    let s:guicol['light'][a:name]  = l:gui
+    if s:is_color_defined(a:name, 'light')
+      throw "Color already defined for light background"
+    endif
+    let s:guicol['light'][a:name] = l:gui
     let s:col256['light'][a:name] = a:base256
     let  s:col16['light'][a:name] = a:base16
   endif
@@ -1583,8 +1592,11 @@ fun! s:parse_color_name()
   if s:token.next().kind !=# 'WORD'
     throw 'Invalid color name'
   endif
-  call s:assert_valid_color_name(s:token.value)
-  return s:token.value
+  let l:name = s:token.value
+  if l:name ==? 'none' || l:name ==? 'fg' || l:name ==? 'bg'
+    throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
+  endif
+  return l:name
 endf
 
 fun! s:parse_gui_value()
@@ -1846,16 +1858,6 @@ endf
 " }}}
 " }}}
 " Checks {{{
-fun! s:assert_valid_color_name(name)
-  if a:name ==? 'none' || a:name ==? 'fg' || a:name ==? 'bg'
-    throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
-  endif
-  if s:is_color_defined(a:name, s:active_section())
-    throw "Color already defined for " . s:active_section() . " background"
-  endif
-  return 1
-endf
-
 fun! s:assert_requirements()
   if empty(s:fullname())
     call s:add_generic_error('Please specify the full name of your color scheme')

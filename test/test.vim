@@ -57,6 +57,7 @@ fun! FinishTesting()
   call matchadd('Constant', '\<Expected\>')
   call matchadd('Constant', '\<but got\>')
   call matchadd('ErrorMsg', 'Caught exception')
+  norm G
 endf
 
 fun! RunBabyRun(...)

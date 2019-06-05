@@ -737,6 +737,16 @@ fun! Test_CT_guifg_guibg_none()
   bwipe test65.txt
 endf
 
+fun! Test_CT_unbalanced_if()
+  edit test66.txt
+  Colortemplate!
+  let l:qflist = getqflist()
+  call assert_equal(1, len(l:qflist))
+  call assert_equal('#if without #endif', l:qflist[0]['text'])
+  cclose
+  bwipe test66.txt
+endf
+
 let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
 let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
 let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)

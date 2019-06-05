@@ -1340,6 +1340,17 @@ fun! s:is_if()
   endfor
   return 1
 endf
+
+fun! s:ifs_are_balanced()
+  for l:v in keys(s:if_stack)
+    for l:s in keys(s:if_stack[l:v])
+      if s:if_stack[l:v][l:s] != 0
+        return 0
+      endif
+    endfor
+  endfor
+  return 1
+endf
 " }}}
 " Aux files {{{
 fun! s:init_auxfiles_parsing()
@@ -1874,7 +1885,7 @@ fun! s:assert_requirements()
       call s:add_generic_error('Too many terminal ANSI colors (' . l:section . ' background)')
     endif
   endfor
-  if s:is_if()
+  if !s:ifs_are_balanced()
     call s:add_generic_error('#if without #endif')
   endif
 endf

@@ -1,0 +1,17 @@
+# vim: ft=colortemplate
+Full name:Test 66
+Short name:test66
+Author:y
+Background:light
+Color:black #000000 16 Black
+Normal black black
+#if ok
+Variant:256
+#endif
+Variant: gui
+#endif
+Variant: 256 gui
+#if wrong
+Variant: gui
+#endif
+# #endif for 256 variant is missing

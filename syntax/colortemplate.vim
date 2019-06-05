@@ -150,7 +150,7 @@ syn include @colortemplatevim syntax/vim.vim
 unlet b:current_syntax
 syn region colortemplatevim matchgroup=colortemplateKeyword start=/verbatim/ end=/endverbatim/ keepend contains=@colortemplatevim
 syn region auxfilevim       matchgroup=colortemplateKeyword start=/auxfile.*\.vim$/ end=/endauxfile/ keepend contains=@colortemplatevim
-syn region colortemplateCommand matchgroup=colortemplateCommand start=/^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>/ end=/$/ keepend contains=@colortemplatevim
+syn region colortemplateCommand matchgroup=colortemplateCommand start=/^\s*#\%[finish]\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>/ end=/$/ keepend contains=@colortemplatevim
 
 syn include @colortemplatehelp syntax/help.vim
 unlet b:current_syntax

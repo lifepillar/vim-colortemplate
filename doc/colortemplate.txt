@@ -442,6 +442,27 @@ is translated into
 <
 assuming `MyColor` is a color with GUI value `#abcdef`.
 
+Special commands may also be prefixed by `#finish`: in this case, they will be
+appended just before the color scheme script is finished. This may be useful
+to perform some clean up work such as unletting variables. For instance, this
+snippet:
+>
+	Background:dark
+	#let x = 1
+	#finishunlet x
+	Normal white black
+	# other stuff
+<
+might be translated as follows:
+>
+	if &background ==# 'dark'
+	  let x = 1
+	  hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
+	  " other stuff
+	  unlet x
+	  finish
+	endif
+<
 ==============================================================================
 Documentation blocks				*colortemplate-doc-blocks*
 

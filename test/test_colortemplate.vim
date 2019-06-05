@@ -721,6 +721,14 @@ fun! Test_CT_call_command()
   bwipe test63.txt
 endf
 
+fun! Test_CT_if_in_multiple_variants()
+  edit test64.txt
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call s:verify('test64')
+  bwipe test64.txt
+endf
+
 fun! Test_CT_guifg_guibg_none()
   edit test65.txt
   Colortemplate!

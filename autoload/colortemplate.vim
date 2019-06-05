@@ -1282,7 +1282,7 @@ endf
 " Verbatim {{{
 fun! s:init_verbatim()
   let s:verb_block = 0
-  let s:if_stack = 0
+  let s:if_stack =  {}
 endf
 
 fun! s:destroy_verbatim()
@@ -1310,18 +1310,35 @@ fun! s:is_verbatim()
 endf
 
 fun! s:start_if()
-  let s:if_stack += 1
+  let l:s = s:active_section()
+  for l:v in s:active_variants()
+    if !has_key(s:if_stack, l:v)
+      let s:if_stack[l:v] = { l:s: 0 }
+    elseif !has_key(s:if_stack[l:v], l:s)
+      let s:if_stack[l:v][l:s] = 0
+    endif
+    let s:if_stack[l:v][l:s] += 1
+  endfor
 endf
 
 fun! s:stop_if()
-  if s:if_stack == 0
-    throw 'endif without if'
-  endif
-  let s:if_stack -= 1
+  let l:s = s:active_section()
+  for l:v in s:active_variants()
+    if get(get(s:if_stack, l:v, {}), l:s, 0) == 0
+      throw 'endif without if'
+    endif
+    let s:if_stack[l:v][l:s] -= 1
+  endfor
 endf
 
 fun! s:is_if()
-  return s:if_stack > 0
+  let l:s = s:active_section()
+  for l:v in s:active_variants()
+    if get(get(s:if_stack, l:v, {}), l:s, 0) == 0
+      return 0
+    endif
+  endfor
+  return 1
 endf
 " }}}
 " Aux files {{{

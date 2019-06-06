@@ -361,7 +361,7 @@ The 16 ASCII colors for Vim terminal windows should be specified using
 a `Term colors` directive:
 >
 	Term colors: myblack myred mygreen myyellow
-        Term colors: myblue mymagenta mycyan mywhite
+	Term colors: myblue mymagenta mycyan mywhite
 	Term colors: mybrightblack mybrightred mybrightgreen mybrightyellow
 	Term colors: mybrightblue mybrightmagenta mybrightcyan mybrightwhite
 <
@@ -467,14 +467,14 @@ commands and what follows is copied verbatim (but interpolated). So, for
 instance, this template:
 >
 	#if get(g:, 'some_option', 0)
-          #let s:color = '@guiMyColor'
-        #endif
+	  #let s:color = '@guiMyColor'
+	#endif
 <
 is translated into
 >
 	if get(g:, 'some_option, '0)
-          let s:color  = '#abcef'
-        endif
+	  let s:color  = '#abcef'
+	endif
 <
 assuming `MyColor` is a color with GUI value `#abcdef`.
 
@@ -617,10 +617,9 @@ Colortemplate to define any mapping, set |g:colortemplate_no_mappings|.
 Colortemplate also honours |g:no_plugin_maps|.
 
 							*ga*
-ga
-                        If the cursor is on a `Color` line, display some
-                        information about the given color, including [count]
-                        best xterm approximations for the color.
+ga			If the cursor is on a `Color` line, display some
+			information about the given color, including [count]
+			best xterm approximations for the color.
 
 							*gx*
 gx			If the cursor is on a `Color` line, replace `~` with
@@ -701,8 +700,8 @@ menu entry must be defined in |g:colortemplate_toolbar_actions|.
 A Dictionary mapping menu entries to the corresponding commands. For instance:
 >
 	let g:colortemplate_toolbar_actions = {
-             \ 'Build!': ':Colortemplate!<cr>'
-             \ }
+	     \ 'Build!': ':Colortemplate!<cr>'
+	     \ }
 <
 This options only defines the actions associated to each label. For a menu
 entry to actually be visible in the toolbar, it must be listed in

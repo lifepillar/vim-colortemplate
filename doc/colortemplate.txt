@@ -245,12 +245,16 @@ If the template uses both backgrounds then the generated color scheme will
 adapt to the current background, e.g., the generated code will be equivalent
 to:
 >
+	" Local preamble here
 	if &background ==# 'dark'
 	  " Dark variant of the color scheme
 	else
 	  " Light variant of the color scheme
 	endif
 <
+Template code in the scope of `any` background will be put in the "local
+preamble", i.e., before checking the value of |background|.
+
 ==============================================================================
 Variants					*colortemplate-variants*
 

@@ -495,10 +495,11 @@ file into another. You do so with an `Include` directive. For example, you
 might put the documentation of your color scheme into a separate template, say
 `_help.colortemplate`, and include it into the main template as follows:
 >
-	Include: _help.colortemplate
+	Include: _help
 <
 The result is the same as if the content of `_help.colortemplate` had been
-written at the inclusion point.
+written at the inclusion point. If the suffix of the included file is
+`.colortemplate`, it may be omitted, as in the example above.
 
 Conventionally, templates that are not meant to be used directly, but only
 included into other templates, have names starting with an underscore.

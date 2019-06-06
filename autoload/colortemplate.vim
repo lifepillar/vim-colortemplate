@@ -1406,6 +1406,7 @@ fun! s:parse_verbatim_line()
       throw "Extra characters after 'endverbatim'"
     endif
   else
+    call s:add_source_line(s:getl())
     for l:v in s:active_variants()
       call s:add_verbatim_item(l:v, s:active_section(),
             \ { 'line': s:getl(), 'linenr': s:linenr(), 'file': s:currfile() })
@@ -1803,6 +1804,7 @@ fun! s:parse_command(cmd)
     throw a:cmd.' without if'
   endif
   let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
+  call s:add_source_line(l:text)
   for l:v in s:active_variants()
     call s:add_verbatim_item(l:v, s:active_section(),
           \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })

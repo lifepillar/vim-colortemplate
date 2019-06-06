@@ -222,7 +222,7 @@ fields should be self-descriptive. When `Neovim` is set to `yes` or `1` then
 additional code is generated to support NeoVim.
 
 ==============================================================================
-color scheme background				*colortemplate-background*
+Color scheme background				*colortemplate-background*
 
 You must specify whether color definitions and highlight group definitions
 apply to a dark background, to a light background or to any background. You do

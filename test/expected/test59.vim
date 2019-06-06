@@ -13,7 +13,7 @@ endif
 let g:colors_name = 'test59'
 
 let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2
-let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || (has('gui_running') && !has('iOS'))
+let s:italics = (((&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')) && !has('iOS'))
 
 if s:t_Co >= 256
   hi Normal ctermfg=255 ctermbg=16 cterm=italic

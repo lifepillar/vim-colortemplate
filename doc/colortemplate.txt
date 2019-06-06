@@ -212,7 +212,7 @@ optional fields:
 	# Optional information
 	Maintainer:      [Uses Author's value by default]
 	Website:         [Empty]
-	Description:     [A one line description of the color scheme]
+	Description:     [Empty]
 	License:         [Vim license]
 	Option Prefix:   [Uses Short name's value by default]
 	Neovim:          [No]

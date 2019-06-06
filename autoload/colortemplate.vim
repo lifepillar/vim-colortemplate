@@ -2080,7 +2080,7 @@ fun! s:print_colorscheme(bufnr, variant)
     if s:has_colorscheme_definitions(a:variant, 'dark')
       call s:put(a:bufnr, "if &background ==# 'dark'")
       call s:print_colorscheme_defs(a:bufnr, a:variant, 'dark')
-      call s:finish_endif(a:bufnr) " if &background
+      call s:finish_endif(a:bufnr) " endif dark background
     endif
     if s:has_colorscheme_definitions(a:variant, 'light')
       call s:put(a:bufnr, '" Light background')
@@ -2090,7 +2090,7 @@ fun! s:print_colorscheme(bufnr, variant)
     let l:background = s:has_dark() ? 'dark' : 'light'
     call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
   endif
-  call s:finish_endif(a:bufnr)
+  call s:finish_endif(a:bufnr) " endif termguicolors/t_Co
 endf
 
 fun! s:generate_colorscheme(outdir, overwrite)

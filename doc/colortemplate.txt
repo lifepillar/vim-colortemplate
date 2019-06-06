@@ -119,7 +119,9 @@ A template consists of:
 2. `Color` and `Term colors` definitions;
 3. `Background` and `Variant` directives;
 4. `Include` statements;
-5. verbatim blocks (`verbatim`/`auxfile`/`documentation`, `#if`, `#let`, ...).
+5. verbatim blocks (`verbatim`/`auxfile`/`documentation`, `#if`, `#let`, ...);
+6. highlight group definitions;
+7. line comments (starting with `#`), which are ignored by Colortemplate.
 
 Each template has one global section and one or more local sections. The
 global section goes from the beginning of the file until the first
@@ -150,21 +152,51 @@ flexibility, e.g.:
 >
 	Variant: gui
 	Background: any
-	  # Definitions for both backgrounds, apply only to GUI
+	  # Defs. for both backgrounds, apply only to GUI
 	Background: dark
-	  # Definitions for dark background, apply only to GUI
+	  # Defs. or dark background, apply only to GUI
 	Variant: gui 256 16
-	  # Definitions for dark background, apply to GUI, 256 colors
-	  # and 16 colors variants
+	  # Defs. for dark background, apply to GUI/256/16 colors
 	Background: any
-	  # Definitions for both backgrounds, apply to GUI, 256 colors
-	  # and 16 colors variants
-	Backgroud: light
+	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	Background: light
 	Variant: 16
-	  # Definitions for light background, apply only to 16-color variant
+	  # Defs. for light background, apply only to 16 colors
 <
-(Lines starting with `#` are interpreted as comments. Comments are ignored by
-Colortemplate and are not included in the generated color scheme.)
+A template like the above will generate code with the following structure:
+>
+	let s:t_Co = ...
+	if [has termguicolors set or is GUI vim]
+	  # Defs. for both backgrounds, apply only to GUI
+	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  if &background ==# 'dark'
+	    # Defs. for dark background, apply only to GUI
+	    # Defs. for dark background, apply to GUI/256/16 colors
+	    finish
+	  endif
+	  finish
+	endif
+	if s:t_Co >= 256
+	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  if &background ==# 'dark'
+	    # Defs. for dark background, apply to GUI/256/16 colors
+	    finish
+	  endif
+	  finish
+	endif
+	if s:t_Co >= 16
+	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  if &background ==# 'dark'
+	    # Defs. for dark background, apply to GUI/256/16 colors
+	    finish
+	  endif
+	  # Defs. for light background, apply only to 16 colors
+	  finish
+	endif
+<	   
+Note how the code is reordered. In particular, code in the scope of `any`
+background is put before the background is checked, for each variant to which
+it applies (the "local preamble" of each variant).
 
 ==============================================================================
 Metadata block					*colortemplate-meta*

@@ -1406,10 +1406,10 @@ fun! s:parse_verbatim_line()
       throw "Extra characters after 'endverbatim'"
     endif
   else
-  for l:v in s:active_variants()
-    call s:add_verbatim_item(l:v, s:active_section(),
-          \ { 'line': s:getl(), 'linenr': s:linenr(), 'file': s:currfile() })
-  endfor
+    for l:v in s:active_variants()
+      call s:add_verbatim_item(l:v, s:active_section(),
+            \ { 'line': s:getl(), 'linenr': s:linenr(), 'file': s:currfile() })
+    endfor
   endif
 endf
 

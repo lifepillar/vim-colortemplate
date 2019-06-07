@@ -2393,27 +2393,41 @@ fun! colortemplate#getinfo(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
   let l:hexc = s:guicol(l:name, 'dark') " 2nd arg doesn't matter
+  let l:best = colortemplate#colorspace#approx(l:hexc)
+  let l:c256 = s:col256(l:name, 'dark') == -1 ? l:best['index'] : s:col256(l:name, 'dark')
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
-  if a:n <= 1
-    let l:best = colortemplate#colorspace#approx(l:hexc)
-    echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %d [%f]',
-          \ l:name, l:r, l:g, l:b, l:hexc,
-          \ l:best['index'], l:best['delta']
-          \ )
+  try
+    execute "hi!" "ColortemplateInfoFg" "ctermfg=".l:c256 "guifg=".l:hexc "ctermbg=NONE guibg=NONE"
+    execute "hi!" "ColortemplateInfoBg" "ctermbg=".l:c256 "guibg=".l:hexc "ctermfg=NONE guifg=NONE"
+  catch /^Vim\%((\a\+)\)\=:E254/ " Cannot allocate color
+    hi clear ColortemplateInfoFg
+    hi clear ColortemplateInfoBg
+  endtry
+  echon printf('%s: rgb(%d,%d,%d) ', l:name, l:r, l:g, l:b)
+  echohl ColortemplateInfoFg | echon 'xxx' | echohl None
+  echon printf(' %s ', l:hexc)
+  echohl ColortemplateInfoBg | echon '   ' | echohl None
+  echon ' Best xterm approx:'
+  if a:n == 1
+    let l:approx = [l:best]
   else
     let l:approx = colortemplate#colorspace#k_neighbours(l:hexc, a:n)
-    echo printf('%s: rgb(%d,%d,%d) %s xterm approx: %s',
-          \ l:name, l:r, l:g, l:b, l:hexc,
-          \ join(l:approx, ', ')
-          \ )
   endif
+  for l:item in l:approx
+    let l:x = l:item['index']
+    let l:g = colortemplate#colorspace#xterm256_hexvalue(l:x)
+    echon printf(' %d', l:x)
+    execute "hi!" "ColortemplateInfoBg".l:x "ctermbg=".l:x "guibg=".l:g "ctermfg=NONE guifg=NONE"
+    execute 'echohl ColortemplateInfoBg'.l:x | echon '   ' | echohl None
+    echon printf('@%.2f', l:item['delta'])
+  endfor
 endf
 
 fun! colortemplate#approx_color(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
   let l:hexc = s:guicol(l:name, 'dark') " 2nd arg doesn't matter
-  let l:col = colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]
+  let l:col = colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]['index']
   call setline('.', substitute(getline('.'), '\~', l:col, ''))
 endf
 

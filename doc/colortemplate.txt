@@ -529,12 +529,13 @@ Include directive		       		*colortemplate-include*
 You may split your template into several files, and include snippets from one
 file into another. You do so with an `Include` directive. For example, you
 might put the documentation of your color scheme into a separate template, say
-`_help.colortemplate`, and include it into the main template as follows:
+`_help` or `_help.colortemplate`, and include it into the main template as
+follows:
 >
 	Include: _help
 <
-The result is the same as if the content of `_help.colortemplate` had been
-written at the inclusion point. If the suffix of the included file is
+The result is the same as if the content of `_help` or `_help.colortemplate`
+had been written at the inclusion point. If the suffix of the included file is
 `.colortemplate`, it may be omitted, as in the example above.
 
 Conventionally, templates that are not meant to be used directly, but only
@@ -542,14 +543,14 @@ included into other templates, have names starting with an underscore.
 
 You may include the same file more than once. This is useful, for example, if
 you have highlight group definitions that are common to a dark and light
-background. Then, you may put them into a `_common.colortemplate` file, and
-include it twice:
+background. Then, you may put them into a `_common` file, and include it
+twice:
 >
 	Background: dark
-	Include: _common.colortemplate
+	Include: _common
 	# Other definitions specific to dark background
 	Background: light
-	Include: _common.colortemplate
+	Include: _common
 	# Other definitions specific to light background
 <
 NOTE: avoid cyclic inclusions: they will cause Colortemplate to run into an

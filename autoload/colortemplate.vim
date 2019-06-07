@@ -2066,7 +2066,9 @@ endf
 fun! s:print_source_code(bufnr)
   if get(g:, 'colortemplate_source_comment', 1)
     for l:line in s:source_lines()
-      call s:put(a:bufnr, '" '.l:line)
+      if l:line !~# '\m^\s*$'
+        call s:put(a:bufnr, '" '.l:line)
+      endif
     endfor
   endif
 endf

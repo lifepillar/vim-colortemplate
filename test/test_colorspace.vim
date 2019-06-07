@@ -71,4 +71,9 @@ fun! Test_CS_contrast_ratio()
   call assert_equal(4.74, s:round(colortemplate#colorspace#contrast_ratio('#fafafa', '#707070'), 2))
 endf
 
+fun! Test_CS_xterm2hex()
+  call assert_equal('#000000', colortemplate#colorspace#xterm256_hexvalue(16))
+  call assert_equal('#ffffff', colortemplate#colorspace#xterm256_hexvalue(231))
+endf
+
 call RunBabyRun('CS')

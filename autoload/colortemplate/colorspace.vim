@@ -905,10 +905,10 @@ fun! colortemplate#colorspace#k_neighbours(color, k, ...)
         let l:color_index = l:i
       endif
     endfor
-    call add(l:result, l:color_index + 16)
+    call add(l:result, { 'index': l:color_index + 16, 'delta': l:delta })
     let l:j += 1
   endfor
-  return l:result
+  return sort(l:result, { i1,i2 -> i1['delta'] < i2['delta'] ? -1 : i1['delta'] > i2['delta'] ? 1 : 0 })
 endf
 
 fun! colortemplate#colorspace#k_neighbors(color, k)

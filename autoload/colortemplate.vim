@@ -1145,6 +1145,9 @@ fun! s:include(path)
   " Save current position in the stack
   call s:push(s:includes_stack, { 'path': s:path, 'linenr': s:linenr, 'numlines': s:numlines })
   let s:path = s:full_path(a:path =~# '\m\.' ? a:path : a:path.'.colortemplate', { 'dir': s:getwd() })
+  if !filereadable(s:path) " Try without adding the suffix
+    let s:path = s:full_path(a:path, { 'dir': s:getwd() })
+  endif
   let s:linenr = 0
   if !has_key(s:cache, s:path)
     let s:cache[s:path] = { 'data': reverse(readfile(fnameescape((s:path)))) }

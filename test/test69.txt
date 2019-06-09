@@ -1,0 +1,10 @@
+# vim: ft=colortemplate
+Full name:Test 69
+Short name:test69
+Author:y
+Variant: 8
+Background:dark
+Color:white #ffffff 231 15
+Color:black #000000 16
+Normal black black
+

@@ -342,7 +342,11 @@ fun! s:add_term_ansi_color(name, section)
 endf
 
 fun! s:col16(name, section)
-  return s:col16[a:section][a:name]
+  if s:col16[a:section][a:name] == -1
+    throw 'Base-16 value undefined for color ' . a:name
+  else
+    return s:col16[a:section][a:name]
+  endif
 endf
 
 fun! s:col256(name, section)
@@ -1645,7 +1649,7 @@ endf
 
 fun! s:parse_base_16_value()
   if !s:token.next().is_edible()
-    return 'Black' " Just a placeholder: we assume that base-16 colors are not used
+    return '-1' " Return a value that will cause an error if used
   elseif s:token.kind ==# 'NUM'
     let l:val = s:token.value
     if str2nr(l:val) > 15 || str2nr(l:val) < 0

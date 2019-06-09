@@ -755,6 +755,16 @@ fun! Test_CT_include_without_suffix()
   bwipe test68a.txt
 endf
 
+fun! Test_CT_undefined_base16_value()
+  edit test69.txt
+  Colortemplate!
+  let l:qflist = getqflist()
+  call assert_equal(1, len(l:qflist))
+  call assert_equal('Base-16 value undefined for color black', l:qflist[0]['text'])
+  cclose
+  bwipe test69.txt
+endf
+
 let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
 let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
 let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)

@@ -47,8 +47,8 @@ endf
 fun! Test_CS_2_neighbours()
   let l:list = colortemplate#colorspace#k_neighbours('#9e0006', 2)
   call assert_equal(2, len(l:list))
-  call assert_equal(124, l:list[0])
-  call assert_equal(88, l:list[1])
+  call assert_equal(124, l:list[0]['index'])
+  call assert_equal(88, l:list[1]['index'])
 endf
 
 fun! Test_CS_contrast_ratio()

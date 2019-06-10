@@ -562,7 +562,7 @@ Colors statistics				*colortemplate-stats*
 Colortemplate can compute some useful statistics to help you assess the
 quality of your color scheme. Such information is displayed in a scratch
 buffer in a split window by |:ColortemplateStats| or by clicking on "Stats" in
-the window toolbar.
+the window toolbar. The following statistics are provided.
 
 Color similarity table ~
 A color similarity table contains a detailed summary of the generated color
@@ -581,6 +581,17 @@ counterpart.
 Keep in mind that the "most similar" terminal color may not necessarily be the
 "best looking" color, because the overall look&feel of a color scheme
 ultimately depends on the interactions among all the colors.
+
+Critical pairs ~
+Pairs of colors that are used as a foreground/background combo by at least one
+highlight group and have contrast ratio less than 3.0 (as per ISO-9241-3) are
+reported in this section, for exact colors and for xterm approximations. For
+each pair of colors, its contrast ratio (CR), color brightness (CB) and color
+difference (CD) are shown (see below), and the highlight groups using such
+pair are listed in the following line. Generally speaking, pairs of fg/bg
+colors with low contrast ratio may be acceptable if they are used for
+decorative elements (e.g., for |hl-VertSplit|), but should be avoided for
+text, and especially for |hl-Normal|.
 
 Contrast ratio matrix ~
 The contrast ratio statistics compares the relative luminance of two colors.

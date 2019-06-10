@@ -514,6 +514,34 @@ fun! s:add_gui_attr(hg, attrlist)
   call uniq(sort(a:hg['gui']))
 endf
 " }}}
+" Color pairs {{{
+fun! s:init_color_pairs()
+  let s:color_pairs = { 'dark': {}, 'light': {} }
+endf
+
+fun! s:destroy_color_pairs()
+  unlet! s:color_pairs
+endf
+
+fun! s:add_color_pair(section, hg)
+  let l:sections = (a:section ==# 'preamble' ? ['dark','light'] : [a:section])
+  for l:s in l:sections
+    let l:key = s:fg(a:hg).'/'.s:bg(a:hg)
+    if l:key =~# '\<\%(fg\|bg\|none\|unused\)\>'
+      continue
+    endif
+    let l:val = s:hi_name(a:hg)
+    if !has_key(s:color_pairs[l:s], l:key)
+      let s:color_pairs[l:s][l:key] = []
+    endif
+    call add(s:color_pairs[l:s][l:key], l:val)
+  endfor
+endf
+
+fun! s:get_color_pairs(bg)
+  return s:color_pairs[a:bg]
+endf
+" }}}
 " Colorscheme metadata {{{
 fun! s:init_metadata()
   let s:supports_dark = 0
@@ -887,6 +915,7 @@ fun! s:init_data_structures()
   call s:init_source_code()
   call s:init_color_palette()
   call s:init_highlight_groups()
+  call s:init_color_pairs()
   call s:init_metadata()
   call s:init_colorscheme_definition()
   call s:init_aux_files()
@@ -896,6 +925,7 @@ fun! s:destroy_data_structures()
   call s:destroy_source_code()
   call s:destroy_color_palette()
   call s:destroy_highlight_groups()
+  call s:destroy_colors_pairs()
   call s:destroy_metadata()
   call s:destroy_colorscheme_definition()
   call s:destroy_aux_files()
@@ -943,6 +973,52 @@ fun! s:print_similarity_table(bg, bufnr)
     call s:put(a:bufnr, printf(l:fmt, l:c, l:colgui, l:rgbgui[0], l:rgbgui[1], l:rgbgui[2], l:col256, l:def256, l:d))
   endfor
   call s:put(a:bufnr, '}}} Color Similarity Table')
+endf
+
+fun! s:print_critical_pairs(section, bufnr)
+  let l:critical_gui = []
+  let l:critical_256 = []
+  for [l:key, l:val] in items(s:get_color_pairs(a:section))
+    let [l:fg, l:bg] = split(l:key, '/')
+    let l:c1 = s:guicol(l:fg, a:section)
+    let l:c2 = s:guicol(l:bg, a:section)
+    let l:cr = colortemplate#colorspace#contrast_ratio(l:c1, l:c2)
+    if l:cr < 3.0
+      let l:cb = colortemplate#colorspace#brightness_diff(l:c1, l:c2)
+      let l:cd = colortemplate#colorspace#color_difference(l:c1, l:c2)
+      call add(l:critical_gui, [l:fg, l:bg, l:cr, l:cb, l:cd, l:val])
+    endif
+    let l:c1 = s:col256(l:fg, a:section)
+    let l:c2 = s:col256(l:bg, a:section)
+    if l:c1 < 16 ||  l:c1 > 255 || l:c2 < 16 || l:c2 > 255
+      continue
+    endif
+    let l:c1 = colortemplate#colorspace#xterm256_hexvalue(l:c1)
+    let l:c2 = colortemplate#colorspace#xterm256_hexvalue(l:c2)
+    let l:cr = colortemplate#colorspace#contrast_ratio(l:c1, l:c2)
+    if l:cr < 3.0
+      let l:cb = colortemplate#colorspace#brightness_diff(l:c1, l:c2)
+      let l:cd = colortemplate#colorspace#color_difference(l:c1, l:c2)
+      call add(l:critical_256, [l:fg, l:bg, l:cr, l:cb, l:cd, l:val])
+    endif
+  endfor
+  call sort(l:critical_gui, { i1,i2 -> i1[2] < i2[2] ? -1 : i1[2] > i2[2] ? 1 : 0 })
+  call sort(l:critical_256, { i1,i2 -> i1[2] < i2[2] ? -1 : i1[2] > i2[2] ? 1 : 0 })
+  call s:put(a:bufnr, '{{{ Critical Pairs (' . a:section . ' background)')
+  call s:put(a:bufnr, 'Not ISO-9241-3 conforming pairs of foreground/background colors')
+  call s:put(a:bufnr, '{{{ GUI (' . a:section . ')')
+  for l:i in l:critical_gui
+    call s:put(a:bufnr, printf('%s/%s  CR:%.2f, CB:%.2f, CD:%.2f', l:i[0], l:i[1], l:i[2], l:i[3], l:i[4]))
+    call s:put(a:bufnr, printf('  Used by %s', join(uniq(sort(l:i[5])), ', ')))
+  endfor
+  call s:put(a:bufnr, '}}}')
+  call s:put(a:bufnr, '{{{ Terminal (' . a:section . ')')
+  for l:i in l:critical_256
+    call s:put(a:bufnr, printf('%s/%s  CR:%.2f, CB:%.2f, CD:%.2f', l:i[0], l:i[1], l:i[2], l:i[3], l:i[4]))
+    call s:put(a:bufnr, printf('  Used by %s', join(uniq(sort(l:i[5])), ', ')))
+  endfor
+  call s:put(a:bufnr, '}}}')
+  call s:put(a:bufnr, '}}} Critical Pairs')
 endf
 
 fun! s:print_matrix(bufnr, matrix, labels, gui, bg)
@@ -1026,6 +1102,7 @@ fun! s:print_color_info()
       call s:put(l:bufnr, '{{{ '.l:bg.' background')
     endif
     call s:print_similarity_table(l:bg, l:bufnr)
+    call s:print_critical_pairs(l:bg, l:bufnr)
     call s:print_color_matrices(l:bg, l:bufnr)
     if s:has_dark_and_light()
       call s:put(l:bufnr, '}}}')
@@ -1712,6 +1789,7 @@ fun! s:parse_hi_group_def()
   call s:set_bg(l:hg, l:colorname)
   let l:hg = s:parse_attributes(l:hg)
   call s:add_highlight_group(l:hg)
+  call s:add_color_pair(s:active_section(), l:hg)
 endf
 
 fun! s:parse_color_value()

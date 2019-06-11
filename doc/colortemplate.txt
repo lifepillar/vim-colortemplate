@@ -384,7 +384,7 @@ directives.
 
 The <style attributes> part of a highlight group definition is used to specify
 comma-separated lists of attributes (see |attr-list|) and the special color to
-use in the GUI. Both parts are optional, so the following are also valid
+use in the GUI (|highlight-guisp|). The following are examples of valid
 highlight group specifications:
 >
 	Normal    white   black
@@ -405,6 +405,9 @@ schemes. For example:
 <
 `term=` may be abbreviated `t=`, and `gui=` may be abbreviated `g=`. Instead
 of `guisp=`, you may also use `s=`.
+
+Colortemplate also supports |highlight-start| and |highlight-stop|: the syntax
+is the same as in Vim color schemes.
 
 Note: variants also determine which attributes are used. For example, if this
 definition:
@@ -500,7 +503,8 @@ to enable a transparent background, you may document it as follows:
 
 A documentation block starts with a `documentation` keyword and ends with
 `enddocumentation`. Interpolation works as in verbatim blocks. Multiple
-documentation blocks are chained together.
+documentation blocks are chained together in the order in which they are
+encountered.
 
 A documentation block will generate a help file in a `doc` directory inside
 the output directory. You may suppress the generation of the help file with

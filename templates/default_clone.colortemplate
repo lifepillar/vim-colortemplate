@@ -294,7 +294,7 @@ Background: any
 # Black&White variant {{{
 Variant: 2
 
-Color: unused #000000 0
+Color: unused #000000 0 0
 
 # Default highlight groups {{{
 # Group              Unused   Unused   term

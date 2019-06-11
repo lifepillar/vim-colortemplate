@@ -79,10 +79,10 @@ v2, the following must be taken into account:
   this, you should remove them: Colortemplate v2 automatically defines
   `g:terminal_ansi_colors` (and the equivalent for NeoVim if enabled, see
   below).
-- There a new `Variant` directive, which specifies to which environments the
+- There is a new `Variant` directive, which specifies to which environments the
   subsequent definitions apply. Replace `Terminal Colors: 256` with `Variant:
-  gui 256`; replace `Terminal Colors: 256 16` with `Variant: gui 256 16`.
-  See `:help colortemplate-variants` for more information.
+  gui 256`; replace `Terminal Colors: 256 16` with `Variant: gui 256 16`; and so
+  on. See `:help colortemplate-variants` for more information.
 - There is a new `Neovim` key: when its value is `yes`, additional code to
   support Neovim is generated (default is `no`).
 - The `Maintainer` key is now optional.

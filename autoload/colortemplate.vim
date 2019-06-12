@@ -126,7 +126,7 @@ if exists('*appendbufline')
   endf
 
   fun! s:new_work_buffer()
-    botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
+    botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap\ bh=hide
     let l:bufnr = bufnr("%")
     wincmd p
     execute winnr('#') 'wincmd c'
@@ -154,7 +154,7 @@ else
   endf
 
   fun! s:new_work_buffer()
-    botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap
+    botright 1new +setlocal\ ft=vim\ et\ ts=2\ sw=2\ norl\ nowrap\ bh=hide
     return bufnr("%")
   endf
 
@@ -174,7 +174,7 @@ fun! s:write_buffer(bufnr, path, env, overwrite)
   call s:make_dir(fnamemodify(l:path, ":h"))
   if bufloaded(l:path)
     if a:overwrite
-      execute "bdelete" bufname(a:path)
+      execute "bdelete!" bufname(a:path)
     else
       throw "Buffer " . l:path . " exists. Use ! to overwrite."
     endif

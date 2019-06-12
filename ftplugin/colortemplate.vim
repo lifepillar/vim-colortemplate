@@ -8,15 +8,6 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-if !(&hidden)
-  redraw
-  echo "\r"
-  echohl Error
-  echomsg '[Colortemplate] Option "hidden" must be set.'
-  echohl None
-  finish
-endif
-
 let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_outdir"
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
 

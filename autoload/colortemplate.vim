@@ -111,7 +111,7 @@ fun! s:make_dir(dirpath)
 endf
 " }}}
 " Buffer and file manipulation {{{
-if has('patch-8.0.1039')
+if exists('*appendbufline')
 
   fun! s:getbufline(bufnr, start, stop)
     return getbufline(a:bufnr, a:start, a:stop)

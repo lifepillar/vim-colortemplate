@@ -58,6 +58,7 @@ fun! FinishTesting()
   call matchadd('Constant', '\<but got\>')
   call matchadd('ErrorMsg', 'Caught exception')
   norm G
+  return (s:fail > 0)
 endf
 
 fun! RunBabyRun(...)
@@ -78,5 +79,5 @@ fun! RunBabyRun(...)
   " Clear window-toolbar
   nunmenu WinBar
 
-  call FinishTesting()
+  return FinishTesting()
 endf

@@ -241,6 +241,10 @@ fun! s:clearscreen()
   echo "\r"
 endf
 
+fun! s:is_error_state()
+  return !empty(filter(getqflist(), { i,v -> v['type'] !=# 'W' }))
+endf
+
 fun! s:show_errors(errmsg)
   botright cwindow
   if getbufvar('', '&ft', '') ==# 'qf'
@@ -1968,7 +1972,9 @@ fun! s:generate_aux_files(outdir, overwrite)
       continue
     endif
     let l:lines = map(s:auxfile(l:path), { _,l -> s:interpolate('256', 'dark', l['line'], l['linenr'], l['file']) })
-    call s:write_list(l:lines, l:path, { 'dir': a:outdir }, a:overwrite)
+    if !s:is_error_state()
+      call s:write_list(l:lines, l:path, { 'dir': a:outdir }, a:overwrite)
+    endif
   endfor
 endf
 
@@ -2212,7 +2218,7 @@ fun! s:generate_colorscheme(outdir, overwrite)
   call s:put(l:bufnr, '')
   call s:print_source_code(l:bufnr)
   call s:reindent_buffer(l:bufnr)
-  if !empty(a:outdir)
+  if !s:is_error_state() && !empty(a:outdir)
     let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'
     try
       call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)

@@ -11,6 +11,7 @@ syn case    match
 " Highlight groups
 syn match   colortemplateAttrs        "\<\%(te\?r\?m\?\|gu\?i\?\)=\S\+" contains=colortemplateAttr,colortemplateSpecial
 syn match   colortemplateGuisp        "\<\%(guisp\|sp\?\)="
+syn match   colortemplateTermCode     "\<st\%(art\|op\)="
 syn match   colortemplateHiGroup      "\<Conceal\>"
 syn match   colortemplateHiGroup      "\<Terminal\>"
 syn keyword colortemplateHiGroup      Boolean Character ColorColumn Comment Conditional Constant Cursor CursorColumn CursorIM

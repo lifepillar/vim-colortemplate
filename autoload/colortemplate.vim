@@ -1352,12 +1352,6 @@ fun! s:add_highlight_group(hg)
     throw "Cannot define highlight group before Variant or Background is set"
   endif
   if s:hi_name(a:hg) ==? 'Normal' " Normal group needs special treatment
-    if s:fg(a:hg) =~# '\m^\%(fg\|bg\)$'
-      throw 'Invalid foreground for Normal: ' . s:fg(a:hg)
-    endif
-    if s:bg(a:hg) =~# '\m^\%(fg\|bg\)$'
-      throw 'Invalid background for Normal: ' . s:bg(a:hg)
-    endif
     for l:v in s:active_variants()
       call s:set_has_normal(l:v, s:active_section())
     endfor

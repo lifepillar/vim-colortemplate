@@ -810,6 +810,21 @@ fun! Test_CT_undefined_base16_value()
   bwipe test69.txt
 endf
 
+fun! Test_CT_omit_keyword_basic()
+  call s:assert_build('test70')
+endf
+
+fun! Test_CT_vacuous_hi_group()
+  edit test71.txt
+  Colortemplate!
+  let l:qflist = getqflist()
+  call assert_equal(2, len(l:qflist))
+  call assert_equal('Vacuous definition for Normal (8 colors, dark background)', l:qflist[0]['text'])
+  call assert_equal('Vacuous definition for CursorLine (2 colors, dark background)', l:qflist[1]['text'])
+  cclose
+  bwipe test71.txt
+endf
+
 "
 " Runner!
 "

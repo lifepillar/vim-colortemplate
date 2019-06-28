@@ -9,7 +9,7 @@ endif
 
 syn case    match
 " Highlight groups
-syn match   colortemplateAttrs        "\<\%(te\?r\?m\?\|gu\?i\?\)=\S\+" contains=colortemplateAttr
+syn match   colortemplateAttrs        "\<\%(te\?r\?m\?\|gu\?i\?\)=\S\+" contains=colortemplateAttr,colortemplateSpecial
 syn match   colortemplateGuisp        "\<\%(guisp\|sp\?\)="
 syn match   colortemplateHiGroup      "\<Conceal\>"
 syn match   colortemplateHiGroup      "\<Terminal\>"
@@ -34,7 +34,7 @@ syn keyword colortemplateHiGroup      vimSetEqual vimStdPlugin vimSubstPat vimSu
 syn keyword colortemplateHiGroup      vimSynMatchRegion vimSynMtchCchar vimSynMtchGroup vimSynPatMod vimSynRegion vimSyncLinebreak vimSyncLinecont vimSyncLines
 syn keyword colortemplateHiGroup      vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
 syn keyword colortemplateAttr         bold underline undercurl strikethrough reverse inverse italic standout nocombine NONE
-syn keyword colortemplateSpecial      fg bg none
+syn keyword colortemplateSpecial      fg bg none omit
 syn match   colortemplateComment      "#.*$" contains=colortemplateTodo,@Spell
 syn match   colortemplateKey          "^\s*\(\w[^:]*\):"
 syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortemplateKey nextgroup=colortemplateColorDef
@@ -170,6 +170,7 @@ hi def link colortemplateNumber       Number
 hi def link colortemplateKey          Special
 hi def link colortemplateKeyword      Keyword
 hi def link colortemplateSpecial      Boolean
+hi def link colortemplateTermCode     String
 hi def link colortemplateTodo         PreProc
 
 let b:current_syntax = "colortemplate"

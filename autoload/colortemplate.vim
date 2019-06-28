@@ -284,17 +284,17 @@ endf
 " }}}
 " Color palette {{{
 fun! s:init_color_palette()
-  let s:guicol = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
-        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
-        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+  let s:guicol = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
+        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
+        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
         \        }
-  let s:col256 = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
-        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
-        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+  let s:col256 = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
+        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
+        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
         \        }
-  let s:col16  = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
-        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
-        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE'},
+  let s:col16  = { 'dark':     {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
+        \          'light':    {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
+        \          'preamble': {'fg':'fg', 'bg':'bg', 'none': 'NONE', 'omit': 'omit'},
         \        }
   let s:term_colors = { 'dark': [], 'light': [], 'preamble': [] } " 16 ASCII colors
 endf
@@ -374,7 +374,7 @@ fun! s:term_colors(section)
 endf
 
 fun! s:color_names(section)
-  return filter(copy(keys(s:guicol[a:section])), { _,v -> v !=# 'fg' && v !=# 'bg' && v !=# 'none' })
+  return filter(copy(keys(s:guicol[a:section])), { _,v -> v !~# '^\%(fg\|bg\|none\|omit\)$' })
 endf
 " }}}
 " Highlight groups {{{
@@ -467,6 +467,11 @@ fun! s:gui_attr_no_italics(hg)
   return empty(l:attr) ? 'NONE' : join(l:attr, ',')
 endf
 
+" type may be only 'start' or 'stop'
+fun! s:terminal_code(hg, type)
+  return empty(a:hg[a:type]) ? 'omit' : a:hg[a:type]
+endf
+
 fun! s:set_fg(hg, colorname)
   let a:hg['fg'] = a:colorname
 endf
@@ -527,7 +532,7 @@ fun! s:add_color_pair(section, hg)
   let l:sections = (a:section ==# 'preamble' ? ['dark','light'] : [a:section])
   for l:s in l:sections
     let l:key = s:fg(a:hg).'/'.s:bg(a:hg)
-    if l:key =~# '\<\%(fg\|bg\|none\|unused\)\>'
+    if l:key =~# '\<\%(fg\|bg\|none\|omit\|unused\)\>'
       continue
     endif
     let l:val = s:hi_name(a:hg)
@@ -1652,8 +1657,8 @@ fun! s:parse_color_name()
     throw 'Invalid color name'
   endif
   let l:name = s:token.value
-  if l:name ==? 'none' || l:name ==? 'fg' || l:name ==? 'bg'
-    throw "Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden"
+  if l:name ==? 'none' || l:name ==? 'fg' || l:name ==? 'bg' || l:name ==? 'omit'
+    throw "'".l:name."' is a reserved name and cannot be overridden"
   endif
   return l:name
 endf
@@ -1794,7 +1799,7 @@ endf
 
 fun! s:parse_color_value()
   let l:color = s:token.value
-  if !s:is_color_defined(l:color, s:active_section()) && l:color !~# '^\(fg\|bg\|none\)$'
+  if !s:is_color_defined(l:color, s:active_section()) && l:color !~# '^\(fg\|bg\|none\|omit\)$'
     throw 'Undefined color name: ' . l:color
   endif
   return l:color
@@ -1837,7 +1842,7 @@ fun! s:parse_attributes(hg)
 endf
 
 fun! s:valid_attribute(name)
-  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\)$')
+  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\|omit\)$')
 endf
 
 fun! s:parse_attr_list()
@@ -1967,40 +1972,57 @@ fun! s:generate_aux_files(outdir, overwrite)
   endfor
 endf
 
+fun! s:hi_item(text, value)
+  return (a:value ==# 'omit' ? '' : ' '.a:text.'='.a:value)
+endf
+
 fun! s:eval(item, col, section)
   let l:v = s:item_value(a:item)
   if s:is_higroup_type(a:item)
     if a:col > 256
       let l:fg = s:guifg(l:v, a:section)
       let l:bg = s:guibg(l:v, a:section)
+      let l:sp = s:guisp(l:v, a:section)
+      let l:attr = s:gui_attr(l:v)
       " When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg/ctermbg
       " See https://github.com/lifepillar/vim-colortemplate/issues/15.
+      " See also https://github.com/vim/vim/issues/1740
       return 'hi ' . s:hi_name(l:v)
-            \ . ' guifg='.l:fg
-            \ . ' guibg='.l:bg
-            \ . ' guisp='.s:guisp(l:v, a:section)
-            \ . ' gui='.s:gui_attr(l:v)
-            \ . (l:fg ==# 'NONE' && l:bg ==# 'NONE' ? ' ctermfg=NONE ctermbg=NONE' : '')
-            \ . ' cterm='.s:gui_attr(l:v) " See https://github.com/vim/vim/issues/1740
+            \ . s:hi_item('guifg', l:fg)
+            \ . s:hi_item('guibg', l:bg)
+            \ . s:hi_item('guisp', l:sp)
+            \ . (l:attr ==# 'omit'
+            \   ? ''
+            \   : (' gui='.l:attr
+            \   . (l:fg ==# 'NONE' && l:bg ==# 'NONE' ? ' ctermfg=NONE ctermbg=NONE' : '')
+            \   . ' cterm='.l:attr)
+            \   )
     elseif a:col > 16
+      let l:fg = s:fg256(l:v, a:section)
+      let l:bg = s:bg256(l:v, a:section)
+      let l:attr = s:term_attr(l:v)
       return 'hi ' . s:hi_name(l:v)
-            \ . ' ctermfg='.s:fg256(l:v, a:section)
-            \ . ' ctermbg='.s:bg256(l:v, a:section)
-            \ . ' cterm='.s:term_attr(l:v)
-            \ . (empty(l:v['start']) ? '' : ' start='.l:v['start'])
-            \ . (empty(l:v['stop']) ? '' : ' stop='.l:v['stop'])
+            \ . s:hi_item('ctermfg', l:fg)
+            \ . s:hi_item('ctermbg', l:bg)
+            \ . s:hi_item('cterm', l:attr)
+            \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
+            \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
     elseif a:col > 2
+      let l:fg = s:fg16(l:v, a:section)
+      let l:bg = s:bg16(l:v, a:section)
+      let l:attr = s:term_attr(l:v)
       return 'hi ' . s:hi_name(l:v)
-            \ . ' ctermfg='.s:fg16(l:v, a:section)
-            \ . ' ctermbg='.s:bg16(l:v, a:section)
-            \ . ' cterm='.s:term_attr(l:v)
-            \ . (empty(l:v['start']) ? '' : ' start='.l:v['start'])
-            \ . (empty(l:v['stop']) ? '' : ' stop='.l:v['stop'])
+            \ . s:hi_item('ctermfg', l:fg)
+            \ . s:hi_item('ctermbg', l:bg)
+            \ . s:hi_item('cterm', l:attr)
+            \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
+            \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
     elseif a:col > 0
+      let l:attr = s:term_attr(l:v)
       return 'hi ' . s:hi_name(l:v)
-            \ . ' term='.s:term_attr(l:v)
-            \ . (empty(l:v['start']) ? '' : ' start='.l:v['start'])
-            \ . (empty(l:v['stop']) ? '' : ' stop='.l:v['stop'])
+            \ . s:hi_item('cterm', l:attr)
+            \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
+            \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
     endif
   elseif s:is_linked_type(a:item)
     return 'hi! link ' . l:v[0] . ' ' . l:v[1]

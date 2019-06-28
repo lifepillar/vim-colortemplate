@@ -522,6 +522,13 @@ fun! s:add_gui_attr(hg, attrlist)
   call extend(a:hg['gui'], a:attrlist)
   call uniq(sort(a:hg['gui']))
 endf
+
+" Vacuous highlight groups have `omit` in all parts
+fun! s:is_hi_group_vacuous(hg)
+  return a:hg['fg'] ==# 'omit' && a:hg['bg'] ==# 'omit' &&
+        \ ((a:hg['sp'] ==# 'omit' && a:hg['gui'] ==# 'omit')
+        \ || (a:hg['term'] ==# 'omit'))
+endf
 " }}}
 " Color pairs {{{
 fun! s:init_color_pairs()
@@ -1999,8 +2006,7 @@ fun! s:eval(item, col, section)
       " When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg/ctermbg
       " See https://github.com/lifepillar/vim-colortemplate/issues/15.
       " See also https://github.com/vim/vim/issues/1740
-      return 'hi ' . s:hi_name(l:v)
-            \ . s:hi_item('guifg', l:fg)
+      let l:def = s:hi_item('guifg', l:fg)
             \ . s:hi_item('guibg', l:bg)
             \ . s:hi_item('guisp', l:sp)
             \ . (l:attr ==# 'omit'
@@ -2013,8 +2019,7 @@ fun! s:eval(item, col, section)
       let l:fg = s:fg256(l:v, a:section)
       let l:bg = s:bg256(l:v, a:section)
       let l:attr = s:term_attr(l:v)
-      return 'hi ' . s:hi_name(l:v)
-            \ . s:hi_item('ctermfg', l:fg)
+      let l:def = s:hi_item('ctermfg', l:fg)
             \ . s:hi_item('ctermbg', l:bg)
             \ . s:hi_item('cterm', l:attr)
             \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
@@ -2023,19 +2028,22 @@ fun! s:eval(item, col, section)
       let l:fg = s:fg16(l:v, a:section)
       let l:bg = s:bg16(l:v, a:section)
       let l:attr = s:term_attr(l:v)
-      return 'hi ' . s:hi_name(l:v)
-            \ . s:hi_item('ctermfg', l:fg)
+      let l:def = s:hi_item('ctermfg', l:fg)
             \ . s:hi_item('ctermbg', l:bg)
             \ . s:hi_item('cterm', l:attr)
             \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
             \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
     elseif a:col > 0
       let l:attr = s:term_attr(l:v)
-      return 'hi ' . s:hi_name(l:v)
-            \ . s:hi_item('cterm', l:attr)
+      let l:def = s:hi_item('term', l:attr)
             \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
             \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
     endif
+    if empty(l:def)
+      call s:add_generic_error('Vacuous definition for '.s:hi_name(l:v)
+            \ . ' ('.(a:col > 256 ? 'GUI' : a:col.' colors').', '.a:section.' background)')
+    endif
+    return 'hi ' . s:hi_name(l:v) . l:def
   elseif s:is_linked_type(a:item)
     return 'hi! link ' . l:v[0] . ' ' . l:v[1]
   elseif s:is_verb_type(a:item)

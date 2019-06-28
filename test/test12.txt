@@ -1,6 +1,6 @@
 # vim: ft=colortemplate
-Full name:X
-Short name:x
+Full name:Test 12
+Short name:test12
 Author:y
 Maintainer:w
 Background: medium

@@ -1,7 +1,6 @@
 # vim: ft=colortemplate fdm=marker
-# Information {{{
-Full name:X
-Short name:x
+Full name:Test 33
+Short name:test33
 Author:y
 Maintainer:w
 Background: dark

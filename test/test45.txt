@@ -1,5 +1,5 @@
 # vim: ft=colortemplate
-Full name:X
+Full name:Test 45
 # Missing Short name
 Author:y
 Maintainer:w

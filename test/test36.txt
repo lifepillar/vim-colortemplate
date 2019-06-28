@@ -1,6 +1,6 @@
 # vim: ft=colortemplate
-Full name:X
-Short name:x
+Full name:Test 36
+Short name:test36
 Author:y
 Maintainer:w
 # Color defined before background

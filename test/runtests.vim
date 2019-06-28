@@ -22,6 +22,14 @@ fun! s:verify(f)
   endif
 endf
 
+fun! s:assert_build(name)
+  execute 'edit' a:name.'.txt'
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  call s:verify(a:name)
+  execute 'bwipe' a:name.'.txt'
+endf
+
 fun! s:setupenv()
   let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
   let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
@@ -135,11 +143,7 @@ fun! Test_CT_xterm2hex()
 endf
 
 fun! Test_CT_fine()
-  edit test1.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test1')
-  bwipe test1.txt
+  call s:assert_build('test1')
 endf
 
 fun! Test_CT_color_typo()
@@ -167,13 +171,13 @@ fun! Test_CT_fg_bg_none_colors()
   Colortemplate!
   let l:qflist = getqflist()
   call assert_equal(3, len(l:qflist))
-  call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:qflist[0]['text'])
+  call assert_equal("'none' is a reserved name and cannot be overridden", l:qflist[0]['text'])
   call assert_equal(7, l:qflist[0]['lnum'])
   call assert_equal(8, l:qflist[0]['col'])
-  call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:qflist[1]['text'])
+  call assert_equal("'fg' is a reserved name and cannot be overridden", l:qflist[1]['text'])
   call assert_equal(8, l:qflist[1]['lnum'])
   call assert_equal(9, l:qflist[1]['col'])
-  call assert_equal("Colors 'none', 'fg', and 'bg' are reserved names and cannot be overridden", l:qflist[2]['text'])
+  call assert_equal("'bg' is a reserved name and cannot be overridden", l:qflist[2]['text'])
   call assert_equal(9, l:qflist[2]['lnum'])
   call assert_equal(7, l:qflist[2]['col'])
   cclose
@@ -181,10 +185,7 @@ fun! Test_CT_fg_bg_none_colors()
 endf
 
 fun! Test_CT_Normal_must_be_first()
-  edit test5.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test5.txt
+  call s:assert_build('test5')
 endf
 
 fun! Test_CT_Normal_alt_background()
@@ -204,10 +205,7 @@ endf
 " reverse in Normal is accepted by Colortemplate! v2.0, but should be
 " detected by Vim's check_colors.vim script.
 fun! Test_CT_Normal_reverse()
-  edit test7.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test7.txt
+  call s:assert_build('test7')
 endf
 
 fun! Test_CT_extra_chars_after_verbatim()
@@ -454,10 +452,7 @@ fun! Test_CT_parse_hi_group_def()
 endf
 
 fun! Test_CT_attributes_ok()
-  edit test22.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test22.txt
+  call s:assert_build('test22')
 endf
 
 fun! Test_CT_attributes_errors()
@@ -491,10 +486,7 @@ fun! Test_CT_attributes_errors()
 endf
 
 fun! Test_CT_parse_linked_group_ok()
-  edit test24.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test24.txt
+  call s:assert_build('test24')
 endf
 
 fun! Test_CT_parse_linked_group_errors()
@@ -516,17 +508,11 @@ fun! Test_CT_parse_linked_group_errors()
 endf
 
 fun! Test_CT_minimal()
-  edit test27.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test27.txt
+  call s:assert_build('test27')
 endf
 
 fun! Test_CT_verbatim_interpolation()
-  edit test28.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test28.txt
+  call s:assert_build('test28')
 endf
 
 fun! Test_CT_wrong_keyword_in_doc()
@@ -539,13 +525,12 @@ fun! Test_CT_wrong_keyword_in_doc()
   call assert_equal(1, l:qflist[0]['col'])
   cclose
   bwipe test29.txt
+  " Delete output file (this is created because the error is in the help)
+  call delete(s:testdir.'/colors/test29.vim')
 endf
 
 fun! Test_CT_keyword_followed_by_underscore_in_doc()
-  edit test30.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test30.txt
+  call s:assert_build('test30')
 endf
 
 fun! Test_CT_empty_short_name()
@@ -572,17 +557,11 @@ fun! Test_CT_invalid_short_name()
 endf
 
 fun! Test_CT_commented_hex_color()
-  edit test33.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test33.txt
+  call s:assert_build('test33')
 endf
 
 fun! Test_CT_comments_after_hi_group_defs()
-  edit test34.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test34.txt
+  call s:assert_build('test34')
 endf
 
 fun! Test_CT_color_already_defined()
@@ -610,17 +589,11 @@ fun! Test_CT_color_def_before_background_is_set()
 endf
 
 fun! Test_CT_background_selected_twice()
-  edit test37.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test37.txt
+  call s:assert_build('test37')
 endf
 
 fun! Test_CT_template_with_included_files()
-  edit test38a.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test38a.txt
+  call s:assert_build('test38a')
 endf
 
 fun! Test_CT_error_in_included_file()
@@ -649,31 +622,19 @@ fun! Test_CT_short_name_too_long()
 endf
 
 fun! Test_CT_comment_after_base256_color()
-  edit test41.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test41.txt
+  call s:assert_build('test41')
 endf
 
 fun! Test_CT_colors_from_rgb_txt()
-  edit test42.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test42.txt
+  call s:assert_build('test42')
 endf
 
 fun! Test_CT_trailing_spaces_are_skipped()
-  edit test43.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test43.txt
+  call s:assert_build('test43')
 endf
 
 fun! Test_CT_first_line_of_included_file_is_not_skipped()
-  edit test44a.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test44a.txt
+  call s:assert_build('test44a')
 endf
 
 fun! Test_CT_check_for_missing_short_name()
@@ -687,10 +648,7 @@ fun! Test_CT_check_for_missing_short_name()
 endf
 
 fun! Test_CT_include_empty_file()
-  edit test46a.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test46a.txt
+  call s:assert_build('test46a')
 endf
 
 " Palette keyword no longer supported in v2.0.0
@@ -733,18 +691,12 @@ endf
 
 " If terminal colors are not defined, v2.0.0 raises only a warning
 fun! Test_CT_terminal_ansi_colors_not_defined()
-  edit test50a.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test50a.txt
+  call s:assert_build('test50a')
 endf
 
 " Ditto
 fun! Test_CT_terminal_ansi_colors_defined_verbatim()
-  edit test50b.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test50b.txt
+  call s:assert_build('test50b')
 endf
 
 fun! Test_CT_rgb_color_names_stats_issue_12()
@@ -752,7 +704,12 @@ fun! Test_CT_rgb_color_names_stats_issue_12()
   " ColortemplateStats parses the file: parsing should not give errors
   ColortemplateStats
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  wincmd c " Stat scratch buffer
+  execute 'write' s:testdir.'/colors/test51.txt'
+  let l:fail = assert_equalfile(s:testdir.'/expected/test51.txt', s:testdir.'/colors/test51.txt')
+  if !l:fail
+    call delete(s:testdir.'/colors/test51.txt')
+  endif
+  wincmd c " Wipe out stat scratch buffer
   bwipe test51.txt
 endf
 
@@ -774,10 +731,7 @@ fun! Test_CT_out_of_range_base256_colors()
 endf
 
 fun! Test_CT_colon_in_comment_is_not_kv_pair()
-  edit test53.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  bwipe test53.txt
+  call s:assert_build('test53')
 endf
 
 fun! Test_CT_color_typo()
@@ -805,59 +759,31 @@ fun! Test_CT_color_typo()
 endf
 
 fun! Test_CT_conditional_commands()
-  edit test58.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test58')
-  bwipe test58.txt
+  call s:assert_build('test58')
 endf
 
 fun! Test_CT_italic_is_flushed_before_command()
-  edit test59.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test59')
-  bwipe test59.txt
+  call s:assert_build('test59')
 endf
 
 fun! Test_CT_let_unlet()
-  edit test60.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test60')
-  bwipe test60.txt
+  call s:assert_build('test60')
 endf
 
 fun! Test_CT_global_interpolation()
-  edit test61.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test61')
-  bwipe test61.txt
+  call s:assert_build('test61')
 endf
 
 fun! Test_CT_call_command()
-  edit test63.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test63')
-  bwipe test63.txt
+  call s:assert_build('test63')
 endf
 
 fun! Test_CT_if_in_multiple_variants()
-  edit test64.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test64')
-  bwipe test64.txt
+  call s:assert_build('test64')
 endf
 
 fun! Test_CT_guifg_guibg_none()
-  edit test65.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test65')
-  bwipe test65.txt
+  call s:assert_build('test65')
 endf
 
 fun! Test_CT_unbalanced_if()
@@ -871,11 +797,7 @@ fun! Test_CT_unbalanced_if()
 endf
 
 fun! Test_CT_include_without_suffix()
-  edit test68a.txt
-  Colortemplate!
-  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
-  call s:verify('test68')
-  bwipe test68a.txt
+  call s:assert_build('test68a')
 endf
 
 fun! Test_CT_undefined_base16_value()

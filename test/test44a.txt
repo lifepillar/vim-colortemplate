@@ -1,4 +1,4 @@
-Full name:X
+Full name:Test 44a
 Include: test44b.txt
 # vim: ft=colortemplate
 

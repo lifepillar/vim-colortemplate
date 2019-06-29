@@ -697,6 +697,14 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
+						*g:colortemplate_rtp*
+By default, Colortemplate prepends the default output directory (see
+|b:colortemplate_outdir|) to |runtimepath| to make sure that the correct color
+scheme is loaded when you test your color scheme. Set this option to 0 if you
+do not want Colortemplate to ever touch your |runtimepath|.
+>
+	let g:colortemplate_rtp = 1
+<
 						*g:colortemplate_source_comment*
 Set to 0 if you do not want Colortemplate to append the source template as
 comments as the end of the generated color scheme. Set to 1 if you want only

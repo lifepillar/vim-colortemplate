@@ -2284,6 +2284,9 @@ fun! colortemplate#setoutdir(newdir)
     return
   endif
   let b:colortemplate_outdir = l:newdir
+  if get(g:, 'colortemplate_rtp', 1)
+    execute 'set runtimepath^='.b:colortemplate_outdir
+  endif
 endf
 
 fun! colortemplate#askoutdir()

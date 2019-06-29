@@ -1,2 +1,2 @@
-# vim: ft=colortemplate
 Normal white black
+# vim: ft=colortemplate

@@ -1,2 +1,3 @@
-# vim: ft=colortemplate
 ColorColumn black white
+
+# vim: ft=colortemplate

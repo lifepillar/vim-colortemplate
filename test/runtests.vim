@@ -30,46 +30,6 @@ fun! s:assert_build(name)
   execute 'bwipe' a:name.'.txt'
 endf
 
-fun! s:setupenv()
-  let s:old_warnings  = get(g:, 'colortemplate_warnings',       -1)
-  let s:old_creator   = get(g:, 'colortemplate_creator',        -1)
-  let s:old_timestamp = get(g:, 'colortemplate_timestamp',      -1)
-  let s:old_comment   = get(g:, 'colortemplate_source_comment', -1)
-  let g:colortemplate_warnings       = 0
-  let g:colortemplate_timestamp      = 0
-  let g:colortemplate_creator        = 0
-  let g:colortemplate_source_comment = 0
-endf
-
-fun! s:restoreenv()
-  if s:old_warnings == -1
-    unlet g:colortemplate_warnings
-  else
-    let g:colortemplate_warnings = s:old_warnings
-  endif
-  if s:old_creator == -1
-    unlet g:colortemplate_creator
-  else
-    let g:colortemplate_creator = s:old_creator
-  endif
-  if s:old_timestamp == -1
-    unlet g:colortemplate_timestamp
-  else
-    let g:colortemplate_timestamp = s:old_timestamp
-  endif
-  if s:old_comment == -1
-    unlet g:colortemplate_source_comment
-  else
-    let g:colortemplate_source_comment = s:old_comment
-  endif
-  unlet s:old_warnings s:old_creator s:old_timestamp s:old_comment
-endf
-
-fun! s:cleantempfiles()
-  call delete(s:colordir, "d") " Delete if empty
-  call delete(s:docdir, "rf")
-endf
-
 "
 " The tests
 "
@@ -603,7 +563,7 @@ fun! Test_CT_error_in_included_file()
   call assert_equal(1, len(l:qflist))
   call assert_equal('Undefined color name: pink', l:qflist[0]['text'])
   call assert_equal('test39b.txt', bufname(l:qflist[0]['bufnr']))
-  call assert_equal(6, l:qflist[0]['lnum'])
+  call assert_equal(5, l:qflist[0]['lnum'])
   call assert_equal(14, l:qflist[0]['col'])
   cclose
   bwipe test39a.txt
@@ -668,7 +628,7 @@ fun! Test_CT_multiple_nested_inclusions()
   let l:qflist = getqflist()
   call assert_equal(2, len(l:qflist))
   call assert_equal("Unexpected token at start of line", l:qflist[0]['text'])
-  call assert_equal(4, l:qflist[0]['lnum'])
+  call assert_equal(3, l:qflist[0]['lnum'])
   call assert_equal(3, l:qflist[0]['col'])
   call assert_equal("Unexpected token at start of line", l:qflist[1]['text'])
   call assert_equal(9, l:qflist[1]['lnum'])
@@ -828,10 +788,11 @@ endf
 "
 " Runner!
 "
-call s:setupenv()
 let s:exit = RunBabyRun('CT')
-call s:restoreenv()
-call s:cleantempfiles()
+
+call delete(s:colordir, "d") " Delete if empty
+call delete(s:docdir, "rf")
+
 if get(g:, 'autotest', 0)
   if s:exit > 0
     execute "write" s:testdir.'/test.log'

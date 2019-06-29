@@ -1,3 +1,4 @@
-# vim: ft=colortemplate
 PreProc white black
 Include: test38c.txt
+
+# vim: ft=colortemplate

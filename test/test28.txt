@@ -1,4 +1,4 @@
-# vim: ft=colortemplate
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
 Full name:Test 28
 Short name:test28
 Author:y
@@ -18,3 +18,5 @@ let g:foo = [
 " xxxx yyyy
 hi Foobar ctermfg=@white ctermbg=@black guibg=@black guifg=@white guisp=@white
 endverbatim
+
+# vim: ft=colortemplate

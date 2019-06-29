@@ -1,4 +1,4 @@
-# vim: ft=colortemplate
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
 Full name:Test 71
 Short name:test71
 Author:y
@@ -13,3 +13,4 @@ Variant: 2
 Normal omit omit
 CursorLine omit omit omit
 
+# vim: ft=colortemplate

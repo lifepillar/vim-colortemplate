@@ -1,4 +1,4 @@
-# vim: ft=colortemplate
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
 Full name:Test 17
 Short name:test17
 Author:y
@@ -9,4 +9,4 @@ Color:black cmyk(0,0,0,0) 0 Black # WRONG
 Color:white #ffffff 255 White
 Normal white black # Will be undefined
 
-
+# vim: ft=colortemplate

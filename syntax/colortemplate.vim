@@ -172,6 +172,6 @@ hi def link colortemplateKey          Special
 hi def link colortemplateKeyword      Keyword
 hi def link colortemplateSpecial      Boolean
 hi def link colortemplateTermCode     String
-hi def link colortemplateTodo         PreProc
+hi def link colortemplateTodo         Todo
 
 let b:current_syntax = "colortemplate"

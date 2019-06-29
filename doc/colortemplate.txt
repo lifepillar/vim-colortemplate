@@ -216,10 +216,26 @@ optional fields:
 	License:         [Vim license]
 	Option Prefix:   [Uses Short name's value by default]
 	Neovim:          [No]
+	Colortemplate Options: []
 <
-The default value for optional fields in shown in square brackets. All the
-fields should be self-descriptive. When `Neovim` is set to `yes` or `1` then
-additional code is generated to support NeoVim.
+Each metadata field must fit in one line. The default values for optional
+fields in shown in square brackets. All the fields should be self-descriptive
+except fo the last two.
+
+When `Neovim` is set to `yes` or `1` then additional code is generated to
+support Neovim.
+
+`Colortemplate Options` allows you to set some options for the current
+template, overriding the corresponding global options (see
+|colortemplate-options|). The value of this metadata field is
+a space-separated sequence of items of the form `option=value`, where `option`
+is the name of a global option with the `g:colortemplate_` prefix removed. For
+example:
+>
+	Colortemplate Options: creator=0 timestamp=1
+
+The options that can be set in this way are `creator`, `quiet`,
+`'source_comment`, `timestamp` and `warnings`.
 
 ==============================================================================
 Color scheme background				*colortemplate-background*

@@ -697,6 +697,12 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
+						*g:colortemplate_quiet*
+Set to 0 if you want Colortemplate to open the generated color scheme in
+a split window automatically after building it.
+>
+	let g:colortemplate_quiet = 1
+<
 						*g:colortemplate_rtp*
 By default, Colortemplate prepends the default output directory (see
 |b:colortemplate_outdir|) to |runtimepath| to make sure that the correct color
@@ -752,12 +758,6 @@ This options only defines the actions associated to each label. For a menu
 entry to actually be visible in the toolbar, it must be listed in
 |g:colortemplate_toolbar_items| as well.
 
-						*g:colortemplate_quiet*
-Set to 0 if you want Colortemplate to open the generated color scheme in
-a split window automatically after building it.
->
-	let g:colortemplate_quiet = 1
-<
 						*g:colortemplate_warnings*
 Set to 0 if you want Colortemplate to report only errors (not recommended).
 >

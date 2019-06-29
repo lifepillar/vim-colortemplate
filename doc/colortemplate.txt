@@ -699,7 +699,11 @@ with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
 						*g:colortemplate_source_comment*
 Set to 0 if you do not want Colortemplate to append the source template as
-comments as the end of the generated color scheme.
+comments as the end of the generated color scheme. Set to 1 if you want only
+color definitions to be appended (this is the default). Set to 2 if you want
+most of the source directives to be appended to the output files, including
+color definitions, terminal colors, highlight group definitions and verbatim
+blocks.
 >
 	let g:colortemplate_source_comment = 1
 <

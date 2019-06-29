@@ -1500,13 +1500,13 @@ fun! s:quickly_parse_color_line()
 endf
 
 fun! s:parse_verbatim_line()
+  call s:add_source_line(s:getl())
   if s:getl() =~? '\m^\s*endverbatim'
     call s:stop_verbatim()
     if s:getl() !~? '\m^\s*endverbatim\s*$'
       throw "Extra characters after 'endverbatim'"
     endif
   else
-    call s:add_source_line(s:getl())
     for l:v in s:active_variants()
       call s:add_verbatim_item(l:v, s:active_section(),
             \ { 'line': s:getl(), 'linenr': s:linenr(), 'file': s:currfile() })
@@ -1542,6 +1542,7 @@ fun! s:parse_line()
   endif
   if s:token.kind ==# 'WORD'
     if s:token.value ==? 'verbatim'
+      call s:add_source_line(s:getl())
       call s:start_verbatim()
       if s:token.next().kind !=# 'EOL'
         throw "Extra characters after 'verbatim'"
@@ -1560,9 +1561,11 @@ fun! s:parse_line()
     elseif s:getl() =~# '\m^[^#]*:' " Look ahead
       call s:parse_key_value_pair()
     else
+      call s:add_source_line(s:getl())
       call s:parse_hi_group_def()
     endif
   elseif s:token.kind ==# 'CMD'
+    call s:add_source_line(s:getl())
     call s:parse_command(s:token.value)
   else
     throw 'Unexpected token at start of line'
@@ -1595,7 +1598,6 @@ fun! s:parse_key_value_pair()
     call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
           \ "The 'Terminal colors' key has been deprecated and is a no-op now")
   elseif l:key ==# 'termcolors'
-    call s:add_source_line(s:getl())
     call s:parse_term_colors()
   elseif l:key ==# 'neovim'
     if s:token.next().value !~# '\m^y\%[es]\|n\%[o]\|1\|0$'
@@ -1616,10 +1618,10 @@ fun! s:parse_key_value_pair()
 endf
 
 fun! s:parse_background_directive()
+  call s:add_source_line(s:getl())
   if s:token.next().kind !=# 'WORD' || s:token.value !~# '\m^\%(dark\|light\|any\)$'
     throw "Background can only be 'dark', 'light' or 'any'"
   endif
-  call s:add_source_line(s:getl())
   if s:is_global_preamble() " Background in preamble implies Variant: gui 256
     call s:set_active_variants([s:GUI, '256'])
   endif
@@ -1766,6 +1768,7 @@ fun! s:parse_base_16_value()
 endf
 
 fun! s:parse_term_colors()
+  call s:add_source_line(s:getl())
   while s:token.next().is_edible()
     if !s:is_color_defined(s:token.value, s:active_section())
       throw 'Undefined color name: ' . s:token.value
@@ -1775,8 +1778,6 @@ fun! s:parse_term_colors()
 endf
 
 fun! s:parse_hi_group_def()
-  call s:add_source_line(s:getl())
-
   if s:getl() =~# '\m->' " Look ahead
     return s:parse_linked_group_def()
   endif
@@ -1905,7 +1906,6 @@ fun! s:parse_command(cmd)
     throw a:cmd.' without if'
   endif
   let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
-  call s:add_source_line(l:text)
   for l:v in s:active_variants()
     call s:add_verbatim_item(l:v, s:active_section(),
           \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })
@@ -2182,11 +2182,15 @@ endf
 
 " Prints source as comment, for provenance
 fun! s:print_source_code(bufnr)
-  if get(g:, 'colortemplate_source_comment', 1)
+  if get(g:, 'colortemplate_source_comment', 1) == 1
     for l:line in s:source_lines()
-      if l:line !~# '\m^\s*$'
+      if l:line =~? '\m^\s*\%(Background\|Color\|Term\s\+colors\)\s*:'
         call s:put(a:bufnr, '" '.l:line)
       endif
+    endfor
+  elseif get(g:, 'colortemplate_source_comment', 1) == 2
+    for l:line in s:source_lines()
+      call s:put(a:bufnr, '" '.l:line)
     endfor
   endif
 endf

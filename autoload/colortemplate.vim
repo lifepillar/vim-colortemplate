@@ -2275,7 +2275,7 @@ fun! colortemplate#outdir()
 endf
 
 fun! colortemplate#setoutdir(newdir)
-  let l:newdir = simplify(fnamemodify(a:newdir, ':p'))
+  let l:newdir = substitute(simplify(fnamemodify(a:newdir, ':p')), "[\\/]$", "", "")
   if !isdirectory(l:newdir)
     call s:print_error_msg('Directory does not exist', 0)
     return

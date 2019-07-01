@@ -363,7 +363,7 @@ fun! s:termcol(name, section, t_Co)
   return a:t_Co <= 16 ? s:col16(a:name, a:section) : s:col256(a:name, a:section)
 endf
 
-" Returns the color as it given by the user (hex value or name)
+" Returns the color as it is given by the user (hex value or name)
 fun! s:guicol(name, section)
   return s:guicol[a:section][a:name]
 endf

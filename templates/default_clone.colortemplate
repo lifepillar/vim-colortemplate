@@ -294,69 +294,68 @@ Background: any
 # Black&White variant {{{
 Variant: 2
 
-Color: unused #000000 0 0
 
 # Default highlight groups {{{
-# Group              Unused   Unused   term
-Normal               unused unused
-ColorColumn          unused unused reverse
-Conceal              unused unused
-Cursor               unused unused
-CursorColumn         unused unused reverse
-CursorLine           unused unused underline
-CursorLineNr         unused unused bold
-DiffAdd              unused unused bold
-DiffChange           unused unused bold
-DiffDelete           unused unused bold
-DiffText             unused unused reverse
-Directory            unused unused bold
-EndOfBuffer          unused unused
-ErrorMsg             unused unused standout
-FoldColumn           unused unused standout
-Folded               unused unused standout
-IncSearch            unused unused reverse
-LineNr               unused unused underline
-MatchParen           unused unused reverse
-ModeMsg              unused unused bold
-MoreMsg              unused unused bold
-NonText              unused unused bold
-Pmenu                unused unused
-PmenuSbar            unused unused
-PmenuSel             unused unused
-PmenuThumb           unused unused
-Question             unused unused standout
-Search               unused unused reverse
-SignColumn           unused unused standout
-SpecialKey           unused unused bold
-SpellBad             unused unused reverse
-SpellCap             unused unused reverse
-SpellLocal           unused unused underline
-SpellRare            unused unused reverse
-StatusLine           unused unused reverse,bold
-StatusLineNC         unused unused reverse
-TabLine              unused unused underline
-TabLineFill          unused unused reverse
-TabLineSel           unused unused bold
-Title                unused unused bold
-VertSplit            unused unused reverse
-Visual               unused unused reverse
-VisualNOS            unused unused bold,underline
-WarningMsg           unused unused standout
-WildMenu             unused unused standout
+# Group              Unused              Unused            term
+Normal               omit                omit
+ColorColumn          omit                omit              reverse
+Conceal              omit                omit
+Cursor               omit                omit
+CursorColumn         omit                omit              reverse
+CursorLine           omit                omit              underline
+CursorLineNr         omit                omit              bold
+DiffAdd              omit                omit              bold
+DiffChange           omit                omit              bold
+DiffDelete           omit                omit              bold
+DiffText             omit                omit              reverse
+Directory            omit                omit              bold
+EndOfBuffer          omit                omit
+ErrorMsg             omit                omit              standout
+FoldColumn           omit                omit              standout
+Folded               omit                omit              standout
+IncSearch            omit                omit              reverse
+LineNr               omit                omit              underline
+MatchParen           omit                omit              reverse
+ModeMsg              omit                omit              bold
+MoreMsg              omit                omit              bold
+NonText              omit                omit              bold
+Pmenu                omit                omit
+PmenuSbar            omit                omit
+PmenuSel             omit                omit
+PmenuThumb           omit                omit
+Question             omit                omit              standout
+Search               omit                omit              reverse
+SignColumn           omit                omit              standout
+SpecialKey           omit                omit              bold
+SpellBad             omit                omit              reverse
+SpellCap             omit                omit              reverse
+SpellLocal           omit                omit              underline
+SpellRare            omit                omit              reverse
+StatusLine           omit                omit              reverse,bold
+StatusLineNC         omit                omit              reverse
+TabLine              omit                omit              underline
+TabLineFill          omit                omit              reverse
+TabLineSel           omit                omit              bold
+Title                omit                omit              bold
+VertSplit            omit                omit              reverse
+Visual               omit                omit              reverse
+VisualNOS            omit                omit              bold,underline
+WarningMsg           omit                omit              standout
+WildMenu             omit                omit              standout
 # Other conventional group names (see `:help group-name`)
-Comment              unused unused bold
-Constant             unused unused underline
-Error                unused unused reverse
-Identifier           unused unused underline
-Ignore               unused unused
-PreProc              unused unused underline
-Special              unused unused bold
-Statement            unused unused bold
-Todo                 unused unused standout
-Type                 unused unused underline
-Underlined           unused unused underline
-CursorIM             unused unused
-ToolbarLine          unused unused underline
-ToolbarButton        unused unused bold
+Comment              omit                omit              bold
+Constant             omit                omit              underline
+Error                omit                omit              reverse
+Identifier           omit                omit              underline
+Ignore               omit                omit
+PreProc              omit                omit              underline
+Special              omit                omit              bold
+Statement            omit                omit              bold
+Todo                 omit                omit              standout
+Type                 omit                omit              underline
+Underlined           omit                omit              underline
+CursorIM             omit                omit
+ToolbarLine          omit                omit              underline
+ToolbarButton        omit                omit              bold
 # }}}
 # }}}

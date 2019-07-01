@@ -313,25 +313,23 @@ endf
 " base256: a numeric value between 16 and 255 or -1 (=infer the value)
 " base16: a numeric value between 0 and 15
 fun! s:add_color(section, name, gui, base256, base16)
-  " If the GUI color is given by name, quote it if the name contains spaces
-  let l:gui = match(a:gui, '\s') > - 1 ? "'".a:gui."'" : a:gui
   if s:is_color_defined(a:name, a:section)
     throw "Color already defined for " . a:section . " background"
   endif
-  let s:guicol[a:section][a:name] = l:gui
+  let s:guicol[a:section][a:name] = a:gui
   let s:col256[a:section][a:name] = a:base256
   let  s:col16[a:section][a:name] = a:base16
   if a:section ==# 'preamble'
     if s:is_color_defined(a:name, 'dark')
       throw "Color already defined for dark background"
     endif
-    let s:guicol['dark'][a:name] = l:gui
+    let s:guicol['dark'][a:name] = a:gui
     let s:col256['dark'][a:name] = a:base256
     let  s:col16['dark'][a:name] = a:base16
     if s:is_color_defined(a:name, 'light')
       throw "Color already defined for light background"
     endif
-    let s:guicol['light'][a:name] = l:gui
+    let s:guicol['light'][a:name] = a:gui
     let s:col256['light'][a:name] = a:base256
     let  s:col16['light'][a:name] = a:base16
   endif
@@ -356,7 +354,7 @@ endf
 fun! s:col256(name, section)
   if s:col256[a:section][a:name] == -1 " Infer the value from GUI color
     let s:col256[a:section][a:name] =
-          \ colortemplate#colorspace#approx(s:guicol[a:section][a:name])['index']
+          \ colortemplate#colorspace#approx(s:guihex(a:name, a:section))['index']
   endif
   return s:col256[a:section][a:name]
 endf
@@ -365,8 +363,16 @@ fun! s:termcol(name, section, t_Co)
   return a:t_Co <= 16 ? s:col16(a:name, a:section) : s:col256(a:name, a:section)
 endf
 
+" Returns the color as it given by the user (hex value or name)
 fun! s:guicol(name, section)
   return s:guicol[a:section][a:name]
+endf
+
+" Always returns the color as a hex value
+fun! s:guihex(name, section)
+  return s:guicol[a:section][a:name] =~# '\m^#'
+        \ ? s:guicol[a:section][a:name]
+        \ : colortemplate#colorspace#rgbname2hex(tolower(s:guicol[a:section][a:name]))
 endf
 
 fun! s:is_color_defined(name, section)
@@ -441,16 +447,25 @@ fun! s:bg256(hg, section)
   return s:col256(a:hg['bg'], a:section)
 endf
 
+fun! s:quote_spaces(v)
+  return a:v =~# '\m\s' ? "'".a:v."'" : a:v
+endf
+
+" If the GUI color is given as a hex value, return it as such.
+" Otherwise it is an RGB name: quote it if it contains spaces.
 fun! s:guifg(hg, section)
-  return s:guicol(a:hg['fg'], a:section)
+  let l:c = s:guicol(a:hg['fg'], a:section)
+  return l:c ==# '\m^#' ? l:c : s:quote_spaces(l:c)
 endf
 
 fun! s:guibg(hg, section)
-  return s:guicol(a:hg['bg'], a:section)
+  let l:c = s:guicol(a:hg['bg'], a:section)
+  return l:c ==# '\m^#' ? l:c : s:quote_spaces(l:c)
 endf
 
 fun! s:guisp(hg, section)
-  return s:guicol(a:hg['sp'], a:section)
+  let l:c = s:guicol(a:hg['sp'], a:section)
+  return l:c ==# '\m^#' ? l:c : s:quote_spaces(l:c)
 endf
 
 fun! s:term_attr(hg)
@@ -986,13 +1001,13 @@ fun! s:print_similarity_table(bg, bufnr)
   let l:delta = {}
   let l:colnames = []
   for l:c in l:colors
-    " Skip color names and ASCII colors (0-15)
-    if s:guicol(l:c, a:bg) !~# '\m^#' || s:col256(l:c, a:bg) < 16
+    " Skip ASCII colors (0-15)
+    if s:col256(l:c, a:bg) < 16
       continue
     endif
     call add(l:colnames, l:c)
     let l:delta[l:c] = colortemplate#colorspace#hex_delta_e(
-          \ s:guicol(l:c, a:bg),
+          \ s:guihex(l:c, a:bg),
           \ colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c, a:bg))
           \ )
   endfor
@@ -1002,7 +1017,7 @@ fun! s:print_similarity_table(bg, bufnr)
   call sort(l:colnames, { c1,c2 -> l:delta[c1] < l:delta[c2] ? -1 : 1 })
   call s:put(a:bufnr, '{{{ Color Similarity Table (' . a:bg . ' background)')
   for l:c in l:colnames
-    let l:colgui = s:guicol(l:c, a:bg)
+    let l:colgui = s:guihex(l:c, a:bg)
     let l:rgbgui = colortemplate#colorspace#hex2rgb(l:colgui)
     let l:col256 = s:col256(l:c, a:bg)
     let l:d  = l:delta[l:c]
@@ -1024,8 +1039,8 @@ fun! s:print_critical_pairs(section, bufnr)
   let l:critical_256 = []
   for [l:key, l:val] in items(s:get_color_pairs(a:section))
     let [l:fg, l:bg] = split(l:key, '/')
-    let l:c1 = s:guicol(l:fg, a:section)
-    let l:c2 = s:guicol(l:bg, a:section)
+    let l:c1 = s:guihex(l:fg, a:section)
+    let l:c2 = s:guihex(l:bg, a:section)
     let l:cr = colortemplate#colorspace#contrast_ratio(l:c1, l:c2)
     if l:cr < 3.0
       let l:cb = colortemplate#colorspace#brightness_diff(l:c1, l:c2)
@@ -1117,11 +1132,11 @@ fun! s:print_color_matrices(bg, bufnr)
   endif
   let l:values = { 'gui': [], 'term': [] }
   for l:c in l:colnames
-    " Skip color names and ASCII colors (0-15)
-    if s:guicol(l:c, a:bg) !~# '\m^#' || s:col256(l:c, a:bg) < 16
+    " Skip colors 0-15
+    if s:col256(l:c, a:bg) < 16
       continue
     endif
-    call add(l:values['gui'], s:guicol(l:c, a:bg))
+    call add(l:values['gui'], s:guihex(l:c, a:bg))
     call add(l:values['term'], colortemplate#colorspace#xterm256_hexvalue(s:col256(l:c, a:bg)))
   endfor
   call s:print_contrast_ratio_matrices(a:bufnr, l:values, l:colnames, a:bg)
@@ -1718,7 +1733,7 @@ fun! s:parse_gui_value()
     while s:token.peek().kind ==# 'WORD'
       let l:rgb_name .= ' ' . s:token.next().value
     endwhile
-    return colortemplate#colorspace#rgbname2hex(tolower(l:rgb_name))
+    return l:rgb_name
   endif
 endf
 
@@ -2569,7 +2584,7 @@ endf
 fun! colortemplate#getinfo(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
-  let l:hexc = s:guicol(l:name, 'dark') " 2nd arg doesn't matter
+  let l:hexc = s:guihex(l:name, 'dark') " 2nd arg doesn't matter
   let l:best = colortemplate#colorspace#approx(l:hexc)
   let l:c256 = s:col256(l:name, 'dark') == -1 ? l:best['index'] : s:col256(l:name, 'dark')
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
@@ -2603,7 +2618,7 @@ endf
 fun! colortemplate#approx_color(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
-  let l:hexc = s:guicol(l:name, 'dark') " 2nd arg doesn't matter
+  let l:hexc = s:guihex(l:name, 'dark') " 2nd arg doesn't matter
   let l:col = colortemplate#colorspace#k_neighbours(l:hexc, a:n)[-1]['index']
   call setline('.', substitute(getline('.'), '\~', l:col, ''))
 endf
@@ -2611,7 +2626,7 @@ endf
 fun! colortemplate#nearby_colors(n)
   let l:name = s:quickly_parse_color_line()
   if empty(l:name) | return | endif
-  echo colortemplate#colorspace#colors_within(a:n, s:guicol(l:name, 'dark'))
+  echo colortemplate#colorspace#colors_within(a:n, s:guihex(l:name, 'dark'))
 endf
 
 " Format a dictionary of color name/value pairs in Colortemplate format

@@ -115,7 +115,7 @@ syn keyword colortemplateConstant     contained MediumPurple2 MediumPurple3 Medi
 syn keyword colortemplateConstant     contained midnight MidnightBlue mint MintCream misty MistyRose MistyRose1 MistyRose2
 syn keyword colortemplateConstant     contained MistyRose3 MistyRose4 moccasin navajo NavajoWhite NavajoWhite1 NavajoWhite2 NavajoWhite3
 syn keyword colortemplateConstant     contained NavajoWhite4 navy NavyBlue old OldLace olive OliveDrab OliveDrab1
-syn keyword colortemplateConstant     contained OliveDrab2 OliveDrab3 OliveDrab4 orange orange1 orange2 orange3 orange4
+syn keyword colortemplateConstant     contained OliveDrab2 OliveDrab3 OliveDrab4 Orange orange orange1 orange2 orange3 orange4
 syn keyword colortemplateConstant     contained OrangeRed OrangeRed1 OrangeRed2 OrangeRed3 OrangeRed4 orchid orchid1 orchid2
 syn keyword colortemplateConstant     contained orchid3 orchid4 pale PaleGoldenrod PaleGreen PaleGreen1 PaleGreen2 PaleGreen3
 syn keyword colortemplateConstant     contained PaleGreen4 PaleTurquoise PaleTurquoise1 PaleTurquoise2 PaleTurquoise3 PaleTurquoise4 PaleVioletRed PaleVioletRed1

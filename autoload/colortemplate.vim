@@ -388,10 +388,78 @@ fun! s:color_names(section)
 endf
 " }}}
 " Highlight groups {{{
+let s:default_hi_groups = [
+      \ 'ColorColumn',
+      \ 'Comment',
+      \ 'Conceal',
+      \ 'Constant',
+      \ 'Cursor',
+      \ 'CursorColumn',
+      \ 'CursorLine',
+      \ 'CursorLineNr',
+      \ 'DiffAdd',
+      \ 'DiffChange',
+      \ 'DiffDelete',
+      \ 'DiffText',
+      \ 'Directory',
+      \ 'EndOfBuffer',
+      \ 'Error',
+      \ 'ErrorMsg',
+      \ 'FoldColumn',
+      \ 'Folded',
+      \ 'Identifier',
+      \ 'Ignore',
+      \ 'IncSearch',
+      \ 'LineNr',
+      \ 'MatchParen',
+      \ 'ModeMsg',
+      \ 'MoreMsg',
+      \ 'NonText',
+      \ 'Normal',
+      \ 'Pmenu',
+      \ 'PmenuSbar',
+      \ 'PmenuSel',
+      \ 'PmenuThumb',
+      \ 'PreProc',
+      \ 'Question',
+      \ 'QuickFixLine',
+      \ 'Search',
+      \ 'SignColumn',
+      \ 'Special',
+      \ 'SpecialKey',
+      \ 'SpellBad',
+      \ 'SpellCap',
+      \ 'SpellLocal',
+      \ 'SpellRare',
+      \ 'Statement',
+      \ 'StatusLine',
+      \ 'StatusLineNC',
+      \ 'StatusLineTerm',
+      \ 'StatusLineTermNC',
+      \ 'TabLine',
+      \ 'TabLineFill',
+      \ 'TabLineSel',
+      \ 'Title',
+      \ 'Todo',
+      \ 'ToolbarButton',
+      \ 'ToolbarLine',
+      \ 'Type',
+      \ 'Underlined',
+      \ 'VertSplit',
+      \ 'Visual',
+      \ 'VisualNOS',
+      \ 'WarningMsg',
+      \ 'WildMenu',
+      \ ]
+
 fun! s:init_highlight_groups()
 endf
 
 fun! s:destroy_highlight_groups()
+endf
+
+fun! s:default_hi_groups()
+  return s:default_hi_groups
 endf
 
 fun! s:new_hi_group(name)
@@ -748,10 +816,11 @@ fun! s:init_colorscheme_definition()
   let s:italics    = { 'global': {'preamble': [] } } " Global is never used for italics
   let s:nvim       = { 'global': { 'preamble': [] } }
   let s:has_normal = { }
+  let s:hi_groups  = { } " Set of defined highlight groups
 endf
 
 fun! s:destroy_colorscheme_definition()
-  unlet! s:data s:italics s:nvim s:has_normal
+  unlet! s:data s:italics s:nvim s:has_normal s:hi_groups
 endf
 
 fun! s:add_colorscheme_variant(v)
@@ -821,6 +890,7 @@ fun! s:add_verbatim_item(variant, section, item)
 endf
 
 fun! s:add_higroup_item(variant, section, hg)
+  let s:hi_groups[s:hi_name(a:hg)] = 1
   if s:is_neovim_group(s:hi_name(a:hg))
     call s:add_neovim_higroup_item(a:variant, a:section, a:hg)
     return
@@ -842,11 +912,16 @@ fun! s:add_neovim_higroup_item(variant, section, item)
 endf
 
 fun! s:add_linked_item(variant, section, source, target)
+  let s:hi_groups[s:hi_name(a:source)] = 1
   if s:is_neovim_group(a:source)
     call add(s:nvim[a:variant][a:section], s:make_item([a:source, a:target], 'link'))
   else
     call s:add_item(a:variant, a:section, [a:source, a:target], 'link')
   endif
+endf
+
+fun! s:hi_group_exists(name)
+  return has_key(s:hi_groups, a:name)
 endf
 
 fun! s:add_italic_item(variant, section, item)
@@ -953,6 +1028,7 @@ endf
 " Colortemplate options {{{
 let s:defaultoptvalue = {
       \ 'creator':        1,
+      \ 'ignore_missing': 0,
       \ 'quiet':          1,
       \ 'source_comment': 1,
       \ 'timestamp':      1,
@@ -965,6 +1041,10 @@ endf
 
 fun! s:destroy_colortemplate_options()
   unlet s:optvalue
+endf
+
+fun! s:options()
+  return keys(s:defaultoptvalue)
 endf
 
 fun! s:setopt(name, value)
@@ -1974,7 +2054,7 @@ fun! s:parse_colortemplate_options()
       throw 'Expected option name'
     endif
     let l:opt = s:token.value
-    if l:opt !~# '\m^\%(creator\|quiet\|source_comment\|timestamp\|warnings\)$'
+    if l:opt !~# '\m^\%('.join(s:options(), '\|').'\)$'
       throw 'Invalid option name: '.l:opt
     endif
     if s:token.next().kind !=# '='
@@ -2217,6 +2297,14 @@ fun! s:print_global_preamble(bufnr)
     call s:put(a:bufnr, '')
     for l:item in s:global_preamble()
       call s:put(a:bufnr, s:eval(l:item, 256, 'preamble'))
+    endfor
+  endif
+  if s:getopt('ignore_missing')
+    call s:put(a:bufnr, '')
+    for l:g in s:default_hi_groups()
+      if !s:hi_group_exists(l:g)
+        call s:put(a:bufnr, '" @suppress '.l:g)
+      endif
     endfor
   endif
 endf

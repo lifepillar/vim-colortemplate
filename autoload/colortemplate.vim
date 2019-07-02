@@ -2393,7 +2393,11 @@ fun! s:generate_colorscheme(outdir, overwrite)
   call s:put(l:bufnr, '')
   call s:print_source_code(l:bufnr)
   call s:reindent_buffer(l:bufnr)
-  if !s:is_error_state() && !empty(a:outdir)
+  if s:is_error_state()
+    call s:destroy_buffer(l:bufnr)
+    return ''
+  endif
+  if !empty(a:outdir)
     let l:outpath = a:outdir . s:slash() . 'colors' . s:slash() . s:shortname() . '.vim'
     try
       call s:write_buffer(l:bufnr, l:outpath, { 'dir': a:outdir }, a:overwrite)

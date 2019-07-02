@@ -591,11 +591,21 @@ fun! s:init_metadata()
         \ 'license': 'Vim License (see `:help license`)',
         \ 'optionprefix': ''
         \ }
+  let s:info_keys_regex = join(keys(s:info), '\|')
 endf
 
 fun! s:destroy_metadata()
   unlet! s:supports_dark s:supports_light s:uses_italics
         \ s:supports_neovim s:supported_variants s:info
+        \ s:info_keys_regex
+endf
+
+fun! s:info_keys()
+  return keys(s:info)
+endf
+
+fun! s:info_keys_regex()
+  return s:info_keys_regex
 endf
 
 fun! s:supports_neovim()
@@ -1180,7 +1190,7 @@ fun! s:interpolate(variant, section, line, linenr, file)
     let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2),"'.a:section.'")',               'g')
     let l:line = substitute(l:line, '@date',                          '\=strftime("%Y %b %d")',                                            'g')
     let l:line = substitute(l:line, '@vimversion',                    '\=string(v:version/100).".".string(v:version%100)',                 'g')
-    let l:line = substitute(l:line, '@\(\a\+\)',                      '\=s:get_info(submatch(1))',                                         'g')
+    let l:line = substitute(l:line, '@\('.s:info_keys_regex().'\)',   '\=s:get_info(submatch(1))',                                         'g')
     return l:line
   catch /.*/
     call s:add_error(a:file, a:linenr, 1, 'Undefined @ value')

@@ -4,7 +4,9 @@ Short name:test29
 Author:y
 Maintainer:w
 documentation
-  @shortnametransp_bg
+  @shortname_transp_bg <-- this is ok (interpolated)
+  @shortnametransp_bg  <-- ditto
+  @suppress            <-- this is ignored (not interpolated)
 enddocumentation
 Background:dark
 Color:black rgb(0,0,0) 16 Black

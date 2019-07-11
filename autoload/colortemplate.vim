@@ -2555,6 +2555,8 @@ fun! colortemplate#make(...)
     call setqflist([], 'r') " Reset quickfix list
   endif
 
+  let l:start_time = reltime()
+
   let l:inpath = expand('%:p')
   call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
   call s:init_data_structures()
@@ -2586,7 +2588,8 @@ fun! colortemplate#make(...)
   finally
     call s:destroy_data_structures()
   endtry
-  call s:print_notice('Success! [' . fnamemodify(l:outpath, ':t') . ' created]')
+  let l:elapsed = 1000.0 * reltimefloat(reltime(l:start_time))
+  call s:print_notice(printf('Success! [%s created in %.00fms]', fnamemodify(l:outpath, ':t'), l:elapsed))
 endf
 
 " a:1 is the optional path to an output directory
@@ -2603,6 +2606,7 @@ fun! colortemplate#build_dir(...)
 
   let l:n = 0
   let l:outdir = (a:0 > 0 && !empty(a:1) ? simplify(fnamemodify(a:1, ':p')) : colortemplate#outdir())
+  let l:start_time= reltime()
   for l:template in glob(l:wd.s:slash().'[^_]*.colortemplate', 1, 1, 1)
     execute "edit" l:template
     call colortemplate#make(l:outdir, get(a:000, 1, ''), 0)
@@ -2611,7 +2615,8 @@ fun! colortemplate#build_dir(...)
   if g:colortemplate_exit_status
     call s:print_error_msg('Build failed. See :messages', 0)
   else
-    call s:print_notice('Success! ['.string(l:n).' color scheme'.(l:n > 1 ? 's' : '').' created]')
+    let l:elapsed = 1000.0 * reltimefloat(reltime(l:start_time))
+    call s:print_notice(printf('Success! [%s color scheme%s created in %.00fms]', string(l:n), (l:n > 1 ? 's' : ''), l:elapsed))
   endif
 endf
 

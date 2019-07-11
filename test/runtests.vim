@@ -780,6 +780,10 @@ fun! Test_CT_vacuous_hi_group()
   bwipe test71.txt
 endf
 
+fun! Test_CT_terminal_colors_in_preamble()
+  call s:assert_build('test72')
+endf
+
 "
 " Runner!
 "

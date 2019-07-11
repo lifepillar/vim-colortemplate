@@ -2310,7 +2310,11 @@ fun! s:print_global_preamble(bufnr)
 endf
 
 fun! s:print_terminal_colors(bufnr, variant, section)
-  if a:section ==# 'preamble' || !s:is_gui(a:variant) || len(s:term_colors(a:section)) != 16
+  if !s:is_gui(a:variant) || len(s:term_colors(a:section)) != 16
+    return
+  endif
+  if a:section !=# 'preamble' && len(s:term_colors('preamble')) == 16
+    " Already added in the preamble
     return
   endif
   let l:tc = s:term_colors(a:section)

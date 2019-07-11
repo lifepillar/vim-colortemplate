@@ -220,9 +220,11 @@ optional fields, usually appearing at the top of your template:
 
 	# Optional information
 	Maintainer:      [Uses Author's value by default]
-	Website:         [Empty]
 	Description:     [Empty]
+        URL:             [Empty]
+	Website:         [Empty]
 	License:         [Vim license]
+        Version:         [Empty]
 	Option Prefix:   [Uses Short name's value by default]
 	Neovim:          [No]
 	Colortemplate Options: []

@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker cc=22
+# vim: ft=colortemplate fdm=marker cc=22 et ts=2 sw=2
 
 # Template for black & white terminals
 Variant: 2

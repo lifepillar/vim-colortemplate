@@ -40,3 +40,5 @@ hi def link colortemplateInfoCD colortemplateInfoColDif
 hi def link colortemplateInfoW3C Keyword
 hi def link colortemplateInfoTitle Title
 hi def link colortemplateInfoUsedBy Comment
+
+" vim: nowrap et ts=2 sw=2

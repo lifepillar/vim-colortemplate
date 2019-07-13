@@ -1,4 +1,4 @@
-" vim: foldmethod=marker nowrap
+" vim: foldmethod=marker nowrap et ts=2 sw=2
 let s:VERSION = '2.0.0rc1'
 " Informal grammar {{{
 " <Template>                  ::= <Line>*

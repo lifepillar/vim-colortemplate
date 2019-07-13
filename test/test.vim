@@ -81,3 +81,5 @@ fun! RunBabyRun(...)
 
   return FinishTesting()
 endf
+
+" vim: nowrap et ts=2 sw=2

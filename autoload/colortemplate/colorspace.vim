@@ -914,3 +914,5 @@ endf
 fun! colortemplate#colorspace#k_neighbors(color, k)
   return colortemplate#colorspace#k_neighbours(a:color, a:k)
 endf
+
+" vim: foldmethod=marker nowrap et ts=2 sw=2

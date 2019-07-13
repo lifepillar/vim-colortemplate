@@ -175,3 +175,5 @@ hi def link colortemplateTermCode     String
 hi def link colortemplateTodo         Todo
 
 let b:current_syntax = "colortemplate"
+
+" vim: nowrap et ts=2 sw=2

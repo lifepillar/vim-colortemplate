@@ -45,4 +45,4 @@ endif
 
 call colortemplate#toolbar#show()
 
-" vim: foldmethod=marker nowrap
+" vim: foldmethod=marker nowrap et ts=2 sw=2

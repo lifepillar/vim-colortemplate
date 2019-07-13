@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker cc=22,42,60
+# vim: ft=colortemplate fdm=marker cc=22,42,60 et ts=2 sw=2
 
 # Information {{{
 Full name:   Default Clone

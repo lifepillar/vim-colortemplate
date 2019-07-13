@@ -806,3 +806,4 @@ if get(g:, 'autotest', 0)
   endif
 endif
 
+" vim: nowrap et ts=2 sw=2

@@ -45,3 +45,5 @@ fun! colortemplate#syn#toggle()
     augroup END
   endif
 endf
+
+" vim: foldmethod=marker nowrap et ts=2 sw=2

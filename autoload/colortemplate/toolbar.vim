@@ -52,3 +52,4 @@ fun! colortemplate#toolbar#hide()
   endif
 endf
 
+" vim: foldmethod=marker nowrap et ts=2 sw=2

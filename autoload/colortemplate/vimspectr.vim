@@ -77,3 +77,5 @@ fun! colortemplate#vimspectr#palette(satline, hue)
 
   return {'g0': l:b0, 'g1': l:b1, 'g2': l:b2, 'g3': l:b3, 'g4': l:b4, 'g5': l:b5, 'g6': l:b6, 'g7': l:b7}
 endf
+
+" vim: foldmethod=marker nowrap et ts=2 sw=2

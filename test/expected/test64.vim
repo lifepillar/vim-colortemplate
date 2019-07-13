@@ -55,3 +55,4 @@ if s:t_Co >= 8
   finish
 endif
 
+" vim: et ts=2 sw=2

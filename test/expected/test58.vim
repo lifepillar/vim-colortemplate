@@ -26,3 +26,4 @@ if (has('termguicolors') && &termguicolors) || has('gui_running')
   finish
 endif
 
+" vim: et ts=2 sw=2

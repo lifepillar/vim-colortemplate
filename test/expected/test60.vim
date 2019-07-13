@@ -21,3 +21,4 @@ if s:t_Co >= 256
   finish
 endif
 
+" vim: et ts=2 sw=2

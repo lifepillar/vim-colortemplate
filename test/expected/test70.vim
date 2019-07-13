@@ -35,3 +35,4 @@ if s:t_Co >= 2
   finish
 endif
 
+" vim: et ts=2 sw=2

@@ -246,7 +246,7 @@ example:
 	Colortemplate Options: creator=0 timestamp=1
 
 The options that can be set in this way are `creator`, `ignore_missing`,
-`quiet`, `source_comment`, `timestamp` and `warnings`.
+`quiet`, `source_comment`, `timestamp`, `use_tabs` and `warnings`.
 
 ==============================================================================
 Color scheme background				*colortemplate-background*
@@ -795,6 +795,12 @@ This option only defines the actions associated to each label. For a menu
 entry to actually be visible in the toolbar, it must be listed in
 |g:colortemplate_toolbar_items| as well.
 
+						*g:colortemplate_use_tabs*
+Set to 1 if you want the generated color schemes to use hard tabs instead of
+spaces.
+>
+	let g:colortemplate_use_tabs = 0
+<
 						*g:colortemplate_warnings*
 Set to 0 if you want Colortemplate to report only errors (not recommended).
 >

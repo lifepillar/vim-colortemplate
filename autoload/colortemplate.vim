@@ -265,7 +265,7 @@ fun! s:show_errors(errmsg)
 endf
 " }}}
 " Misc {{{
-if has('nvim')
+if exists('*isnan')
   fun! s:isnan(x)
     return printf("%f", a:x) ==# 'nan'
   endf

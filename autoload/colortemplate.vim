@@ -267,11 +267,11 @@ endf
 " Misc {{{
 if exists('*isnan')
   fun! s:isnan(x)
-    return printf("%f", a:x) ==# 'nan'
+    return isnan(a:x)
   endf
 else
   fun! s:isnan(x)
-    return isnan(a:x)
+    return printf("%f", a:x) ==# 'nan'
   endf
 endif
 " }}}

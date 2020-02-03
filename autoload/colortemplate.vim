@@ -2278,7 +2278,7 @@ fun! s:print_header(bufnr)
   call s:put  (a:bufnr, ''                                                     )
   call s:put  (a:bufnr, "let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2")
   if s:uses_italics()
-    let l:itcheck =  "let s:italics = (((&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')) && !has('iOS'))"
+    let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
     if s:supports_neovim()
       let l:itcheck .= " || has('nvim')"
     endif

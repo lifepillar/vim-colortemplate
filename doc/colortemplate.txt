@@ -78,10 +78,10 @@ If the template builds successfully, Colortemplate tells you so with a message
 in the command line.
 
 To enable the generated color scheme, you may use |:colorscheme| or (better)
-click on "Show" in the toolbar (the dark template uses only black and white,
-so it does not stand out as a catchy color scheme). If you enable the color
-scheme by clicking on "Show" in the toolbar, you may switch back to the
-original color scheme by clicking on "Hide".
+click on "Show" in the toolbar (the dark template uses only two colors out of
+its palette, so it does not stand out as a catchy color scheme). If you enable
+the color scheme by clicking on "Show" in the toolbar, you may switch back to
+the original color scheme by clicking on "Hide".
 
 You may validate your color scheme against Vim's built-in script
 `$VIMRUNTIME/colors/tools/check_colors.vim` with |:ColortemplateCheck| or by

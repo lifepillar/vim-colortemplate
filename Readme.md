@@ -18,6 +18,11 @@ The resulting color scheme will be written into `~/.vim/colors`.
 The generated color scheme replicates Vim's `default` color scheme. Look inside
 the `templates` folder for other templates.
 
+**Note:** :Colortemplate and other plugin's commands are filetype-specific. That
+means that they are available only if the filetype is set to `colortemplate`.
+You may need to explicitly type `:set ft=colortemplate` to make them available
+in new buffers.
+
 
 ## Features
 

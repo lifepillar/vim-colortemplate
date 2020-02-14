@@ -68,6 +68,11 @@ If you use Vim 8.0.1123 or later, you may also execute commands by clicking on
 a window toolbar. Click on "OutDir" and set the output directory to `~/.vim`,
 then click on "Build!" to create the color scheme.
 
+Note: |Colortemplate| and other plugin's commands are filetype-specific. That
+means that they are available only if the filetype is set to `colortemplate`.
+You may need to explicitly type `:set ft=colortemplate` to make them available
+in new buffers.
+
 Note: |:Colortemplate| gives an error if the color scheme already exists at
 the given location (`~/.vim/colors` in the example above): use
 `:Colortemplate!` to overwrite existing files. Vice versa, the "Build!" menu

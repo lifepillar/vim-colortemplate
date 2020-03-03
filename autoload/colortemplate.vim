@@ -1913,7 +1913,9 @@ fun! s:parse_base_16_value()
     endif
     return l:val
   elseif s:token.kind ==# 'WORD'
-    if index(g:colortemplate#colorspace#ansi_colors, tolower(s:token.value)) == -1
+    if s:token.value ==# 'none'
+      return 'NONE'
+    elseif index(g:colortemplate#colorspace#ansi_colors, tolower(s:token.value)) == -1
       throw "Invalid color name: " . s:token.value
     endif
     return s:token.value

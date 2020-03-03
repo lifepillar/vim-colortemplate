@@ -46,7 +46,7 @@ syn match   colortemplateHexColor     "#[a-f0-9]\{6\}" contained
 syn keyword colortemplateFunction     contained rgb
 syn keyword colortemplateTodo         contained TODO FIXME XXX DEBUG NOTE
 " Basic color names
-syn keyword colortemplateConstant     contained Black Blue Brown Cyan DarkRed DarkGreen DarkYellow DarkBlue DarkMagenta DarkCyan Green LightGray LightGreySj
+syn keyword colortemplateConstant     contained Black Blue Brown Cyan DarkRed DarkGreen DarkYellow DarkBlue DarkMagenta DarkCyan Green LightGray LightGrey
 syn keyword colortemplateConstant     contained DarkGray DarkGrey Gray Grey LightRed LightGreen LightYellow LightBlue LightMagenta LightCyan Magenta Red Yellow White
 " Color names from $VIMRUNTIME/rgb.txt
 syn keyword colortemplateConstant     contained alice AliceBlue almond antique AntiqueWhite AntiqueWhite1 AntiqueWhite2 AntiqueWhite3

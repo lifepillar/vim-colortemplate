@@ -8,6 +8,10 @@ color schemes for Vim!
 
 ## Quick Start
 
+Installing this plugin does not require anything special. If you need help,
+please first check the
+[FAQ](https://github.com/lifepillar/vim-colortemplate/wiki/FAQs).
+
 ```vim
 :edit templates/default_clone.colortemplate
 :Colortemplate! ~/.vim

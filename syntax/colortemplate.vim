@@ -36,7 +36,7 @@ syn keyword colortemplateHiGroup      vimSynMatchRegion vimSynMtchCchar vimSynMt
 syn keyword colortemplateHiGroup      vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
 syn keyword colortemplateAttr         bold underline undercurl strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial      fg bg none omit
-syn match   colortemplateComment      "#.*$" contains=colortemplateTodo,@Spell
+syn match   colortemplateComment      "[;#].*$" contains=colortemplateTodo,@Spell
 syn match   colortemplateKey          "^\s*\(\w[^:]*\):"
 syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortemplateKey nextgroup=colortemplateColorDef
 syn match   colortemplateColorDef     ".\+$" contained contains=colortemplateNumber,colortemplateHexColor,colortemplateFunction,colortemplateConstant,colortemplateCompound,colortemplateComment

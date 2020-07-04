@@ -1355,6 +1355,10 @@ fun! s:token.next() dict
       let self.kind = 'COMMENT'
       let self.pos = len(s:getl())
     endif
+  elseif l:char ==# ';'
+    let self.value = ';'
+    let self.kind = 'COMMENT'
+    let self.pos = len(s:getl())
   elseif match(l:char, "[*:=.,>~)(-]") > -1
     let self.value = l:char
     let self.kind = l:char

@@ -798,7 +798,7 @@ fun! Test_CT_linked_group_with_multiple_tokens()
   let l:qflist = getqflist()
   call assert_equal(1, len(l:qflist))
   call assert_equal('Extra token in linked group definition', l:qflist[0]['text'])
-  call assert_equal(11, l:qflist[0]['lnum'])
+  call assert_equal(10, l:qflist[0]['lnum'])
   call assert_equal(13, l:qflist[0]['col'])
   cclose
   bwipe test75.txt

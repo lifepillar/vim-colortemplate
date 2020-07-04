@@ -796,10 +796,13 @@ fun! Test_CT_linked_group_with_multiple_tokens()
   edit test75.txt
   Colortemplate!
   let l:qflist = getqflist()
-  call assert_equal(1, len(l:qflist))
+  call assert_equal(2, len(l:qflist))
   call assert_equal('Extra token in linked group definition', l:qflist[0]['text'])
-  call assert_equal(10, l:qflist[0]['lnum'])
+  call assert_equal(11, l:qflist[0]['lnum'])
   call assert_equal(13, l:qflist[0]['col'])
+  call assert_equal('Extra token in linked group definition', l:qflist[1]['text'])
+  call assert_equal(13, l:qflist[1]['lnum'])
+  call assert_equal(20, l:qflist[1]['col'])
   cclose
   bwipe test75.txt
 endf

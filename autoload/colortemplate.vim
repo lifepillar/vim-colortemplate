@@ -2051,6 +2051,9 @@ fun! s:parse_linked_group_def()
   for l:v in s:active_variants()
     call s:add_linked_item(l:v, s:active_section(), l:source_group, s:token.value)
   endfor
+  if s:token.next().is_edible()
+    throw 'Extra token in linked group definition'
+  endif
 endf
 
 fun! s:parse_command(cmd)

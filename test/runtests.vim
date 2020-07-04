@@ -788,6 +788,10 @@ fun! Test_CT_use_tabs()
   call s:assert_build('test73')
 endf
 
+fun! Test_CT_ctermfg_ctermbg_is_none()
+  call s:assert_build('test74')
+endf
+
 "
 " Runner!
 "

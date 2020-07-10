@@ -574,7 +574,7 @@ This will write the content of the auxfile block into the specified file
 (creating the intermediate directories if necessary). The path is mandatory
 and must be a relative path (relative to the output directory). No comment may
 appear in an `auxline` line. The content of an `auxfile` block is interpolated
-as in verbatim blocks. You mau suppress the generation of all auxiliary files
+as in verbatim blocks. You may suppress the generation of all auxiliary files
 (including the help file) with |g:colortemplate_no_aux_files|.
 
 ==============================================================================

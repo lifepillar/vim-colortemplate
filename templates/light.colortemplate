@@ -19,15 +19,12 @@ Include: _help.colortemplate
 # }}}
 
 # Common linked groups {{{
-QuickFixLine      -> Search
-StatusLineTerm    -> StatusLine
-StatusLineTermNC  -> StatusLineNC
 # Other conventional group names (see `:help group-name`)
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
-Define            -> PreProc
 Debug             -> Special
+Define            -> PreProc
 Delimiter         -> Special
 Exception         -> Statement
 Float             -> Constant
@@ -38,10 +35,14 @@ Label             -> Statement
 Macro             -> PreProc
 Number            -> Constant
 Operator          -> Statement
+PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
+QuickFixLine      -> Search
 Repeat            -> Statement
 SpecialChar       -> Special
 SpecialComment    -> Special
+StatusLineTerm    -> StatusLine
+StatusLineTermNC  -> StatusLineNC
 StorageClass      -> Type
 String            -> Constant
 Structure         -> Type
@@ -117,7 +118,7 @@ MoreMsg              black             white
 NonText              black             white
 Pmenu                black             white
 PmenuSbar            black             white
-PmenuSel             black             white
+PmenuSel             black             white             reverse
 PmenuThumb           black             white
 Question             black             white
 Search               black             white

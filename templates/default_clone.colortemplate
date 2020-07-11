@@ -72,14 +72,13 @@ Term Colors: darkgrey red green yellow blue magenta cyan white
 # }}}
 
 # Common linked groups {{{
-EndOfBuffer       -> NonText
-QuickFixLine      -> Search
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
-Define            -> PreProc
 Debug             -> Special
+Define            -> PreProc
 Delimiter         -> Special
+EndOfBuffer       -> NonText
 Exception         -> Statement
 Float             -> Number
 Function          -> Identifier
@@ -89,7 +88,9 @@ Label             -> Statement
 Macro             -> PreProc
 Number            -> Constant
 Operator          -> Statement
+PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
+QuickFixLine      -> Search
 Repeat            -> Statement
 SpecialChar       -> Special
 SpecialComment    -> Special

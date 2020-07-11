@@ -31,6 +31,7 @@ Pmenu                omit   omit    reverse
 PmenuSbar            omit   omit
 PmenuSel             omit   omit
 PmenuThumb           omit   omit
+PopupSelected        omit   omit    reverse
 Question             omit   omit    standout
 Search               omit   omit    underline,italic
 SignColumn           omit   omit    reverse

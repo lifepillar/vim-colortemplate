@@ -566,15 +566,36 @@ Auxiliary files				       	*colortemplate-auxfiles*
 If you want to generate additional files besides the color scheme itself, you
 may put the content of each file into a separate `auxfile` block. For example:
 >
-	auxfile autoload/airline/themes/mycolorscheme.vim
+	auxfile autoload/airline/themes/@shortname.vim
 	" Anything can go here
 	endauxfile
-
+<
 This will write the content of the auxfile block into the specified file
 (creating the intermediate directories if necessary). The path is mandatory
 and must be a relative path (relative to the output directory). No comment may
 appear in an `auxline` line. The content of an `auxfile` block is interpolated
-as in verbatim blocks. You may suppress the generation of all auxiliary files
+as in verbatim blocks. As you can see in the example above, the path is also
+interpolated.
+
+Multiple `auxfile` blocks referring to the same path are chained together in
+the order in which they are encountered. For instance:
+>
+	auxfile autoload/foobar.vim
+	" First part of auxiliary file
+	endauxfile
+
+        # Some other code
+
+	auxfile autoload/foobar.vim
+	" Second part of auxiliary file
+	endauxfile
+<
+will result in `autoload/foobar.vim` with the following content:
+>
+	" First part of auxiliary file
+        " Second part of auxiliary file
+<
+You may suppress the generation of all auxiliary files
 (including the help file) with |g:colortemplate_no_aux_files|.
 
 ==============================================================================

@@ -699,10 +699,41 @@ no less than 125.
 ==============================================================================
 Colortemplate mappings				*colortemplate-mappings*
 
-Note: the following mappings are all buffer-local. If you do not want
-Colortemplate to define any mapping, set |g:colortemplate_no_mappings|.
-Colortemplate also honours |g:no_plugin_maps|.
+If you do not want Colortemplate to define any mapping, set
+|g:colortemplate_no_mappings|. Colortemplate also honours |g:no_plugin_maps|.
+If you want to disable only global mappings, but retain buffer-local mappings,
+set |g:colortemplate_no_global_mappings|.
 
+Global mappings ~
+							*gb*
+gb			Toggle boldface for the highlight group under the
+			cursor.
+
+							*gi*
+gi			Toggle italics for the highlight group under the
+			cursor.
+
+							*gr*
+gr			Toggle reverse text for the highlight group under the
+			cursor.
+
+							*gs*
+gs			Toggle standout for the highlight group under the
+			cursor.
+
+							*gS*
+gS			Toggle strikethrough for the highlight group under the
+			cursor.
+
+							*gu*
+gu			Toggle underline for the highlight group under the
+			cursor.
+
+							*gU*
+gU			Toggle undercurl for the highlight group under the
+			cursor.
+
+Buffer-local mappings ~
 							*ga*
 ga			If the cursor is on a `Color` line, display some
 			information about the given color, including [count]
@@ -747,6 +778,11 @@ file).
 Set to 1 if you do not want to generate the help file.
 >
 	let g:colortemplate_no_doc = 0
+<
+						*g:colortemplate_no_global_mappings*
+Set to 1 to suppress only global mappings.
+>
+	let g:colortemplate_no_global_mappings = 0
 <
 						*g:colortemplate_no_mappings*
 Set to 1 to suppress mappings.

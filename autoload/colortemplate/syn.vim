@@ -9,6 +9,45 @@ fun! colortemplate#syn#hi_group_fg(hl)
   return [synIDattr(synIDtrans(hlID(a:hl)), "fg", "cterm"), synIDattr(synIDtrans(hlID(a:hl)), "fg", "gui")]
 endf
 
+fun! colortemplate#syn#attributes(synid, mode)
+  let l:attrs = []
+  for l:a in ['bold', 'italic', 'reverse', 'standout', 'underline', 'undercurl']
+    if '1' ==# synIDattr(a:synid, l:a, a:mode)
+      call add(l:attrs, l:a)
+    endif
+  endfor
+  if '1' ==# synIDattr(a:synid, 'strike', a:mode)
+    call add(l:attrs, 'strikethrough')
+  endif
+  return l:attrs
+endf
+
+fun! s:toggle_attribute(synid, attr)
+  let l:mode = has('gui_running') ? 'gui' : 'cterm'
+  let l:synid = synIDtrans(a:synid)
+  let l:old_attrs = colortemplate#syn#attributes(l:synid, l:mode)
+  let l:name = synIDattr(l:synid, 'name')
+  if empty(l:name) " Assume Normal
+    echohl WarningMsg
+    unsilent echo '[Colortemplate] Attributes cannot be set for Normal.'
+    echohl None
+    return
+  endif
+  let l:i = index(l:old_attrs, a:attr)
+  if l:i == -1
+    execute 'hi' l:name l:mode..'='..a:attr..','..join(l:old_attrs, ',')
+    echo '[Colortemplate] Set ' .. a:attr .. ' in ' .. l:name
+  else
+    call remove(l:old_attrs, l:i)
+    execute 'hi' l:name l:mode..'='..(empty(l:old_attrs) ? 'NONE' : join(l:old_attrs, ','))
+    echo '[Colortemplate] Removed ' .. a:attr .. ' from ' .. l:name
+  endif
+endf
+
+fun! colortemplate#syn#toggle_attribute(attr)
+  call s:toggle_attribute(synID(line('.'), col('.'), 1), a:attr)
+endf
+
 " Prints information about the highlight group at the cursor position.
 " See: http://vim.wikia.com/wiki/VimTip99 and hilinks.vim script.
 fun! colortemplate#syn#hi_group()

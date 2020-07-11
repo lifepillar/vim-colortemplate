@@ -27,6 +27,16 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> <c-l> :<c-u>call colortemplate#toolbar#show()<cr><c-l>
   nnoremap <silent> <buffer> gx    :<c-u>call colortemplate#approx_color(v:count1)<cr>
   nnoremap <silent> <buffer> gy    :<c-u>call colortemplate#nearby_colors(v:count1)<cr>
+  if !get(g:, 'colortemplate_no_global_mappings', 0)
+    let s:g = get(g:, 'colortemplate_mapping_prefix', 'g')
+    execute 'nnoremap' s:g.'b' ':<c-u>call colortemplate#syn#toggle_attribute("bold")<cr>'
+    execute 'nnoremap' s:g.'i' ':<c-u>call colortemplate#syn#toggle_attribute("italic")<cr>'
+    execute 'nnoremap' s:g.'r' ':<c-u>call colortemplate#syn#toggle_attribute("reverse")<cr>'
+    execute 'nnoremap' s:g.'s' ':<c-u>call colortemplate#syn#toggle_attribute("standout")<cr>'
+    execute 'nnoremap' s:g.'S' ':<c-u>call colortemplate#syn#toggle_attribute("strikethrough")<cr>'
+    execute 'nnoremap' s:g.'u' ':<c-u>call colortemplate#syn#toggle_attribute("underline")<cr>'
+    execute 'nnoremap' s:g.'U' ':<c-u>call colortemplate#syn#toggle_attribute("undercurl")<cr>'
+  endif
 endif
 
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate silent call colortemplate#make(<q-args>, "<bang>")

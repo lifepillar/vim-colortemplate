@@ -807,6 +807,10 @@ fun! Test_CT_linked_group_with_multiple_tokens()
   bwipe test75.txt
 endf
 
+fun! Test_CT_ignore_missing_linked_groups()
+  call s:assert_build('test76')
+endf
+
 "
 " Runner!
 "

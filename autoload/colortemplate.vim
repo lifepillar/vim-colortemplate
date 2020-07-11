@@ -932,7 +932,7 @@ fun! s:add_neovim_higroup_item(variant, section, item)
 endf
 
 fun! s:add_linked_item(variant, section, source, target)
-  let s:hi_groups[s:hi_name(a:source)] = 1
+  let s:hi_groups[a:source] = 1
   if s:is_neovim_group(a:source)
     call add(s:nvim[a:variant][a:section], s:make_item([a:source, a:target], 'link'))
   else

@@ -1077,7 +1077,7 @@ Here are some guidelines to develop outstanding hackable color schemes:
   separator character (a vertical bar by default) is visible. The user can
   always suppress (or replace) the separator character with 'fillchars'.
 
-  The rationale for this guideline is that it makes it clear how a windows has
+  The rationale for this guideline is that it makes it clear how a window has
   been split. For example, a vertical split followed by two horizontal splits
   produces this layout:
 >

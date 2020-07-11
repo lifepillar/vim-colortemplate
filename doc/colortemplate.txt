@@ -646,12 +646,12 @@ values, presented in the following form:
   red: GUI=#9e0006/rgb(158,0,6) Term=88 #870000/rgb(135,0,0) [delta=4.473285]
 <
 Here, the delta value is the distance between the GUI value (`#9e0006`) and
-the corresponding terminal color (`88`). The used distance is a sophisticated
-variant of the CIELAB ΔE* metric, which takes into account the perceptual
-characteristics of the human eye. Roughly speaking, colors at distance less
-than 2.3 correspond to "just noticeable differences". The greater the
-distance, the greater the discrepancy between the GUI color and its base-256
-counterpart.
+the corresponding terminal color (`88`, which corresponds to `#870000`
+according to xterm tables). The used distance is a sophisticated variant of
+the CIELAB ΔE* metric, which takes into account the perceptual characteristics
+of the human eye. Roughly speaking, colors at distance less than 2.3
+correspond to "just noticeable differences". The greater the distance, the
+greater the discrepancy between the GUI color and its base-256 counterpart.
 
 Keep in mind that the "most similar" terminal color may not necessarily be the
 "best looking" color, because the overall look&feel of a color scheme

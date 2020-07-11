@@ -701,37 +701,6 @@ Colortemplate mappings				*colortemplate-mappings*
 
 If you do not want Colortemplate to define any mapping, set
 |g:colortemplate_no_mappings|. Colortemplate also honours |g:no_plugin_maps|.
-If you want to disable only global mappings, but retain buffer-local mappings,
-set |g:colortemplate_no_global_mappings|.
-
-Global mappings ~
-							*gb*
-gb			Toggle boldface for the highlight group under the
-			cursor.
-
-							*gi*
-gi			Toggle italics for the highlight group under the
-			cursor.
-
-							*gr*
-gr			Toggle reverse text for the highlight group under the
-			cursor.
-
-							*gs*
-gs			Toggle standout for the highlight group under the
-			cursor.
-
-							*gS*
-gS			Toggle strikethrough for the highlight group under the
-			cursor.
-
-							*gu*
-gu			Toggle underline for the highlight group under the
-			cursor.
-
-							*gU*
-gU			Toggle undercurl for the highlight group under the
-			cursor.
 
 Buffer-local mappings ~
 							*ga*
@@ -778,11 +747,6 @@ file).
 Set to 1 if you do not want to generate the help file.
 >
 	let g:colortemplate_no_doc = 0
-<
-						*g:colortemplate_no_global_mappings*
-Set to 1 to suppress only global mappings.
->
-	let g:colortemplate_no_global_mappings = 0
 <
 						*g:colortemplate_no_mappings*
 Set to 1 to suppress mappings.
@@ -871,9 +835,21 @@ Set to 0 if you want Colortemplate to report only errors (not recommended).
 ==============================================================================
 Colortemplate commands		       		*colortemplate-commands*
 
-NOTE: all the following commands are available only in buffers whose
-|'filetype'| is set to `colortemplate`.
+Global commands ~
 
+						*:ColortemplateStyle*
+Opens a |popup| window that allows you to dynamically change the style
+attributes of the highlight group under the cursor. Use up and down arrow keys
+to choose an attribute and press space to toggle the attribute. Press `x` or
+click on the upper-right corner of the popup menu to dismiss it. You may drag
+the window around with the mouse. 
+
+Note: Popup menus are available in Vim 8.1.1705 or later.
+
+Note: Global commands are available in any buffer, but only after a template
+has been opened.
+
+Buffer-local commands ~
 						*:Colortemplate[!]*
 Creates a Vim color scheme from the template in the current buffer. If used
 without arguments, the output is written in |b:colortemplate_outdir|. The

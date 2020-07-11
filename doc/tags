@@ -2,6 +2,7 @@
 :ColortemplateCheck	colortemplate.txt	/*:ColortemplateCheck*
 :ColortemplateOutdir	colortemplate.txt	/*:ColortemplateOutdir*
 :ColortemplateStats	colortemplate.txt	/*:ColortemplateStats*
+:ColortemplateStyle	colortemplate.txt	/*:ColortemplateStyle*
 :Colortemplate[!]	colortemplate.txt	/*:Colortemplate[!]*
 @shortname-options	colortemplate.txt	/*@shortname-options*
 CTRL-L	colortemplate.txt	/*CTRL-L*
@@ -31,13 +32,13 @@ colortemplate-toolbar	colortemplate.txt	/*colortemplate-toolbar*
 colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
+dark.txt	dark.txt	/*dark.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_transp_bg	colortemplate.txt	/*g:@shortname_transp_bg*
 g:colortemplate_creator	colortemplate.txt	/*g:colortemplate_creator*
 g:colortemplate_ignore_missing	colortemplate.txt	/*g:colortemplate_ignore_missing*
 g:colortemplate_no_aux_files	colortemplate.txt	/*g:colortemplate_no_aux_files*
 g:colortemplate_no_doc	colortemplate.txt	/*g:colortemplate_no_doc*
-g:colortemplate_no_global_mappings	colortemplate.txt	/*g:colortemplate_no_global_mappings*
 g:colortemplate_no_mappings	colortemplate.txt	/*g:colortemplate_no_mappings*
 g:colortemplate_quiet	colortemplate.txt	/*g:colortemplate_quiet*
 g:colortemplate_rtp	colortemplate.txt	/*g:colortemplate_rtp*
@@ -48,13 +49,7 @@ g:colortemplate_toolbar_actions	colortemplate.txt	/*g:colortemplate_toolbar_acti
 g:colortemplate_toolbar_items	colortemplate.txt	/*g:colortemplate_toolbar_items*
 g:colortemplate_use_tabs	colortemplate.txt	/*g:colortemplate_use_tabs*
 g:colortemplate_warnings	colortemplate.txt	/*g:colortemplate_warnings*
-gS	colortemplate.txt	/*gS*
-gU	colortemplate.txt	/*gU*
+g:dark_transp_bg	dark.txt	/*g:dark_transp_bg*
 ga	colortemplate.txt	/*ga*
-gb	colortemplate.txt	/*gb*
-gi	colortemplate.txt	/*gi*
-gr	colortemplate.txt	/*gr*
-gs	colortemplate.txt	/*gs*
-gu	colortemplate.txt	/*gu*
 gx	colortemplate.txt	/*gx*
 gy	colortemplate.txt	/*gy*

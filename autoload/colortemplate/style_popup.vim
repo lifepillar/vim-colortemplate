@@ -78,6 +78,10 @@ fun! colortemplate#style_popup#cs_closed(id, result)
 endf
 
 fun! colortemplate#style_popup#open()
+  if !hlexists('PopupSelected')
+    hi PopupSelected cterm=reverse gui=reverse
+  endif
+
   if s:cs_popup_id > -1
     return s:cs_popup_id
   endif

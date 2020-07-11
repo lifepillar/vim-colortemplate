@@ -525,11 +525,11 @@ instance, this template:
 <
 is translated into
 >
-	if get(g:, 'some_option, '0)
+	if get(g:, 'some_option', 0)
 	  let s:color  = '#abcef'
 	endif
 <
-assuming `MyColor` is a color with GUI value `#abcdef`.
+assuming that `MyColor` is a color with GUI value `#abcdef`.
 
 ==============================================================================
 Documentation blocks				*colortemplate-doc-blocks*

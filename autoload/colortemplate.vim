@@ -2155,7 +2155,7 @@ endf
 " }}}
 " Colorscheme generation {{{
 fun! s:generate_aux_files(outdir, overwrite)
-  if get (g:, 'colortemplate_no_aux_files', 0)
+  if get(g:, 'colortemplate_no_aux_files', 0)
     return
   endif
   for l:path in s:auxfile_paths()

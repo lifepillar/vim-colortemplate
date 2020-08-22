@@ -2071,6 +2071,9 @@ fun! s:parse_command(cmd)
     throw a:cmd.' without if'
   endif
   let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
+  if l:text =~ '^call!'
+    let l:text = 'silent! ' . l:text
+  endif
   for l:v in s:active_variants()
     call s:add_verbatim_item(l:v, s:active_section(),
           \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })

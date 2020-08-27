@@ -1940,7 +1940,7 @@ fun! s:parse_term_colors()
 endf
 
 fun! s:parse_hi_group_def()
-  if s:getl() =~# '\m->' " Look ahead
+  if s:getl() =~# '\m^[^#;]*->' " Look ahead
     return s:parse_linked_group_def()
   endif
 

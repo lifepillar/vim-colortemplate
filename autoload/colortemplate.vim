@@ -2170,7 +2170,7 @@ fun! s:generate_aux_files(outdir, overwrite)
 endf
 
 fun! s:hi_item(text, value)
-  return (a:value ==# 'omit' ? '' : ' '.a:text.'='.a:value)
+  return (type(a:value) ==# v:t_string && a:value ==# 'omit' ? '' : ' '.a:text.'='.a:value)
 endf
 
 fun! s:eval(item, col, section)

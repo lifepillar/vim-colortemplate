@@ -822,6 +822,10 @@ fun! Test_CT_arrows_in_comments_are_not_parsed_as_linked_groups()
   call s:assert_build('test78')
 endf
 
+fun! Test_CT_colors_0_16_in_base256_do_not_cause_base16_color_undefined()
+  call s:assert_build('test79')
+endf
+
 "
 " Runner!
 "

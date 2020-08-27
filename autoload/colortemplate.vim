@@ -1533,7 +1533,7 @@ endf
 
 fun! s:start_verbatim()
   " Verbatim blocks act like optimization fences: since we don't know what the
-  " code in a verbatim block does, we need to flush definitions collected so
+  " code in a verbatim block does, we need to flush the definitions collected so
   " far.
   for l:v in s:active_variants()
     call s:flush_italics(l:v, s:active_section())

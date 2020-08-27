@@ -319,28 +319,28 @@ endf
 " section: 'preamble, 'dark' or 'light'
 " name: color name as defined by the user
 " gui: GUI value (either a hex value or a standard name)
-" base256: a numeric value between 16 and 255 or -1 (=infer the value)
-" base16: a numeric value between 0 and 15
+" base256: a numeric value between 16 and 255, or -1 (=infer the value)
+" base16: a numeric value between 0 and 15, or -1 (=value unspecified)
 fun! s:add_color(section, name, gui, base256, base16)
   if s:is_color_defined(a:name, a:section)
     throw "Color already defined for " . a:section . " background"
   endif
   let s:guicol[a:section][a:name] = a:gui
   let s:col256[a:section][a:name] = a:base256
-  let  s:col16[a:section][a:name] = a:base16
+  let  s:col16[a:section][a:name] = (a:base16 == -1 && a:base256 < 16) ? a:base256 : a:base16
   if a:section ==# 'preamble'
     if s:is_color_defined(a:name, 'dark')
       throw "Color already defined for dark background"
     endif
     let s:guicol['dark'][a:name] = a:gui
     let s:col256['dark'][a:name] = a:base256
-    let  s:col16['dark'][a:name] = a:base16
+    let  s:col16['dark'][a:name] = (a:base16 == -1 && a:base256 < 16) ? a:base256 : a:base16
     if s:is_color_defined(a:name, 'light')
       throw "Color already defined for light background"
     endif
     let s:guicol['light'][a:name] = a:gui
     let s:col256['light'][a:name] = a:base256
-    let  s:col16['light'][a:name] = a:base16
+    let  s:col16['light'][a:name] = (a:base16 == -1 && a:base256 < 16) ? a:base256 : a:base16
   endif
 endf
 

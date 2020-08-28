@@ -116,7 +116,7 @@ necessarily sequential) steps:
 If you want to start from scratch instead of using one of the predefined
 templates, set the modeline in your template to
 >
-	# vim: ft=colortemplate
+	; vim: ft=colortemplate
 
 or save your template with a `.colortemplate` suffix.
 
@@ -135,7 +135,7 @@ A template consists of:
 4. `Include` directives;
 5. verbatim blocks (`verbatim`/`auxfile`/`documentation`, `#if`, `#let`, ...);
 6. highlight group definitions;
-7. line comments (starting with `#`), which are ignored by Colortemplate.
+7. line comments (starting with `;`), which are ignored by Colortemplate.
 
 Each template has one global section and one or more local sections. The
 global section starts at the beginning of the file and lasts until the first
@@ -166,45 +166,45 @@ flexibility, e.g.:
 >
 	Variant: gui
 	Background: any
-	  # Defs. for both backgrounds, apply only to GUI
+	  ; Defs. for both backgrounds, apply only to GUI
 	Background: dark
-	  # Defs. or dark background, apply only to GUI
+	  ; Defs. or dark background, apply only to GUI
 	Variant: gui 256 16
-	  # Defs. for dark background, apply to GUI/256/16 colors
+	  ; Defs. for dark background, apply to GUI/256/16 colors
 	Background: any
-	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  ; Defs. for both backgrounds, apply to GUI/256/16 colors
 	Background: light
 	Variant: 16
-	  # Defs. for light background, apply only to 16 colors
+	  ; Defs. for light background, apply only to 16 colors
 <
 A template like the above will generate code with the following structure:
 >
 	let s:t_Co = ...
 	if [has termguicolors set or is GUI vim]
-	  # Defs. for both backgrounds, apply only to GUI
-	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  " Defs. for both backgrounds, apply only to GUI
+	  " Defs. for both backgrounds, apply to GUI/256/16 colors
 	  if &background ==# 'dark'
-	    # Defs. for dark background, apply only to GUI
-	    # Defs. for dark background, apply to GUI/256/16 colors
+	    " Defs. for dark background, apply only to GUI
+	    " Defs. for dark background, apply to GUI/256/16 colors
 	    finish
 	  endif
 	  finish
 	endif
 	if s:t_Co >= 256
-	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  " Defs. for both backgrounds, apply to GUI/256/16 colors
 	  if &background ==# 'dark'
-	    # Defs. for dark background, apply to GUI/256/16 colors
+	    " Defs. for dark background, apply to GUI/256/16 colors
 	    finish
 	  endif
 	  finish
 	endif
 	if s:t_Co >= 16
-	  # Defs. for both backgrounds, apply to GUI/256/16 colors
+	  " Defs. for both backgrounds, apply to GUI/256/16 colors
 	  if &background ==# 'dark'
-	    # Defs. for dark background, apply to GUI/256/16 colors
+	    " Defs. for dark background, apply to GUI/256/16 colors
 	    finish
 	  endif
-	  # Defs. for light background, apply only to 16 colors
+	  " Defs. for light background, apply only to 16 colors
 	  finish
 	endif
 <
@@ -218,12 +218,12 @@ Metadata block					*colortemplate-meta*
 Information about a color scheme consists of the following mandatory and
 optional fields, usually appearing at the top of your template:
 >
-	# Mandatory information
+	; Mandatory information
 	Full name:       A unique and attractive name
 	Short name:      all_lowercase_with_no_spaces
 	Author:          Myself <myself@somewhere.org>
 
-	# Optional information
+	; Optional information
 	Maintainer:      [Uses Author's value by default]
 	Description:     [Empty]
         URL:             [Empty]
@@ -592,7 +592,7 @@ the order in which they are encountered. For instance:
 	" First part of auxiliary file
 	endauxfile
 
-        # Some other code
+        ; Some other code
 
 	auxfile autoload/foobar.vim
 	" Second part of auxiliary file
@@ -631,10 +631,10 @@ twice:
 >
 	Background: dark
 	Include: _common
-	# Other definitions specific to dark background
+	; Other definitions specific to dark background
 	Background: light
 	Include: _common
-	# Other definitions specific to light background
+	; Other definitions specific to light background
 <
 NOTE: avoid cyclic inclusions: they will cause Colortemplate to run into an
 infinite loop!
@@ -1053,9 +1053,9 @@ Here are some guidelines to develop outstanding hackable color schemes:
      cursor line should "pass behind" highlighted search results. You may
      achieve that effect by adapting the following snippet:
 >
-	CursorLine   none   grey            # No foreground color
-	CursorColumn none   grey            # No foreground color
-	Search       yellow fg    reverse   # Use reverse
+	CursorLine   none   grey            ; No foreground color
+	CursorColumn none   grey            ; No foreground color
+	Search       yellow fg    reverse   ; Use reverse
 <
   g. Diffs (|hl-DiffAdd|, |hl-DiffChange|, |hl-DiffDelete|, |hl-DiffText|).
      Open two buffers in a split window and execute |diffthis| on both of
@@ -1154,10 +1154,10 @@ Here are some guidelines to develop outstanding hackable color schemes:
 	Variant: 256 16 8
 	#if get(g:, '@optionprefix_transp_bg', 0)
 	  Normal some_color none
-	  # Other definitions specific for transparency
+	  ; Other definitions specific for transparency
 	#else
 	  Normal some_color some_other_color
-	  # Other definitions specific for opaqueness
+	  ; Other definitions specific for opaqueness
 	#endif
 <
   Do not forget to document `@optionprefix_transp_bg`!

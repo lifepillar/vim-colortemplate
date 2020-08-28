@@ -1351,7 +1351,7 @@ fun! s:token.next() dict
     elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
       let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
-    else
+    else " Use of # as a comment tag is deprecated, but still supported for backward compatibility
       let self.value = '#'
       let self.kind = 'COMMENT'
       let self.pos = len(s:getl())
@@ -1696,6 +1696,10 @@ endf
 
 fun! s:parse_line()
   if !s:token.next().is_edible() " Empty line or comment
+    if s:token.kind ==# 'COMMENT' && s:token.value ==# '#'
+      call s:add_warning(s:currfile(), s:linenr(), s:token.pos,
+            \ "The # symbol for comments is deprecated. Use ; instead.")
+    endif
     return
   endif
   if s:token.kind ==# 'WORD'

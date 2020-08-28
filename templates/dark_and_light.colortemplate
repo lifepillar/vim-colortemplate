@@ -1,23 +1,23 @@
-# vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
+; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
 
-# Information {{{
-# Mandatory
+; Information {{{
+; Mandatory
 Full name:     Dark and Light
 Short name:    dark_and_light
 Author:        Myself <myself@somewhere.org>
-# Optional
+; Optional
 Maintainer:    Myself <myself@somewhere.org>
 Website:       https://me.org
 Description:   Template for a colorscheme with dark and light variants
 License:       Public domain
 Option Prefix: dark_and_light
-# }}}
+; }}}
 
-# Documentation {{{
+; Documentation {{{
 Include: _help.colortemplate
-# }}}
+; }}}
 
-# Global definitions - put at the top of the colorscheme {{{
+; Global definitions - put at the top of the colorscheme {{{
 Boolean              -> Constant
 Character            -> Constant
 Conditional          -> Statement
@@ -46,14 +46,14 @@ String               -> Constant
 Structure            -> Type
 Tag                  -> Special
 Typedef              -> Type
-# See `:help lCursor`
+; See `:help lCursor`
 lCursor              -> Cursor
-# }}}
+; }}}
 
 Background: dark
 
-# Color palette for dark variant {{{
-# Color name                GUI                  Base256    Base16 (optional)
+; Color palette for dark variant {{{
+; Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb( 57,  71,  89)     ~        Black
 Color: red                  rgb(255,   0,   0)     ~        DarkRed
 Color: green                rgb(  0, 255,   0)     ~        DarkGreen
@@ -69,17 +69,17 @@ Color: brightyellow         rgb(255, 255, 100)     ~        LightYellow
 Color: brightblue           rgb(  0, 100, 255)     ~        LightBlue
 Color: brightmagenta        rgb(255, 100, 255)     ~        LightMagenta
 Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
-# You may use hexadecimal values, too, and you may provide an explicit base-256 color:
+; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
 Color: brightwhite          #e0e0ed                231      White
-# }}}
+; }}}
 
-# Terminal colors for dark variant {{{
+; Terminal colors for dark variant {{{
 Term colors: black red green yellow blue magenta cyan white
 Term colors: brightblack brightred brightgreen brightyellow
 Term colors: brightblue brightmagenta brightcyan brightwhite
-# }}}
+; }}}
 
-# Definitions common to all variants {{{
+; Definitions common to all variants {{{
 Variant: gui
 #if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
 Variant: 256 8
@@ -92,7 +92,7 @@ Variant: gui 256 8
     Terminal         white             black
 #endif
 
-# Group              Foreground        Background        Attributes
+; Group              Foreground        Background        Attributes
 ColorColumn          fg                black
 Conceal              none              none
 Cursor               white             black
@@ -137,7 +137,7 @@ Visual               white             black
 VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
-# Other conventional group names (see `:help group-name`)
+; Other conventional group names (see `:help group-name`)
 Comment              white             none              italic
 Constant             white             none
 Error                white             black             reverse
@@ -149,21 +149,21 @@ Statement            white             none
 Todo                 white             none
 Type                 white             none
 Underlined           white             none
-# See `:help CursorIM`
+; See `:help CursorIM`
 CursorIM             none              fg
-# See `:help window-toolbar`
+; See `:help window-toolbar`
 ToolbarLine          none              white
 ToolbarButton        white             black             bold
-# }}}
+; }}}
 
-# Additional highlight groups {{{
-# Add additional highlight groups here if you want
-# }}}
+; Additional highlight groups {{{
+; Add additional highlight groups here if you want
+; }}}
 
 Background: light
 
-# Color palette for light variant {{{
-# Color name                GUI                  Base256    Base16 (optional)
+; Color palette for light variant {{{
+; Color name                GUI                  Base256    Base16 (optional)
 Color: black                rgb( 83,  88,  95)     ~        Black
 Color: red                  rgb(255,   0,   0)     ~        DarkRed
 Color: green                rgb(  0, 255,   0)     ~        DarkGreen
@@ -179,17 +179,17 @@ Color: brightyellow         rgb(255, 255, 100)     ~        LightYellow
 Color: brightblue           rgb(  0, 100, 255)     ~        LightBlue
 Color: brightmagenta        rgb(255, 100, 255)     ~        LightMagenta
 Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
-# You may use hexadecimal values, too, and you may provide an explicit base-256 color:
+; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
 Color: brightwhite          #ffffff                231      White
-# }}}
+; }}}
 
-# Terminal colors for light variant {{{
+; Terminal colors for light variant {{{
 Term colors: black red green yellow blue magenta cyan white
 Term colors: brightblack brightred brightgreen brightyellow
 Term colors: brightblue brightmagenta brightcyan brightwhite
-# }}}
+; }}}
 
-# Definitions common to all variants {{{
+; Definitions common to all variants {{{
 Variant: gui
 #if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
 Variant: 256 8
@@ -202,7 +202,7 @@ Variant: gui 256 8
     Terminal         black             white
 #endif
 
-# Group              Foreground        Background        Attributes
+; Group              Foreground        Background        Attributes
 ColorColumn          fg                black
 Conceal              none              none
 Cursor               black             white
@@ -247,7 +247,7 @@ Visual               black             white
 VisualNOS            black             white
 WarningMsg           black             white
 WildMenu             black             white
-# Other conventional group names (see `:help group-name`)
+; Other conventional group names (see `:help group-name`)
 Comment              black             none              italic
 Constant             black             none
 Error                black             white             reverse
@@ -259,16 +259,16 @@ Statement            black             none
 Todo                 black             none
 Type                 black             none
 Underlined           black             none
-# See `:help CursorIM`
+; See `:help CursorIM`
 CursorIM             none              fg
-# See `:help window-toolbar`
+; See `:help window-toolbar`
 ToolbarLine          none              black
 ToolbarButton        black             white             bold
-# }}}
+; }}}
 
-# Additional highlight groups {{{
-# Add additional highlight groups here if you want
-# }}}
+; Additional highlight groups {{{
+; Add additional highlight groups here if you want
+; }}}
 
 Background: any
 Include: _bw.colortemplate

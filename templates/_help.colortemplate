@@ -1,4 +1,4 @@
-# vim: ft=colortemplate fdm=marker noet ts=8 tw=78
+; vim: ft=colortemplate fdm=marker noet ts=8 tw=78
 
 documentation
 *@shortname.txt*	For Vim version @vimversion	Last change: @date

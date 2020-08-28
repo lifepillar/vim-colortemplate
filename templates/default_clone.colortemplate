@@ -1,16 +1,16 @@
-# vim: ft=colortemplate fdm=marker cc=22,42,60 et ts=2 sw=2
+; vim: ft=colortemplate fdm=marker cc=22,42,60 et ts=2 sw=2
 
-# Information {{{
+; Information {{{
 Full name:   Default Clone
 Short name:  default_clone
 Author:      Bram Moolenaar <Bram@vim.org>
 Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 Website:     https://github.com/vim/vim/blob/master/src/syntax.c
 Description: A nearly exact clone of Vim's default colorscheme
-# }}}
+; }}}
 
-# Color palette {{{
-# Color name                GUI                  Base256    Base16
+; Color palette {{{
+; Color name                GUI                  Base256    Base16
 Color: black                Black                  0        Black
 Color: blue                 Blue                  12        Blue
 Color: bluedarkblue         Blue                   4        DarkBlue
@@ -63,15 +63,15 @@ Color: yellow               Yellow                11        Yellow
 Color: yellowstatement      #ffff60               11        Yellow
 Color: darkyellow           DarkYellow             3        DarkYellow
 Color: darkgrey             DarkGrey               8        DarkGrey
-# }}}
+; }}}
 
-# Terminal colors {{{
-# Vim by default does not define g:terminal_ansi_colors
+; Terminal colors {{{
+; Vim by default does not define g:terminal_ansi_colors
 Term Colors: black darkred darkgreen darkyellow darkblue darkmagenta darkcyan lightgrey
 Term Colors: darkgrey red green yellow blue magenta cyan white
-# }}}
+; }}}
 
-# Common linked groups {{{
+; Common linked groups {{{
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
@@ -99,15 +99,15 @@ String            -> Constant
 Structure         -> Type
 Tag               -> Special
 Typedef           -> Type
-# }}}
+; }}}
 
 Background: light
 
-# Default highlight groups for light variant {{{
+; Default highlight groups for light variant {{{
 
 Variant: 256 8
 
-# NOTE: Vim's default does not define Normal
+; NOTE: Vim's default does not define Normal
 Normal               white               none
 Terminal             white               none
 CursorLine           none                none              underline
@@ -142,10 +142,10 @@ Todo                 blue                yellow
 
 Variant: gui 256 8
 
-# Group              Foreground          Background        Attributes
+; Group              Foreground          Background        Attributes
 ColorColumn          none                lightred
 Conceal              lightgrey           darkgrey242
-# NOTE: Vim's default does not define Cursor/lCursor in the terminal
+; NOTE: Vim's default does not define Cursor/lCursor in the terminal
 Cursor               white               fg
 CursorColumn         none                lightgrey90
 CursorLineNr         brown               none              g=bold
@@ -179,7 +179,7 @@ Visual               none                lightgrey
 VisualNOS            none                none              underline,bold
 WarningMsg           reddarkred          none
 WildMenu             black               yellow
-# Other conventional group names (see `:help group-name`)
+; Other conventional group names (see `:help group-name`)
 Comment              bluedarkblue        none
 Constant             magentadarkred      none
 Error                white               red
@@ -189,20 +189,20 @@ Special              slateblue           none
 Statement            brown               none              g=bold
 Type                 seagreen            none              g=bold
 Underlined           slateblue           none              underline
-# See `:help lCursor`
+; See `:help lCursor`
 lCursor              white               fg
-# See `:help window-toolbar`
+; See `:help window-toolbar`
 ToolbarLine          none                lightgrey
 ToolbarButton        white               grey40            bold
-# }}}
+; }}}
 
 Background: dark
 
-# Default highlight groups for dark variant {{{
+; Default highlight groups for dark variant {{{
 
 Variant: 256 8
 
-# NOTE: Vim's default does not define Normal
+; NOTE: Vim's default does not define Normal
 Normal               white               none
 Terminal             white               black
 CursorLine           none                none              underline
@@ -235,10 +235,10 @@ Todo                 blue                yellow
 
 Variant: gui 256 8
 
-# Group              Foreground          Background        Attributes
+; Group              Foreground          Background        Attributes
 ColorColumn          none                darkred
 Conceal              lightgrey           darkgrey242
-# NOTE: Vim's default does not define Cursor/lCursor in the terminal
+; NOTE: Vim's default does not define Cursor/lCursor in the terminal
 Cursor               black               fg
 CursorColumn         none                grey40
 CursorLineNr         yellow              none              g=bold
@@ -272,7 +272,7 @@ Visual               none                darkgrey242
 VisualNOS            none                none              underline,bold
 WarningMsg           redlightred         none
 WildMenu             black               yellow
-# Other conventional group names (see `:help group-name`)
+; Other conventional group names (see `:help group-name`)
 Comment              cyancomment         none
 Constant             magentaconstant     none
 Error                white231            red
@@ -283,21 +283,21 @@ Special              orange              none
 Statement            yellowstatement     none              g=bold
 Type                 lightseagreentype   none              g=bold
 Underlined           lightblueunderlined none              underline
-# See `:help lCursor`
+; See `:help lCursor`
 lCursor           -> Cursor
-# See `:help window-toolbar`
+; See `:help window-toolbar`
 ToolbarLine          none                grey50
 ToolbarButton        black               lightgrey         bold
-# }}}
+; }}}
 
 Background: any
 
-# Black&White variant {{{
+; Black&White variant {{{
 Variant: 2
 
 
-# Default highlight groups {{{
-# Group              Unused              Unused            term
+; Default highlight groups {{{
+; Group              Unused              Unused            term
 Normal               omit                omit
 ColorColumn          omit                omit              reverse
 Conceal              omit                omit
@@ -343,7 +343,7 @@ Visual               omit                omit              reverse
 VisualNOS            omit                omit              bold,underline
 WarningMsg           omit                omit              standout
 WildMenu             omit                omit              standout
-# Other conventional group names (see `:help group-name`)
+; Other conventional group names (see `:help group-name`)
 Comment              omit                omit              bold
 Constant             omit                omit              underline
 Error                omit                omit              reverse
@@ -358,5 +358,5 @@ Underlined           omit                omit              underline
 CursorIM             omit                omit
 ToolbarLine          omit                omit              underline
 ToolbarButton        omit                omit              bold
-# }}}
-# }}}
+; }}}
+; }}}

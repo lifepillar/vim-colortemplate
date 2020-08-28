@@ -1,24 +1,24 @@
-# vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
+; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
 
-# Information {{{
-# Mandatory
+; Information {{{
+; Mandatory
 Full name:     Dark
 Short name:    dark
 Author:        Myself <myself@somewhere.org>
-# Optional
+; Optional
 Maintainer:    Myself <myself@somewhere.org>
 Website:       https://me.org
 Description:   Template for dark colorscheme
 License:       Public domain
-# Prefix for options: short name is used if this key is not present:
+; Prefix for options: short name is used if this key is not present:
 Option Prefix: dark
-# }}}
+; }}}
 
-# Documentation {{{
+; Documentation {{{
 Include: _help.colortemplate
-# }}}
+; }}}
 
-# Common linked groups {{{
+; Common linked groups {{{
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
@@ -47,14 +47,14 @@ String            -> Constant
 Structure         -> Type
 Tag               -> Special
 Typedef           -> Type
-# See `:help lCursor`
+; See `:help lCursor`
 lCursor           -> Cursor
-# }}}
+; }}}
 
 Background: dark
 
-# Color palette {{{
-# Color name         GUI                     Base256     Base16 (optional)
+; Color palette {{{
+; Color name         GUI                     Base256     Base16 (optional)
 Color: black         rgb( 57,  71,  89)        ~         Black
 Color: red           rgb(255,   0,   0)        ~         DarkRed
 Color: green         rgb(  0, 255,   0)        ~         DarkGreen
@@ -70,16 +70,16 @@ Color: brightyellow  rgb(255, 255, 100)        ~         LightYellow
 Color: brightblue    rgb(  0, 100, 255)        ~         LightBlue
 Color: brightmagenta rgb(255, 100, 255)        ~         LightMagenta
 Color: brightcyan    rgb(100, 255, 255)        ~         LightCyan
-# You may use hexadecimal values, too, and you may provide an explicit base-256 color:
+; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
 Color: brightwhite   #e0e0ed                  231        White
-# }}}
-# Terminal colors {{{
+; }}}
+; Terminal colors {{{
 Term colors: black red green yellow blue magenta cyan white
 Term colors: brightblack brightred brightgreen brightyellow
 Term colors: brightblue brightmagenta brightcyan brightwhite
-# }}}
+; }}}
 
-# Default highlight groups {{{
+; Default highlight groups {{{
 Variant: gui
 #if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
 Variant: 256 8
@@ -92,7 +92,7 @@ Variant: gui 256 8
     Terminal         white             black
 #endif
 
-# Group              Foreground        Background        Attributes
+; Group              Foreground        Background        Attributes
 ColorColumn          fg                black
 Conceal              none              none
 Cursor               white             black
@@ -137,7 +137,7 @@ Visual               white             black
 VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
-# Other conventional group names (see `:help group-name`)
+; Other conventional group names (see `:help group-name`)
 Comment              white             none              italic
 Constant             white             none
 Error                white             black             reverse
@@ -149,17 +149,17 @@ Statement            white             none
 Todo                 white             none
 Type                 white             none
 Underlined           white             none
-# See `:help CursorIM`
+; See `:help CursorIM`
 CursorIM             none              fg
-# See `:help window-toolbar`
+; See `:help window-toolbar`
 ToolbarLine          none              black
 ToolbarButton        white             black             bold
-# }}}
+; }}}
 
-# Additional highlight groups {{{
-# Add additional highlight groups here if you want
-# }}}
+; Additional highlight groups {{{
+; Add additional highlight groups here if you want
+; }}}
 
-# B/W variant {{{
+; B/W variant {{{
 Include: _bw.colortemplate
-# }}}
+; }}}

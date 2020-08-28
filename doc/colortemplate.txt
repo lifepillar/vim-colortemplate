@@ -207,7 +207,7 @@ A template like the above will generate code with the following structure:
 	  # Defs. for light background, apply only to 16 colors
 	  finish
 	endif
-<	   
+<
 Note how the code is reordered. In particular, code in the scope of `any`
 background is put before the background is checked, for each variant to which
 it applies (the "local preamble" of each variant).
@@ -850,7 +850,7 @@ Opens a |popup| window that allows you to dynamically change the style
 attributes of the highlight group under the cursor. Use up and down arrow keys
 to choose an attribute and press space to toggle the attribute. Press `x` or
 click on the upper-right corner of the popup menu to dismiss it. You may drag
-the window around with the mouse. 
+the window around with the mouse.
 
 Note: Popup menus are available in Vim 8.1.1705 or later.
 

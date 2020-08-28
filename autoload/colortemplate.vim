@@ -1720,7 +1720,7 @@ fun! s:parse_line()
         throw "Extra characters after 'documentation'"
       endif
       call s:start_help_file()
-    elseif s:getl() =~# '\m^[^#]*:' " Look ahead
+    elseif s:getl() =~# '\m^[^;#]*:' " Look ahead
       call s:parse_key_value_pair()
     else
       call s:add_source_line(s:getl())

@@ -13,4 +13,4 @@ Variant: 2
 Normal omit omit
 CursorLine omit omit omit
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

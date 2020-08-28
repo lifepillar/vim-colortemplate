@@ -4,10 +4,10 @@ Short name:test52
 Author:y
 Maintainer:w
 Background:dark
-# Colors in the range 0-15 are ok in the third argument:
+; Colors in the range 0-15 are ok in the third argument:
 Color:black rgb(0,0,0) 15 Black
-# Color number is out of range:
+; Color number is out of range:
 Color:white #ffffff 256 White
 Normal white black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

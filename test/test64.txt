@@ -24,4 +24,4 @@ Variant: gui 8
 #else
 #endif
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

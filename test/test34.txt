@@ -4,8 +4,8 @@ Short name:test34
 Author:y
 Maintainer:w
 Background:dark
-Color:black rgb(0,0,0) 16 Black # Comment
-Color:white #ffffff 255 White  # Comment
+Color:black rgb(0,0,0) 16 Black ; Comment
+Color:white #ffffff 255 White  ; Comment
 Normal white black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -1,5 +1,5 @@
 Color: white rgb(248,248,248) ~ White
 Include: test48c.txt
-  **** # Make sure that this line is reached
+  **** ; Make sure that this line is reached
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -12,5 +12,5 @@ Normal white black
 Normal black white
 #endif
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate
 

@@ -16,4 +16,4 @@ String      white black standout
 Type        white black nocombine
 Error       white black idontexist
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

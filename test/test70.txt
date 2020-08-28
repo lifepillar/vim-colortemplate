@@ -15,4 +15,4 @@ Background:dark
 Normal omit omit
 CursorLine omit omit underline
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

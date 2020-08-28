@@ -5,9 +5,9 @@ Author:y
 Maintainer:w
 Background:dark
 Color:white #ffffff 255 White
-# Background directive may be repeated starting with v2.0.0
+; Background directive may be repeated starting with v2.0.0
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Normal white black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

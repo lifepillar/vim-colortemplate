@@ -15,4 +15,4 @@ hi Foo guifg=@bblack
 hi Bar guibg=@wwhite
 endverbatim
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

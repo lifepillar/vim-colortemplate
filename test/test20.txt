@@ -10,4 +10,4 @@ Color:red #ffffff 255 ,White
 Color:red #ffffff 255 16
 Normal white black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

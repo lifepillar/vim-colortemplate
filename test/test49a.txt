@@ -7,6 +7,6 @@ Background:dark
 Color:black rgb(0,0,0) 16 Black
 Include: test49b.txt
 Include: test49c.txt
-     ** # Make sure that this line is reached
+     ** ; Make sure that this line is reached
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

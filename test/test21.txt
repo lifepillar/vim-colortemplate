@@ -12,4 +12,4 @@ ColorColumn fg
 ColorColumn fg bg/
 ColorColumn fg bg/ reverse
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

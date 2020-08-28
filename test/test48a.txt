@@ -6,6 +6,6 @@ Maintainer:w
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Include: test48b.txt
-     ** # Make sure that this line is reached
+     ** ; Make sure that this line is reached
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

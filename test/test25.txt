@@ -11,4 +11,4 @@ ColorColumn ->
 ColorColumn --->
 ColorColumn ->  123
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

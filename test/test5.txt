@@ -9,4 +9,4 @@ Color:white #ffffff 255 White
 ColorColumn white black
 Normal white black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

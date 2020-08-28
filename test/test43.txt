@@ -7,7 +7,7 @@ Background:dark
 Color:black rgb(0,0,0) 16 Black
 
 Color:white #ffffff 255 White
-# There are trailing spaces after this definition:
+; There are trailing spaces after this definition:
 Normal white black    
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

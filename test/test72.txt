@@ -14,5 +14,5 @@ Normal white black
 Background: light
 Normal black white
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate
 

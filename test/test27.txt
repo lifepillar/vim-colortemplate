@@ -7,4 +7,4 @@ Background:dark
 Color:black rgb(0,0,0) ~
 Normal black black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

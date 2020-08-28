@@ -14,6 +14,6 @@ Variant: 256 gui
 #if wrong
 Variant: gui
 #endif
-# #endif for 256 variant is missing
+; #endif for 256 variant is missing
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

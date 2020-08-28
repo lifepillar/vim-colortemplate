@@ -9,4 +9,4 @@ Color:  fg rgb(0,0,0) 16 Black
 Color:bg rgb(0,0,0) 16 Black
 Normal fg  bg
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

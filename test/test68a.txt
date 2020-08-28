@@ -7,4 +7,4 @@ Background:dark
 Color:black #000000 16 Black
 Include: test68b
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

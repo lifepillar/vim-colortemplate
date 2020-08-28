@@ -4,4 +4,4 @@ Color:white #ffffff 255 White
 Normal white black
 Foobar white pink
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

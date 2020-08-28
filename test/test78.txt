@@ -5,5 +5,5 @@ Author:z
 Variant:256
 Background:dark
 Color: black  #000000 16
-Normal black none # This arrow -> should be ignored
-# vim: ft=colortemplate
+Normal black none ; This arrow -> should be ignored
+; vim: ft=colortemplate

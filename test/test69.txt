@@ -8,4 +8,4 @@ Color:white #ffffff 231 15
 Color:black #000000 16
 Normal black black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

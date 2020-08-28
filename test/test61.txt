@@ -6,7 +6,7 @@ Color:black #333333 236 Black
 #let x256 = '@term256black'
 #let x16  = '@term16black'
 #let xgui = '@guiblack'
-# In global scope, this is by default translated as a base256 color:
+; In global scope, this is by default translated as a base256 color:
 verbatim
 hi Foobar ctermbg=@black
 endverbatim
@@ -14,4 +14,4 @@ Variant:256
 Background:light
 Normal black black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -19,4 +19,4 @@ let g:foo = [
 hi Foobar ctermfg=@white ctermbg=@black guibg=@black guifg=@white guisp=@white
 endverbatim
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

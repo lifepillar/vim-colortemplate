@@ -8,4 +8,4 @@ verbatim
 endverbatim
 Normal skyblue nightblue
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

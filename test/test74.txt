@@ -5,11 +5,11 @@ Author:y
 Variant: 16
 Background:dark
 Color:white #ffffff 231 15
-# `none` must result is cterm(fg|bg)=NONE:
+; `none` must result is cterm(fg|bg)=NONE:
 Color:black #000000 16 none
 Normal white black
 NonText black white
 Conceal black black
 Cursor white white
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -15,4 +15,4 @@ ColorColumn fg bg t.bold
 ColorColumn fg bg t==bold
 ColorColumn fg bg g(bold
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

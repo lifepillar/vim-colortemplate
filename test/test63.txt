@@ -10,4 +10,4 @@ Color:black #000000 16 Black
 Normal black black
 #call foobar()
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

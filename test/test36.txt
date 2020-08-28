@@ -3,14 +3,14 @@ Full name:Test 36
 Short name:test36
 Author:y
 Maintainer:w
-# Color defined before background
-# must be valid for both background
+; Color defined before background
+; must be valid for both background
 Color:white #ffffff 255 White
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Normal white black
 Background:light
 Normal white white
-ColorColumn white black # black is undefined here
+ColorColumn white black ; black is undefined here
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

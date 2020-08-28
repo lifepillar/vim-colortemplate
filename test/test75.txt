@@ -6,10 +6,10 @@ Variant: 256
 Background:dark
 Color:white #ffffff 231 15
 Normal white white
-# The following should raise an error (link with multiple tokens):
-# See https://github.com/lifepillar/vim-colortemplate/issues/29
+; The following should raise an error (link with multiple tokens):
+; See https://github.com/lifepillar/vim-colortemplate/issues/29
 Cursor -> x y
-Todo -> Label # This is ok!
+Todo -> Label ; This is ok!
 Label -> Statement Float #
-# vim: ft=colortemplate
+; vim: ft=colortemplate
 

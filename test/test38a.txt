@@ -9,4 +9,4 @@ Color:white #ffffff 255 White
 Normal white black
 Include: test38b.txt
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

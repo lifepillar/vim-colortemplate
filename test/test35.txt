@@ -6,8 +6,8 @@ Maintainer:w
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
-Color:black #eeeeee 230 White  # ERROR: cannot redefine color
+Color:black #eeeeee 230 White  ; ERROR: cannot redefine color
 Normal white black
 
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

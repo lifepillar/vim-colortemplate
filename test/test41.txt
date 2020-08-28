@@ -4,8 +4,8 @@ Short name:test41
 Author:y
 Maintainer:w
 Background:dark
-Color:black  #000000 ~            # Comment after color definition
+Color:black  #000000 ~            ; Comment after color definition
 Color:white  #ffffff ~
 Normal       white  black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

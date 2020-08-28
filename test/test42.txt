@@ -4,10 +4,10 @@ Short name:test42
 Author:y
 Maintainer:w
 Background:dark
-# Color names from $VIMRUNTIME/rgb.txt are accepted, even with spaces
+; Color names from $VIMRUNTIME/rgb.txt are accepted, even with spaces
 Color:c1 snow                     ~
 Color:c2 ghost white              ~
 Color:c3 BlanchedAlmond           ~
 Normal c2 c3
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

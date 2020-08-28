@@ -6,4 +6,4 @@ Variant:256
 Background:dark
 Color: black  #000000 0
 Normal black black
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -1,2 +1,2 @@
 Color: white rgb(255,255,255) ~
-# vim: ft=colortemplate
+; vim: ft=colortemplate

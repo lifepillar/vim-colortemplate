@@ -14,4 +14,4 @@ Normal black white #else ditto
 Normal black black #elseif ditto
 #endif " end some condition (@term256white)
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

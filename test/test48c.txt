@@ -1,4 +1,4 @@
 Include: test48d.txt
-Normal black white # Normal is defined only if we reach this line
+Normal black white ; Normal is defined only if we reach this line
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

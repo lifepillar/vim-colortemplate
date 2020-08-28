@@ -10,4 +10,4 @@ Color:white #ffffff 256 White
 Color:white #ffffff not a number is an error
 Normal white black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

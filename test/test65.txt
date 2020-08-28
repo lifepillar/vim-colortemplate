@@ -4,10 +4,10 @@ Short name:test65
 Author:y
 Variant:gui
 Background:light
-# When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg and ctermbg.
-# So, those must be set to NONE, too.
-# See https://github.com/lifepillar/vim-colortemplate/issues/15
+; When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg and ctermbg.
+; So, those must be set to NONE, too.
+; See https://github.com/lifepillar/vim-colortemplate/issues/15
 Normal none none
 LineNr none none
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -4,9 +4,9 @@ Short name:test16
 Author:y
 Maintainer:w
 Background:dark
-Color:black (0,0,0) 0 Black  # WRONG
+Color:black (0,0,0) 0 Black  ; WRONG
 Color:white #ffffff 255 White
 Variant:2
-Normal white black # will be undefined
+Normal white black ; will be undefined
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -9,4 +9,4 @@ Color:white #ffffff 255 White
 #Color:green #719e07 ~
 Normal black white
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

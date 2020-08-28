@@ -9,4 +9,4 @@ Color:white #ffffff 255 White
 Normal white black
 ColorColumn fg none standout underline,nocombine t=bold,italic term=inverse gui=bold,italic g=undercurl guisp=bg s=white
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -6,9 +6,9 @@ Variant:256
 Background:light
 Color:black #000000 16
 Color:white #ffffff 255
-Normal white black italic # italic must be flushed
+Normal white black italic ; italic must be flushed
 #if 1 " some condition
-LineNr white black italic # ditto
+LineNr white black italic ; ditto
 #endif " end some condition (@term256white)
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

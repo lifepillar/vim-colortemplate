@@ -5,4 +5,4 @@ Author:y
 Maintainer:w
 Include: test39b.txt
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -8,4 +8,4 @@ Color:black rgb(0,0,0) ~ Black
 Color:peru peru ~
 Normal peru black
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

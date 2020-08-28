@@ -5,8 +5,8 @@ Author:y
 Maintainer:w
 Background:dark
 Variant:8
-Color:black cmyk(0,0,0,0) 0 Black # WRONG
+Color:black cmyk(0,0,0,0) 0 Black ; WRONG
 Color:white #ffffff 255 White
-Normal white black # Will be undefined
+Normal white black ; Will be undefined
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

@@ -5,7 +5,7 @@ Author:y
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
-# Older version mistakenly parsed : in comments
-Normal white black  # :
+; Older version mistakenly parsed : in comments
+Normal white black  ; :
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

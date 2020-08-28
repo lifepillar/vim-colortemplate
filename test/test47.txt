@@ -8,6 +8,6 @@ Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Palette: vimspectr wcurve 180
 Normal white black
-ColorColumn g0 g7  # vimspectr colors
+ColorColumn g0 g7  ; vimspectr colors
 
-# vim: ft=colortemplate
+; vim: ft=colortemplate

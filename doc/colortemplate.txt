@@ -937,7 +937,7 @@ Colortemplate functions				*colortemplate-functions*
 
 These are some utility functions that advanced users may find useful.
 
-				*colortemplate#format_palette()*
+					*colortemplate#format_palette()*
 Formats a Dictionary of color name/value pairs into Colortemplate format. The
 returned value is a List, each item of which contains a color definition. To
 insert the color definitions at the current cursor's position, you may use
@@ -946,7 +946,18 @@ something like:
 	:call append('.', colortemplate#format_palette(some_color_dictionary))
 <
 
-				*colortemplate#vimspectr#palette()*
+					*colortemplate#import#run()*
+Creates a template document in a new buffer extracting information from the
+currently active highlight groups. For better results, it is recommended to
+run a GUI version of Vim or to run terminal Vim in an environment supporting
+`termguicolors`, and to proceed as follows:
+
+- run `vim --clean`;
+- load (with |:colorscheme|) the color scheme to be imported;
+- add Colortemplate to |runtimepath|;
+- `:call` `colortemplate#import#run()`.
+
+					*colortemplate#vimspectr#palette()*
 Returns a Dictionary of color name/value pairs corresponding to the given
 Vimspectr parameters. The function takes two arguments: the first argument is
 the saturation curve (allowed values are `'grey'`, `'flat'`, `'wflat'`,
@@ -959,7 +970,7 @@ The color names are `g0`, `g1`, ... through `g7`.
 
 See also: https://github.com/nightsense/vimspectr
 
-						*colortemplate#syn#toggle()*
+					*colortemplate#syn#toggle()*
 Toggles the display of highlight group information for the text under the
 cursor. The information is displayed in the command line and has the following
 form:

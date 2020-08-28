@@ -8,6 +8,7 @@
 CTRL-L	colortemplate.txt	/*CTRL-L*
 b:colortemplate_outdir	colortemplate.txt	/*b:colortemplate_outdir*
 colortemplate#format_palette()	colortemplate.txt	/*colortemplate#format_palette()*
+colortemplate#import#run()	colortemplate.txt	/*colortemplate#import#run()*
 colortemplate#syn#toggle()	colortemplate.txt	/*colortemplate#syn#toggle()*
 colortemplate#vimspectr#palette()	colortemplate.txt	/*colortemplate#vimspectr#palette()*
 colortemplate-auxfiles	colortemplate.txt	/*colortemplate-auxfiles*

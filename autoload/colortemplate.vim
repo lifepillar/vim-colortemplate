@@ -1347,7 +1347,7 @@ fun! s:token.next() dict
     " Commands are recognized only at the start of a line
     if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>', 0) > -1
       let self.kind = 'CMD'
-      let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\)\>', 0)
+      let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\|\%[un]let\|call!\=\)', 0)
     elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
       let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'
@@ -2063,14 +2063,16 @@ endf
 
 fun! s:parse_command(cmd)
   call s:start_verbatim()
-  if a:cmd =~# '\m^if$'
+  if a:cmd ==# 'if'
     call s:start_if()
-  elseif a:cmd =~# '\m^endif$'
+  elseif a:cmd ==# 'endif'
     call s:stop_if()
   elseif a:cmd =~# '\m^else' && !s:is_if()
     throw a:cmd.' without if'
   endif
-  let l:text = matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
+  let l:text = (a:cmd ==# 'call!')
+        \ ? 'silent! call' . matchstr(s:getl(), '^\s*#call!\zs.\{-}\s*$')
+        \ : matchstr(s:getl(), '^\s*#\zs.\{-}\s*$')
   for l:v in s:active_variants()
     call s:add_verbatim_item(l:v, s:active_section(),
           \ { 'line': l:text, 'linenr': s:linenr(), 'file': s:currfile() })

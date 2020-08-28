@@ -32,7 +32,6 @@ colortemplate-toolbar	colortemplate.txt	/*colortemplate-toolbar*
 colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
-dark.txt	dark.txt	/*dark.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_transp_bg	colortemplate.txt	/*g:@shortname_transp_bg*
 g:colortemplate_creator	colortemplate.txt	/*g:colortemplate_creator*
@@ -49,7 +48,6 @@ g:colortemplate_toolbar_actions	colortemplate.txt	/*g:colortemplate_toolbar_acti
 g:colortemplate_toolbar_items	colortemplate.txt	/*g:colortemplate_toolbar_items*
 g:colortemplate_use_tabs	colortemplate.txt	/*g:colortemplate_use_tabs*
 g:colortemplate_warnings	colortemplate.txt	/*g:colortemplate_warnings*
-g:dark_transp_bg	dark.txt	/*g:dark_transp_bg*
 ga	colortemplate.txt	/*ga*
 gx	colortemplate.txt	/*gx*
 gy	colortemplate.txt	/*gy*

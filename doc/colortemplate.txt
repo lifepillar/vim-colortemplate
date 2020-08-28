@@ -514,7 +514,7 @@ insert the current Vim version).
 Verbatim blocks are most often used for conditionals or to set and get
 variables or to invoke functions. Therefore, Colortemplate provides convenient
 shortcuts for such cases. When `#if`, `#else`, `#elseif`, `#endif`, `#let`,
-`#unlet` or `#call[!]` appear at the start of a line, they act as one-line
+`#unlet[!]` or `#call[!]` appear at the start of a line, they act as one-line
 verbatim blocks. Such directives are replaced by the corresponding Vim
 commands and what follows until the end of the line is copied verbatim (but
 interpolated) to the output. So, for instance, this template:

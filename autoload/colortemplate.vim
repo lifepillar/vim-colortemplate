@@ -1347,7 +1347,7 @@ fun! s:token.next() dict
     " Commands are recognized only at the start of a line
     if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>', 0) > -1
       let self.kind = 'CMD'
-      let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\|\%[un]let\|call!\=\)', 0)
+      let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\|\%[un]let!\=\|call!\=\)', 0)
     elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
       let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
       let self.kind = 'HEX'

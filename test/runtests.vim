@@ -826,6 +826,11 @@ fun! Test_CT_colors_0_16_in_base256_do_not_cause_base16_color_undefined()
   call s:assert_build('test79')
 endf
 
+fun! Test_CT_silent_call_command()
+  call s:assert_build('test80')
+endf
+
+
 "
 " Runner!
 "

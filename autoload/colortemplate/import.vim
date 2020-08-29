@@ -359,10 +359,11 @@ fun! s:generate_template()
   for l:g in sort(keys(s:higroups))
     let l:fg = s:higroups[l:g]['fgname']
     let l:bg = s:higroups[l:g]['bgname']
+    let l:at = s:attr_text(s:higroups[l:g])
     call s:put(l:g . ' ' . repeat(' ', s:name_maxlen - len(l:g))
           \ . l:fg . ' ' . repeat(' ', 10 - len(l:fg))
-          \ . l:bg . ' ' . repeat(' ', 10 - len(l:bg))
-          \ . s:attr_text(s:higroups[l:g]))
+          \ . l:bg . (empty(l:at) ? '' : ' ' . repeat(' ', 10 - len(l:bg)))
+          \ . l:at)
   endfor
   call s:put('; }}}')
 endf

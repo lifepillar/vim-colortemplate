@@ -148,6 +148,19 @@ fun! s:cleanup()
   unlet! s:pairs
 endf
 
+fun! s:warn(t)
+  echohl WarningMsg
+  echomsg '[Colortemplate]' t . '.'
+  echohl None
+endf
+
+fun! s:fatal(t)
+  echohl Error
+  echomsg '[Colortemplate]' t . '.'
+  echohl None
+  call interrupt()
+endf
+
 fun! s:higroup_name(synid)
   let l:name = synIDattr(a:synid, 'name')
   let s:name_maxlen = max([s:name_maxlen, len(l:name)])
@@ -176,10 +189,7 @@ fun! s:next_color_name()
   let s:n += 1
   if get(g:, 'colortemplate_fancy_import', 1)
     if s:n > len(s:pairs)
-      echohl Error
-      echomsg '[Colortemplate] Too many colors. Try setting g:colortemplate_fancy_import = 0.'
-      echohl None
-      call interrupt()
+      call fatal('Too many colors. Try setting g:colortemplate_fancy_import = 0')
     endif
     return g:colortemplate#import#adjectives[s:pairs[s:n][0]] . g:colortemplate#import#names[s:pairs[s:n][1]]
   else
@@ -201,9 +211,7 @@ fun! s:assignColor(synid, type)
       try " to convert name to number
         let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
       catch " What?!
-        echohl WarningMsg
-        echomsg  '[Colortemplate] Unknown color name:' l:term 'in' s:higroup_name(a:synid)
-        echohl None
+        call s:warn('Unknown color name:' l:term 'in' s:higroup_name(a:synid))
         return 'none'
       endtry
     endif
@@ -326,6 +334,16 @@ fun! s:attr_text(higroup)
   return l:s
 endf
 
+fun! s:print_higroup(g)
+  let l:fg = s:higroups[a:g]['fgname']
+  let l:bg = s:higroups[a:g]['bgname']
+  let l:at = s:attr_text(s:higroups[a:g])
+  call s:put(a:g . ' ' . repeat(' ', s:name_maxlen - len(a:g))
+        \ . l:fg . ' ' . repeat(' ', 10 - len(l:fg))
+        \ . l:bg . (empty(l:at) ? '' : ' ' . repeat(' ', 10 - len(l:bg)))
+        \ . l:at)
+endf
+
 fun! s:generate_template()
   let l:name = (exists('g:colors_name') && !empty(g:colors_name) ? g:colors_name : 'My Theme')
   call setline(1, 'Full name: ' . l:name)
@@ -357,14 +375,15 @@ fun! s:generate_template()
   call s:put('Variant: gui 256')
   call s:put('')
   call s:put('; Highlight groups {{{')
+  " Print Normal group first
+  if has_key(s:higroups, 'Normal')
+    call s:print_higroup('Normal')
+    call remove(s:higroups, 'Normal')
+  else " This should never happen
+    call s:warn('Normal group is not defined')
+  endif
   for l:g in sort(keys(s:higroups))
-    let l:fg = s:higroups[l:g]['fgname']
-    let l:bg = s:higroups[l:g]['bgname']
-    let l:at = s:attr_text(s:higroups[l:g])
-    call s:put(l:g . ' ' . repeat(' ', s:name_maxlen - len(l:g))
-          \ . l:fg . ' ' . repeat(' ', 10 - len(l:fg))
-          \ . l:bg . (empty(l:at) ? '' : ' ' . repeat(' ', 10 - len(l:bg)))
-          \ . l:at)
+    call s:print_higroup(l:g)
   endfor
   call s:put('; }}}')
 endf

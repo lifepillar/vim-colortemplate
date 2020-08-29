@@ -140,6 +140,16 @@ fun! s:collect()
       let s:linked_groups[s:higroup_name(l:id)] = s:higroup_name(l:trid)
     endif
   endfor
+  " Retrieve terminal ANSI colors
+  if (exists('g:terminal_ansi_colors'))
+    for l:c in g:terminal_ansi_colors
+      if !has_key(s:invmap, l:c)
+        let l:name = s:next_color_name()
+        let s:colmap[l:name] = l:c
+        let s:invmap[l:c] = l:name
+      endif
+    endfor
+  endif
 endf
 
 
@@ -200,6 +210,10 @@ fun! s:generate_template()
   for l:name in sort(keys(s:colmap))
     call s:put('Color: ' . l:name . ' ' . s:colmap[l:name] . ' ~')
   endfor
+  call s:put('')
+  if exists('g:terminal_ansi_colors')
+    call s:put('Term colors: ' . join(map(g:terminal_ansi_colors, 's:invmap[v:val]'), ' '))
+  endif
   call s:put('; }}}')
   call s:put('')
   " Highlight group definitions

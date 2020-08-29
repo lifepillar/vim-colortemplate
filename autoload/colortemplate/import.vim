@@ -23,6 +23,7 @@ fun! s:init()
   let s:invmap        = {} " GUI value => Color name
   let s:higroups      = {} " Highlight group definitions
   let s:linked_groups = {} " Linked groups (source => target)
+  let s:name_maxlen   = 6  " Maximum length of a highlight group name
 endf
 
 fun! s:cleanup()
@@ -30,10 +31,13 @@ fun! s:cleanup()
   unlet s:invmap
   unlet s:higroups
   unlet s:linked_groups
+  unlet s:name_maxlen
 endf
 
 fun! s:higroup_name(synid)
-  return synIDattr(a:synid, 'name')
+  let l:name = synIDattr(a:synid, 'name')
+  let s:name_maxlen = max([s:name_maxlen, len(l:name)])
+  return l:name
 endf
 
 " Returns the list of the names of the currently defined highlight groups.
@@ -199,7 +203,7 @@ fun! s:generate_template()
   " Linked groups
   call s:put('; Common linked groups {{{')
   for l:g in sort(keys(s:linked_groups))
-    call s:put(l:g . ' -> ' . s:linked_groups[l:g])
+    call s:put(l:g . repeat(' ', s:name_maxlen - len(l:g)) .' -> ' . s:linked_groups[l:g])
   endfor
   call s:put('; }}}')
   call s:put('')
@@ -222,7 +226,12 @@ fun! s:generate_template()
   call s:put('')
   call s:put('; Highlight groups {{{')
   for l:g in sort(keys(s:higroups))
-    call s:put(l:g . ' ' . s:higroups[l:g]['fgname'] . ' ' . s:higroups[l:g]['bgname'] . s:attr_text(s:higroups[l:g]))
+    let l:fg = s:higroups[l:g]['fgname']
+    let l:bg = s:higroups[l:g]['bgname']
+    call s:put(l:g . ' ' . repeat(' ', s:name_maxlen - len(l:g))
+          \ . l:fg . ' ' . repeat(' ', 10 - len(l:fg))
+          \ . l:bg . ' ' . repeat(' ', 10 - len(l:bg))
+          \ . s:attr_text(s:higroups[l:g]))
   endfor
   call s:put('; }}}')
 endf

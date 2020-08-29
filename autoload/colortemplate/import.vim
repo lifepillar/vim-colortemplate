@@ -91,6 +91,12 @@ fun! s:assignColor(synid, type)
     endtry
   endif
 
+  if l:gui ==# 'bg'
+    return s:higroups['Normal']['bgname']
+  endif
+  if l:gui ==# 'fg'
+    return s:higroups['Normal']['fgname']
+  endif
   if has_key(s:invmap, l:gui) " Color already defined: return its name
     return s:invmap[l:gui]
   endif
@@ -135,6 +141,9 @@ endf
 " The information is stored in the s:higroups dictionary.
 " Linked groups are collected into s:linked_groups.
 fun! s:collect()
+  " Get Normal colors first
+  call extend(s:higroups, s:higroup_info(hlID('Normal')))
+  " Get info about the remaining highlight groups
   let l:allids = colortemplate#import#ids()
   for l:id in l:allids
     let l:trid = synIDtrans(l:id)

@@ -19,7 +19,7 @@ let g:colortemplate#import#ansi_colors = [
       \ ]
 
 let g:colortemplate#import#adjectives = [
-      \ 'blue',
+      \ 'bald',
       \ 'bold',
       \ 'busy',
       \ 'calm',
@@ -43,6 +43,7 @@ let g:colortemplate#import#adjectives = [
       \ 'long',
       \ 'nice',
       \ 'open',
+      \ 'pale',
       \ 'poor',
       \ 'real',
       \ 'rich',

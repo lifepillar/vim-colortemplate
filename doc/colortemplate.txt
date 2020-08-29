@@ -954,8 +954,8 @@ something like:
 <
 
 					*colortemplate#import#run()*
-Creates a template document in a new buffer extracting information from the
-currently active highlight groups. For better results, it is recommended to
+Creates a template document in a new buffer by extracting information from the
+currently defined highlight groups. For optimal results, it is recommended to
 run a GUI version of Vim or to run terminal Vim in an environment supporting
 `termguicolors`, and to proceed as follows:
 
@@ -963,6 +963,11 @@ run a GUI version of Vim or to run terminal Vim in an environment supporting
 - load (with |:colorscheme|) the color scheme to be imported;
 - add Colortemplate to |runtimepath|;
 - `:call` `colortemplate#import#run()`.
+
+Note: although the generated template should compile out of the box and
+faithfully reproduce your currently active color scheme, keep in mind that
+this function is only meant to facilitate the initial scaffolding of a new
+template.
 
 					*colortemplate#vimspectr#palette()*
 Returns a Dictionary of color name/value pairs corresponding to the given

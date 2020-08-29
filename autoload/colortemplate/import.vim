@@ -328,8 +328,8 @@ endf
 
 fun! s:generate_template()
   let l:name = (exists('g:colors_name') && !empty(g:colors_name) ? g:colors_name : 'My Theme')
-  call setline(1, 'Full name: Template ' . l:name)
-  call s:put('Short name: template_' . l:name)
+  call setline(1, 'Full name: ' . l:name)
+  call s:put('Short name: template_' . substitute(tolower(l:name), '\%(\s\|-\)', '_', 'g'))
   call s:put('Author: Me <me@somewhere.org>')
   call s:put('')
   " Linked groups

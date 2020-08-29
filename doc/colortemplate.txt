@@ -737,6 +737,13 @@ output color scheme.
 >
 	let g:colortemplate_creator = 1
 <
+						*g:colortemplate_fancy_import*
+When importing a color scheme (see |colortemplate#import#run()|),
+Colortemplate by default generates random fancy names for colors. Set this to
+0 if you prefer dull names such as Color0001, Color0002, etc., instead.
+>
+	let g:colortemplate_fancy_import = 1
+<
 						*g:colortemplate_ignore_missing*
 Set to 1 if you want Colortemplate to automatically add `@suppress` lines for
 the highlight groups that are not defined by your template. Such lines are

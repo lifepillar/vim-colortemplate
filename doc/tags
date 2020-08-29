@@ -36,6 +36,7 @@ colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_transp_bg	colortemplate.txt	/*g:@shortname_transp_bg*
 g:colortemplate_creator	colortemplate.txt	/*g:colortemplate_creator*
+g:colortemplate_fancy_import	colortemplate.txt	/*g:colortemplate_fancy_import*
 g:colortemplate_ignore_missing	colortemplate.txt	/*g:colortemplate_ignore_missing*
 g:colortemplate_no_aux_files	colortemplate.txt	/*g:colortemplate_no_aux_files*
 g:colortemplate_no_doc	colortemplate.txt	/*g:colortemplate_no_doc*

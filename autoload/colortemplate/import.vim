@@ -18,12 +18,123 @@ let g:colortemplate#import#ansi_colors = [
       \ '#ffffff',
       \ ]
 
+let g:colortemplate#import#adjectives = [
+      \ 'blue',
+      \ 'bold',
+      \ 'busy',
+      \ 'calm',
+      \ 'cool',
+      \ 'cute',
+      \ 'dead',
+      \ 'drab',
+      \ 'dull',
+      \ 'dumb',
+      \ 'easy',
+      \ 'evil',
+      \ 'fair',
+      \ 'fine',
+      \ 'free',
+      \ 'glad',
+      \ 'glum',
+      \ 'good',
+      \ 'hurt',
+      \ 'kind',
+      \ 'lazy',
+      \ 'long',
+      \ 'nice',
+      \ 'open',
+      \ 'poor',
+      \ 'real',
+      \ 'rich',
+      \ 'sore',
+      \ 'sour',
+      \ 'tame',
+      \ 'ugly',
+      \ 'vast',
+      \ 'warm',
+      \ 'weak',
+      \ 'wild',
+      \ 'zany',
+      \ ]
+
+let g:colortemplate#import#names = [
+      \ 'Akita',
+      \ 'Bison',
+      \ 'Bongo',
+      \ 'Booby',
+      \ 'Camel',
+      \ 'Coati',
+      \ 'Coral',
+      \ 'Crane',
+      \ 'Dhole',
+      \ 'Dingo',
+      \ 'Eagle',
+      \ 'Fossa',
+      \ 'Gecko',
+      \ 'Goose',
+      \ 'Guppy',
+      \ 'Heron',
+      \ 'Horse',
+      \ 'Human',
+      \ 'Hyena',
+      \ 'Indri',
+      \ 'Koala',
+      \ 'Lemur',
+      \ 'Liger',
+      \ 'Llama',
+      \ 'Macaw',
+      \ 'Molly',
+      \ 'Moose',
+      \ 'Mouse',
+      \ 'Okapi',
+      \ 'Otter',
+      \ 'Prawn',
+      \ 'Quail',
+      \ 'Quoll',
+      \ 'Robin',
+      \ 'Saola',
+      \ 'Sheep',
+      \ 'Skunk',
+      \ 'Sloth',
+      \ 'Snail',
+      \ 'Snake',
+      \ 'Squid',
+      \ 'Stoat',
+      \ 'Tapir',
+      \ 'Tetra',
+      \ 'Tiger',
+      \ 'Xerus',
+      \ 'Zebra',
+      \ 'Zorse',
+      \ ]
+
+fun! s:shuffle(x)
+  for l:i in reverse(range(0, len(a:x) - 1))
+    let l:j = rand() % (l:i + 1)
+    let l:tmp = a:x[l:i]
+    let a:x[l:i] = a:x[l:j]
+    let a:x[l:j] = l:tmp
+  endfor
+  return a:x
+endf
+
 fun! s:init()
   let s:colmap        = {} " Color name => GUI value
   let s:invmap        = {} " GUI value => Color name
   let s:higroups      = {} " Highlight group definitions
   let s:linked_groups = {} " Linked groups (source => target)
   let s:name_maxlen   = 6  " Maximum length of a highlight group name
+  if get(g:, 'colortemplate_fancy_import', 1)
+    let s:pairs = []
+    for l:i in range(0, len(g:colortemplate#import#adjectives) - 1)
+      for l:j in range(0, len(g:colortemplate#import#names) - 1)
+        call add(s:pairs, [l:i, l:j])
+      endfor
+    endfor
+    let s:pairs = s:shuffle(s:pairs)
+  else
+  endif
+  let s:n = 0
 endf
 
 fun! s:cleanup()
@@ -32,6 +143,8 @@ fun! s:cleanup()
   unlet s:higroups
   unlet s:linked_groups
   unlet s:name_maxlen
+  unlet s:n
+  unlet! s:pairs
 endf
 
 fun! s:higroup_name(synid)
@@ -58,10 +171,19 @@ fun! colortemplate#import#ids()
   return map(colortemplate#import#names(), 'hlID(matchstr(v:val, "^\\S\\+"))')
 endf
 
-let s:n = 0
 fun! s:next_color_name()
   let s:n += 1
-  return 'Color' .. repeat('0', float2nr(4 - log10(s:n + 1))) . s:n
+  if get(g:, 'colortemplate_fancy_import', 1)
+    if s:n > len(s:pairs)
+      echohl Error
+      echomsg '[Colortemplate] Too many colors. Try setting g:colortemplate_fancy_import = 0.'
+      echohl None
+      call interrupt()
+    endif
+    return g:colortemplate#import#adjectives[s:pairs[s:n][0]] . g:colortemplate#import#names[s:pairs[s:n][1]]
+  else
+    return 'Color' .. repeat('0', float2nr(4 - log10(s:n + 1))) . s:n
+  endif
 endf
 
 " Returns a generated color name for the color of the specified type

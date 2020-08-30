@@ -85,4 +85,103 @@ fun! colortemplate#syn#toggle()
   endif
 endf
 
+" Configurable values for the 16 terminal ANSI colors
+" These are arbitrary hex values for terminal colors in the range 0-15. These
+" are defined for situations in which a hex value must be returned under all
+" circumstances, even if it is an approximate one.
+let g:colortemplate#syn#ansi_colors = [
+      \ '#000000',
+      \ '#990000',
+      \ '#00a600',
+      \ '#999900',
+      \ '#0000b2',
+      \ '#b200b2',
+      \ '#00a6b2',
+      \ '#bfbfbf',
+      \ '#888888',
+      \ '#e50000',
+      \ '#00d900',
+      \ '#e5e500',
+      \ '#0000ff',
+      \ '#e500e5',
+      \ '#00e5e5',
+      \ '#ffffff',
+      \ ]
+
+" Try (hard) to derive a more or less reasonable hex value for a given
+" highlight group color. This is trivial if the highlight group defines
+" guifg/guibg/guisp, and it is easy if the cterm color is a number >15 (see
+" above). But the highlight group may not define guifg/guibg/guisp, and the
+" terminal color might be a number in [0-15], a name (e.g., Magenta), or fg/bg
+" (or it may not exist either).
+"
+" This function is useful, for instance, when importing highlight group
+" definitions to create a template, or in the style popup. In such cases,
+" getting an approximate value is better than nothing.
+"
+" name: the name of a highlight group
+" type: 'fg', 'bg', or 'sp'
+fun! colortemplate#syn#higroup2hex(name, type)
+  let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
+  if l:gui =~# '\m^#' " Fast path
+    return l:gui
+  endif
+  if empty(l:gui)
+    let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
+    if empty(l:term)
+      if tolower(a:name) ==# 'normal' " ? No info
+        return a:type ==# 'fg' ? '#ffffff' : '#000000'
+      else
+        return colortemplate#syn#higroup2hex('Normal', a:type)
+      endif
+    endif
+    if l:term !~ '\m^\d\+$'
+      if l:term ==# 'bg'
+        if tolower(a:name) ==# 'normal' " ? Should never happen
+          return '#000000'
+        else
+          return colortemplate#syn#higroup2hex('Normal', 'bg')
+        endif
+      elseif l:term ==# 'fg'
+        if tolower(a:name) ==# 'normal' " ? Should never happen
+          return '#ffffff'
+        else
+          return colortemplate#syn#higroup2hex('Normal', 'fg')
+        endif
+      endif
+      try " to convert name to number
+        let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
+      catch " What?!
+        return a:type ==# 'fg' ? '#ffffff' : '#000000'
+      endtry
+    endif
+    try
+      let l:gui = colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term))
+    catch " Term number is in [0,15]
+      return g:colortemplate#syn#ansi_colors[str2nr(l:gui)]
+    endtry
+    return l:gui
+  endif
+  " If we get here, l:gui is not empty, but it's not a hex value
+  if l:gui ==# 'fg'
+    if tolower(a:name) ==# 'normal' " ? Should never happen
+      return '#ffffff'
+    else
+      return colortemplate#syn#higroup2hex('Normal', 'fg')
+    endif
+  elseif l:gui ==# 'bg'
+    if tolower(a:name) ==# 'normal' " ? Should never happen
+      return '#000000'
+    else
+      return colortemplate#syn#higroup2hex('Normal', 'bg')
+    endif
+  endif
+  try
+    let l:gui = colortemplate#colorspace#rgbname2hex(l:gui)
+  catch " What?!
+    return a:type ==# 'fg' ? '#ffffff' : '#000000'
+  endtry
+  return l:gui
+endf
+
 " vim: foldmethod=marker nowrap et ts=2 sw=2

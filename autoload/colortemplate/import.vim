@@ -1,23 +1,3 @@
-" Configurable values for the 16 terminal ANSI colors
-let g:colortemplate#import#ansi_colors = [
-      \ '#000000',
-      \ '#990000',
-      \ '#00a600',
-      \ '#999900',
-      \ '#0000b2',
-      \ '#b200b2',
-      \ '#00a6b2',
-      \ '#bfbfbf',
-      \ '#888888',
-      \ '#e50000',
-      \ '#00d900',
-      \ '#e5e500',
-      \ '#0000ff',
-      \ '#e500e5',
-      \ '#00e5e5',
-      \ '#ffffff',
-      \ ]
-
 let g:colortemplate#import#adjectives = [
       \ 'bald',
       \ 'bold',
@@ -201,40 +181,14 @@ endf
 " (fg, bg, sp) in the given highlight group. Different colors are assigned
 " different names.
 fun! s:assignColor(synid, type)
-  let l:gui  = synIDattr(a:synid, a:type , 'gui')
-  if empty(l:gui) " Try deriving it from cterm color
-    let l:term = synIDattr(a:synid, a:type, 'cterm')
-    if empty(l:term) " No info
-      return 'none'
-    endif
-    if l:term !~ '\m^\d\+$'
-      try " to convert name to number
-        let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
-      catch " What?!
-        call s:warn('Unknown color name:' l:term 'in' s:higroup_name(a:synid))
-        return 'none'
-      endtry
-    endif
-    try
-      let l:gui = colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term))
-    catch " Term number is in [0,15]
-      let l:gui = g:colortemplate#import#ansi_colors[str2nr(l:term)]
-    endtry
-  endif
-
-  if l:gui ==# 'bg'
-    return s:higroups['Normal']['bgname']
-  endif
-  if l:gui ==# 'fg'
-    return s:higroups['Normal']['fgname']
-  endif
-  if has_key(s:invmap, l:gui) " Color already defined: return its name
-    return s:invmap[l:gui]
+  let l:col = colortemplate#syn#higroup2hex(synIDattr(a:synid, 'name'), a:type)
+  if has_key(s:invmap, l:col) " Color already defined: return its name
+    return s:invmap[l:col]
   endif
   " New color: generate new name
   let l:name = s:next_color_name()
-  let s:colmap[l:name] = l:gui
-  let s:invmap[l:gui] = l:name
+  let s:colmap[l:name] = l:col
+  let s:invmap[l:col] = l:name
   return l:name
 endf
 

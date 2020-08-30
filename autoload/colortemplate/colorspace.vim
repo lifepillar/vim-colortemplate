@@ -25,6 +25,13 @@ fun! colortemplate#colorspace#rgb2hex(r, g, b)
   return s:rgb2hex(a:r, a:g, a:b)
 endf
 
+" Convert an RGB color (in 0-255) into a gray shade (0-1)
+" See: https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
+fun! colortemplate#colorspace#color2gray(r, g, b)
+  let l:y = colortemplate#colorspace#relative_luminance(a:r, a:g, a:b)
+  return l:y <= 0.0031308 ? 12.92 * l:y : 1.055 * pow(l:y, 0.4167) - 0.055
+endf
+
 " Convert an HSV color into RGB space.
 " Input values must be in the interval [0,1]
 " See: http://www.easyrgb.com/en/math.php

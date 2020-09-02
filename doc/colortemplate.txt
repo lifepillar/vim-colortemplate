@@ -852,17 +852,33 @@ Colortemplate commands		       		*colortemplate-commands*
 
 Global commands ~
 
-						*:ColortemplateStyle*
-Opens a |popup| window that allows you to dynamically change the style
-attributes of the highlight group under the cursor. Use up and down arrow keys
-to choose an attribute and press space to toggle the attribute. Press `x` or
-click on the upper-right corner of the popup menu to dismiss it. You may drag
-the window around with the mouse.
-
-Note: Popup menus are available in Vim 8.1.1705 or later.
-
 Note: Global commands are available in any buffer, but only after a template
 has been opened.
+
+						*:ColortemplateStyle*
+Opens a |popup| window that allows you to dynamically change the color and
+style of a highlight group. When the command is used without arguments, the
+popup will reflect the status of the highlight group under the cursor. The
+command also accepts an optional highlight group: this is useful to style 
+not editable elements, such as the status line.
+
+The popup window consists of four panes: RGB, HSL, Grayscale, and Help, which
+can be selected by pressing R, H, G, and ?, respectively. Currently, only the
+RGB and Help panes are implemented.
+
+Use up and down arrow keys to choose an item in the popup. When a level bar is
+selected, you may change the corresponding value with the left and right keys.
+To choose a new color, press E. To modify a different highlight group, press
+N. Attributes such as boldface, italics, and so on, can also be toggled by
+pressing a key: see the Help pane for the details. Press Tab or S-Tab to
+switch between foreground, background, and special color.
+
+Press `x` or click on the upper-right corner of the popup menu
+to dismiss it. If you want to revert your changes, press `X` instead.
+
+You may drag the window around with the mouse.
+
+Note: Popup menus are available in Vim 8.1.1705 or later.
 
 Buffer-local commands ~
 						*:Colortemplate[!]*

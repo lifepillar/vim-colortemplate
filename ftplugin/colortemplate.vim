@@ -36,7 +36,7 @@ command! -buffer -nargs=0                          ColortemplateOutdir call colo
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 
 if has('patch-8.1.1705')
-  command! -nargs=0 -bar ColortemplateStyle call colortemplate#style_popup#open()
+  command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)
 endif
 
 if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu')) " does it have window-toolbar?

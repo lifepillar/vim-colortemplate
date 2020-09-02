@@ -4,16 +4,20 @@ function! s:slash() abort
 endfunction
 
 fun! s:hex2rgb(col)
-  return map(matchlist(a:col, '^#\?\(..\)\(..\)\(..\)$')[1:3], 'str2nr(v:val,16)')
+  return a:col =~# '^#'
+        \ ? [str2nr(a:col[1:2],16), str2nr(a:col[3:4],16), str2nr(a:col[5:6],16)]
+        \ : [str2nr(a:col[0:1],16), str2nr(a:col[2:3],16), str2nr(a:col[4:5],16)]
 endf
 
 fun! s:rgb2hex(r, g, b)
-  return '#' . printf('%02x', a:r) . printf('%02x', a:g) . printf('%02x', a:b)
+  return printf('#%02x%02x%02x', a:r, a:g, a:b)
 endf
 
 " Convert a hexadecimal color string into a three-elements list of RGB values.
 "
 " Example: call colortemplate#colorspace#hex2rgb('#ffffff') -> [255,255,255]
+"
+" Note: the leading '#' may be omitted.
 fun! colortemplate#colorspace#hex2rgb(col)
   return s:hex2rgb(a:col)
 endf

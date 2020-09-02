@@ -11,7 +11,7 @@ endf
 
 fun! colortemplate#syn#attributes(synid, mode)
   let l:attrs = []
-  for l:a in ['bold', 'italic', 'reverse', 'standout', 'underline', 'undercurl']
+  for l:a in ['bold', 'italic', 'inverse', 'standout', 'underline', 'undercurl']
     if '1' ==# synIDattr(a:synid, l:a, a:mode)
       call add(l:attrs, l:a)
     endif
@@ -44,8 +44,9 @@ fun! s:toggle_attribute(synid, attr)
   endif
 endf
 
-fun! colortemplate#syn#toggle_attribute(attr)
-  call s:toggle_attribute(synID(line('.'), col('.'), 1), a:attr)
+fun! colortemplate#syn#toggle_attribute(synid, attr)
+  " call s:toggle_attribute(synID(line('.'), col('.'), 1), a:attr)
+  call s:toggle_attribute(a:synid, a:attr)
 endf
 
 " Prints information about the highlight group at the cursor position.
@@ -109,11 +110,12 @@ let g:colortemplate#syn#ansi_colors = [
       \ ]
 
 " Try (hard) to derive a more or less reasonable hex value for a given
-" highlight group color. This is trivial if the highlight group defines
-" guifg/guibg/guisp, and it is easy if the cterm color is a number >15 (see
-" above). But the highlight group may not define guifg/guibg/guisp, and the
-" terminal color might be a number in [0-15], a name (e.g., Magenta), or fg/bg
-" (or it may not exist either).
+" highlight group color. This is trivial if the environment supports millions
+" of colors and the highlight group defines guifg/guibg/guisp; it is easy if
+" the cterm color is a number >15 (see above). But the highlight group may not
+" define guifg/guibg/guisp, the environment may support only 256 colors, and
+" the terminal color might be a number in [0-15], a name (e.g., Magenta), or
+" fg/bg (or it may not exist either).
 "
 " This function is useful, for instance, when importing highlight group
 " definitions to create a template, or in the style popup. In such cases,
@@ -122,11 +124,15 @@ let g:colortemplate#syn#ansi_colors = [
 " name: the name of a highlight group
 " type: 'fg', 'bg', or 'sp'
 fun! colortemplate#syn#higroup2hex(name, type)
-  let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
+  if has('gui_running') || (has('termguicolors') && &termguicolors)
+    let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
+  else
+    let l:gui = ''
+  endif
   if l:gui =~# '\m^#' " Fast path
     return l:gui
   endif
-  if empty(l:gui)
+  if empty(l:gui) " Infer from cterm color
     let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
     if empty(l:term)
       if tolower(a:name) ==# 'normal' " ? No info

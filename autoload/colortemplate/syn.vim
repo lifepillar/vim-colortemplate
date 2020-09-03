@@ -138,7 +138,7 @@ fun! colortemplate#syn#higroup2hex(name, type)
       if tolower(a:name) ==# 'normal' " ? No info
         return a:type ==# 'fg' ? '#ffffff' : '#000000'
       else
-        return colortemplate#syn#higroup2hex('Normal', a:type)
+        return colortemplate#syn#higroup2hex('Normal', (a:type ==# 'sp' ? 'bg' : a:type))
       endif
     endif
     if l:term !~ '\m^\d\+$'

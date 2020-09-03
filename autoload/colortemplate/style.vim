@@ -308,7 +308,7 @@ fun! s:redraw_help()
         \ s:noprop('[S-Tab] sp->bg->fg    [?] Help pane'),
         \ s:noprop(''),
         \ s:proplabel('Attributes'),
-        \ s:noprop('[B] boldface          [V] Toggle reverse'),
+        \ s:noprop('[B] Toggle boldface   [V] Toggle reverse'),
         \ s:noprop('[I] Toggle italics    [S] Toggle standout'),
         \ s:noprop('[U] Toggle underline  [~] Toggle undercurl'),
         \ s:noprop('[-] Toggle strikethrough'),

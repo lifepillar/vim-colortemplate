@@ -184,14 +184,8 @@ fun! s:find_next_item(linenr)
   let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: 'item', lnum: a:linenr, col: 1, skipstart: 1}, 'f')
   if empty(l:next)
     let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: 'item', lnum: 1, col: 1}, 'f')
-    if empty(l:next) " This should never happen
-      echohl Error
-      echomsg '[Colortemplate] Cannot find the next item. Please report this bug.'
-      echohl None
-      return a:linenr
-    endif
   endif
-  return l:next.lnum
+    return empty(l:next) ? a:linenr : l:next.lnum
 endf
 
 " Returns the previous line before linenr, which has an 'item' property.
@@ -200,14 +194,8 @@ fun! s:find_prev_item(linenr)
   let l:prev = prop_find(#{bufnr: winbufnr(s:popup_id), type: 'item', lnum: a:linenr - 1, col: 1,}, 'b')
   if empty(l:prev)
     let l:prev = prop_find(#{bufnr: winbufnr(s:popup_id), type: 'item', lnum: line('$', s:popup_id), col: 1}, 'b')
-    if empty(l:prev) " This should never happen
-      echohl Error
-      echomsg '[Colortemplate] Cannot find the previous item. Please report this bug.'
-      echohl None
-      return a:linenr
-    endif
   endif
-  return l:prev.lnum
+  return empty(l:prev) ? a:linenr : l:prev.lnum
 endf
 
 fun! s:proptitle(t)

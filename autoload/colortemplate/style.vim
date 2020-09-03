@@ -352,7 +352,7 @@ fun! s:redraw_help()
         \ s:proplabel('Color'),
         \ s:noprop('[→] Increase value    [E] New value'),
         \ s:noprop('[←] Decrease value    [N] New hi group'),
-        \ s:noprop('[y] Yank color'),
+        \ s:noprop('[y] Yank color        [Z] Clear color'),
         \ ])
   call prop_add(1, 42, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
@@ -443,6 +443,12 @@ fun! s:edit_color()
   else
     call s:choose_term_color()
   endif
+endf
+
+fun! s:clear_color()
+    execute "hi!" s:higroup s:mode..s:coltype.."=NONE"
+    call s:set_higroup(s:higroup)
+    call s:redraw()
 endf
 
 fun! s:edit_name()
@@ -537,6 +543,7 @@ let s:keymap = {
       \ "-"           : function('s:toggle_strike'),
       \ "E"           : function('s:edit_color'),
       \ "N"           : function('s:edit_name'),
+      \ "Z"           : function('s:clear_color'),
       \ "R"           : function('s:switch_to_rgb'),
       \ "H"           : function('s:switch_to_hsl'),
       \ "G"           : function('s:switch_to_grayscale'),

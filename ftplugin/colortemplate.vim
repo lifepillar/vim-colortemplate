@@ -19,7 +19,7 @@ if get(g:, 'colortemplate_rtp', 1)
   execute 'set runtimepath^='.b:colortemplate_outdir
 endif
 
-setlocal commentstring=#%s
+setlocal commentstring=;%s
 setlocal omnifunc=syntaxcomplete#Complete
 
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))

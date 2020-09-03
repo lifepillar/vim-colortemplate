@@ -109,10 +109,10 @@ fun! s:set_highlight()
   execute printf("hi! ColortemplateBold guifg=%s ctermfg=%s cterm=bold gui=bold", s:lgc, s:ltc)
   execute printf("hi! ColortemplateItalic guifg=%s ctermfg=%s cterm=italic gui=italic", s:lgc, s:ltc)
   execute printf("hi! ColortemplateUnderline guifg=%s ctermfg=%s cterm=underline gui=underline", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateUndercurl guifg=%s ctermfg=%s cterm=undercurl gui=undercurl", s:lgc, s:ltc)
+  execute printf("hi! ColortemplateUndercurl guifg=%s ctermfg=%s cterm=inverse gui=inverse", s:lgc, s:ltc)
   execute printf("hi! ColortemplateStandout guifg=%s ctermfg=%s cterm=standout gui=standout", s:lgc, s:ltc)
   execute printf("hi! ColortemplateInverse guifg=%s ctermfg=%s cterm=inverse gui=inverse", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateStrike guifg=%s ctermfg=%s cterm=strikethrough gui=strikethrough", s:lgc, s:ltc)
+  execute printf("hi! ColortemplateStrike guifg=%s ctermfg=%s cterm=inverse gui=inverse", s:lgc, s:ltc)
   " FIXME: decorative highlights, to be eliminated:
   hi! ColortemplateC1 guibg=#a62317 ctermbg=124
   hi! ColortemplateC2 guibg=#ff966e ctermbg=209

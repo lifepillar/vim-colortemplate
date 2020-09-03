@@ -101,18 +101,17 @@ endf
 " }}}
 " Text properties {{{
 fun! s:set_highlight()
-  " FIXME: distinguish between GUI and terminal colors.
-  let s:lgc = colortemplate#syn#higroup2hex('Label', 'fg')
-  let s:ltc = synIDattr(synIDtrans(hlID('Label')), 'fg', 'cterm')
-  hi! clear ColortemplateGUIColor
-  hi! clear ColortemplateTermColor
-  execute printf("hi! ColortemplateBold guifg=%s ctermfg=%s cterm=bold gui=bold", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateItalic guifg=%s ctermfg=%s cterm=italic gui=italic", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateUnderline guifg=%s ctermfg=%s cterm=underline gui=underline", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateUndercurl guifg=%s ctermfg=%s cterm=inverse gui=inverse", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateStandout guifg=%s ctermfg=%s cterm=standout gui=standout", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateInverse guifg=%s ctermfg=%s cterm=inverse gui=inverse", s:lgc, s:ltc)
-  execute printf("hi! ColortemplateStrike guifg=%s ctermfg=%s cterm=inverse gui=inverse", s:lgc, s:ltc)
+  let l:c = synIDattr(synIDtrans(hlID('Label')), 'fg', s:mode)
+  hi! clear ColortemplateStyleGUIColor
+  hi! clear ColortemplateStyleTermColor
+  execute printf("hi! ColortemplateStyleBold %sfg=%s cterm=bold gui=bold", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleItalic %sfg=%s cterm=italic gui=italic", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleUnderline %sfg=%s cterm=underline gui=underline", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleUndercurl %sfg=%s cterm=inverse gui=inverse", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleStandout %sfg=%s cterm=standout gui=standout", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleInverse %sfg=%s cterm=inverse gui=inverse", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleStrike %sfg=%s cterm=inverse gui=inverse", s:mode, l:c)
+
   " FIXME: decorative highlights, to be eliminated:
   hi! ColortemplateC1 guibg=#a62317 ctermbg=124
   hi! ColortemplateC2 guibg=#ff966e ctermbg=209
@@ -132,17 +131,17 @@ fun! s:add_prop_types()
   " To highlight text with the currently selected highglight group
   call prop_type_add('curr',  #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   " Highglight for the current GUI color
-  call prop_type_add('gcol',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateGUIColor'})
+  call prop_type_add('gcol',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleGUIColor'})
   " Highlight for the current cterm color
-  call prop_type_add('tcol',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateTermColor'})
+  call prop_type_add('tcol',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleTermColor'})
   " Highlight for attributes
-  call prop_type_add('bold',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateBold'})
-  call prop_type_add('it',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateItalic'})
-  call prop_type_add('ul',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateUnderline'})
-  call prop_type_add('uc',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateUndercurl'})
-  call prop_type_add('st',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStandout'})
-  call prop_type_add('inv',   #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateInverse'})
-  call prop_type_add('strik', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStrike'})
+  call prop_type_add('bold',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleBold'})
+  call prop_type_add('it',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleItalic'})
+  call prop_type_add('ul',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleUnderline'})
+  call prop_type_add('uc',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleUndercurl'})
+  call prop_type_add('st',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleStandout'})
+  call prop_type_add('inv',   #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleInverse'})
+  call prop_type_add('strik', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleStrike'})
   """"""""""""""""""" Pane-specific properties
   " Mark line as an RGB slider
   call prop_type_add('rgb',   #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
@@ -263,10 +262,10 @@ fun! s:redraw_rgb()
   call prop_add(7,  1, #{bufnr: winbufnr(s:popup_id), length: 2, type: 'label'})
   call prop_add(1, 39, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
   if s:mode ==# 'gui'
-    execute printf('hi! ColortemplateGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:tc['index'])
+    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:tc['index'])
     call prop_add(7, 12, #{bufnr: winbufnr(s:popup_id), length: 3, type: 'gcol'})
   endif
-  execute printf('hi! ColortemplateTermColor guibg=%s ctermbg=%d', colortemplate#colorspace#xterm256_hexvalue(l:tc['index']), l:tc['index'])
+  execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', colortemplate#colorspace#xterm256_hexvalue(l:tc['index']), l:tc['index'])
   call prop_add(7, 20, #{bufnr: winbufnr(s:popup_id), length: 3, type: 'tcol'})
   " TODO: refactor attributes
   if s:bold

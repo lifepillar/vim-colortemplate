@@ -614,7 +614,7 @@ fun! colortemplate#style#open(...)
         \ col: s:popup_x,
         \ resize: 0,
         \ scrollbar: 0,
-        \ tabpage: 0,
+        \ tabpage: -1,
         \ title: '',
         \ wrap: 0,
         \ zindex: 200,

@@ -88,6 +88,7 @@ fun! s:choose_term_color()
   if l:col =~# '\m^[0-9]\{1,3}$' && str2nr(l:col) > 15 && str2nr(l:col) < 256
     let s:color[s:coltype] = colortemplate#colorspace#xterm256_hexvalue(str2nr(l:col))
     call s:apply_color()
+    call s:redraw()
   endif
 endf
 " }}}

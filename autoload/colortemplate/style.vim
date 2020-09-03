@@ -20,6 +20,8 @@ let s:popup_id = -1              " Popup buffer ID
 let s:active_line = 1            " Where the marker is located in the popup
 let s:pane = 'rgb'               " Current pane ('rgb', 'gray', 'hsl')
 let s:coltype = 'fg'             " Currently displayed color ('fg', 'bg', 'sp')
+let s:step = 1                   " Step for increasing/decreasing levels
+let s:step_reset = 1             " Status of the step counter
 let s:recent  = []               " List of recent colors
 let s:favorites = []             " List of favorite colors
 " }}}
@@ -40,10 +42,6 @@ fun! s:slider(name, value, width = 32)
   let l:part_char = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉"][l:part_width]
   let l:bar = printf("%s %3d %s", a:name, a:value, l:bar.l:part_char)
   return l:bar
-endf
-
-fun! s:is_active_line(linenr)
-  return a:linenr == s:active_line
 endf
 
 fun! s:set_higroup(name)
@@ -142,6 +140,7 @@ fun! s:add_prop_types()
   call prop_type_add('st',    #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleStandout'})
   call prop_type_add('inv',   #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleInverse'})
   call prop_type_add('strik', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleStrike'})
+  call prop_type_add('level', #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
   """"""""""""""""""" Pane-specific properties
   " Mark line as an RGB slider
   call prop_type_add('rgb',   #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
@@ -157,24 +156,61 @@ fun! s:add_prop_types()
   call prop_type_add('C5', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC5'})
 endf
 
+fun! s:init_pane()
+  let s:_line = 0 " Current line being built
+endf
+
 fun! s:noprop(t)
+  let s:_line += 1
   return #{ text: a:t, props: [] }
 endfunc
 
-fun! s:propitem(t, linenr)
+fun! s:blank()
+  return s:noprop('')
+endf
+
+" Returns the list of the names of the text properties for the given line
+fun! s:get_properties(linenr)
+  return map(prop_list(a:linenr, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
+endf
+
+fun! s:propitem(t)
+  let s:_line += 1
   return #{
-        \ text: (s:is_active_line(a:linenr) ? s:mark : repeat(' ', len(s:mark))).a:t,
+        \ text: (s:active_line == s:_line ? s:mark : repeat(' ', len(s:mark))).a:t,
         \ props: [#{type: 'item', col: 1, length: 0}]
         \ }
 endf
 
-fun! s:proplevel(t, linenr, pane, name)
+fun! s:proplevel(t, pane, name)
+  let s:_line += 1
   return #{
-        \ text: (s:is_active_line(a:linenr) ? s:mark : repeat(' ', len(s:mark))).a:t,
+        \ text: (s:active_line == s:_line ? s:mark : repeat(' ', len(s:mark))).a:t,
         \ props: [#{type: 'item',  col: 1, length: 0},
+        \         #{type: 'level', col: 1, length: 0},
         \         #{type: a:pane,  col: 1, length: 0},
         \         #{type: a:name,  col: 1, length: 0}]
         \ }
+endf
+
+fun! s:proptitle(t)
+  let s:_line += 1
+  return #{ text: a:t, props: [#{type: 'title', col: 1, length: s:width}] }
+endf
+
+fun! s:proplabel(t)
+  let s:_line += 1
+  return #{ text: a:t, props: [#{type: 'label', col: 1, length: s:width}] }
+endf
+
+fun! s:propcurrent(t)
+  let s:_line += 1
+  call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
+  return #{ text: a:t, props: [#{type: 'curr', col: 1, length: s:width}] }
+endf
+
+fun! s:has_property(list, prop)
+  return index(a:list, a:prop) != - 1
 endf
 
 " Returns the next line after linenr, which has an 'item' property.
@@ -197,44 +233,34 @@ fun! s:find_prev_item(linenr)
   return empty(l:prev) ? a:linenr : l:prev.lnum
 endf
 
-fun! s:proptitle(t)
-  return #{ text: a:t, props: [#{type: 'title', col: 1, length: s:width}] }
-endf
-
-fun! s:proplabel(t)
-  return #{ text: a:t, props: [#{type: 'label', col: 1, length: s:width}] }
-endf
-
-fun! s:propcurrent(t)
-  call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
-  return #{ text: a:t, props: [#{type: 'curr', col: 1, length: s:width}] }
-endf
-
-fun! s:has_property(list, prop)
-  return index(a:list, a:prop) != - 1
-endf
 " }}}
 " RGB Pane {{{
-fun! s:rgb_increase_level(props)
+fun! s:rgb_increase_level(props, value)
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
-  if s:has_property(a:props, 'red') && l:r < 255
-    let l:r += 1
-  elseif s:has_property(a:props, 'green') && l:g < 255
-    let l:g += 1
-  elseif s:has_property(a:props, 'blue') && l:b < 255
-    let l:b += 1
+  if s:has_property(a:props, 'red')
+    let l:r += a:value
+    if l:r > 255 | let l:r = 255 | endif
+  elseif s:has_property(a:props, 'green')
+    let l:g += a:value
+    if l:g > 255 | let l:g = 255 | endif
+  elseif s:has_property(a:props, 'blue')
+    let l:b += a:value
+    if l:b > 255 | let l:b = 255 | endif
   endif
   let s:color[s:coltype] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
 endf
 
-fun! s:rgb_decrease_level(props)
+fun! s:rgb_decrease_level(props, value)
  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
-  if s:has_property(a:props, 'red') && l:r > 0
-    let l:r -= 1
-  elseif s:has_property(a:props, 'green') && l:g > 0
-    let l:g -= 1
-  elseif s:has_property(a:props, 'blue') && l:b > 0
-    let l:b -= 1
+  if s:has_property(a:props, 'red')
+    let l:r -= a:value
+    if l:r < 0 | let l:r = 0 | endif
+  elseif s:has_property(a:props, 'green')
+    let l:g -= a:value
+    if l:g < 0 | let l:g = 0 | endif
+  elseif s:has_property(a:props, 'blue')
+    let l:b -= a:value
+    if l:b < 0 | let l:b = 0 | endif
   endif
   let s:color[s:coltype] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
 endf
@@ -243,21 +269,23 @@ fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
   let l:t = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
   let l:tc = colortemplate#colorspace#approx(s:color[s:coltype])
+  call s:init_pane()
   call popup_settext(s:popup_id, [
-        \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')), s:noprop(''),
-        \ s:proplevel(s:slider('R', l:r), 3, 'rgb', 'red'),
-        \ s:proplevel(s:slider('G', l:g), 4, 'rgb', 'green'),
-        \ s:proplevel(s:slider('B', l:b), 5, 'rgb', 'blue'),
-        \ s:noprop(''),
+        \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+        \ s:blank(),
+        \ s:proplevel(s:slider('R', l:r), 'rgb', 'red'),
+        \ s:proplevel(s:slider('G', l:g), 'rgb', 'green'),
+        \ s:proplevel(s:slider('B', l:b), 'rgb', 'blue'),
+        \ s:proplabel(printf('      %02d ', s:step)),
         \ s:noprop(printf('%s %s     %3d      BIUSV~-    ', l:t, s:color[s:coltype], l:tc['index'])),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:propcurrent('The quick brown fox jumped over the lazy dog'),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:proplabel('Recent'),
-        \ s:propitem('0    1    2    NOT IMPLEMENTED YET      ', 12),
-        \ s:noprop(''),
+        \ s:propitem('0    1    2    NOT IMPLEMENTED YET      '),
+        \ s:blank(),
         \ s:proplabel('Favorites'),
-        \ s:propitem('0    1         NOT IMPLEMENTED YET      ', 15),
+        \ s:propitem('0    1         NOT IMPLEMENTED YET      '),
         \ ])
   call prop_add(7,  1, #{bufnr: winbufnr(s:popup_id), length: 2, type: 'label'})
   call prop_add(1, 39, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
@@ -347,6 +375,7 @@ endf
 " Popup actions {{{
 fun! s:commit()
   call popup_close(s:popup_id)
+  return 1
 endf
 
 fun! s:cancel()
@@ -354,74 +383,83 @@ fun! s:cancel()
   if exists('g:colors_name') && !empty('g:colors_name')
     execute 'colorscheme' g:colors_name
   endif
+  return 1
 endf
 
 fun! s:yank()
   let @"=s:color[s:coltype]
+  return 1
 endf
 
 fun! s:mouse_clicked()
   echo string(s:popup_id) . ' ' . string(getmousepos())
+  return 1
 endf
 
 fun! s:select_next_item()
   let s:active_line = s:find_next_item(s:active_line)
   call s:redraw()
+  return 1
 endf
 
 fun! s:select_prev_item()
   let s:active_line = s:find_prev_item(s:active_line)
   call s:redraw()
+  return 1
 endf
 
 fun! s:update_higroup()
   call s:set_higroup_under_cursor()
   " TODO: save current color to recent colors if modified
   call s:redraw()
+  return 1
 endf
 
 fun! s:fgbgsp_next()
   let s:coltype = (s:coltype == 'fg' ? 'bg' : (s:coltype == 'bg' ? 'sp' : 'fg'))
   call s:redraw()
+  return 1
 endf
 
 fun! s:fgbgsp_prev()
   let s:coltype = (s:coltype == 'bg' ? 'fg' : (s:coltype == 'fg' ? 'sp' : 'bg'))
   call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_attribute(attrname)
   call colortemplate#syn#toggle_attribute(hlID(s:higroup), a:attrname)
   call s:set_higroup(s:higroup)
   call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_bold()
-  call s:toggle_attribute('bold')
+  return s:toggle_attribute('bold')
 endf
 
 fun! s:toggle_italic()
-  call s:toggle_attribute('italic')
+  return s:toggle_attribute('italic')
 endf
 
 fun! s:toggle_underline()
-  call s:toggle_attribute('underline')
+  return s:toggle_attribute('underline')
 endf
 
 fun! s:toggle_undercurl()
-  call s:toggle_attribute('undercurl')
+  return s:toggle_attribute('undercurl')
 endf
 
 fun! s:toggle_standout()
-  call s:toggle_attribute('standout')
+  return s:toggle_attribute('standout')
 endf
 
 fun! s:toggle_inverse()
-  call s:toggle_attribute('inverse')
+  return s:toggle_attribute('inverse')
 endf
 
 fun! s:toggle_strike()
-  call s:toggle_attribute('strikethrough')
+  return s:toggle_attribute('strikethrough')
 endf
 
 fun! s:edit_color()
@@ -430,12 +468,14 @@ fun! s:edit_color()
   else
     call s:choose_term_color()
   endif
+  return 1
 endf
 
 fun! s:clear_color()
     execute "hi!" s:higroup s:mode..s:coltype.."=NONE"
     call s:set_higroup(s:higroup)
     call s:redraw()
+    return 1
 endf
 
 fun! s:edit_name()
@@ -447,27 +487,29 @@ fun! s:edit_name()
     call s:set_higroup(l:name)
     call s:redraw()
   endif
+  return 1
 endf
 
 fun! s:set_pane(p)
   let s:pane = a:p
   call s:redraw()
+  return 1
 endf
 
 fun! s:switch_to_rgb()
-  call s:set_pane('rgb')
+  return s:set_pane('rgb')
 endf
 
 fun! s:switch_to_hsl()
-  call s:set_pane('hsl')
+  return s:set_pane('hsl')
 endf
 
 fun! s:switch_to_grayscale()
-  call s:set_pane('gray')
+  return s:set_pane('gray')
 endf
 
 fun! s:switch_to_help()
-  call s:set_pane('help')
+  return s:set_pane('help')
 endf
 
 fun! s:notify_change()
@@ -481,21 +523,44 @@ fun! s:apply_color()
 endf
 
 fun! s:move_right()
-  let l:props = map(prop_list(s:active_line, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
+  let l:props = s:get_properties(s:active_line)
   if s:has_property(l:props, 'rgb')
-    call s:rgb_increase_level(l:props)
+    call s:rgb_increase_level(l:props, s:step)
+    call s:apply_color()
+    call s:redraw()
   endif
-  call s:apply_color()
-  call s:redraw()
+  return 1
 endf
 
 fun! s:move_left()
-  let l:props = map(prop_list(s:active_line, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
+  let l:props = s:get_properties(s:active_line)
   if s:has_property(l:props, 'rgb')
-    call s:rgb_decrease_level(l:props)
+    call s:rgb_decrease_level(l:props, s:step)
+    call s:apply_color()
+    call s:redraw()
   endif
-  call s:apply_color()
+  return 1
+endf
+
+fun! s:handle_digit(n)
+  let l:props = s:get_properties(s:active_line)
+  if !s:has_property(l:props, 'level')
+    return 0
+  endif
+  if s:step_reset
+    let s:step = a:n
+    let s:step_reset = 0
+  else
+    let s:step = 10 * s:step + a:n
+    if s:step > 99
+      let s:step = a:n
+    endif
+  endif
+  if s:step < 1
+    let s:step = 1
+  endif
   call s:redraw()
+  return 1
 endf
 
 fun! s:redraw()
@@ -538,9 +603,12 @@ let s:keymap = {
       \ }
 
 fun! colortemplate#style#filter(winid, key)
+  if a:key =~ '\m\d'
+    return s:handle_digit(a:key)
+  endif
   if has_key(s:keymap, a:key)
-    call s:keymap[a:key]()
-    return 1
+    let s:step_reset = 1
+    return s:keymap[a:key]()
   endif
   return 0
 endf
@@ -603,9 +671,8 @@ fun! colortemplate#style#open(...)
         \ wrap: 0,
         \ zindex: 200,
         \ })
-  echomsg s:popup_id
-  call s:add_prop_types()
   let s:active_line = 3
+  call s:add_prop_types()
   call s:redraw()
   return s:popup_id
 endf

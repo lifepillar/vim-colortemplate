@@ -589,7 +589,7 @@ fun! colortemplate#style#open(...)
         \ filter: 'colortemplate#style#filter',
         \ filtermode: 'n',
         \ highlight: 'Normal',
-        \ mapping: 0,
+        \ mapping: 1,
         \ maxwidth: s:width,
         \ minwidth: s:width,
         \ padding: [0,1,0,1],

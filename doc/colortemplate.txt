@@ -856,31 +856,45 @@ Note: Global commands are available in any buffer, but only after a template
 has been opened.
 
 						*:ColortemplateStyle*
-Opens a |popup| window that allows you to dynamically change the color and
+Opens a |popup| window that allows you to dynamically change the colors and
 style of a highlight group. When the command is used without arguments, the
 popup will reflect the status of the highlight group under the cursor. The
 command also accepts an optional highlight group: this is useful to style 
-not editable elements, such as the status line.
+not editable elements, such as status lines. If this is the first time you
+use the style picker, you may want to open it now and to try using it while
+reading this section.
 
 The popup window consists of four panes: RGB, HSL, Grayscale, and Help, which
-can be selected by pressing R, H, G, and ?, respectively. Currently, only the
-RGB and Help panes are implemented.
+can be selected by pressing |R|, |H|, |G|, and |?|, respectively. Currently,
+only the RGB and Help panes are implemented.
 
-Use up and down arrow keys to choose an item in the popup. When a level bar is
-selected, you may change the corresponding value with the left and right keys.
-To choose a new color, press E. To modify a different highlight group, press
-N. Attributes such as boldface, italics, and so on, can also be toggled by
-pressing a key: see the Help pane for the details. Press Tab or S-Tab to
-switch between foreground, background, and special color.
+Use up and down arrow keys to choose an item in the popup. The current item
+has a marker on the side. When a level bar is selected, you may change the
+corresponding value with the left and right keys. Changes are applied
+immediately. The amount by which a slider is changed can be set by simply
+typing a number between 1 and 99 while the marker is on a level bar. The
+current step is shown below the sliders. When the marker is elsewhere, the
+numbers you type are passed to the underlying buffer, so you can continue
+using counts with your mappings (e.g., you may type `5j` to move down five
+lines).
 
-Press `x` or click on the upper-right corner of the popup menu to dismiss it.
-If you want to revert your changes, press `X` instead. Press CTRL-C to
-force-close the popup window if something goes wrong (that should never be
-necessary, and you may want to report the issue: see
-|colortemplate-feedback|).
+To choose a new color, press |E|. To modify a specific highlight group, press
+|N|. Attributes such as boldface, italics, and so on, can also be toggled by
+pressing a key: |B| for bolface, |I| for italics, etc. See the Help pane for
+the details. Press |Tab| or |S-Tab| to cycle through the foreground,
+background, and special color for the current highlight group.
 
-You may drag the window around with the mouse. The style popup is not
-resizable.
+Press |x| or click on the upper-right corner of the popup window to dismiss
+it. If you want to revert your changes, press |X| instead.
+
+You may drag the popup around with the mouse. The window is not resizable.
+
+Note: when the popup is open all keystrokes are filtered by the popup. Only
+the keys that are not used by the popup are "passed through" to the underlying
+buffer. That means that none of the keys used by the popup are available to
+the underlying buffer. For instance, you cannot select text with |V| while the
+popup is open, because |V| is used by the popup to toggle reverse text. But
+you can still use |v|, because the style popup does not map that key.
 
 Note: |popup| is a feature of Vim 8.1.1705 or later.
 

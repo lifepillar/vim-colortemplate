@@ -62,6 +62,34 @@ endf
 fun! s:set_higroup_under_cursor()
   call s:set_higroup(synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name'))
 endf
+
+fun! s:choose_gui_color()
+  let l:col = input('New color: #', '')
+  if !has('patch-8.1.1456')
+    redraw! " see https://github.com/vim/vim/issues/4473
+  endif
+  if l:col =~# '\m^[0-9a-fa-f]\{1,6}$'
+    if len(l:col) <= 3
+      let l:col = repeat(l:col, 6 /  len(l:col))
+    endif
+    if len(l:col) == 6
+      let s:color[s:coltype] = '#'.l:col
+      call s:apply_color()
+      call s:redraw()
+    endif
+  endif
+endf
+
+fun! s:choose_term_color()
+  let l:col = input('New terminal color [16-255]: ', '')
+  if !has('patch-8.1.1456')
+    redraw! " see https://github.com/vim/vim/issues/4473
+  endif
+  if l:col =~# '\m^[0-9]\{1,3}$' && str2nr(l:col) > 15 && str2nr(l:col) < 256
+    let s:color[s:coltype] = colortemplate#colorspace#xterm256_hexvalue(str2nr(l:col))
+    call s:apply_color()
+  endif
+endf
 " }}}
 " Text properties {{{
 fun! s:set_highlight()
@@ -402,19 +430,10 @@ fun! s:toggle_strike()
 endf
 
 fun! s:edit_color()
-  let l:col = input('New color: #', '')
-  if !has('patch-8.1.1456')
-    redraw! " see https://github.com/vim/vim/issues/4473
-  endif
-  if l:col =~# '\m^[0-9a-fa-f]\{1,6}$'
-    if len(l:col) <= 3
-      let l:col = repeat(l:col, 6 /  len(l:col))
-    endif
-    if len(l:col) == 6
-      let s:color[s:coltype] = '#'.l:col
-      call s:apply_color()
-      call s:redraw()
-    endif
+  if s:mode ==# 'gui'
+    call s:choose_gui_color()
+  else
+    call s:choose_term_color()
   endif
 endf
 

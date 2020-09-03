@@ -558,10 +558,7 @@ fun! colortemplate#style#closed(id, result)
 endf
 
 " Optional argument is the name of a highlight group
-" If no name is used, then the popup updates as the cursor moves,
-" selecting the highlight group under the cursor.
-" TODO: open at the upper right of the screen/window
-" TODO: remember last position
+" If no name is used, then the popup updates as the cursor moves.
 fun! colortemplate#style#open(...)
   if s:popup_id > -1 " Already open
     return s:popup_id
@@ -569,7 +566,7 @@ fun! colortemplate#style#open(...)
 
   if empty(a:000) || empty(a:1)
     call s:set_higroup_under_cursor()
-    " Track the cursot
+    " Track the cursor
     augroup colortemplate_style
       " TODO: do not redraw unnecessarily
       autocmd CursorMoved * call s:update_higroup()

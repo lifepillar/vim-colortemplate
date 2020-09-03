@@ -14,12 +14,14 @@ let s:strike    = 0
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
 const s:mark = get(g:, 'colortemplate_marker', '=> ')
 const s:width = 39 + len(s:mark) " Popup width
-let s:popup_id = -1            " Popup buffer ID
-let s:active_line = 1          " Where the marker is located in the popup
-let s:pane = 'rgb'             " Current pane ('rgb', 'gray', 'hsl')
-let s:coltype = 'fg'           " Currently displayed color ('fg', 'bg', 'sp')
-let s:recent  = []             " List of recent colors
-let s:favorites = []           " List of favorite colors
+let s:popup_x = 0                " Horizontal position of the popup (0=center)
+let s:popup_y = 0                " Vertical position of the popup (0=center)
+let s:popup_id = -1              " Popup buffer ID
+let s:active_line = 1            " Where the marker is located in the popup
+let s:pane = 'rgb'               " Current pane ('rgb', 'gray', 'hsl')
+let s:coltype = 'fg'             " Currently displayed color ('fg', 'bg', 'sp')
+let s:recent  = []               " List of recent colors
+let s:favorites = []             " List of favorite colors
 " }}}
 " Helper functions {{{
 " Builds a level bar (for simplicity called a "slider") with a specified
@@ -90,6 +92,11 @@ fun! s:choose_term_color()
     call s:apply_color()
     call s:redraw()
   endif
+endf
+
+fun! s:save_popup_position(id)
+  let s:popup_x = popup_getoptions(a:id)['col']
+  let s:popup_y = popup_getoptions(a:id)['line']
 endf
 " }}}
 " Text properties {{{
@@ -551,6 +558,7 @@ fun! colortemplate#style#closed(id, result)
     autocmd! colortemplate_style
     augroup! colortemplate_style
   endif
+  call s:save_popup_position(a:id)
   let s:popup_id = -1
 endf
 
@@ -594,7 +602,9 @@ fun! colortemplate#style#open(...)
         \ maxwidth: s:width,
         \ minwidth: s:width,
         \ padding: [0,1,0,1],
-        \ pos: 'center',
+        \ pos: 'topleft',
+        \ line: s:popup_y,
+        \ col: s:popup_x,
         \ resize: 0,
         \ scrollbar: 0,
         \ tabpage: 0,

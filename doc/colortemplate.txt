@@ -873,12 +873,16 @@ N. Attributes such as boldface, italics, and so on, can also be toggled by
 pressing a key: see the Help pane for the details. Press Tab or S-Tab to
 switch between foreground, background, and special color.
 
-Press `x` or click on the upper-right corner of the popup menu
-to dismiss it. If you want to revert your changes, press `X` instead.
+Press `x` or click on the upper-right corner of the popup menu to dismiss it.
+If you want to revert your changes, press `X` instead. Press CTRL-C to
+force-close the popup window if something goes wrong (that should never be
+necessary, and you may want to report the issue: see
+|colortemplate-feedback|).
 
-You may drag the window around with the mouse.
+You may drag the window around with the mouse. The style popup is not
+resizable.
 
-Note: Popup menus are available in Vim 8.1.1705 or later.
+Note: |popup| is a feature of Vim 8.1.1705 or later.
 
 Buffer-local commands ~
 						*:Colortemplate[!]*

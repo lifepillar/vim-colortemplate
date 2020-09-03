@@ -2753,15 +2753,15 @@ fun! colortemplate#getinfo(n)
   let l:best = colortemplate#colorspace#approx(l:hexc)
   let l:c256 = s:col256(l:name, 'dark') == -1 ? l:best['index'] : s:col256(l:name, 'dark')
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
-  try
-    execute "hi!" "ColortemplateInfoFg" "ctermfg=".l:c256 "guifg=".l:hexc "ctermbg=NONE guibg=NONE"
-    execute "hi!" "ColortemplateInfoBg" "ctermbg=".l:c256 "guibg=".l:hexc "ctermfg=NONE guifg=NONE"
-  catch /^Vim\%((\a\+)\)\=:E254/ " Cannot allocate color
-    hi clear ColortemplateInfoFg
-    hi clear ColortemplateInfoBg
-  endtry
   echon printf('%s: %s/rgb(%d,%d,%d) ', l:name, l:hexc, l:r, l:g, l:b)
   if s:has_gui()
+    try
+      execute "hi!" "ColortemplateInfoFg" "ctermfg=".l:c256 "guifg=".l:hexc "ctermbg=NONE guibg=NONE"
+      execute "hi!" "ColortemplateInfoBg" "ctermbg=".l:c256 "guibg=".l:hexc "ctermfg=NONE guifg=NONE"
+    catch /^Vim\%((\a\+)\)\=:E254/ " Cannot allocate color
+      hi clear ColortemplateInfoFg
+      hi clear ColortemplateInfoBg
+    endtry
     echohl ColortemplateInfoFg | echon 'xxx' | echohl None
     echon ' '
     echohl ColortemplateInfoBg | echon '   ' | echohl None

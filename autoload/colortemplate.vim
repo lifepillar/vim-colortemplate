@@ -2739,10 +2739,18 @@ fun! colortemplate#highlighttest()
   runtime syntax/hitest.vim
 endf
 
+" Get info about the color definition under the cursor.
+" This may be a hex string (e.g., #ffffff) or a Color line.
+"
+" n: the desired number of terminal approximations for the given color.
 fun! colortemplate#getinfo(n)
-  let l:name = s:quickly_parse_color_line()
-  if empty(l:name) | return | endif
-  let l:hexc = s:guihex(l:name, 'dark') " 2nd arg doesn't matter
+  if expand("<cword>") =~# '\m^#[0-9A-fa-f]\{6}$'
+    let l:hexc = expand("<cword>")
+  else
+    let l:name = s:quickly_parse_color_line()
+    if empty(l:name) | return | endif
+    let l:hexc = s:guihex(l:name, 'dark') " 2nd arg doesn't matter in this context
+  endif
   let l:best = colortemplate#colorspace#approx(l:hexc)
   let l:c256 = s:col256(l:name, 'dark') == -1 ? l:best['index'] : s:col256(l:name, 'dark')
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)

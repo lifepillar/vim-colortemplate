@@ -332,17 +332,20 @@ endf
 fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
   call s:init_pane()
-  call popup_settext(s:popup_id, [
-        \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
-        \ s:blank(),
-        \ s:proplevel(s:slider('R', l:r), 'rgb', 'red'),
-        \ s:proplevel(s:slider('G', l:g), 'rgb', 'green'),
-        \ s:proplevel(s:slider('B', l:b), 'rgb', 'blue'),
-        \ s:proplabel(printf('      %02d ', s:step)),
-        \ ]
-        \ + s:info_section()
-        \ + s:recent_section()
-        \ + s:favorites_section()
+  call popup_settext(s:popup_id,
+        \ extend(
+        \   extend(
+        \     extend([
+        \             s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+        \             s:blank(),
+        \             s:proplevel(s:slider('R', l:r), 'rgb', 'red'),
+        \             s:proplevel(s:slider('G', l:g), 'rgb', 'green'),
+        \             s:proplevel(s:slider('B', l:b), 'rgb', 'blue'),
+        \             s:proplabel(printf('      %02d ', s:step)),
+        \            ],
+        \     s:info_section()),
+        \   s:recent_section()),
+        \ s:favorites_section())
         \)
   call prop_add(1, 39, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf

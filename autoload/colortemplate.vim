@@ -265,6 +265,10 @@ fun! s:show_errors(errmsg)
 endf
 " }}}
 " Misc {{{
+fun! s:has_gui()
+  return has('gui_running') || (has('termguicolors') && &termguicolors)
+endf
+
 if exists('*isnan')
   fun! s:isnan(x)
     return isnan(a:x)
@@ -2756,10 +2760,12 @@ fun! colortemplate#getinfo(n)
     hi clear ColortemplateInfoFg
     hi clear ColortemplateInfoBg
   endtry
-  echon printf('%s: rgb(%d,%d,%d) ', l:name, l:r, l:g, l:b)
-  echohl ColortemplateInfoFg | echon 'xxx' | echohl None
-  echon printf(' %s ', l:hexc)
-  echohl ColortemplateInfoBg | echon '   ' | echohl None
+  echon printf('%s: %s/rgb(%d,%d,%d) ', l:name, l:hexc, l:r, l:g, l:b)
+  if s:has_gui()
+    echohl ColortemplateInfoFg | echon 'xxx' | echohl None
+    echon ' '
+    echohl ColortemplateInfoBg | echon '   ' | echohl None
+  endif
   echon ' Best xterm approx:'
   if a:n == 1
     let l:approx = [l:best]

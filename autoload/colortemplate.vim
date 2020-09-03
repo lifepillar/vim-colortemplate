@@ -2739,8 +2739,7 @@ fun! colortemplate#highlighttest()
   runtime syntax/hitest.vim
 endf
 
-" Get info about the color definition under the cursor.
-" This may be a hex string (e.g., #ffffff) or a Color line.
+" Get info about the Color definition under the cursor.
 "
 " n: the desired number of terminal approximations for the given color.
 fun! colortemplate#getinfo(n)

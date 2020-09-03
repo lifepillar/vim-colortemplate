@@ -27,7 +27,7 @@ fun! s:toggle_attribute(synid, attr)
   let l:synid = synIDtrans(a:synid)
   let l:old_attrs = colortemplate#syn#attributes(l:synid, l:mode)
   let l:name = synIDattr(l:synid, 'name')
-  if empty(l:name) " Assume Normal
+  if empty(l:name) || tolower(l:name) ==# 'normal'
     echohl WarningMsg
     unsilent echo '[Colortemplate] Attributes cannot be set for Normal.'
     echohl None

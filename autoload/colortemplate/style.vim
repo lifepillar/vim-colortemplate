@@ -532,7 +532,8 @@ fun! s:clear_color()
   if tolower(s:higroup) ==# 'normal'
     return 1
   endif
-  execute "hi!" s:higroup s:mode..s:coltype.."=NONE"
+  let l:ct = (s:mode ==# 'cterm' && s:coltype ==# 'sp' ? 'ul' : s:coltype)
+  execute "hi!" s:higroup s:mode..l:ct.."=NONE"
   call s:set_higroup(s:higroup)
   call s:redraw()
   return 1
@@ -577,12 +578,9 @@ fun! s:notify_change()
 endf
 
 fun! s:apply_color()
-  if (s:coltype ==# 'sp' && s:mode ==# 'cterm')
-    " TODO: set ctermul?
-    return
-  endif
+  let l:ct = (s:coltype ==# 'sp' && s:mode ==# 'cterm') ? 'ul' : s:coltype
   let l:col = (s:mode ==# 'gui' ? s:color[s:coltype] : colortemplate#colorspace#approx(s:color[s:coltype])['index'])
-  execute 'hi!' s:higroup s:mode..s:coltype..'='..l:col
+  execute 'hi!' s:higroup s:mode..l:ct..'='..l:col
 endf
 
 fun! s:move_right()

@@ -577,15 +577,12 @@ fun! s:notify_change()
 endf
 
 fun! s:apply_color()
-  if s:mode ==# 'gui'
-    execute "hi!" s:higroup "guifg=".s:color.fg "guibg=".s:color.bg "guisp=".s:color.sp
-  else
-    let l:tfg = colortemplate#colorspace#approx(s:color.fg)
-    let l:tbg = colortemplate#colorspace#approx(s:color.bg)
-    " let l:tsp = colortemplate#colorspace#approx(s:color.sp)
-    " execute "hi!" s:higroup "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index "ctermul=".l:tsp.index
-    execute "hi!" s:higroup "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index
+  if (s:coltype ==# 'sp' && s:mode ==# 'cterm')
+    " TODO: set ctermul?
+    return
   endif
+  let l:col = (s:mode ==# 'gui' ? s:color[s:coltype] : colortemplate#colorspace#approx(s:color[s:coltype])['index'])
+  execute 'hi!' s:higroup s:mode..s:coltype..'='..l:col
 endf
 
 fun! s:move_right()

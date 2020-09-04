@@ -12,10 +12,9 @@ let s:strike    = 0
 
 " Popup configuration
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
-let s:mark = '=>'
-let s:star = '*'
-let s:width = 41
-let s:compact = 0
+let s:mark = ''                  " Marker for the current line (set when the popup is open)
+let s:width = 0                  " Popup width (set when the popup is open)
+let s:star = ''                  " Star for colors (set when the popup is open)
 let s:popup_x = 0                " Horizontal position of the popup (0=center)
 let s:popup_y = 0                " Vertical position of the popup (0=center)
 let s:popup_id = -1              " Popup buffer ID
@@ -130,13 +129,14 @@ fun! s:set_highlight()
 endf
 
 fun! s:add_prop_types()
-  """""""""""""""""""" Generic properties
   " Title of the pane
   call prop_type_add('title', #{bufnr: winbufnr(s:popup_id), highlight: 'Title'})
   " Mark line as an item that can be selected
   call prop_type_add('item',  #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
   " Mark line as a label
   call prop_type_add('label', #{bufnr: winbufnr(s:popup_id), highlight: 'Label'})
+  " Mark line as a level bar (slider)
+  call prop_type_add('level', #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
   " To highlight text with the currently selected highglight group
   call prop_type_add('curr',  #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   " Highglight for the current GUI color
@@ -152,9 +152,7 @@ fun! s:add_prop_types()
   call prop_type_add('inv',   #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleInverse'})
   call prop_type_add('strik', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleStrike'})
   call prop_type_add('disabled', #{bufnr: winbufnr(s:popup_id), highlight: 'Comment'})
-  call prop_type_add('level', #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
-  """"""""""""""""""" Pane-specific properties
-  " Mark line as an RGB slider
+  " RGB pane
   call prop_type_add('rgb',   #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
   call prop_type_add('red',   #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
   call prop_type_add('green', #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
@@ -169,60 +167,54 @@ fun! s:add_prop_types()
 endf
 
 fun! s:init_pane()
-  let s:_line = 0 " Current line being built
+  let s:__line__ = 0 " Keeps track of the line being built
 endf
 
-fun! s:props(p)
-  let s:_line += 1
-  return a:p
+" Defines a new generic, non-selectable, text line with properties.
+"
+" t: a String
+" props: an Array of text properties, as in popup_settext().
+"
+" Returns a Dictionary.
+fun! s:prop(t, props)
+  let s:__line__ += 1
+  return #{ text: a:t, props: a:props }
+endf
+
+" Defines a new selectable line in the popup. If the line is currently
+" selected, a marker is prepended to it.
+fun! s:prop_item(t, props = [])
+  let s:__line__ += 1
+  return #{ text: (s:__line__ == s:active_line ? s:mark : repeat(' ', len(s:mark)))..a:t,
+        \   props: extend([#{ col: 1, length: 0, type: 'item' }], a:props),
+        \}
+endf
+
+fun! s:blank()
+  return s:prop('', [])
 endf
 
 fun! s:noprop(t)
-  let s:_line += 1
-  return #{ text: a:t, props: [] }
+  return s:prop(a:t, [])
 endfunc
 
-fun! s:blank()
-  return s:noprop('')
+fun! s:prop_level_bar(t, pane, name)
+  return s:prop_item(a:t, [#{ col: 1, length: 0, type: 'level' },
+        \                  #{ col: 1, length: 0, type: a:pane },
+        \                  #{ col: 1, length: 0, type: a:name }])
+endf
+
+fun! s:prop_label(t)
+  return s:prop(a:t, [#{ col: 1, length: s:width, type: 'label' }])
+endf
+
+fun! s:prop_current(t)
+  return s:prop(a:t, [#{ col: 1, length: s:width, type: 'curr' }])
 endf
 
 " Returns the list of the names of the text properties for the given line
 fun! s:get_properties(linenr)
   return map(prop_list(a:linenr, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
-endf
-
-fun! s:propitem(t, props = [])
-  let s:_line += 1
-  return #{
-        \ text: (s:active_line == s:_line ? s:mark : repeat(' ', len(s:mark))).a:t,
-        \ props: extend([#{type: 'item', col: 1, length: 0}], a:props)
-        \ }
-endf
-
-fun! s:proplevel(t, pane, name)
-  let s:_line += 1
-  return #{
-        \ text: (s:active_line == s:_line ? s:mark : repeat(' ', len(s:mark))).a:t,
-        \ props: [#{type: 'item',  col: 1, length: 0},
-        \         #{type: 'level', col: 1, length: 0},
-        \         #{type: a:pane,  col: 1, length: 0},
-        \         #{type: a:name,  col: 1, length: 0}]
-        \ }
-endf
-
-fun! s:proptitle(t)
-  let s:_line += 1
-  return #{ text: a:t, props: [#{type: 'title', col: 1, length: s:width}] }
-endf
-
-fun! s:proplabel(t)
-  let s:_line += 1
-  return #{ text: a:t, props: [#{type: 'label', col: 1, length: s:width}] }
-endf
-
-fun! s:propcurrent(t)
-  let s:_line += 1
-  return #{ text: a:t, props: [#{type: 'curr', col: 1, length: s:width}] }
 endf
 
 fun! s:has_property(list, prop)
@@ -251,18 +243,19 @@ endf
 
 " }}}
 " Title of a pane {{{
-fun! s:title_section(pane)
+fun! s:title_section(pane) " -> List of Dictionaries
   let l:n = (a:pane ==# 'R' ? 1 : a:pane==# 'H' ? 2 : a:pane ==# 'G' ? 3 : 4)
   let l:ct = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
-  let l:title = #{
-        \ text: printf('%s [%s]%s%s', s:higroup, l:ct, repeat(' ', s:width - (len(s:higroup) + len(l:ct)) - 7), 'RHG?'),
-        \ props: s:props([#{ col: 38 + l:n, length: 1, type: 'label' }])
-        \ }
-  return (s:compact ? [l:title] : [l:title, s:blank()])
+  return [
+        \ s:prop(
+        \   printf('%s [%s]%s%s', s:higroup, l:ct, repeat(' ', s:width - (len(s:higroup) + len(l:ct)) - 7), 'RHG?'),
+        \   [#{ col: 1, length: s:width, type: 'title' }, #{ col: 38 + l:n, length: 1, type: 'label' }],
+        \ ),
+        \]
 endf
 " }}}
 " Info section of a pane {{{
-fun! s:info_section()
+fun! s:info_section() " -> List of Dictionaries
   let l:tc = {}
   let l:th = {}
   if s:coltype ==# 'sp'
@@ -287,56 +280,52 @@ fun! s:info_section()
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   let l:delta = l:tc[s:coltype]['delta']
 
-  let l:slider = #{
-        \ text:  printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
+  return [
+        \ s:blank(),
+        \ s:prop(printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
         \          s:color[s:coltype], s:gui_stars, l:tc[s:coltype]['index'], s:term_stars, l:tc[s:coltype]['delta']),
-        \ props: s:props([
-        \   #{ col:  1, length: 2, type: 'label' },
-        \   #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
-        \   #{ col: 18, length: 2, type: 'tcol' },
-        \   #{ col: 37, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
-        \   #{ col: 38, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
-        \   #{ col: 39, length: 1, type: (s:underline ? 'ul'    : 'disabled') },
-        \   #{ col: 40, length: 1, type: (s:standout  ? 'st'    : 'disabled') },
-        \   #{ col: 41, length: 1, type: (s:inverse   ? 'inv'   : 'disabled') },
-        \   #{ col: 42, length: 1, type: (s:undercurl ? 'uc'    : 'disabled') },
-        \   #{ col: 43, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
-        \  ])
-        \}
-
-  let l:sample = #{
-        \ text: 'The quick brown fox jumped over the lazy dog',
-        \ props: s:props([#{ col: 1, length: s:width, type: 'curr' }])
-        \ }
-
-  return (s:compact ? [l:slider, l:sample] : [ s:blank(), l:slider, s:blank(), l:sample, s:blank() ])
+        \        [
+        \         #{ col:  1, length: 2, type: 'label' },
+        \         #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
+        \         #{ col: 18, length: 2, type: 'tcol' },
+        \         #{ col: 37, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
+        \         #{ col: 38, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
+        \         #{ col: 39, length: 1, type: (s:underline ? 'ul'    : 'disabled') },
+        \         #{ col: 40, length: 1, type: (s:standout  ? 'st'    : 'disabled') },
+        \         #{ col: 41, length: 1, type: (s:inverse   ? 'inv'   : 'disabled') },
+        \         #{ col: 42, length: 1, type: (s:undercurl ? 'uc'    : 'disabled') },
+        \         #{ col: 43, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
+        \        ]),
+        \ s:blank(),
+        \ s:prop('The quick brown fox jumped over the lazy dog', [#{ col: 1, length: s:width, type: 'curr' }]),
+        \]
 endf
 " }}}
 " Recently used colors section {{{
-fun! s:recent_section()
-  let l:mru = (s:compact ? [] : [s:proplabel('Recent')])
-  call add(l:mru, s:propitem('0    1    2    NOT IMPLEMENTED YET      ',
+fun! s:recent_section() " -> List of Dictionaries
+  return [
+        \ s:blank(),
+        \ s:prop_label('Recent'),
+        \ s:prop_item('0    1    2    not implemented yet      ',
         \               [
         \                 #{col:  6, length: 2, type: 'C1'},
         \                 #{col: 11, length: 2, type: 'C2'},
         \                 #{col: 16, length: 2, type: 'C3'}
-        \               ])
-        \ )
-  if !s:compact
-    call add(l:mru, s:blank())
-  endif
-  return l:mru
+        \               ]),
+        \]
 endf
 " }}}
 " Favorites section {{{
-fun! s:favorites_section()
-  let l:fav = [
-        \ s:proplabel('Favorites'),
-        \ s:propitem('0    1         NOT IMPLEMENTED YET      '),
+fun! s:favorites_section() " -> List of Dictionaries
+  return [
+        \ s:blank(),
+        \ s:prop_label('Favorites'),
+        \ s:prop_item('0    1         not implemented yet      ',
+        \               [
+        \                 #{col:  6, length: 2, type: 'C4'},
+        \                 #{col: 11, length: 2, type: 'C5'},
+        \               ]),
         \]
-  call add(l:fav[1]['props'],  #{col: 6, length: 2, type: 'C4'})
-  call add(l:fav[1]['props'],  #{col: 11, length: 2, type: 'C5'})
-  return l:fav
 endf
 " }}}
 " RGB Pane {{{
@@ -370,16 +359,14 @@ fun! s:rgb_decrease_level(props, value)
   let s:color[s:coltype] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
 endf
 
-fun! s:rgb_slider(r, g, b)
-  let l:slider = [
-        \ s:proplevel(s:slider('R', a:r), 'rgb', 'red'),
-        \ s:proplevel(s:slider('G', a:g), 'rgb', 'green'),
-        \ s:proplevel(s:slider('B', a:b), 'rgb', 'blue'),
+fun! s:rgb_slider(r, g, b) " -> List of Dictionaries
+  return [
+        \ s:blank(),
+        \ s:prop_level_bar(s:slider('R', a:r), 'rgb', 'red'),
+        \ s:prop_level_bar(s:slider('G', a:g), 'rgb', 'green'),
+        \ s:prop_level_bar(s:slider('B', a:b), 'rgb', 'blue'),
+        \ s:prop_label(printf('%s%02d', repeat(' ', len(s:mark) + 3), s:step)),
         \]
-  if !s:compact
-    call add(l:slider, s:proplabel(printf('      %02d ', s:step)))
-  endif
-  return l:slider
 endf
 
 fun! s:redraw_rgb()
@@ -398,10 +385,10 @@ endf
 " HSL Pane {{{
 fun! s:redraw_hsl()
   call popup_settext(s:popup_id, [
-        \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+        \ s:prop_title(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
         \ s:blank(),
-        \ s:proplabel('Not implemented yet.'),
-        \ s:proplabel('Please switch back to R.'),
+        \ s:prop_label('Not implemented yet.'),
+        \ s:prop_label('Please switch back to R.'),
         \ ])
   call prop_add(1, 40, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
@@ -409,10 +396,10 @@ endf
 " Grayscale Pane {{{
 fun! s:redraw_gray()
   call popup_settext(s:popup_id, [
-        \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+        \ s:prop_title(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
         \ s:blank(),
-        \ s:proplabel('Not implemented yet.'),
-        \ s:proplabel('Please switch back to R.'),
+        \ s:prop_label('Not implemented yet.'),
+        \ s:prop_label('Please switch back to R.'),
         \ ])
   call prop_add(1, 41, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
@@ -420,21 +407,21 @@ endf
 " Help pane {{{
 fun! s:redraw_help()
   call popup_settext(s:popup_id, [
-        \ s:proptitle(printf('Keyboard Controls%s%s', repeat(' ', s:width - 21), 'RHG?')),
+        \ s:prop_title(printf('Keyboard Controls%s%s', repeat(' ', s:width - 21), 'RHG?')),
         \ s:blank(),
-        \ s:proplabel('Popup'),
+        \ s:prop_label('Popup'),
         \ s:noprop('[x] Close             [R] RGB'),
         \ s:noprop('[X] Cancel            [H] HSL'),
         \ s:noprop('[Tab] fg->bg->sp      [G] Grayscale'),
         \ s:noprop('[S-Tab] sp->bg->fg    [?] Help pane'),
         \ s:blank(),
-        \ s:proplabel('Attributes'),
+        \ s:prop_label('Attributes'),
         \ s:noprop('[B] Toggle boldface   [V] Toggle reverse'),
         \ s:noprop('[I] Toggle italics    [S] Toggle standout'),
         \ s:noprop('[U] Toggle underline  [~] Toggle undercurl'),
         \ s:noprop('[-] Toggle strikethrough'),
         \ s:blank(),
-        \ s:proplabel('Color'),
+        \ s:prop_label('Color'),
         \ s:noprop('[→] Increase value    [E] New value'),
         \ s:noprop('[←] Decrease value    [N] New hi group'),
         \ s:noprop('[y] Yank color        [Z] Clear color'),
@@ -710,7 +697,7 @@ fun! colortemplate#style#open(...)
   endif
 
   let s:mark    = get(g:, 'colortemplate_style_marker', '=> ')
-  let s:width   = 39 + len(s:mark)
+  let s:width   = max([39 + len(s:mark), 42])
   let s:star    = get(g:, 'colortemplate_style_star', '*')
   let s:compact = get(g:, 'colortemplate_style_compact', 0)
 

@@ -896,6 +896,38 @@ it. If you want to revert your changes, press |X| instead.
 
 You may drag the popup around with the mouse. The window is not resizable.
 
+In the middle of the pane, some information is displayed about the current
+color. It looks as follows:
+>
+	██ #9fbec6 ****  ██ 109 **    Δ7.1 BIUSV~-
+<
+Here you may see the hex value of the color (`#9fbec6`), its best terminal
+approximation (`109`), the difference between the GUI and terminal color
+(`7.1`, see |colortemplate-stats|), and which attributes are applied to the
+current highlight group (`BIUSV~-`, attributes that are active are
+highlighted). Besides, an evaluation of the quality of the GUI and terminal
+colors against the background of the current highlight group are provided in
+the form of stars. A color can have up to five stars, according to how many of
+the following tests it passes:
+
+- the contrast ratio (CR) between the color and the background is >=3.0;
+- CR >= 4.5;
+- CR >= 7.0;
+- the color difference between the color and the background is >=500;
+- the brightness difference between the color and the background is >=125.
+
+The thresholds are based on W3C guidelines:
+
+    https://www.w3.org/TR/AERT/
+    https://www.w3.org/TR/2008/REC-WCAG20-20081211/
+
+Generally speaking, I'd say that you should aim at getting at least two/three
+stars for each highlight group, and at least four/five for the |Normal| group.
+This will ensure that your color scheme will have good legibility, even for
+people with color deficits. That said, use with a grain of salt: if you are
+developing a low-contrast color scheme for your programming night sessions,
+your colors will often get zero or one star.
+
 Note: when the popup is open all keystrokes are filtered by the popup. Only
 the keys that are not used by the popup are "passed through" to the underlying
 buffer. That means that none of the keys used by the popup are available to

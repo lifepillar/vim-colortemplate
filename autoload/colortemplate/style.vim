@@ -582,8 +582,9 @@ fun! s:apply_color()
   else
     let l:tfg = colortemplate#colorspace#approx(s:color.fg)
     let l:tbg = colortemplate#colorspace#approx(s:color.bg)
-    let l:tsp = colortemplate#colorspace#approx(s:color.sp)
-    execute "hi!" "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index "ctermul=".l:tsp.index
+    " let l:tsp = colortemplate#colorspace#approx(s:color.sp)
+    " execute "hi!" s:higroup "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index "ctermul=".l:tsp.index
+    execute "hi!" s:higroup "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index
   endif
 endf
 

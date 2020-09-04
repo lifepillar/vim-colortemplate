@@ -12,9 +12,10 @@ let s:strike    = 0
 
 " Popup configuration
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
-const s:mark = get(g:, 'colortemplate_marker', '=> ')
-const s:star = get(g:, 'colortemplate_star', '*')
-const s:width = 39 + len(s:mark) " Popup width
+let s:mark = '=>'
+let s:star = '*'
+let s:width = 41
+let s:compact = 0
 let s:popup_x = 0                " Horizontal position of the popup (0=center)
 let s:popup_y = 0                " Vertical position of the popup (0=center)
 let s:popup_id = -1              " Popup buffer ID
@@ -43,6 +44,15 @@ fun! s:slider(name, value, width = 32)
   let l:part_char = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉"][l:part_width]
   let l:bar = printf("%s %3d %s", a:name, a:value, l:bar.l:part_char)
   return l:bar
+endf
+
+" Assign up to five stars to a pair of colors according to how many criteria
+" the pair satifies. Thresholds follow W3C guidelines.
+fun! s:stars(c1, c2)
+  let l:cr = colortemplate#colorspace#contrast_ratio(a:c1, a:c2)
+  let l:cd = colortemplate#colorspace#color_difference(a:c1, a:c2)
+  let l:bd = colortemplate#colorspace#brightness_diff(a:c1, a:c2)
+  return repeat(s:star, (l:cr >= 3.0) + (l:cr >= 4.5) + (l:cr >= 7.0) + (l:cd >= 500) + (l:bd >= 125))
 endf
 
 fun! s:set_higroup(name)
@@ -181,11 +191,11 @@ fun! s:get_properties(linenr)
   return map(prop_list(a:linenr, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
 endf
 
-fun! s:propitem(t)
+fun! s:propitem(t, props = [])
   let s:_line += 1
   return #{
         \ text: (s:active_line == s:_line ? s:mark : repeat(' ', len(s:mark))).a:t,
-        \ props: [#{type: 'item', col: 1, length: 0}]
+        \ props: extend([#{type: 'item', col: 1, length: 0}], a:props)
         \ }
 endf
 
@@ -240,14 +250,18 @@ fun! s:find_prev_item(linenr)
 endf
 
 " }}}
-" Info section of a pane {{{
-fun! s:stars(c1, c2)
-  let l:cr = colortemplate#colorspace#contrast_ratio(a:c1, a:c2)
-  let l:cd = colortemplate#colorspace#color_difference(a:c1, a:c2)
-  let l:bd = colortemplate#colorspace#brightness_diff(a:c1, a:c2)
-  return repeat(s:star, (l:cr >= 3.0) + (l:cr >= 4.5) + (l:cr >= 7.0) + (l:cd >= 500) + (l:bd >= 125))
+" Title of a pane {{{
+fun! s:title_section(pane)
+  let l:n = (a:pane ==# 'R' ? 1 : a:pane==# 'H' ? 2 : a:pane ==# 'G' ? 3 : 4)
+  let l:ct = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
+  let l:title = #{
+        \ text: printf('%s [%s]%s%s', s:higroup, l:ct, repeat(' ', s:width - (len(s:higroup) + len(l:ct)) - 7), 'RHG?'),
+        \ props: s:props([#{ col: 38 + l:n, length: 1, type: 'label' }])
+        \ }
+  return (s:compact ? [l:title] : [l:title, s:blank()])
 endf
-
+" }}}
+" Info section of a pane {{{
 fun! s:info_section()
   let l:tc = {}
   let l:th = {}
@@ -272,43 +286,45 @@ fun! s:info_section()
   execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', l:th[s:coltype], l:tc[s:coltype]['index'])
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   let l:delta = l:tc[s:coltype]['delta']
-  return [
-        \ s:blank(),
-        \ #{
-        \    text:  printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-', s:color[s:coltype], s:gui_stars, l:tc[s:coltype]['index'], s:term_stars, l:tc[s:coltype]['delta']),
-        \    props: s:props([
-        \            #{ col:  1, length: 2, type: 'label' },
-        \            #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
-        \            #{ col: 18, length: 2, type: 'tcol' },
-        \            #{ col: 37, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
-        \            #{ col: 38, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
-        \            #{ col: 39, length: 1, type: (s:underline ? 'ul'    : 'disabled') },
-        \            #{ col: 40, length: 1, type: (s:standout  ? 'st'    : 'disabled') },
-        \            #{ col: 41, length: 1, type: (s:inverse   ? 'inv'   : 'disabled') },
-        \            #{ col: 42, length: 1, type: (s:undercurl ? 'uc'    : 'disabled') },
-        \            #{ col: 43, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
-        \    ])
-        \  },
-        \ s:blank(),
-        \ #{
-        \    text: 'The brown fox jumped over the lazy dog',
-        \    props: s:props([#{ col: 1, length: s:width, type: 'curr' }])
-        \  },
-        \ s:blank(),
-        \ ]
+
+  let l:slider = #{
+        \ text:  printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
+        \          s:color[s:coltype], s:gui_stars, l:tc[s:coltype]['index'], s:term_stars, l:tc[s:coltype]['delta']),
+        \ props: s:props([
+        \   #{ col:  1, length: 2, type: 'label' },
+        \   #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
+        \   #{ col: 18, length: 2, type: 'tcol' },
+        \   #{ col: 37, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
+        \   #{ col: 38, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
+        \   #{ col: 39, length: 1, type: (s:underline ? 'ul'    : 'disabled') },
+        \   #{ col: 40, length: 1, type: (s:standout  ? 'st'    : 'disabled') },
+        \   #{ col: 41, length: 1, type: (s:inverse   ? 'inv'   : 'disabled') },
+        \   #{ col: 42, length: 1, type: (s:undercurl ? 'uc'    : 'disabled') },
+        \   #{ col: 43, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
+        \  ])
+        \}
+
+  let l:sample = #{
+        \ text: 'The quick brown fox jumped over the lazy dog',
+        \ props: s:props([#{ col: 1, length: s:width, type: 'curr' }])
+        \ }
+
+  return (s:compact ? [l:slider, l:sample] : [ s:blank(), l:slider, s:blank(), l:sample, s:blank() ])
 endf
 " }}}
 " Recently used colors section {{{
 fun! s:recent_section()
-  let l:mru = [
-        \ s:proplabel('Recent'),
-        \ s:propitem('0    1    2    NOT IMPLEMENTED YET      '),
-        \ s:blank(),
-        \]
-  " FIXME: temporary properties, just for decoration
-  call add(l:mru[1]['props'],  #{col: 6, length: 2, type: 'C1'})
-  call add(l:mru[1]['props'],  #{col: 11, length: 2, type: 'C2'})
-  call add(l:mru[1]['props'],  #{col: 16, length: 2, type: 'C3'})
+  let l:mru = (s:compact ? [] : [s:proplabel('Recent')])
+  call add(l:mru, s:propitem('0    1    2    NOT IMPLEMENTED YET      ',
+        \               [
+        \                 #{col:  6, length: 2, type: 'C1'},
+        \                 #{col: 11, length: 2, type: 'C2'},
+        \                 #{col: 16, length: 2, type: 'C3'}
+        \               ])
+        \ )
+  if !s:compact
+    call add(l:mru, s:blank())
+  endif
   return l:mru
 endf
 " }}}
@@ -354,33 +370,36 @@ fun! s:rgb_decrease_level(props, value)
   let s:color[s:coltype] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
 endf
 
+fun! s:rgb_slider(r, g, b)
+  let l:slider = [
+        \ s:proplevel(s:slider('R', a:r), 'rgb', 'red'),
+        \ s:proplevel(s:slider('G', a:g), 'rgb', 'green'),
+        \ s:proplevel(s:slider('B', a:b), 'rgb', 'blue'),
+        \]
+  if !s:compact
+    call add(l:slider, s:proplabel(printf('      %02d ', s:step)))
+  endif
+  return l:slider
+endf
+
 fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
-  let l:t = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
   call s:init_pane()
   call popup_settext(s:popup_id,
-        \ extend(
-        \   extend(
-        \     extend([
-        \             s:proptitle(printf('%s [%s]%s%s', s:higroup, l:t, repeat(' ', s:width - (len(s:higroup) + len(l:t)) - 7), 'RHG?')),
-        \             s:blank(),
-        \             s:proplevel(s:slider('R', l:r), 'rgb', 'red'),
-        \             s:proplevel(s:slider('G', l:g), 'rgb', 'green'),
-        \             s:proplevel(s:slider('B', l:b), 'rgb', 'blue'),
-        \             s:proplabel(printf('      %02d ', s:step)),
-        \            ],
-        \     s:info_section()),
+        \ extend(extend(extend(extend(
+        \   s:title_section('R'),
+        \   s:rgb_slider(l:r, l:g, l:b)),
+        \   s:info_section()),
         \   s:recent_section()),
-        \ s:favorites_section())
+        \   s:favorites_section())
         \)
-  call prop_add(1, 39, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
 " }}}
 " HSL Pane {{{
 fun! s:redraw_hsl()
   call popup_settext(s:popup_id, [
         \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:proplabel('Not implemented yet.'),
         \ s:proplabel('Please switch back to R.'),
         \ ])
@@ -391,7 +410,7 @@ endf
 fun! s:redraw_gray()
   call popup_settext(s:popup_id, [
         \ s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:proplabel('Not implemented yet.'),
         \ s:proplabel('Please switch back to R.'),
         \ ])
@@ -402,19 +421,19 @@ endf
 fun! s:redraw_help()
   call popup_settext(s:popup_id, [
         \ s:proptitle(printf('Keyboard Controls%s%s', repeat(' ', s:width - 21), 'RHG?')),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:proplabel('Popup'),
         \ s:noprop('[x] Close             [R] RGB'),
         \ s:noprop('[X] Cancel            [H] HSL'),
         \ s:noprop('[Tab] fg->bg->sp      [G] Grayscale'),
         \ s:noprop('[S-Tab] sp->bg->fg    [?] Help pane'),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:proplabel('Attributes'),
         \ s:noprop('[B] Toggle boldface   [V] Toggle reverse'),
         \ s:noprop('[I] Toggle italics    [S] Toggle standout'),
         \ s:noprop('[U] Toggle underline  [~] Toggle undercurl'),
         \ s:noprop('[-] Toggle strikethrough'),
-        \ s:noprop(''),
+        \ s:blank(),
         \ s:proplabel('Color'),
         \ s:noprop('[→] Increase value    [E] New value'),
         \ s:noprop('[←] Decrease value    [N] New hi group'),
@@ -690,6 +709,11 @@ fun! colortemplate#style#open(...)
     return s:popup_id
   endif
 
+  let s:mark    = get(g:, 'colortemplate_style_marker', '=> ')
+  let s:width   = 39 + len(s:mark)
+  let s:star    = get(g:, 'colortemplate_style_star', '*')
+  let s:compact = get(g:, 'colortemplate_style_compact', 0)
+
   if empty(a:000) || empty(a:1)
     call s:set_higroup_under_cursor()
     " Track the cursor
@@ -719,7 +743,7 @@ fun! colortemplate#style#open(...)
         \ mapping: 1,
         \ maxwidth: s:width,
         \ minwidth: s:width,
-        \ padding: [0,1,0,1],
+        \ padding: (s:compact ? [0,0,0,0] : [0,1,0,1]),
         \ pos: 'topleft',
         \ line: s:popup_y,
         \ col: s:popup_x,

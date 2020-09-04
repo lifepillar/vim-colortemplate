@@ -523,10 +523,13 @@ fun! s:edit_color()
 endf
 
 fun! s:clear_color()
-    execute "hi!" s:higroup s:mode..s:coltype.."=NONE"
-    call s:set_higroup(s:higroup)
-    call s:redraw()
+  if tolower(s:higroup) ==# 'normal'
     return 1
+  endif
+  execute "hi!" s:higroup s:mode..s:coltype.."=NONE"
+  call s:set_higroup(s:higroup)
+  call s:redraw()
+  return 1
 endf
 
 fun! s:edit_name()

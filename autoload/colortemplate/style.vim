@@ -13,6 +13,7 @@ let s:strike    = 0
 " Popup configuration
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
 const s:mark = get(g:, 'colortemplate_marker', '=> ')
+const s:star = get(g:, 'colortemplate_star', '*')
 const s:width = 39 + len(s:mark) " Popup width
 let s:popup_x = 0                " Horizontal position of the popup (0=center)
 let s:popup_y = 0                " Vertical position of the popup (0=center)
@@ -240,28 +241,52 @@ endf
 
 " }}}
 " Info section of a pane {{{
+fun! s:stars(c1, c2)
+  let l:cr = colortemplate#colorspace#contrast_ratio(a:c1, a:c2)
+  let l:cd = colortemplate#colorspace#color_difference(a:c1, a:c2)
+  let l:bd = colortemplate#colorspace#brightness_diff(a:c1, a:c2)
+  return repeat(s:star, (l:cr >= 3.0) + (l:cr >= 4.5) + (l:cr >= 7.0) + (l:cd >= 500) + (l:bd >= 125))
+endf
+
 fun! s:info_section()
-  let l:t = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
-  let l:tc = colortemplate#colorspace#approx(s:color[s:coltype])
-  if s:mode ==# 'gui'
-    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:tc['index'])
+  let l:tc = {}
+  let l:th = {}
+  if s:coltype ==# 'sp'
+    let l:tc['sp']   = colortemplate#colorspace#approx(s:color['sp'])
+    let l:tc['bg']   = colortemplate#colorspace#approx(s:color['bg'])
+    let l:th['sp']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['sp']['index'])
+    let l:th['bg']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['bg']['index'])
+    let s:term_stars = s:stars(l:th['sp'], l:th['bg'])
+    let s:gui_stars  = s:stars(s:color['sp'], s:color['bg'])
+  else
+    let l:tc['fg']   = colortemplate#colorspace#approx(s:color['fg'])
+    let l:tc['bg']   = colortemplate#colorspace#approx(s:color['bg'])
+    let l:th['fg']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['fg']['index'])
+    let l:th['bg']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['bg']['index'])
+    let s:term_stars = s:stars(l:th['fg'], l:th['bg'])
+    let s:gui_stars  = s:stars(s:color['fg'], s:color['bg'])
   endif
-  execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', colortemplate#colorspace#xterm256_hexvalue(l:tc['index']), l:tc['index'])
+  if s:mode ==# 'gui'
+    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:tc[s:coltype]['index'])
+  endif
+  execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', l:th[s:coltype], l:tc[s:coltype]['index'])
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
+  let l:delta = l:tc[s:coltype]['delta']
   return [
+        \ s:blank(),
         \ #{
-        \    text:  printf('%s %s    %3d       BIUSV~-    ', l:t, s:color[s:coltype], l:tc['index']),
+        \    text:  printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-', s:color[s:coltype], s:gui_stars, l:tc[s:coltype]['index'], s:term_stars, l:tc[s:coltype]['delta']),
         \    props: s:props([
         \            #{ col:  1, length: 2, type: 'label' },
-        \            #{ col: 12, length: 3, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
-        \            #{ col: 19, length: 3, type: 'tcol' },
-        \            #{ col: 25, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
-        \            #{ col: 26, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
-        \            #{ col: 27, length: 1, type: (s:underline ? 'ul'    : 'disabled') },
-        \            #{ col: 28, length: 1, type: (s:standout  ? 'st'    : 'disabled') },
-        \            #{ col: 29, length: 1, type: (s:inverse   ? 'inv'   : 'disabled') },
-        \            #{ col: 30, length: 1, type: (s:undercurl ? 'uc'    : 'disabled') },
-        \            #{ col: 31, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
+        \            #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
+        \            #{ col: 18, length: 2, type: 'tcol' },
+        \            #{ col: 37, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
+        \            #{ col: 38, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
+        \            #{ col: 39, length: 1, type: (s:underline ? 'ul'    : 'disabled') },
+        \            #{ col: 40, length: 1, type: (s:standout  ? 'st'    : 'disabled') },
+        \            #{ col: 41, length: 1, type: (s:inverse   ? 'inv'   : 'disabled') },
+        \            #{ col: 42, length: 1, type: (s:undercurl ? 'uc'    : 'disabled') },
+        \            #{ col: 43, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
         \    ])
         \  },
         \ s:blank(),
@@ -331,12 +356,13 @@ endf
 
 fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
+  let l:t = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
   call s:init_pane()
   call popup_settext(s:popup_id,
         \ extend(
         \   extend(
         \     extend([
-        \             s:proptitle(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+        \             s:proptitle(printf('%s [%s]%s%s', s:higroup, l:t, repeat(' ', s:width - (len(s:higroup) + len(l:t)) - 7), 'RHG?')),
         \             s:blank(),
         \             s:proplevel(s:slider('R', l:r), 'rgb', 'red'),
         \             s:proplevel(s:slider('G', l:g), 'rgb', 'green'),
@@ -542,9 +568,14 @@ fun! s:notify_change()
 endf
 
 fun! s:apply_color()
-  let l:tfg = colortemplate#colorspace#approx(s:color.fg)
-  let l:tbg = colortemplate#colorspace#approx(s:color.bg)
-  execute "hi!" s:higroup "guifg=".s:color['fg'] "guibg=".s:color['bg'] "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index
+  if s:mode ==# 'gui'
+    execute "hi!" s:higroup "guifg=".s:color.fg "guibg=".s:color.bg "guisp=".s:color.sp
+  else
+    let l:tfg = colortemplate#colorspace#approx(s:color.fg)
+    let l:tbg = colortemplate#colorspace#approx(s:color.bg)
+    let l:tsp = colortemplate#colorspace#approx(s:color.sp)
+    execute "hi!" "ctermfg=".l:tfg.index "ctermbg=".l:tbg.index "ctermul=".l:tsp.index
+  endif
 endf
 
 fun! s:move_right()

@@ -123,9 +123,13 @@ let g:colortemplate#syn#ansi_colors = [
 "
 " name: the name of a highlight group
 " type: 'fg', 'bg', or 'sp'
+" FIXME: this has to be revised
 fun! colortemplate#syn#higroup2hex(name, type)
   if has('gui_running') || (has('termguicolors') && &termguicolors)
     let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
+    if empty(l:gui)
+      return colortemplate#syn#higroup2hex('Normal', (a:type ==# 'sp' ? 'bg': a:type))
+    endif
   else
     let l:gui = ''
   endif

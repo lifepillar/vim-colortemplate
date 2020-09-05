@@ -774,8 +774,39 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
+						*g:colortemplate_popup_mapping*
+Set the "mapping" attribute of the style picker. When set to 1, any key
+arrives to the popup after any mapping. This may interfere with the keyboard
+controls of the style picker. The default is to pass any key literally to the
+popup. This means that, as long as the style picker is open, no mappings are
+available.
+>
+	let g:colortemplate_popup_mapping = 0
+<
+						*g:colortemplate_popup_marker*
+The String used to mark the selected line in the style picker. The width of
+the style picker adapts to accommodate symbols of arbitrary length.
+>
+	let g:colortemplate_popup_marker = '=> '
+<
+						*g:colortemplate_popup_notifications*
+Set to 0 if you want to suppress the notifications popups (such as 'Color
+cleared', 'Color yanked', etc.) in the style picker.
+>
+	let g:colortemplate_popup_notifications = 1
+<
+						*g:colortemplate_popup_quotes*
+A List of quotes to be displayed as sample text in the style picker.
+>
+	let g:colortemplate_popup_quotes = [<some wisdom>]
+<
+						*g:colortemplate_popup_star*
+The one-character symbol used for stars in the style picker.
+>
+	let g:colortemplate_popup_marker = '*'
+<
 						*g:colortemplate_quiet*
-Set to 0 if you want Colortemplate to open the generated color scheme in
+et to 0 if you want Colortemplate to open the generated color scheme in
 a split window immediately after building it.
 >
 	let g:colortemplate_quiet = 1
@@ -809,20 +840,6 @@ color definitions, terminal colors, highlight group definitions and verbatim
 blocks.
 >
 	let g:colortemplate_source_comment = 1
-<
-						*g:colortemplate_popup_mapping*
-Set the "mapping" attribute of the style picker. When set to 1, any key
-arrives to the popup after any mapping. This may interfere with the keyboard
-controls of the style picker. The default is to pass any key literally to the
-popup. This means that, as long as the style picker is open, no mappings are
-available.
->
-	let g:colortemplate_popup_mapping = 0
-<
-						*g:colortemplate_popup_quotes*
-A List of quotes to be displayed as sample text in the style picker.
->
-	let g:colortemplate_popup_quotes = [<some wisdom>]
 <
 						*g:colortemplate_timestamp*
 Set to 0 if you do not want a timestamp in the generated color scheme.

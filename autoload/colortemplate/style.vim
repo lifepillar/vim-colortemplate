@@ -164,7 +164,7 @@ endf
 " }}}
 " Notification popup {{{
 fun! s:notification(msg, duration = 2000)
-  if get(g:, 'colortemplate_style_notifications', 1)
+  if get(g:, 'colortemplate_popup_notifications', 1)
     call popup_notification(s:center(a:msg, s:width), #{
           \ pos: 'topleft',
           \ line: popup_getoptions(s:popup_id)['line'],
@@ -750,9 +750,9 @@ endf
 " Public interface {{{
 " Callback for when the popup is closed
 fun! colortemplate#style#closed(id, result)
-  if exists('#colortemplate_style')
-    autocmd! colortemplate_style
-    augroup! colortemplate_style
+  if exists('#colortemplate_popup')
+    autocmd! colortemplate_popup
+    augroup! colortemplate_popup
   endif
   call s:save_popup_position(a:id)
   let s:popup_id = -1
@@ -765,10 +765,9 @@ fun! colortemplate#style#open(...)
     return s:popup_id
   endif
 
-  let s:mark    = get(g:, 'colortemplate_style_marker', '=> ')
+  let s:mark    = get(g:, 'colortemplate_popup_marker', '=> ')
   let s:width   = max([39 + len(s:mark), 42])
-  let s:star    = get(g:, 'colortemplate_style_star', '*')
-  let s:compact = get(g:, 'colortemplate_style_compact', 0)
+  let s:star    = get(g:, 'colortemplate_popup_star', '*')
   let s:sample_text = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
 
   call s:set_slider_symbols(0)
@@ -782,7 +781,7 @@ fun! colortemplate#style#open(...)
   if empty(a:000) || empty(a:1)
     call s:set_higroup_under_cursor()
     " Track the cursor
-    augroup colortemplate_style
+    augroup colortemplate_popup
       " TODO: do not redraw unnecessarily
       autocmd CursorMoved * call s:update_higroup()
     augroup END
@@ -791,7 +790,7 @@ fun! colortemplate#style#open(...)
   endif
 
   call s:set_highlight()
-  augroup colortemplate_style
+  augroup colortemplate_popup
     autocmd ColorScheme * call s:set_highlight()
   augroup END
 
@@ -808,7 +807,7 @@ fun! colortemplate#style#open(...)
         \ mapping: get(g:, 'colortemplate_popup_mapping', 0),
         \ maxwidth: s:width,
         \ minwidth: s:width,
-        \ padding: (s:compact ? [0,0,0,0] : [0,1,0,1]),
+        \ padding: [0,1,0,1],
         \ pos: 'topleft',
         \ line: s:popup_y,
         \ col: s:popup_x,

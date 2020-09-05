@@ -155,7 +155,8 @@ fun! s:notification(msg, duration = 2000)
           \ time: a:duration,
           \ moved: 'any',
           \ mousemoved: 'any',
-          \ minwidth: 10,
+          \ minwidth: s:width,
+          \ maxwidth: s:width,
           \})
   endif
 endf

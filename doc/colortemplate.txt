@@ -810,6 +810,15 @@ blocks.
 >
 	let g:colortemplate_source_comment = 1
 <
+						*g:colortemplate_popup_mapping*
+Set the "mapping" attribute of the style picker. When set to 1, any key
+arrives to the popup after any mapping. This may interfere with the keyboard
+controls of the style picker. The default is to pass any key literally to the
+popup. This means that, as long as the style picker is open, no mappings are
+available.
+>
+	let g:colortemplate_popup_mapping = 0
+<
 						*g:colortemplate_timestamp*
 Set to 0 if you do not want a timestamp in the generated color scheme.
 >

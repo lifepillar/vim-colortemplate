@@ -41,6 +41,7 @@ g:colortemplate_ignore_missing	colortemplate.txt	/*g:colortemplate_ignore_missin
 g:colortemplate_no_aux_files	colortemplate.txt	/*g:colortemplate_no_aux_files*
 g:colortemplate_no_doc	colortemplate.txt	/*g:colortemplate_no_doc*
 g:colortemplate_no_mappings	colortemplate.txt	/*g:colortemplate_no_mappings*
+g:colortemplate_popup_mapping	colortemplate.txt	/*g:colortemplate_popup_mapping*
 g:colortemplate_quiet	colortemplate.txt	/*g:colortemplate_quiet*
 g:colortemplate_rtp	colortemplate.txt	/*g:colortemplate_rtp*
 g:colortemplate_slider_ascii	colortemplate.txt	/*g:colortemplate_slider_ascii*

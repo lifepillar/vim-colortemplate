@@ -784,7 +784,7 @@ fun! colortemplate#style#open(...)
         \ filter: 'colortemplate#style#filter',
         \ filtermode: 'n',
         \ highlight: 'Normal',
-        \ mapping: 1,
+        \ mapping: get(g:, 'colortemplate_popup_mapping', 0),
         \ maxwidth: s:width,
         \ minwidth: s:width,
         \ padding: (s:compact ? [0,0,0,0] : [0,1,0,1]),

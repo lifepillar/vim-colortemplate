@@ -181,16 +181,18 @@ endf
 " }}}
 " Text properties {{{
 fun! s:set_highlight()
-  let l:c = synIDattr(synIDtrans(hlID('Label')), 'fg', s:mode)
+  let l:labcol = synIDattr(synIDtrans(hlID('Label')), 'fg', s:mode)
+  let l:warncol = synIDattr(synIDtrans(hlID('WarningMsg')), 'fg', s:mode)
   hi! clear ColortemplateStyleGUIColor
   hi! clear ColortemplateStyleTermColor
-  execute printf("hi! ColortemplateStyleBold %sfg=%s cterm=bold gui=bold", s:mode, l:c)
-  execute printf("hi! ColortemplateStyleItalic %sfg=%s cterm=italic gui=italic", s:mode, l:c)
-  execute printf("hi! ColortemplateStyleUnderline %sfg=%s cterm=underline gui=underline", s:mode, l:c)
-  execute printf("hi! ColortemplateStyleUndercurl %sfg=%s cterm=inverse gui=inverse", s:mode, l:c)
-  execute printf("hi! ColortemplateStyleStandout %sfg=%s cterm=standout gui=standout", s:mode, l:c)
-  execute printf("hi! ColortemplateStyleInverse %sfg=%s cterm=inverse gui=inverse", s:mode, l:c)
-  execute printf("hi! ColortemplateStyleStrike %sfg=%s cterm=inverse gui=inverse", s:mode, l:c)
+  execute printf("hi! ColortemplateStyleBold %sfg=%s cterm=bold gui=bold", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleItalic %sfg=%s cterm=italic gui=italic", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleUnderline %sfg=%s cterm=underline gui=underline", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleUndercurl %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleStandout %sfg=%s cterm=standout gui=standout", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleInverse %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleStrike %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
+  execute printf("hi! ColortemplateStyleWarn %sfg=%s cterm=bold gui=bold", s:mode, l:warncol)
 
   " FIXME: decorative highlights, to be eliminated:
   hi! ColortemplateC1 guibg=#a62317 ctermbg=124
@@ -201,6 +203,8 @@ fun! s:set_highlight()
 endf
 
 fun! s:add_prop_types()
+  " Property for Normal text
+  call prop_type_add('norm',  #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   " Title of the pane
   call prop_type_add('title', #{bufnr: winbufnr(s:popup_id), highlight: 'Title'})
   " Mark line as an item that can be selected
@@ -211,6 +215,8 @@ fun! s:add_prop_types()
   call prop_type_add('level', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   " To highlight text with the currently selected highglight group
   call prop_type_add('curr',  #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
+  " Highlight for warning symbol
+  call prop_type_add('warn',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleWarn'})
   " Highglight for the current GUI color
   call prop_type_add('gcol',  #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleGUIColor'})
   " Highlight for the current cterm color
@@ -344,16 +350,20 @@ fun! s:info_section() " -> List of Dictionaries
   execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', l:termhex[s:coltype], l:termcol[s:coltype]['index'])
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   let l:delta = l:termcol[s:coltype]['delta']
+  let l:warn = !s:is_good(s:coltype)
+  let l:excl = (l:warn ? '!' : ' ')
 
   " TODO: Highlight when a color is not good.
   return [
         \ s:blank(),
-        \ s:prop(printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
-        \          s:col(s:coltype), s:gui_stars, l:termcol[s:coltype]['index'], s:term_stars, l:termcol[s:coltype]['delta']),
+        \ s:prop(printf('   %s%s%-5s    %3d%s%-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
+        \          s:col(s:coltype), l:excl, s:gui_stars, l:termcol[s:coltype]['index'], l:excl, s:term_stars, l:termcol[s:coltype]['delta']),
         \        [
         \         #{ col:  1, length: 2, type: 'label' },
         \         #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
+        \         #{ col:  4, length: 8, type: (l:warn ? 'warn' : 'norm') },
         \         #{ col: 18, length: 2, type: 'tcol' },
+        \         #{ col: 21, length: 4, type: (l:warn ? 'warn' : 'norm') },
         \         #{ col: 37, length: 1, type: (s:bold      ? 'bold'  : 'disabled') },
         \         #{ col: 38, length: 1, type: (s:italic    ? 'it'    : 'disabled') },
         \         #{ col: 39, length: 1, type: (s:underline ? 'ul'    : 'disabled') },

@@ -1,7 +1,7 @@
 " Popup state {{{
 " Current style
 let s:higroup   = 'Normal'
-let s:color     = #{ fg: '#000000', bg: '#000000', sp: '#000000' }
+let s:color     = #{ fg: {}, bg: {}, sp: {} }
 let s:bold      = 0
 let s:italic    = 0
 let s:inverse   = 0
@@ -30,6 +30,31 @@ let s:recent  = []               " List of recent colors
 let s:favorites = []             " List of favorite colors
 " }}}
 " Helper functions {{{
+fun! s:set_color(type, hex, is_good = 1)
+  let s:color[a:type].hex = a:hex
+  let s:color[a:type].good = a:is_good
+endf
+
+fun! s:col(type)
+  return s:color[a:type].hex
+endf
+
+fun! s:fgcol()
+  return s:color.fg.hex
+endf
+
+fun! s:bgcol()
+  return s:color.bg.hex
+endf
+
+fun! s:spcol()
+  return s:color.sp.hex
+endf
+
+fun! s:is_good(type)
+  return s:color[a:type].good
+endf
+
 fun! s:set_slider_symbols(force_default)
   let l:defaults = get(g:, 'colortemplate_slider_ascii', 0)
       \ ? [" ", ".", ":", "!", "|", "/", "-", "=", "#"]
@@ -95,7 +120,7 @@ fun! s:choose_gui_color()
       let l:col = repeat(l:col, 6 /  len(l:col))
     endif
     if len(l:col) == 6
-      let s:color[s:coltype] = '#'.l:col
+      call s:set_color(s:coltype, '#'..l:col)
       call s:apply_color()
       call s:redraw()
     endif
@@ -108,7 +133,7 @@ fun! s:choose_term_color()
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
   if l:col =~# '\m^[0-9]\{1,3}$' && str2nr(l:col) > 15 && str2nr(l:col) < 256
-    let s:color[s:coltype] = colortemplate#colorspace#xterm256_hexvalue(str2nr(l:col))
+    call s:set_color(s:coltype, colortemplate#colorspace#xterm256_hexvalue(str2nr(l:col)))
     call s:apply_color()
     call s:redraw()
   endif
@@ -288,14 +313,14 @@ fun! s:info_section() " -> List of Dictionaries
   let l:termhex = {}
   let l:fg = (s:coltype ==# 'sp' ? 'sp' : 'fg')
   " Compute stars
-  let l:termcol[l:fg]   = colortemplate#colorspace#approx(s:color[l:fg])
-  let l:termcol['bg']   = colortemplate#colorspace#approx(s:color['bg'])
+  let l:termcol[l:fg]   = colortemplate#colorspace#approx(s:col(l:fg))
+  let l:termcol['bg']   = colortemplate#colorspace#approx(s:bgcol())
   let l:termhex[l:fg]   = colortemplate#colorspace#xterm256_hexvalue(l:termcol[l:fg]['index'])
   let l:termhex['bg']   = colortemplate#colorspace#xterm256_hexvalue(l:termcol['bg']['index'])
   let s:term_stars = s:stars(l:termhex[l:fg], l:termhex['bg'])
-  let s:gui_stars  = s:stars(s:color[l:fg], s:color['bg'])
+  let s:gui_stars  = s:stars(s:col(l:fg), s:bgcol())
   if s:mode ==# 'gui'
-    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:termcol[s:coltype]['index'])
+    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:col(s:coltype), l:termcol[s:coltype]['index'])
   endif
   execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', l:termhex[s:coltype], l:termcol[s:coltype]['index'])
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
@@ -304,7 +329,7 @@ fun! s:info_section() " -> List of Dictionaries
   return [
         \ s:blank(),
         \ s:prop(printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
-        \          s:color[s:coltype], s:gui_stars, l:termcol[s:coltype]['index'], s:term_stars, l:termcol[s:coltype]['delta']),
+        \          s:col(s:coltype), s:gui_stars, l:termcol[s:coltype]['index'], s:term_stars, l:termcol[s:coltype]['delta']),
         \        [
         \         #{ col:  1, length: 2, type: 'label' },
         \         #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
@@ -351,7 +376,7 @@ endf
 " }}}
 " RGB Pane {{{
 fun! s:rgb_increase_level(props, value)
-  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:col(s:coltype))
   if s:has_property(a:props, 'red')
     let l:r += a:value
     if l:r > 255 | let l:r = 255 | endif
@@ -362,11 +387,11 @@ fun! s:rgb_increase_level(props, value)
     let l:b += a:value
     if l:b > 255 | let l:b = 255 | endif
   endif
-  let s:color[s:coltype] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
+  call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
 endf
 
 fun! s:rgb_decrease_level(props, value)
- let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
+ let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:col(s:coltype))
   if s:has_property(a:props, 'red')
     let l:r -= a:value
     if l:r < 0 | let l:r = 0 | endif
@@ -377,7 +402,7 @@ fun! s:rgb_decrease_level(props, value)
     let l:b -= a:value
     if l:b < 0 | let l:b = 0 | endif
   endif
-  let s:color[s:coltype] = colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
+  call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
 endf
 
 fun! s:rgb_slider(r, g, b) " -> List of Dictionaries
@@ -391,7 +416,7 @@ fun! s:rgb_slider(r, g, b) " -> List of Dictionaries
 endf
 
 fun! s:redraw_rgb()
-  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:color[s:coltype])
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:col(s:coltype))
   call s:init_pane()
   call popup_settext(s:popup_id,
         \ extend(extend(extend(extend(
@@ -465,7 +490,7 @@ fun! s:cancel()
 endf
 
 fun! s:yank()
-  let @"=s:color[s:coltype]
+  let @"=s:col(s:coltype)
   return 1
 endf
 
@@ -506,6 +531,10 @@ fun! s:fgbgsp_prev()
 endf
 
 fun! s:toggle_attribute(attrname)
+  if s:higroup == 'Normal'
+    call s:notification('You cannot set Normal attributes')
+    return 1
+  endif
   call colortemplate#syn#toggle_attribute(hlID(s:higroup), a:attrname)
   call s:set_higroup(s:higroup)
   call s:redraw()
@@ -550,8 +579,8 @@ fun! s:edit_color()
 endf
 
 fun! s:clear_color()
-  " Never clear foreground/background for Normal
   if s:higroup == 'Normal' && s:coltype != 'sp'
+    call s:notification('You cannot clear Normal ' .. s:coltype)
     return 1
   endif
   let l:ct = (s:mode ==# 'cterm' && s:coltype ==# 'sp' ? 'ul' : s:coltype)
@@ -602,7 +631,7 @@ endf
 
 fun! s:apply_color()
   let l:ct = (s:coltype ==# 'sp' && s:mode ==# 'cterm') ? 'ul' : s:coltype
-  let l:col = (s:mode ==# 'gui' ? s:color[s:coltype] : colortemplate#colorspace#approx(s:color[s:coltype])['index'])
+  let l:col = (s:mode ==# 'gui' ? s:col(s:coltype) : colortemplate#colorspace#approx(s:col(s:coltype))['index'])
   execute 'hi!' s:higroup s:mode..l:ct..'='..l:col
 endf
 

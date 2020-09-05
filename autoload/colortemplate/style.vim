@@ -27,6 +27,15 @@ let s:recent  = []               " List of recent colors
 let s:favorites = []             " List of favorite colors
 " }}}
 " Helper functions {{{
+fun! s:set_slider_symbols(force_default)
+  let l:defaults = get(g:, 'colortemplate_slider_ascii', 0)
+      \ ? [" ", ".", ":", "!", "|", "/", "-", "=", "#"]
+      \ : [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", '█']
+  let s:slider_symbols =  a:force_default
+        \ ? l:defaults
+        \ : get(g:, 'colortemplate_slider_symbols', l:defaults)
+endf
+
 " Builds a level bar (for simplicity called a "slider") with a specified
 " value.
 "
@@ -38,9 +47,9 @@ let s:favorites = []             " List of favorite colors
 fun! s:slider(name, value, width = 32)
   let l:whole = a:value * a:width / 256
   let l:frac = a:value * a:width / 256.0 - l:whole
-  let l:bar = repeat('█', l:whole)
+  let l:bar = repeat(s:slider_symbols[8], l:whole)
   let l:part_width = float2nr(floor(l:frac * 8))
-  let l:part_char = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉"][l:part_width]
+  let l:part_char = s:slider_symbols[l:part_width]
   let l:bar = printf("%s %3d %s", a:name, a:value, l:bar.l:part_char)
   return l:bar
 endf
@@ -696,6 +705,13 @@ fun! colortemplate#style#open(...)
   let s:width   = max([39 + len(s:mark), 42])
   let s:star    = get(g:, 'colortemplate_style_star', '*')
   let s:compact = get(g:, 'colortemplate_style_compact', 0)
+  call s:set_slider_symbols(0)
+  if len(s:slider_symbols) != 9
+    echohl WarningMsg
+    echomsg '[Colortemplate] g:colortemplate_slider_symbols must be a List with 9 elements.'
+    echohl None
+    call s:set_slider_symbols(1)
+  endif
 
   if empty(a:000) || empty(a:1)
     call s:set_higroup_under_cursor()

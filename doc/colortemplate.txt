@@ -788,6 +788,18 @@ do not want Colortemplate to ever touch your |runtimepath|.
 >
 	let g:colortemplate_rtp = 1
 <
+						*g:colortemplate_slider_ascii*
+Set to 1 to use ASCII symbols for the level bars in the style picker. This
+option is ignored if |g:colortemplate_slider_symbols| is defined.
+>
+	let g:colortemplate_slider_ascii = 0
+<
+						*g:colortemplate_slider_symbols*
+A List of 9 elements to be used to draw level bars in the style picker.
+>
+	let g:colortemplate_slider_symbols =
+            \ [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", '█']
+<
 						*g:colortemplate_source_comment*
 Set to 0 if you do not want Colortemplate to append the source template as
 a comment at the end of the generated color scheme. Set to 1 if you want only

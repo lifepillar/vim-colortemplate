@@ -273,7 +273,7 @@ fun! s:attr_text(higroup)
     endif
   endfor
   let l:s = ''
-  if a:higroup['spname'] != 'none'
+  if a:higroup['spname'] != 'none' && a:higroup['synid'] != hlID('Normal') && a:higroup['spname'] != s:higroups['Normal']['bgname']
     let l:s .= ' guisp=' . a:higroup['spname']
   endif
   if !empty(l:common_attr)
@@ -332,11 +332,10 @@ fun! s:generate_template()
   " Print Normal group first
   if has_key(s:higroups, 'Normal')
     call s:print_higroup('Normal')
-    call remove(s:higroups, 'Normal')
   else " This should never happen
     call s:warn('Normal group is not defined')
   endif
-  for l:g in sort(keys(s:higroups))
+  for l:g in filter(sort(keys(s:higroups)), { i,v -> v != 'Normal' })
     call s:print_higroup(l:g)
   endfor
   call s:put('; }}}')

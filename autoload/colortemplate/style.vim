@@ -572,7 +572,7 @@ fun! s:toggle_attribute(attrname)
 endf
 
 fun! s:toggle_bold()
-  return s:toggle_attribute('_bold')
+  return s:toggle_attribute('bold')
 endf
 
 fun! s:toggle_italic()

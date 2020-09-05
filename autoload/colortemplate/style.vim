@@ -40,6 +40,8 @@ let s:sample_texts = get(g:, 'colortemplate_popup_quotes', [
       \ "Nec sine te, nec tecum vivere possum",
       \ "Quis custodiet ipsos custodes?",
       \ "Quod non vetat lex, hoc vetat fieri pudor",
+      \ "Vim vi repellere licet",
+      \ "Vana gloria spica ingens est sine grano",
       \])
 let s:sample_text = ''
 " }}}

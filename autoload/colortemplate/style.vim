@@ -11,7 +11,10 @@ let s:undercurl = 0
 let s:strike    = 0
 
 " Popup configuration
+" Mode for colors
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
+" Mode for attributes
+const s:attrmode = (has('gui_running') || (has('nvim' && has('termguicolors') && &termguicolors))) ? 'gui' : 'cterm'
 let s:mark = ''                  " Marker for the current line (set when the popup is open)
 let s:width = 0                  " Popup width (set when the popup is open)
 let s:star = ''                  " Star for colors (set when the popup is open)
@@ -69,13 +72,13 @@ fun! s:set_higroup(name)
   let s:color.fg    = colortemplate#syn#higroup2hex(a:name, 'fg')
   let s:color.bg    = colortemplate#syn#higroup2hex(a:name, 'bg')
   let s:color.sp    = colortemplate#syn#higroup2hex(a:name, 'sp')
-  let s:bold        = synIDattr(l:id, 'bold') ==# '1' ? 1 : 0
-  let s:italic      = synIDattr(l:id, 'italic') ==# '1' ? 1 : 0
-  let s:inverse     = synIDattr(l:id, 'reverse') ==# '1' ? 1 : 0
-  let s:standout    = synIDattr(l:id, 'standout') ==# '1' ? 1 : 0
-  let s:underline   = synIDattr(l:id, 'underline') ==# '1' ? 1 : 0
-  let s:undercurl   = synIDattr(l:id, 'undercurl') ==# '1' ? 1 : 0
-  let s:strike      = synIDattr(l:id, 'strike') ==# '1' ? 1 : 0
+  let s:bold        = synIDattr(l:id, 'bold',      s:attrmode) ==# '1' ? 1 : 0
+  let s:italic      = synIDattr(l:id, 'italic',    s:attrmode) ==# '1' ? 1 : 0
+  let s:inverse     = synIDattr(l:id, 'reverse',   s:attrmode) ==# '1' ? 1 : 0
+  let s:standout    = synIDattr(l:id, 'standout',  s:attrmode) ==# '1' ? 1 : 0
+  let s:underline   = synIDattr(l:id, 'underline', s:attrmode) ==# '1' ? 1 : 0
+  let s:undercurl   = synIDattr(l:id, 'undercurl', s:attrmode) ==# '1' ? 1 : 0
+  let s:strike      = synIDattr(l:id, 'strike',    s:attrmode) ==# '1' ? 1 : 0
 endf
 
 fun! s:set_higroup_under_cursor()

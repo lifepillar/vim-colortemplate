@@ -1,6 +1,6 @@
 " Popup state {{{
 " Current style
-let s:higroup   = 'Normal'
+let s:higroup   = ''
 let s:color     = #{ fg: {}, bg: {}, sp: {} }
 let s:bold      = 0
 let s:italic    = 0
@@ -120,10 +120,16 @@ fun! s:set_higroup(name)
   let s:underline   = synIDattr(l:id, 'underline', s:attrmode) ==# '1' ? 1 : 0
   let s:undercurl   = synIDattr(l:id, 'undercurl', s:attrmode) ==# '1' ? 1 : 0
   let s:strike      = synIDattr(l:id, 'strike',    s:attrmode) ==# '1' ? 1 : 0
+  return 1
 endf
 
-fun! s:set_higroup_under_cursor()
+fun! s:init_higroup_under_cursor()
   call s:set_higroup(synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name'))
+endf
+
+fun! s:update_higroup_under_cursor()
+  let l:group = synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name')
+  return (l:group == s:higroup ? 0 : s:set_higroup(l:group))
 endf
 
 fun! s:choose_gui_color()
@@ -544,9 +550,10 @@ fun! s:select_prev_item()
 endf
 
 fun! s:update_higroup()
-  call s:set_higroup_under_cursor()
-  " TODO: save current color to recent colors if modified
-  call s:redraw()
+  if s:update_higroup_under_cursor()
+    " TODO: save current color to recent colors if modified
+    call s:redraw()
+  endif
   return 1
 endf
 
@@ -791,10 +798,9 @@ fun! colortemplate#style#open(...)
   endif
 
   if empty(a:000) || empty(a:1)
-    call s:set_higroup_under_cursor()
+    call s:init_higroup_under_cursor()
     " Track the cursor
     augroup colortemplate_popup
-      " TODO: do not redraw unnecessarily
       autocmd CursorMoved * call s:update_higroup()
     augroup END
   else

@@ -127,10 +127,10 @@ fun! colortemplate#syn#higroup2hex(name, type)
   if has('gui_running') || (has('termguicolors') && &termguicolors)
     let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
     if empty(l:gui)
-      if a:name == 'Normal'
-        return a:type ==# 'bg' ? '#ffffff' : '#000000'
-      elseif a:type ==# 'sp'
+      if a:type ==# 'sp'
         return colortemplate#syn#higroup2hex(a:name, 'fg')
+      elseif a:name == 'Normal'
+        return a:type ==# 'bg' ? '#ffffff' : '#000000'
       endif
       return colortemplate#syn#higroup2hex('Normal', a:type)
     endif
@@ -139,10 +139,10 @@ fun! colortemplate#syn#higroup2hex(name, type)
   " Assume 256-color terminal
   let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
     if empty(l:term)
-      if a:name == 'Normal'
-        return a:type ==# 'bg' ? '#ffffff' : '#000000'
-      elseif a:name ==# 'sp'
+      if a:name ==# 'sp'
         return colortemplate#syn#higroup2hex(a:name, 'fg')
+      elseif a:name == 'Normal'
+        return a:type ==# 'bg' ? '#ffffff' : '#000000'
       endif
       return colortemplate#syn#higroup2hex('Normal', a:type)
     endif

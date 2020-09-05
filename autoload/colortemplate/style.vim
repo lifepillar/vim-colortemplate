@@ -538,7 +538,8 @@ fun! s:edit_color()
 endf
 
 fun! s:clear_color()
-  if tolower(s:higroup) ==# 'normal'
+  " Never clear foreground and background for Normal
+  if s:higroup == 'Normal' && s:coltype !=# 'sp'
     return 1
   endif
   let l:ct = (s:mode ==# 'cterm' && s:coltype ==# 'sp' ? 'ul' : s:coltype)

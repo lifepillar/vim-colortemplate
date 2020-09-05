@@ -353,7 +353,6 @@ fun! s:info_section() " -> List of Dictionaries
   let l:warn = !s:is_good(s:coltype)
   let l:excl = (l:warn ? '!' : ' ')
 
-  " TODO: Highlight when a color is not good.
   return [
         \ s:blank(),
         \ s:prop(printf('   %s%s%-5s    %3d%s%-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',

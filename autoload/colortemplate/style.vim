@@ -204,11 +204,11 @@ fun! s:add_prop_types()
   " Title of the pane
   call prop_type_add('title', #{bufnr: winbufnr(s:popup_id), highlight: 'Title'})
   " Mark line as an item that can be selected
-  call prop_type_add('item',  #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
+  call prop_type_add('item',  #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   " Mark line as a label
   call prop_type_add('label', #{bufnr: winbufnr(s:popup_id), highlight: 'Label'})
   " Mark line as a level bar (slider)
-  call prop_type_add('level', #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
+  call prop_type_add('level', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   " To highlight text with the currently selected highglight group
   call prop_type_add('curr',  #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   " Highglight for the current GUI color
@@ -225,10 +225,10 @@ fun! s:add_prop_types()
   call prop_type_add('strik', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateStyleStrike'})
   call prop_type_add('disabled', #{bufnr: winbufnr(s:popup_id), highlight: 'Comment'})
   " RGB pane
-  call prop_type_add('rgb',   #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
-  call prop_type_add('red',   #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
-  call prop_type_add('green', #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
-  call prop_type_add('blue',  #{bufnr: winbufnr(s:popup_id), highlight: 'Ignore'})
+  call prop_type_add('rgb',   #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('red',   #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('green', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('blue',  #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
 
   " FIXME: decorative types, to be eliminated
   call prop_type_add('C1', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC1'})

@@ -58,6 +58,11 @@ fun! colortemplate#syn#hi_group()
   let higrp = synIDattr(synid, "name")
   let synid = synIDtrans(synid)
   let logrp = synIDattr(synid, "name")
+  if logrp == s:cached_higroup
+    return
+  else
+    let s:cached_higroup = logrp
+  endif
   let fgcol = [synIDattr(synid, "fg", "cterm"), synIDattr(synid, "fg", "gui")]
   let bgcol = [synIDattr(synid, "bg", "cterm"), synIDattr(synid, "bg", "gui")]
   try " The following may raise an error, e.g., if CtrlP is opened while this is active
@@ -81,6 +86,7 @@ fun! colortemplate#syn#toggle()
     autocmd! colortemplate_syn_info
     augroup! colortemplate_syn_info
   else
+    let s:cached_higroup = ''
     augroup colortemplate_syn_info
       autocmd CursorMoved * call colortemplate#syn#hi_group()
     augroup END

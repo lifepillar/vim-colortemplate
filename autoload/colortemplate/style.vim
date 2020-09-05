@@ -28,6 +28,20 @@ let s:step = 1                   " Step for increasing/decreasing levels
 let s:step_reset = 1             " Status of the step counter
 let s:recent  = []               " List of recent colors
 let s:favorites = []             " List of favorite colors
+let s:sample_texts = get(g:, 'colortemplate_popup_quotes', [
+      \ "Absentem edit cum ebrio qui litigat",
+      \ "Accipere quam facere praestat iniuriam",
+      \ "Amicum cum vides obliviscere miserias",
+      \ "Diligite iustitiam qui iudicatis terram",
+      \ "Etiam capillus unus habet umbram suam",
+      \ "Impunitas semper ad deteriora invitat",
+      \ "Mala tempora currunt sed peiora parantur",
+      \ "Nec quod fuimusve sumusve, cras erimus",
+      \ "Nec sine te, nec tecum vivere possum",
+      \ "Quis custodiet ipsos custodes?",
+      \ "Quod non vetat lex, hoc vetat fieri pudor",
+      \])
+let s:sample_text = ''
 " }}}
 " Helper functions {{{
 fun! s:set_color(type, hex, is_good = 1)
@@ -143,11 +157,15 @@ fun! s:save_popup_position(id)
   let s:popup_x = popup_getoptions(a:id)['col']
   let s:popup_y = popup_getoptions(a:id)['line']
 endf
+
+fun! s:center(text, width)
+  return printf('%s%s', repeat(' ', (a:width - len(a:text)) / 2), a:text)
+endf
 " }}}
 " Notification popup {{{
 fun! s:notification(msg, duration = 2000)
   if get(g:, 'colortemplate_style_notifications', 1)
-    call popup_notification(a:msg, #{
+    call popup_notification(s:center(a:msg, s:width), #{
           \ pos: 'topleft',
           \ line: popup_getoptions(s:popup_id)['line'],
           \ col: popup_getoptions(s:popup_id)['col'],
@@ -327,6 +345,7 @@ fun! s:info_section() " -> List of Dictionaries
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   let l:delta = l:termcol[s:coltype]['delta']
 
+  " TODO: Highlight when a color is not good.
   return [
         \ s:blank(),
         \ s:prop(printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
@@ -344,7 +363,7 @@ fun! s:info_section() " -> List of Dictionaries
         \         #{ col: 43, length: 1, type: (s:strike    ? 'strik' : 'disabled') },
         \        ]),
         \ s:blank(),
-        \ s:prop('The quick brown fox jumped over the lazy dog', [#{ col: 1, length: s:width, type: 'curr' }]),
+        \ s:prop(s:sample_text, [#{ col: 1, length: s:width, type: 'curr' }]),
         \]
 endf
 " }}}
@@ -750,6 +769,8 @@ fun! colortemplate#style#open(...)
   let s:width   = max([39 + len(s:mark), 42])
   let s:star    = get(g:, 'colortemplate_style_star', '*')
   let s:compact = get(g:, 'colortemplate_style_compact', 0)
+  let s:sample_text = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
+
   call s:set_slider_symbols(0)
   if len(s:slider_symbols) != 9
     echohl WarningMsg

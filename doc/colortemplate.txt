@@ -819,6 +819,11 @@ available.
 >
 	let g:colortemplate_popup_mapping = 0
 <
+						*g:colortemplate_popup_quotes*
+A List of quotes to be displayed as sample text in the style picker.
+>
+	let g:colortemplate_popup_quotes = [<some wisdom>]
+<
 						*g:colortemplate_timestamp*
 Set to 0 if you do not want a timestamp in the generated color scheme.
 >

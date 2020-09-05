@@ -22,7 +22,7 @@ let s:popup_x = 0                " Horizontal position of the popup (0=center)
 let s:popup_y = 0                " Vertical position of the popup (0=center)
 let s:popup_id = -1              " Popup buffer ID
 let s:active_line = 1            " Where the marker is located in the popup
-let s:pane = 'rgb'               " Current pane ('rgb', 'gray', 'hsl')
+let s:pane = 'rgb'               " Current pane ('rgb', 'gray', 'hsb')
 let s:coltype = 'fg'             " Currently displayed color ('fg', 'bg', 'sp')
 let s:step = 1                   " Step for increasing/decreasing levels
 let s:step_reset = 1             " Status of the step counter
@@ -428,36 +428,36 @@ fun! s:redraw_rgb()
         \)
 endf
 " }}}
-" HSL Pane {{{
-fun! s:redraw_hsl()
-  call popup_settext(s:popup_id, [
-        \ s:prop_title(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+" HSB Pane {{{
+fun! s:redraw_hsb()
+  call popup_settext(s:popup_id,
+        \ extend(s:title_section('H'), [
         \ s:blank(),
         \ s:prop_label('Not implemented yet.'),
         \ s:prop_label('Please switch back to R.'),
-        \ ])
+        \ ]))
   call prop_add(1, 40, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
 " }}}
 " Grayscale Pane {{{
 fun! s:redraw_gray()
-  call popup_settext(s:popup_id, [
-        \ s:prop_title(printf('%s%s%s', s:higroup, repeat(' ', s:width - len(s:higroup) - 4), 'RHG?')),
+  call popup_settext(s:popup_id,
+        \ extend(s:title_section('G'), [
         \ s:blank(),
         \ s:prop_label('Not implemented yet.'),
         \ s:prop_label('Please switch back to R.'),
-        \ ])
+        \ ]))
   call prop_add(1, 41, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
 " }}}
 " Help pane {{{
 fun! s:redraw_help()
-  call popup_settext(s:popup_id, [
-        \ s:prop_title(printf('Keyboard Controls%s%s', repeat(' ', s:width - 21), 'RHG?')),
+  call popup_settext(s:popup_id,
+        \ extend(s:title_section('G'), [
         \ s:blank(),
         \ s:prop_label('Popup'),
         \ s:noprop('[x] Close             [R] RGB'),
-        \ s:noprop('[X] Cancel            [H] HSL'),
+        \ s:noprop('[X] Cancel            [H] HSB'),
         \ s:noprop('[Tab] fg->bg->sp      [G] Grayscale'),
         \ s:noprop('[S-Tab] sp->bg->fg    [?] Help pane'),
         \ s:blank(),
@@ -471,7 +471,7 @@ fun! s:redraw_help()
         \ s:noprop('[→] Increase value    [E] New value'),
         \ s:noprop('[←] Decrease value    [N] New hi group'),
         \ s:noprop('[y] Yank color        [Z] Clear color'),
-        \ ])
+        \ ]))
   call prop_add(1, 42, #{bufnr: winbufnr(s:popup_id), length: 1, type: 'label'})
 endf
 " }}}
@@ -491,6 +491,7 @@ endf
 
 fun! s:yank()
   let @"=s:col(s:coltype)
+  call s:notification('Color yanked')
   return 1
 endf
 
@@ -613,8 +614,8 @@ fun! s:switch_to_rgb()
   return s:set_pane('rgb')
 endf
 
-fun! s:switch_to_hsl()
-  return s:set_pane('hsl')
+fun! s:switch_to_hsb()
+  return s:set_pane('hsb')
 endf
 
 fun! s:switch_to_grayscale()
@@ -679,8 +680,8 @@ endf
 fun! s:redraw()
   if s:pane ==# 'rgb'
     call s:redraw_rgb()
-  elseif s:pane ==# 'hsl'
-    call s:redraw_hsl()
+  elseif s:pane ==# 'hsb'
+    call s:redraw_hsb()
   elseif s:pane ==# 'gray'
     call s:redraw_gray()
   elseif s:pane ==# 'help'
@@ -710,7 +711,7 @@ let s:keymap = {
       \ "N"           : function('s:edit_name'),
       \ "Z"           : function('s:clear_color'),
       \ "R"           : function('s:switch_to_rgb'),
-      \ "H"           : function('s:switch_to_hsl'),
+      \ "H"           : function('s:switch_to_hsb'),
       \ "G"           : function('s:switch_to_grayscale'),
       \ "?"           : function('s:switch_to_help'),
       \ }

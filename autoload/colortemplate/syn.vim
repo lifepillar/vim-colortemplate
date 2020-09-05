@@ -89,26 +89,31 @@ fun! colortemplate#syn#toggle()
   endif
 endf
 
-" Configurable values for the 16 terminal ANSI colors
+" Configurable values for the 16 terminal ANSI colors.
+"
+" The 24 bit RGB values used for the 16 ANSI colors differ greatly for each
+" terminal implementation. Below is a system that is both consistent and 12
+" bit compatible. See https://mudhalla.net/tintin/info/ansicolor/
+
 " These are arbitrary hex values for terminal colors in the range 0-15. These
-" are defined for situations in which a hex value must be returned under all
-" circumstances, even if it is an approximate one.
+" are defined for situations in which a hex value must be returned under any
+" circumstances, even if it is an approximate value.
 let g:colortemplate#syn#ansi_colors = [
       \ '#000000',
-      \ '#ff0000',
-      \ '#00ff00',
-      \ '#ffff00',
-      \ '#0000ff',
-      \ '#ff00ff',
-      \ '#00ffff',
-      \ '#ffffff',
-      \ '#000000',
-      \ '#ff0000',
-      \ '#00ff00',
-      \ '#ffff00',
-      \ '#0000ff',
-      \ '#ff00ff',
-      \ '#00ffff',
+      \ '#aa0000',
+      \ '#00aa00',
+      \ '#aaaa00',
+      \ '#0000aa',
+      \ '#aa00aa',
+      \ '#00aaaa',
+      \ '#aaaaaa',
+      \ '#555555',
+      \ '#ff5555',
+      \ '#55ff55',
+      \ '#ffff55',
+      \ '#5555ff',
+      \ '#ff55ff',
+      \ '#55ffff',
       \ '#ffffff',
       \ ]
 

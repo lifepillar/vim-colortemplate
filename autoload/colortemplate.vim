@@ -15,9 +15,9 @@ let s:VERSION = '2.0.0'
 " <Key>                       ::= Full name | Short name | Author | Background | ...
 " <Value>                     ::= .*
 " <ColorDef>                  ::= Color : <ColorName> <GUIValue> <Base256Value> [ <Base16Value> ]
-" <ColorName>                 ::= [a-z1-9_]+
+" <ColorName>                 ::= [A-Za-z1-9_]+
 " <GUIValue>                  ::= <HexValue> | <RGBValue> | <RGBColorName>
-" <HexValue>                  ::= #[a-f0-9]{6}
+" <HexValue>                  ::= #[A-Za-f0-9]{6}
 " <RGBValue>                  ::= rgb ( <8BitNumber> , <8BitNumber> , <8BitNumber> )
 " <RGBColorName>              ::= See $VIMRUNTIME/rgb.txt
 " <Base256Value>              ::= ~ | <8BitNumber>
@@ -1352,8 +1352,8 @@ fun! s:token.next() dict
     if match(s:getl(), '^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>', 0) > -1
       let self.kind = 'CMD'
       let self.value = matchstr(s:getl(), '^\s*#\zs\%(if\|else\%[if]\|endif\|\%[un]let!\=\|call!\=\)', 0)
-    elseif match(s:getl(), '^[0-9a-f]\{6}', self.pos) > -1
-      let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-f]\{6}', self.pos - 1)
+    elseif match(s:getl(), '^[0-9a-fA-F]\{6}', self.pos) > -1
+      let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '#[0-9a-fA-F]\{6}', self.pos - 1)
       let self.kind = 'HEX'
     else " Use of # as a comment tag is deprecated, but still supported for backward compatibility
       let self.value = '#'
@@ -1846,7 +1846,7 @@ endf
 
 fun! s:parse_gui_value()
   if s:token.next().kind ==# 'HEX'
-    return s:token.value
+    return tolower(s:token.value)
   elseif s:token.kind !=# 'WORD'
     throw 'Invalid GUI color value'
   elseif s:token.value ==? 'rgb'

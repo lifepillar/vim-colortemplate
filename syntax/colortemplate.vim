@@ -42,7 +42,7 @@ syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortempl
 syn match   colortemplateColorDef     ".\+$" contained contains=colortemplateNumber,colortemplateHexColor,colortemplateFunction,colortemplateConstant,colortemplateCompound,colortemplateComment
 syn match   colortemplateNumber       "\<\d\+\>" contained
 syn match   colortemplateArrow        "->"
-syn match   colortemplateHexColor     "#[a-f0-9]\{6\}" contained
+syn match   colortemplateHexColor     "#[A-Fa-f0-9]\{6\}" contained
 syn keyword colortemplateFunction     contained rgb
 syn keyword colortemplateTodo         contained TODO FIXME XXX DEBUG NOTE
 " Basic color names

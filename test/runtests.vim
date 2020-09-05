@@ -830,6 +830,10 @@ fun! Test_CT_silent_call_command()
   call s:assert_build('test80')
 endf
 
+fun! Test_CT_upper_case_hex_colors()
+  call s:assert_build('test82')
+endf
+
 
 "
 " Runner!

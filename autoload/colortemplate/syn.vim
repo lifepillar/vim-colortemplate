@@ -117,6 +117,13 @@ let g:colortemplate#syn#ansi_colors = [
       \ '#ffffff',
       \ ]
 
+fun! s:fallback_color(type)
+  return #{ hex: a:type ==# 'bg'
+        \                   ? (&bg ==# 'dark' ? '#000000' : '#ffffff')
+        \                   : (&bg ==# 'dark' ? '#ffffff' : '#000000'),
+        \   good: 0 }
+endf
+
 " Try (hard) to derive a more or less reasonable hex value for a given
 " highlight group color. This is trivial if the environment supports millions
 " of colors and the highlight group defines guifg/guibg/guisp; it is easy if
@@ -131,50 +138,61 @@ let g:colortemplate#syn#ansi_colors = [
 "
 " name: the name of a highlight group
 " type: 'fg', 'bg', or 'sp'
+"
+" Returns a Dictionary with two keys:
+" hex: the color value
+" good: a 0/1 flag indicating whether the color is likely a (bad)
+" approximation.
 fun! colortemplate#syn#higroup2hex(name, type)
   if has('gui_running') || (has('termguicolors') && &termguicolors)
     let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
-    if empty(l:gui)
-      if a:type ==# 'sp'
-        return colortemplate#syn#higroup2hex(a:name, 'fg')
-      elseif a:name == 'Normal'
-        return a:type ==# 'bg' ? '#ffffff' : '#000000'
-      endif
-      return colortemplate#syn#higroup2hex('Normal', a:type)
+
+    if !empty(l:gui) " Fast path
+      return #{ hex: l:gui, good: 1}
     endif
-    return l:gui
+
+    if a:type ==# 'sp'
+      return colortemplate#syn#higroup2hex(a:name, 'fg')
+    elseif a:name == 'Normal'
+      return s:fallback_color(a:type)
+    endif
+    return colortemplate#syn#higroup2hex('Normal', a:type)
   endif
+
   " Assume 256-color terminal
   let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
-    if empty(l:term)
-      if a:type ==# 'sp'
-        return colortemplate#syn#higroup2hex(a:name, 'fg')
-      elseif a:name == 'Normal'
-        return a:type ==# 'bg' ? '#ffffff' : '#000000'
-      endif
-      return colortemplate#syn#higroup2hex('Normal', a:type)
+
+  if !empty(l:term) && str2nr(l:term) > 15 " Fast path
+    return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), good: 1}
+  endif
+
+  if empty(l:term)
+    if a:type ==# 'sp'
+      return colortemplate#syn#higroup2hex(a:name, 'fg')
+    elseif a:name == 'Normal'
+      return s:fallback_color(a:type)
     endif
-    " If we get here, then l:term is non-empty, but it might not be a number
-    if l:term !~ '\m^\d\+$'
-      if l:term =~# '\m^[fb]g$'
-        if a:name == 'Normal' " ? Should never happen
-          return (l:term ==# 'bg' ? '#ffffff' : '#000000')
-        endif
-        return colortemplate#syn#higroup2hex('Normal', l:term)
-      endif
-      try " to convert name to number
-        let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
-      catch " What?!
-        return a:type ==# 'bg' ? '#ffffff' : '#000000'
-      endtry
+    return colortemplate#syn#higroup2hex('Normal', a:type)
+  endif
+
+  if l:term =~ '\m^\d\+$' " If it's a number, it must be between 0 and 15
+    return #{ hex: g:colortemplate#syn#ansi_colors[str2nr(l:term)], good: 0}
+  endif
+
+  if l:term =~# '\m^\(fg\|bg\|ul\)$' " fg/bg/ul
+    if a:name == 'Normal' " ? Should never happen
+      return s:fallback_color(a:type)
     endif
-    " If we get here, we've got a color number in [0-255]
-    try " to get corresponding hex value
-      let l:gui = colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term))
-      return l:gui
-    catch " Term number is in [0,15]
-      return g:colortemplate#syn#ansi_colors[str2nr(l:term)]
-    endtry
+    return colortemplate#syn#higroup2hex('Normal', (l:term ==# 'ul' ? 'sp' : l:term))
+  endif
+
+  " Term color is a color name
+  try " to convert name to number
+    let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
+    return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), good: 1}
+  catch " What?!
+    return s:fallback_color(a:type)
+  endtry
   endif
 endf
 

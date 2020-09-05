@@ -2806,5 +2806,6 @@ fun! colortemplate#format_palette(colors)
 endf
 " }}} Public interface
 " TODO {{{
+" - Support for ctermul
 " - Support for font in highlight group definitions?
 " }}}

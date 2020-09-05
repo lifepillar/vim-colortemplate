@@ -139,7 +139,7 @@ fun! colortemplate#syn#higroup2hex(name, type)
   " Assume 256-color terminal
   let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
     if empty(l:term)
-      if a:name ==# 'sp'
+      if a:type ==# 'sp'
         return colortemplate#syn#higroup2hex(a:name, 'fg')
       elseif a:name == 'Normal'
         return a:type ==# 'bg' ? '#ffffff' : '#000000'

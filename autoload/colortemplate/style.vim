@@ -538,8 +538,8 @@ fun! s:edit_color()
 endf
 
 fun! s:clear_color()
-  " Never clear foreground and background for Normal
-  if s:higroup == 'Normal' && s:coltype !=# 'sp'
+  " Never clear Normal
+  if s:higroup == 'Normal'
     return 1
   endif
   let l:ct = (s:mode ==# 'cterm' && s:coltype ==# 'sp' ? 'ul' : s:coltype)
@@ -588,6 +588,10 @@ fun! s:notify_change()
 endf
 
 fun! s:apply_color()
+  " Do not set special color for Normal (attributes cannot be set anyway)
+  if s:coltype ==# 'sp' && s:higroup == 'Normal'
+    return
+  endif
   let l:ct = (s:coltype ==# 'sp' && s:mode ==# 'cterm') ? 'ul' : s:coltype
   let l:col = (s:mode ==# 'gui' ? s:color[s:coltype] : colortemplate#colorspace#approx(s:color[s:coltype])['index'])
   execute 'hi!' s:higroup s:mode..l:ct..'='..l:col

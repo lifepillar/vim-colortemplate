@@ -65,7 +65,7 @@ endf
 
 fun! s:set_higroup(name)
   let s:higroup     = empty(a:name) ? 'Normal' : a:name
-  let l:id          = hlID(a:name)
+  let l:id          = hlID(s:higroup)
   let s:color.fg    = colortemplate#syn#higroup2hex(a:name, 'fg')
   let s:color.bg    = colortemplate#syn#higroup2hex(a:name, 'bg')
   let s:color.sp    = colortemplate#syn#higroup2hex(a:name, 'sp')

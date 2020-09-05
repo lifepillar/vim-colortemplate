@@ -23,11 +23,15 @@ fun! colortemplate#syn#attributes(synid, mode)
 endf
 
 fun! s:toggle_attribute(synid, attr)
-  let l:mode = has('gui_running') ? 'gui' : 'cterm'
+  " Note that in terminals, Vim (correctly) always uses cterm attributes, even
+  " when termguicolors is set (termguicolors is only about colors, not
+  " attributes). NeoVim does not get it right, IMO (and Bram's), because it
+  " uses gui attributes when termguicolors is set.
+  let l:mode = (has('gui_running') || (has('neovim') && &termguicolors)) ? 'gui' : 'cterm'
   let l:synid = synIDtrans(a:synid)
   let l:old_attrs = colortemplate#syn#attributes(l:synid, l:mode)
   let l:name = synIDattr(l:synid, 'name')
-  if empty(l:name) || tolower(l:name) ==# 'normal'
+  if empty(l:name) || l:name == 'Normal'
     echohl WarningMsg
     unsilent echo '[Colortemplate] Attributes cannot be set for Normal.'
     echohl None
@@ -45,7 +49,6 @@ fun! s:toggle_attribute(synid, attr)
 endf
 
 fun! colortemplate#syn#toggle_attribute(synid, attr)
-  " call s:toggle_attribute(synID(line('.'), col('.'), 1), a:attr)
   call s:toggle_attribute(a:synid, a:attr)
 endf
 

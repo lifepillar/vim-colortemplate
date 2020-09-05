@@ -265,34 +265,27 @@ endf
 " }}}
 " Info section of a pane {{{
 fun! s:info_section() " -> List of Dictionaries
-  let l:tc = {}
-  let l:th = {}
-  if s:coltype ==# 'sp'
-    let l:tc['sp']   = colortemplate#colorspace#approx(s:color['sp'])
-    let l:tc['bg']   = colortemplate#colorspace#approx(s:color['bg'])
-    let l:th['sp']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['sp']['index'])
-    let l:th['bg']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['bg']['index'])
-    let s:term_stars = s:stars(l:th['sp'], l:th['bg'])
-    let s:gui_stars  = s:stars(s:color['sp'], s:color['bg'])
-  else
-    let l:tc['fg']   = colortemplate#colorspace#approx(s:color['fg'])
-    let l:tc['bg']   = colortemplate#colorspace#approx(s:color['bg'])
-    let l:th['fg']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['fg']['index'])
-    let l:th['bg']   = colortemplate#colorspace#xterm256_hexvalue(l:tc['bg']['index'])
-    let s:term_stars = s:stars(l:th['fg'], l:th['bg'])
-    let s:gui_stars  = s:stars(s:color['fg'], s:color['bg'])
-  endif
+  let l:termcol = {}
+  let l:termhex = {}
+  let l:fg = (s:coltype ==# 'sp' ? 'sp' : 'fg')
+  " Compute stars
+  let l:termcol[l:fg]   = colortemplate#colorspace#approx(s:color[l:fg])
+  let l:termcol['bg']   = colortemplate#colorspace#approx(s:color['bg'])
+  let l:termhex[l:fg]   = colortemplate#colorspace#xterm256_hexvalue(l:termcol[l:fg]['index'])
+  let l:termhex['bg']   = colortemplate#colorspace#xterm256_hexvalue(l:termcol['bg']['index'])
+  let s:term_stars = s:stars(l:termhex[l:fg], l:termhex['bg'])
+  let s:gui_stars  = s:stars(s:color[l:fg], s:color['bg'])
   if s:mode ==# 'gui'
-    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:tc[s:coltype]['index'])
+    execute printf('hi! ColortemplateStyleGUIColor guibg=%s ctermbg=%d', s:color[s:coltype], l:termcol[s:coltype]['index'])
   endif
-  execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', l:th[s:coltype], l:tc[s:coltype]['index'])
+  execute printf('hi! ColortemplateStyleTermColor guibg=%s ctermbg=%d', l:termhex[s:coltype], l:termcol[s:coltype]['index'])
   call prop_type_change('curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
-  let l:delta = l:tc[s:coltype]['delta']
+  let l:delta = l:termcol[s:coltype]['delta']
 
   return [
         \ s:blank(),
         \ s:prop(printf('   %s %-5s    %3d %-5s Δ%.'..(l:delta>=10.0?'f  ':'1f ')..'BIUSV~-',
-        \          s:color[s:coltype], s:gui_stars, l:tc[s:coltype]['index'], s:term_stars, l:tc[s:coltype]['delta']),
+        \          s:color[s:coltype], s:gui_stars, l:termcol[s:coltype]['index'], s:term_stars, l:termcol[s:coltype]['delta']),
         \        [
         \         #{ col:  1, length: 2, type: 'label' },
         \         #{ col:  1, length: 2, type: (s:mode ==# 'gui' ? 'gcol' : 'disabled') },
@@ -761,6 +754,10 @@ fun! colortemplate#style#open(...)
   let s:active_line = 3
   call s:add_prop_types()
   call s:redraw()
+  return s:popup_id
+endf
+
+fun! colortemplate#style#popup_id()
   return s:popup_id
 endf
 " }}}

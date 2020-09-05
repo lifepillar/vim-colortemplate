@@ -127,33 +127,37 @@ fun! colortemplate#syn#higroup2hex(name, type)
   if has('gui_running') || (has('termguicolors') && &termguicolors)
     let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
     if empty(l:gui)
-      if tolower(a:name) ==# 'normal'
-        return a:type ==# 'fg' ? '#ffffff' : '#000000'
+      if a:name == 'Normal'
+        return a:type ==# 'bg' ? '#ffffff' : '#000000'
+      elseif a:type ==# 'sp'
+        return colortemplate#syn#higroup2hex(a:name, 'fg')
       endif
-      return colortemplate#syn#higroup2hex('Normal', (a:type ==# 'sp' ? 'bg': a:type))
+      return colortemplate#syn#higroup2hex('Normal', a:type)
     endif
     return l:gui
   endif
   " Assume 256-color terminal
   let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
     if empty(l:term)
-      if tolower(a:name) ==# 'normal'
-        return a:type ==# 'fg' ? '#ffffff' : '#000000'
+      if a:name == 'Normal'
+        return a:type ==# 'bg' ? '#ffffff' : '#000000'
+      elseif a:name ==# 'sp'
+        return colortemplate#syn#higroup2hex(a:name, 'fg')
       endif
-      return colortemplate#syn#higroup2hex('Normal', (a:type ==# 'sp' ? 'bg' : a:type))
+      return colortemplate#syn#higroup2hex('Normal', a:type)
     endif
     " If we get here, then l:term is non-empty, but it might not be a number
     if l:term !~ '\m^\d\+$'
       if l:term =~# '\m^[fb]g$'
-        if tolower(a:name) ==# 'normal' " ? Should never happen
-          return (l:term ==# 'fg' ? '#ffffff' : '#000000')
+        if a:name == 'Normal' " ? Should never happen
+          return (l:term ==# 'bg' ? '#ffffff' : '#000000')
         endif
         return colortemplate#syn#higroup2hex('Normal', l:term)
       endif
       try " to convert name to number
         let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
       catch " What?!
-        return a:type ==# 'fg' ? '#ffffff' : '#000000'
+        return a:type ==# 'bg' ? '#ffffff' : '#000000'
       endtry
     endif
     " If we get here, we've got a color number in [0-255]

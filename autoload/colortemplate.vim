@@ -2594,7 +2594,6 @@ fun! colortemplate#make(...)
 
   let l:inpath = expand('%:p')
   call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
-  call s:init_data_structures()
   try
     call colortemplate#parse(l:inpath)
   catch /Parse error/

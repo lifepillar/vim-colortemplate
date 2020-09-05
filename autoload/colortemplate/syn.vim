@@ -40,11 +40,9 @@ fun! s:toggle_attribute(synid, attr)
   let l:i = index(l:old_attrs, a:attr)
   if l:i == -1
     execute 'hi' l:name l:mode..'='..a:attr..','..join(l:old_attrs, ',')
-    echo '[Colortemplate] Set ' .. a:attr .. ' in ' .. l:name
   else
     call remove(l:old_attrs, l:i)
     execute 'hi' l:name l:mode..'='..(empty(l:old_attrs) ? 'NONE' : join(l:old_attrs, ','))
-    echo '[Colortemplate] Removed ' .. a:attr .. ' from ' .. l:name
   endif
 endf
 

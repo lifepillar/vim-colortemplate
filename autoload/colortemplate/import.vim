@@ -273,7 +273,7 @@ fun! s:attr_text(higroup)
     endif
   endfor
   let l:s = ''
-  if a:higroup['spname'] != 'none' && a:higroup['synid'] != hlID('Normal') && a:higroup['spname'] != s:higroups['Normal']['bgname']
+  if a:higroup['spname'] != 'none' && a:higroup['synid'] != hlID('Normal') && a:higroup['spname'] != a:higroup['fgname']
     let l:s .= ' guisp=' . a:higroup['spname']
   endif
   if !empty(l:common_attr)

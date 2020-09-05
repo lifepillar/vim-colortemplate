@@ -320,7 +320,7 @@ fun! s:generate_template()
   endfor
   call s:put('')
   if exists('g:terminal_ansi_colors')
-    call s:put('Term colors: ' . join(map(g:terminal_ansi_colors, 's:invmap[v:val]'), ' '))
+    call s:put('Term colors: ' . join(map(copy(g:terminal_ansi_colors), 's:invmap[v:val]'), ' '))
   endif
   call s:put('; }}}')
   call s:put('')

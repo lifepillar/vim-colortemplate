@@ -182,13 +182,13 @@ endf
 " different names.
 fun! s:assignColor(synid, type)
   let l:col = colortemplate#syn#higroup2hex(synIDattr(a:synid, 'name'), a:type)
-  if has_key(s:invmap, l:col) " Color already defined: return its name
-    return s:invmap[l:col]
+  if has_key(s:invmap, l:col.hex) " Color already defined: return its name
+    return s:invmap[l:col.hex]
   endif
   " New color: generate new name
   let l:name = s:next_color_name()
-  let s:colmap[l:name] = l:col
-  let s:invmap[l:col] = l:name
+  let s:colmap[l:name] = l:col.hex
+  let s:invmap[l:col.hex] = l:name
   return l:name
 endf
 

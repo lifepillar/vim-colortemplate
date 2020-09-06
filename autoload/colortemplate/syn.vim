@@ -168,6 +168,7 @@ fun! colortemplate#syn#balloonexpr()
     let s:balloon_id = popup_beval(l:beval, #{
           \ mousemoved: 'word',
           \ moved: 'any',
+          \ close: 'click',
           \ padding: [0,1,0,1],
           \ })
     let s:last_text = v:beval_text

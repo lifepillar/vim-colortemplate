@@ -15,6 +15,7 @@ let s:strike    = 0
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
 " Mode for attributes
 const s:attrmode = (has('gui_running') || (has('nvim' && has('termguicolors') && &termguicolors))) ? 'gui' : 'cterm'
+let s:key = {}                   " Dictionary of key controls (initialized below)
 let s:mark = ''                  " Marker for the current line (set when the popup is open)
 let s:width = 0                  " Popup width (set when the popup is open)
 let s:star = ''                  " Star for colors (set when the popup is open)
@@ -307,14 +308,16 @@ fun! s:has_property(list, prop)
   return index(a:list, a:prop) != - 1
 endf
 
+fun! s:select_first_item(linenr)
+  let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: 1, col: 1}, 'f')
+  return empty(l:next) ? a:linenr : l:next.lnum
+endf
+
 " Returns the next line after linenr, which has an 'item' property.
 " It wraps at the last item.
 fun! s:find_next_item(linenr)
   let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: a:linenr, col: 1, skipstart: 1}, 'f')
-  if empty(l:next)
-    let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: 1, col: 1}, 'f')
-  endif
-    return empty(l:next) ? a:linenr : l:next.lnum
+  return empty(l:next) ? s:select_first_item(a:linenr) : l:next.lnum
 endf
 
 " Returns the previous line before linenr, which has an 'item' property.
@@ -332,9 +335,10 @@ endf
 fun! s:title_section(pane) " -> List of Dictionaries
   let l:n = (a:pane ==# 'R' ? 1 : a:pane==# 'H' ? 2 : a:pane ==# 'G' ? 3 : 4)
   let l:ct = (s:coltype ==# 'fg' ? 'Fg' : (s:coltype ==# 'bg' ? 'Bg' : 'Sp'))
+  let l:title = (l:n == 4 ? 'Keyboard Controls' : printf('%s [%s]', s:higroup[0:s:width-12], l:ct))
   return [
         \ s:prop(
-        \   printf('%s [%s]%s%s', s:higroup, l:ct, repeat(' ', s:width - (len(s:higroup) + len(l:ct)) - 7), 'RHG?'),
+        \   printf('%s%s%s', l:title, repeat(' ', s:width - len(l:title) - 4), 'RHG?'),
         \   [#{ col: 1, length: s:width, type: '_titl' }, #{ col: 38 + l:n, length: 1, type: '_labe' }],
         \ ),
         \]
@@ -389,25 +393,90 @@ fun! s:recent_section() " -> List of Dictionaries
   return [
         \ s:blank(),
         \ s:prop_label('Recent'),
-        \ s:prop_item('0    1    2    not implemented yet      ',
+        \ s:prop_item('                                   ',
         \               [
-        \                 #{col:  6, length: 2, type: 'C1'},
-        \                 #{col: 11, length: 2, type: 'C2'},
-        \                 #{col: 16, length: 2, type: 'C3'}
+        \                 #{col:  4, length: 3, type: 'C1'},
+        \                 #{col:  7, length: 3, type: 'C2'},
+        \                 #{col: 10, length: 3, type: 'C3'},
+        \                 #{col: 13, length: 3, type: 'C4'},
+        \                 #{col: 16, length: 3, type: 'C5'},
         \               ]),
+        \s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
         \]
 endf
 " }}}
 " Favorites section {{{
 fun! s:favorites_section() " -> List of Dictionaries
   return [
-        \ s:blank(),
         \ s:prop_label('Favorites'),
-        \ s:prop_item('0    1         not implemented yet      ',
+        \ s:prop_item('                                       ',
         \               [
-        \                 #{col:  6, length: 2, type: 'C4'},
-        \                 #{col: 11, length: 2, type: 'C5'},
+        \                 #{col:  4, length: 3, type: 'C4'},
+        \                 #{col:  7, length: 3, type: 'C1'},
+        \                 #{col: 10, length: 3, type: 'C5'},
+        \                 #{col: 13, length: 3, type: 'C3'},
+        \                 #{col: 16, length: 3, type: 'C2'},
+        \                 #{col: 19, length: 3, type: 'C1'},
+        \                 #{col: 22, length: 3, type: 'C4'},
+        \                 #{col: 25, length: 3, type: 'C2'},
+        \                 #{col: 28, length: 3, type: 'C5'},
+        \                 #{col: 31, length: 3, type: 'C1'},
+        \                 #{col: 34, length: 3, type: 'C4'},
+        \                 #{col: 37, length: 3, type: 'C3'},
+        \                 #{col: 40, length: 3, type: 'C5'},
         \               ]),
+        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
+        \ s:prop_item('                                       ',
+        \               [
+        \                 #{col:  4, length: 3, type: 'C1'},
+        \                 #{col:  7, length: 3, type: 'C3'},
+        \                 #{col: 10, length: 3, type: 'C2'},
+        \                 #{col: 13, length: 3, type: 'C5'},
+        \                 #{col: 16, length: 3, type: 'C4'},
+        \                 #{col: 19, length: 3, type: 'C1'},
+        \                 #{col: 22, length: 3, type: 'C2'},
+        \                 #{col: 25, length: 3, type: 'C5'},
+        \                 #{col: 28, length: 3, type: 'C3'},
+        \                 #{col: 31, length: 3, type: 'C1'},
+        \                 #{col: 34, length: 3, type: 'C4'},
+        \                 #{col: 37, length: 3, type: 'C5'},
+        \                 #{col: 40, length: 3, type: 'C2'},
+        \               ]),
+        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
+        \ s:prop_item('                                       ',
+        \               [
+        \                 #{col:  4, length: 3, type: 'C4'},
+        \                 #{col:  7, length: 3, type: 'C1'},
+        \                 #{col: 10, length: 3, type: 'C5'},
+        \                 #{col: 13, length: 3, type: 'C3'},
+        \                 #{col: 16, length: 3, type: 'C2'},
+        \                 #{col: 19, length: 3, type: 'C1'},
+        \                 #{col: 22, length: 3, type: 'C4'},
+        \                 #{col: 25, length: 3, type: 'C2'},
+        \                 #{col: 28, length: 3, type: 'C5'},
+        \                 #{col: 31, length: 3, type: 'C1'},
+        \                 #{col: 34, length: 3, type: 'C4'},
+        \                 #{col: 37, length: 3, type: 'C3'},
+        \                 #{col: 40, length: 3, type: 'C5'},
+        \               ]),
+        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
+        \ s:prop_item('                                       ',
+        \               [
+        \                 #{col:  4, length: 3, type: 'C1'},
+        \                 #{col:  7, length: 3, type: 'C3'},
+        \                 #{col: 10, length: 3, type: 'C2'},
+        \                 #{col: 13, length: 3, type: 'C5'},
+        \                 #{col: 16, length: 3, type: 'C4'},
+        \                 #{col: 19, length: 3, type: 'C1'},
+        \                 #{col: 22, length: 3, type: 'C2'},
+        \                 #{col: 25, length: 3, type: 'C5'},
+        \                 #{col: 28, length: 3, type: 'C3'},
+        \                 #{col: 31, length: 3, type: 'C1'},
+        \                 #{col: 34, length: 3, type: 'C4'},
+        \                 #{col: 37, length: 3, type: 'C5'},
+        \                 #{col: 40, length: 3, type: 'C2'},
+        \               ]),
+        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
         \]
 endf
 " }}}
@@ -490,13 +559,15 @@ endf
 " Help pane {{{
 fun! s:redraw_help()
   call popup_settext(s:popup_id,
-        \ extend(s:title_section('G'), [
+        \ extend(s:title_section('?'), [
         \ s:blank(),
         \ s:prop_label('Popup'),
-        \ s:noprop('[x] Close             [R] RGB'),
-        \ s:noprop('[X] Cancel            [H] HSB'),
-        \ s:noprop('[Tab] fg->bg->sp      [G] Grayscale'),
-        \ s:noprop('[S-Tab] sp->bg->fg    [?] Help pane'),
+        \ s:noprop('[↑] Move up           [R] RGB'),
+        \ s:noprop('[↓] Move down         [H] HSB'),
+        \ s:noprop('[T] Go to top         [G] Grayscale'),
+        \ s:noprop('[Tab] fg->bg->sp      [x] Close'),
+        \ s:noprop('[S-Tab] sp->bg->fg    [X] Cancel'),
+        \ s:noprop('[?] Help pane'),
         \ s:blank(),
         \ s:prop_label('Attributes'),
         \ s:noprop('[B] Toggle boldface   [V] Toggle reverse'),
@@ -505,9 +576,9 @@ fun! s:redraw_help()
         \ s:noprop('[-] Toggle strikethrough'),
         \ s:blank(),
         \ s:prop_label('Color'),
-        \ s:noprop('[→] Increase value    [E] New value'),
-        \ s:noprop('[←] Decrease value    [N] New hi group'),
-        \ s:noprop('[y] Yank color        [Z] Clear color'),
+        \ s:noprop('[→] Increment value   [E] New value'),
+        \ s:noprop('[←] Decrement value   [N] New hi group'),
+        \ s:noprop('[Y] Yank color        [Z] Clear color'),
         \ ]))
   call prop_add(1, 42, #{bufnr: winbufnr(s:popup_id), length: 1, type: '_labe'})
 endf
@@ -545,6 +616,12 @@ endf
 
 fun! s:select_prev_item()
   let s:active_line = s:find_prev_item(s:active_line)
+  call s:redraw()
+  return 1
+endf
+
+fun! s:go_to_top()
+  let s:active_line = s:select_first_item(s:active_line)
   call s:redraw()
   return 1
 endf
@@ -728,33 +805,68 @@ fun! s:redraw()
 endf
 " }}}
 " Keymap {{{
+let s:key = extend({
+      \ 'close':            "x",
+      \ 'cancel':           "X",
+      \ 'yank':             "Y",
+      \ 'down':             "\<down>",
+      \ 'up':               "\<up>",
+      \ 'top':              "T",
+      \ 'decrement':        "\<left>",
+      \ 'increment':        "\<right>",
+      \ 'next-color':       "\<tab>",
+      \ 'prev-color':       "\<s-tab>",
+      \ 'toggle-bold':      "B",
+      \ 'toggle-italic':    "I",
+      \ 'toggle-underline': "U",
+      \ 'toggle-standout':  "S",
+      \ 'toggle-inverse':   "V",
+      \ 'toggle-undercurl': "~",
+      \ 'toggle-strike':    "-",
+      \ 'new-color':        "E",
+      \ 'new-higroup':      "N",
+      \ 'clear':            "Z",
+      \ 'rgb':              "R",
+      \ 'hsb':              "H",
+      \ 'gray':             "G",
+      \ 'help':             "?",
+      \ }, get(g:, 'colortemplate_popup_keys', {}), "force")
+
+" TODO: escape
+let s:pane_key = printf('\m[%s%s%s%s%s]',
+      \ s:key['rgb'], s:key['hsb'], s:key['gray'], s:key['close'], s:key['cancel'])
+
 let s:keymap = {
-      \ "x"           : function('s:commit'),
-      \ "X"           : function('s:cancel'),
-      \ "y"           : function('s:yank'),
-      \ "\<down>"     : function('s:select_next_item'),
-      \ "\<up>"       : function('s:select_prev_item'),
-      \ "\<left>"     : function('s:move_left'),
-      \ "\<right>"    : function('s:move_right'),
-      \ "\<tab>"      : function('s:fgbgsp_next'),
-      \ "\<s-tab>"    : function('s:fgbgsp_prev'),
-      \ "B"           : function('s:toggle_bold'),
-      \ "I"           : function('s:toggle_italic'),
-      \ "U"           : function('s:toggle_underline'),
-      \ "S"           : function('s:toggle_standout'),
-      \ "V"           : function('s:toggle_inverse'),
-      \ "~"           : function('s:toggle_undercurl'),
-      \ "-"           : function('s:toggle_strike'),
-      \ "E"           : function('s:edit_color'),
-      \ "N"           : function('s:edit_name'),
-      \ "Z"           : function('s:clear_color'),
-      \ "R"           : function('s:switch_to_rgb'),
-      \ "H"           : function('s:switch_to_hsb'),
-      \ "G"           : function('s:switch_to_grayscale'),
-      \ "?"           : function('s:switch_to_help'),
+      \ s:key['close']:            function('s:commit'),
+      \ s:key['cancel']:           function('s:cancel'),
+      \ s:key['yank']:             function('s:yank'),
+      \ s:key['down']:             function('s:select_next_item'),
+      \ s:key['up']:               function('s:select_prev_item'),
+      \ s:key['top']:              function('s:go_to_top'),
+      \ s:key['decrement']:        function('s:move_left'),
+      \ s:key['increment']:        function('s:move_right'),
+      \ s:key['next-color']:       function('s:fgbgsp_next'),
+      \ s:key['prev-color']:       function('s:fgbgsp_prev'),
+      \ s:key['toggle-bold']:      function('s:toggle_bold'),
+      \ s:key['toggle-italic']:    function('s:toggle_italic'),
+      \ s:key['toggle-underline']: function('s:toggle_underline'),
+      \ s:key['toggle-standout']:  function('s:toggle_standout'),
+      \ s:key['toggle-inverse']:   function('s:toggle_inverse'),
+      \ s:key['toggle-undercurl']: function('s:toggle_undercurl'),
+      \ s:key['toggle-strike']:    function('s:toggle_strike'),
+      \ s:key['new-color']:        function('s:edit_color'),
+      \ s:key['new-higroup']:      function('s:edit_name'),
+      \ s:key['clear']:            function('s:clear_color'),
+      \ s:key['rgb']:              function('s:switch_to_rgb'),
+      \ s:key['hsb']:              function('s:switch_to_hsb'),
+      \ s:key['gray']:             function('s:switch_to_grayscale'),
+      \ s:key['help']:             function('s:switch_to_help'),
       \ }
 
 fun! colortemplate#style#filter(winid, key)
+  if s:pane ==# 'help' && a:key !~# s:pane_key
+    return 0
+  endif
   if a:key =~ '\m\d'
     return s:handle_digit(a:key)
   endif
@@ -787,7 +899,6 @@ fun! colortemplate#style#open(...)
   let s:width   = max([39 + len(s:mark), 42])
   let s:star    = get(g:, 'colortemplate_popup_star', '*')
   let s:sample_text = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
-  let s:sample_text = s:center(s:sample_texts[10], s:width)
 
   call s:set_slider_symbols(0)
   if len(s:slider_symbols) != 9
@@ -822,7 +933,7 @@ fun! colortemplate#style#open(...)
         \ filter: 'colortemplate#style#filter',
         \ filtermode: 'n',
         \ highlight: 'Normal',
-        \ mapping: get(g:, 'colortemplate_popup_mapping', 0),
+        \ mapping: get(g:, 'colortemplate_popup_mapping', 1),
         \ maxwidth: s:width,
         \ minwidth: s:width,
         \ padding: [0,1,0,1],

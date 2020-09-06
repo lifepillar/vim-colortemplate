@@ -774,14 +774,52 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
+						*g:colortemplate_popup_keys*
+A Dictionary used to customize the keys used by the style picker. For example,
+to use `q` to close the popup, put this in your |vimrc|:
+>
+	let g:colortemplate_popup_keys = { 'close': 'q' }
+<
+Keep in mind that, by default, mappings are processed before passing keys to
+the popup. In practice, the keys used in the popup should not be mapped in
+Normal mode. See also |g:colortemplate_popup_mapping|.
+
+Note: multiple-keystroke mappings are not allowed!
+>
+	let g:colortemplate_popup_keys = {
+	    \ 'close':            "x",
+	    \ 'cancel':           "X",
+	    \ 'yank':             "Y",
+	    \ 'down':             "\<down>",
+	    \ 'up':               "\<up>",
+	    \ 'top':              "T",
+	    \ 'decrement':        "\<left>",
+	    \ 'increment':        "\<right>",
+	    \ 'next-color':       "\<tab>",
+	    \ 'prev-color':       "\<s-tab>",
+	    \ 'toggle-bold':      "B",
+	    \ 'toggle-italic':    "I",
+	    \ 'toggle-underline': "U",
+	    \ 'toggle-standout':  "S",
+	    \ 'toggle-inverse':   "V",
+	    \ 'toggle-undercurl': "~",
+	    \ 'toggle-strike':    "-",
+	    \ 'new-color':        "E",
+	    \ 'new-higroup':      "N",
+	    \ 'clear':            "Z",
+	    \ 'rgb':              "R",
+	    \ 'hsb':              "H",
+	    \ 'gray':             "G",
+	    \ 'help':             "?",
+	\ }
+<
 						*g:colortemplate_popup_mapping*
 Set the "mapping" attribute of the style picker. When set to 1, any key
 arrives to the popup after any mapping. This may interfere with the keyboard
-controls of the style picker. The default is to pass any key literally to the
-popup. This means that, as long as the style picker is open, no mappings are
-available.
+controls of the style picker. In such cases, you may set this to 0 or
+(probably better) redefine some keys with |g:colortemplate_popup_keys|.
 >
-	let g:colortemplate_popup_mapping = 0
+	let g:colortemplate_popup_mapping = 1
 <
 						*g:colortemplate_popup_marker*
 The String used to mark the selected line in the style picker. The width of

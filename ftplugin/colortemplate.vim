@@ -8,7 +8,7 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_outdir"
+let s:undo_ftplugin = "setlocal balloonexpr< commentstring< omnifunc< | unlet! b:colortemplate_outdir"
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
 
 let b:colortemplate_outdir = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
@@ -19,6 +19,7 @@ if get(g:, 'colortemplate_rtp', 1)
   execute 'set runtimepath^='.b:colortemplate_outdir
 endif
 
+setlocal balloonexpr=colortemplate#syn#balloonexpr()
 setlocal commentstring=;%s
 setlocal omnifunc=syntaxcomplete#Complete
 

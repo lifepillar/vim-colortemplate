@@ -1136,19 +1136,32 @@ The color names are `g0`, `g1`, ... through `g7`.
 
 See also: https://github.com/nightsense/vimspectr
 
+					*colortemplate#syn#balloonexpr()*
+This function can be used to display some information about the highlight
+group under the mouse pointer when |ballooneval| or |balloonevalterm| is set.
+The information that is displayed is similar to the output of
+|colortemplate#syn#toggle()|.
+
+To enable these popups in Colortemplate buffers, just set |ballooneval| or
+|balloonevalterm|. To enable these popups globally, you also need to set
+|balloonexpr| to this function.
+
+Note: these popups require |+popupwin| and |+textprop|.
+
 					*colortemplate#syn#toggle()*
 Toggles the display of highlight group information for the text under the
 cursor. The information is displayed in the command line and has the following
 form:
 >
-	vimVar ⊂ vimFuncBody xxx vimVar → Identifier    fg=14/#00aba5    bg=/
+	vimVar ⊂ vimFuncBody xxx vimVar → Identifier
+	██ fg=14/#00aba5    bg=NONE/NONE    sp=NONE/NONE
 <
 From left to right, this shows:
 
-- the nesting of highlight groups (`⊂`);
+- the nesting of highlight groups, or "synstack" (`⊂`);
 - a sample of how the text looks like with the current hi group (`xxx`);
 - the hi group to which the current hi group resolves, if any (`→`);
-- the terminal/GUI values of the foreground and background color.
+- the terminal/GUI values of the foreground, background, and special color.
 
 You are encouraged to define a global mapping in your |vimrc|, e.g.:
 >

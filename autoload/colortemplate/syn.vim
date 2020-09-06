@@ -1,3 +1,4 @@
+" Utility functions {{{
 " Returns the background color of the given highlight group, as a two-element
 " array containing the cterm and the gui entry.
 fun! colortemplate#syn#hi_group_bg(hl)
@@ -8,7 +9,8 @@ endf
 fun! colortemplate#syn#hi_group_fg(hl)
   return [synIDattr(synIDtrans(hlID(a:hl)), "fg", "cterm"), synIDattr(synIDtrans(hlID(a:hl)), "fg", "gui")]
 endf
-
+" }}}
+" Info about attributes {{{
 fun! colortemplate#syn#attributes(synid, mode)
   let l:attrs = []
   for l:a in ['bold', 'italic', 'inverse', 'standout', 'underline', 'undercurl']
@@ -49,36 +51,146 @@ endf
 fun! colortemplate#syn#toggle_attribute(synid, attr)
   call s:toggle_attribute(a:synid, a:attr)
 endf
+" }}}
+" Info about the highlighting under cursor/mouse {{{
+hi clear ColortemplateInfoFg
+hi clear ColortemplateInfoBg
+hi clear ColortemplateInfoSp
+hi ColortemplateInfoBlack ctermbg=16 guibg=#000000
 
-" Prints information about the highlight group at the cursor position.
+let s:cached_higroup = #{ synid: -1 }
+
+" Returns a Dictionary with information about the highlight group at the
+" specified position.
+"
 " See: http://vim.wikia.com/wiki/VimTip99 and hilinks.vim script.
-fun! colortemplate#syn#hi_group()
-  let trans = synIDattr(synID(line("."), col("."), 0), "name")
-  let synid = synID(line("."), col("."), 1)
+fun! s:get_higroup_info(line, col)
+  let synid = synID(a:line, a:col, 0)
+  if empty(synid) || synid == 0 " Apparently, sometimes synID() fails to return a value
+    return {}
+  endif
+  let trans = synIDattr(synID(a:line, a:col, 0), "name")
+  let synid = synID(a:line, a:col, 1)
   let higrp = synIDattr(synid, "name")
   let synid = synIDtrans(synid)
   let logrp = synIDattr(synid, "name")
-  if logrp == s:cached_higroup
-    return
+  if synid == s:cached_higroup.synid
+    return s:cached_higroup
   else
-    let s:cached_higroup = logrp
+    let fgterm = synIDattr(synid, "fg", "cterm")
+    let fggui  = synIDattr(synid, "fg#", "gui")
+    let bgterm = synIDattr(synid, "bg", "cterm")
+    let bggui  = synIDattr(synid, "bg#", "gui")
+    let spterm = synIDattr(synid, "ul", "cterm") " TODO: Not implemented? Should be 'sp'?
+    let spgui  = synIDattr(synid, "sp#", "gui")
+    let s:cached_higroup = #{
+          \ synid:     synid,
+          \ tname:     trans,
+          \ name:      higrp,
+          \ transname: logrp,
+          \ fgterm:    empty(fgterm) ? 'NONE' : fgterm,
+          \ fggui:     empty(fggui)  ? 'NONE' : fggui,
+          \ bgterm:    empty(bgterm) ? 'NONE' : bgterm,
+          \ bggui:     empty(bggui)  ? 'NONE' : bggui,
+          \ spterm:    empty(spterm) ? 'NONE' : spterm,
+          \ spgui:     empty(spgui)  ? 'NONE' : spgui,
+          \ }
   endif
-  let fgcol = [synIDattr(synid, "fg", "cterm"), synIDattr(synid, "fg", "gui")]
-  let bgcol = [synIDattr(synid, "bg", "cterm"), synIDattr(synid, "bg", "gui")]
   try " The following may raise an error, e.g., if CtrlP is opened while this is active
-    execute "hi!" "ColortemplateInfoFg" "ctermbg=".(empty(fgcol[0])?"NONE":fgcol[0]) "guibg=".(empty(fgcol[1])?"NONE":fgcol[1])
-    execute "hi!" "ColortemplateInfoBg" "ctermbg=".(empty(bgcol[0])?"NONE":bgcol[0]) "guibg=".(empty(bgcol[1])?"NONE":bgcol[1])
+    execute "hi!" "ColortemplateInfoFg" "ctermbg=".s:cached_higroup.fgterm "guibg=".s:cached_higroup.fggui
+    execute "hi!" "ColortemplateInfoBg" "ctermbg=".s:cached_higroup.bgterm "guibg=".s:cached_higroup.bggui
+    execute "hi!" "ColortemplateInfoSp" "ctermbg=".s:cached_higroup.spterm "guibg=".s:cached_higroup.spgui
   catch /^Vim\%((\a\+)\)\=:E254/ " Cannot allocate color
     hi clear ColortemplateInfoFg
     hi clear ColortemplateInfoBg
   endtry
-  echo join(map(reverse(synstack(line("."), col("."))), {i,v -> synIDattr(v, "name")}), " ⊂ ")
-  execute "echohl" logrp | echon " xxx " | echohl None
-  echon (higrp != trans ? "T:".trans." → ".higrp : higrp) . (higrp != logrp ? " → ".logrp : "")." "
+  let synstack = synstack(a:line, a:col)
+  " Sometimes, Vim spits E896: Argument of map() must be a List, Dictionary or Blob
+  " even if synstack is a List...
+  if !empty(synstack)
+    let s:cached_higroup['synstack'] = map(reverse(synstack), { i,v -> synIDattr(v, "name") })
+  else
+    let s:cached_higroup['synstack'] = []
+  endif
+  return s:cached_higroup
+endf
+
+let s:balloon_id = 0
+let s:last_text = ''
+let s:ballon_text = []
+
+call prop_type_delete('ct_hifg')
+call prop_type_delete('ct_hibg')
+call prop_type_delete('ct_hisp')
+call prop_type_delete('ct_blck')
+call prop_type_add('ct_hifg', #{ highlight: 'ColortemplateInfoFg' })
+call prop_type_add('ct_hibg', #{ highlight: 'ColortemplateInfoBg' })
+call prop_type_add('ct_hisp', #{ highlight: 'ColortemplateInfoSp' })
+call prop_type_add('ct_blck', #{ highlight: 'ColortemplateInfoBlack' })
+
+" Display info about the highlight group under the cursor in a popup when
+" ballooneval or balloonevalterm is set.
+"
+" See :help popup_beval_example
+fun! colortemplate#syn#balloonexpr()
+  if s:balloon_id && popup_getpos(s:balloon_id) != {}
+    " Previous popup window still shows
+    if v:beval_text == s:last_text
+      " Still the same text, keep the existing popup
+      return ''
+    endif
+    call popup_close(s:balloon_id)
+  endif
+  let info = s:get_higroup_info(v:beval_lnum, v:beval_col)
+  if !empty(info)
+    let l:beval = [
+          \ #{ text: printf('%s%s%s',
+          \                (info['tname'] == info['name'] ? '' : 'T:'..info['tname']..' → '),
+          \                 info['name'],
+          \                 info['name'] == info['transname'] ? '' :  ' → '..info['transname']
+          \               ),
+          \    props: []
+          \  },
+          \ #{ text: printf('     Fg %7s %4s     ', info.fggui, info.fgterm),
+          \   props: [#{ col: 1, length:  4, type: 'ct_blck' },
+          \           #{ col: 2, length:  2, type: 'ct_hifg' }]
+          \  },
+          \ #{ text: printf('     Bg %7s %4s     ', info.bggui, info.bgterm),
+          \   props: [#{ col: 1, length:  4, type: 'ct_blck' },
+          \           #{ col: 2, length:  2, type: 'ct_hibg' }]
+          \ },
+          \ #{ text: printf('     Sp %7s %4s     ', info.spgui, info.spterm),
+          \   props: [#{ col: 1, length:  4, type: 'ct_blck' },
+          \           #{ col: 2, length:  2, type: 'ct_hisp' }]
+          \ },
+          \ #{ text: join(info['synstack'], " ⊂ "), props: [] },
+          \]
+    let s:balloon_id = popup_beval(l:beval, #{
+          \ mousemoved: 'word',
+          \ padding: [0,1,0,1],
+          \ })
+    let s:last_text = v:beval_text
+  endif
+  return ''
+endfunc
+
+" Displays some information about the highlight group under the cursor
+" in the command line.
+fun! colortemplate#syn#hi_group()
+  let info = s:get_higroup_info(line('.'), col('.'))
+  if empty(info)
+    return ''
+  endif
+  echo join(info.synstack, " ⊂ ")
+  execute "echohl" info.transname | echon " xxx " | echohl None
+  echon (info.name != info.tname ? "T:".info['tname']." → ".info['name'] : info['name'])
+        \ . (info.name != info.transname ? " → ".info['transname'] : "")." "
   echohl ColortemplateInfoFg | echon "  " | echohl None
-  echon " fg=".join(fgcol, "/")." "
+  echon printf(" fg=%s/%s ", info.fggui, info.fgterm)
   echohl ColortemplateInfoBg | echon "  " | echohl None
-  echon " bg=".join(bgcol, "/")
+  echon printf(" bg=%s/%s ", info.bggui, info.bgterm)
+  echohl ColortemplateInfoSp | echon "  " | echohl None
+  echon printf(" sp=%s/%s ", info.spgui, info.spterm)
 endf
 
 fun! colortemplate#syn#toggle()
@@ -86,13 +198,14 @@ fun! colortemplate#syn#toggle()
     autocmd! colortemplate_syn_info
     augroup! colortemplate_syn_info
   else
-    let s:cached_higroup = ''
+    let s:cached_higroup = #{ synid: -1 }
     augroup colortemplate_syn_info
       autocmd CursorMoved * call colortemplate#syn#hi_group()
     augroup END
   endif
 endf
-
+" }}}
+" Highlight -> RGB {{{
 " Configurable values for the 16 terminal ANSI colors.
 "
 " The 24 bit RGB values used for the 16 ANSI colors differ greatly for each
@@ -199,5 +312,6 @@ fun! colortemplate#syn#higroup2hex(name, type)
   endtry
   endif
 endf
+" }}}
 
 " vim: foldmethod=marker nowrap et ts=2 sw=2

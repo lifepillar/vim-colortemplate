@@ -196,14 +196,23 @@ fun! colortemplate#syn#hi_group()
 endf
 
 fun! colortemplate#syn#toggle()
-  if exists("#colortemplate_syn_info")
-    autocmd! colortemplate_syn_info
-    augroup! colortemplate_syn_info
-  else
-    let s:cached_higroup = #{ synid: -1 }
-    augroup colortemplate_syn_info
-      autocmd CursorMoved * call colortemplate#syn#hi_group()
-    augroup END
+  if get(g:, 'colortemplate_higroup_balloon', 1)
+    if s:balloon_id && popup_getpos(s:balloon_id) != {}
+      call popup_close(s:balloon_id)
+    endif
+    set ballooneval! balloonevalterm!
+  endif
+  if get(g:, 'colortemplate_higroup_command_line', 1)
+    if exists("#colortemplate_syn_info")
+      autocmd! colortemplate_syn_info
+      augroup! colortemplate_syn_info
+      echo "\r"
+    else
+      let s:cached_higroup = #{ synid: -1 }
+      augroup colortemplate_syn_info
+        autocmd CursorMoved * call colortemplate#syn#hi_group()
+      augroup END
+    endif
   endif
 endf
 " }}}

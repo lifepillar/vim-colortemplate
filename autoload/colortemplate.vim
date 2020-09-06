@@ -2525,7 +2525,6 @@ fun! colortemplate#askoutdir()
 endf
 
 fun! colortemplate#parse(filename) abort
-  call s:init_data_structures()
   call s:init_parser()
   call s:setwd(fnamemodify(a:filename, ":h"))
   call s:include(a:filename)
@@ -2543,7 +2542,6 @@ fun! colortemplate#parse(filename) abort
     catch /^FATAL/
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
       call s:destroy_parser()
-      call s:destroy_data_structures()
       throw 'Parse error'
     catch /.*/
       call s:add_error(s:currfile(), s:linenr(), s:token.spos + 1, v:exception)
@@ -2594,6 +2592,8 @@ fun! colortemplate#make(...)
 
   let l:inpath = expand('%:p')
   call s:print_notice('Building '.fnamemodify(l:inpath, ':t:r').'...')
+
+  call s:init_data_structures()
   try
     call colortemplate#parse(l:inpath)
   catch /Parse error/
@@ -2620,7 +2620,7 @@ fun! colortemplate#make(...)
     call s:print_error_msg(v:exception, 0)
     return g:colortemplate_exit_status
   finally
-    call s:destroy_data_structures()
+    call s:destroy_data_structures() " TODO: keep, may be useful information, e.g., for highlighting
   endtry
   let l:elapsed = 1000.0 * reltimefloat(reltime(l:start_time))
   call s:print_notice(printf('Success! [%s created in %.00fms]', fnamemodify(l:outpath, ':t'), l:elapsed))
@@ -2661,6 +2661,7 @@ fun! colortemplate#stats()
   let g:colortemplate_warnings = 0
   try
     call setqflist([], 'r') " Reset quickfix list
+    call s:init_data_structures()
     call colortemplate#parse(expand('%:p'))
   catch /Parse error/
     call s:destroy_data_structures()

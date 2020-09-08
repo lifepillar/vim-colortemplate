@@ -191,10 +191,14 @@ fun! colortemplate#syn#hi_group()
         \ . (info.name != info.transname ? " → ".info['transname'] : "")." "
   echohl ColortemplateInfoFg | echon "  " | echohl None
   echon printf(" fg=%s/%s ", info.fggui, info.fgterm)
-  echohl ColortemplateInfoBg | echon "  " | echohl None
-  echon printf(" bg=%s/%s ", info.bggui, info.bgterm)
-  echohl ColortemplateInfoSp | echon "  " | echohl None
-  echon printf(" sp=%s/%s ", info.spgui, info.spterm)
+  if info.bggui != 'NONE' || info.bgterm != 'NONE'
+    echohl ColortemplateInfoBg | echon "  " | echohl None
+    echon printf(" bg=%s/%s ", info.bggui, info.bgterm)
+  endif
+  if info.spgui != 'NONE' || info.spterm != 'NONE'
+    echohl ColortemplateInfoSp | echon "  " | echohl None
+    echon printf(" sp=%s/%s ", info.spgui, info.spterm)
+  endif
 endf
 
 fun! colortemplate#syn#toggle()

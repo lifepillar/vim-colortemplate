@@ -745,7 +745,7 @@ buffers as well. Here are some mappings you may want to add to your |vimrc|:
 
 - Make the style picker available everywhere:
 >
-	nnoremap gs :<c-u>call colortemplate#style#open()<cr>
+	nnoremap <silent> gs :<c-u>call colortemplate#style#open()<cr>
 <
 - Toggle the display of highlight group information globally:
 >
@@ -755,7 +755,11 @@ buffers as well. Here are some mappings you may want to add to your |vimrc|:
 >
 	set balloonexpr=colortemplate#syn#balloonexpr()
 <
-Adjust to your pleasure.
+- Generate a template from the currently active highlight groups:
+>
+	nnoremap <silent> gc :<c-u>call colortemplate#import#run()<cr>
+<
+Adjust to your taste.
 
 ==============================================================================
 Colortemplate options				*colortemplate-options*

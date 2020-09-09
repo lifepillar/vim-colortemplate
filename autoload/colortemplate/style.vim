@@ -114,7 +114,7 @@ fun! s:set_higroup(name)
   let s:color.fg    = colortemplate#syn#higroup2hex(a:name, 'fg')
   let s:color.bg    = colortemplate#syn#higroup2hex(a:name, 'bg')
   let s:color.sp    = colortemplate#syn#higroup2hex(a:name, 'sp')
-  let s:bold        = synIDattr(l:id, '_bold',      s:attrmode) ==# '1' ? 1 : 0
+  let s:bold        = synIDattr(l:id, 'bold',      s:attrmode) ==# '1' ? 1 : 0
   let s:italic      = synIDattr(l:id, 'italic',    s:attrmode) ==# '1' ? 1 : 0
   let s:inverse     = synIDattr(l:id, 'reverse',   s:attrmode) ==# '1' ? 1 : 0
   let s:standout    = synIDattr(l:id, 'standout',  s:attrmode) ==# '1' ? 1 : 0

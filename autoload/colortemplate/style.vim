@@ -222,6 +222,10 @@ fun! s:add_prop_types()
   call prop_type_add('_labe', #{bufnr: winbufnr(s:popup_id), highlight: 'Label'})
   " Mark line as a level bar (slider)
   call prop_type_add('_leve', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  " Mark line as a "recent colors" line
+  call prop_type_add('_mru_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  " Mark line as a "favorite colors" line
+  call prop_type_add('_fav_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   " To highlight text with the currently selected highglight group
   call prop_type_add('_curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   " Highlight for warning symbol

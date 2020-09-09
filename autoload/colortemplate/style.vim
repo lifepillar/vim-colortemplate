@@ -27,8 +27,6 @@ let s:pane = 'rgb'               " Current pane ('rgb', 'gray', 'hsb')
 let s:coltype = 'fg'             " Currently displayed color ('fg', 'bg', 'sp')
 let s:step = 1                   " Step for increasing/decreasing levels
 let s:step_reset = 1             " Status of the step counter
-let s:recent  = []               " List of recent colors
-let s:favorites = []             " List of favorite colors
 let s:sample_texts = get(g:, 'colortemplate_popup_quotes', [
       \ "Absentem edit cum ebrio qui litigat",
       \ "Accipere quam facere praestat iniuriam",
@@ -397,23 +395,57 @@ fun! s:info_section() " -> List of Dictionaries
 endf
 " }}}
 " Recently used colors section {{{
+const s:recent_capacity = 10 " Number of colors to remember
+let s:recent_colors  = []
+
+fun! s:save_to_recent(color)
+  if index(s:recent_colors, a:color) != -1 " Do not add the same color twice
+    return
+  endif
+  " Less efficient but but much simpler to implement than a proper queue
+  call insert(s:recent_colors, a:color, 0)
+  if len(s:recent_colors) > s:recent_capacity
+    call remove(s:recent_colors, -1)
+  endif
+endf
+
+fun! s:pick_recent()
+  echo '[Colortemplate] Which color? '
+  let l:n = nr2char(getchar())
+  if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
+    call s:set_color(s:coltype, s:recent_colors[str2nr(l:n)])
+    call s:apply_color()
+    call s:redraw()
+  endif
+  return 1
+endf
+
+fun! s:add_mru_prop_types()
+  for l:i in range(s:recent_capacity)
+    execute 'hi clear ColortemplatePopupMRU' .. i
+    call prop_type_add('_mru' .. l:i, #{ bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupMRU' .. l:i})
+  endfor
+endf
+
 fun! s:recent_section() " -> List of Dictionaries
+  let l:props = [#{ col: 1, length: 0, type: '_mru_' }]
+  for l:i in range(len(s:recent_colors))
+    let l:approx = colortemplate#colorspace#approx(s:recent_colors[l:i])['index']
+    execute printf('hi ColortemplatePopupMRU%d guibg=%s ctermbg=%s', l:i, s:recent_colors[l:i], l:approx)
+    call add(l:props, #{ col: 1 + len(s:mark) + 4 * l:i, length: 3, type: '_mru'.. l:i })
+  endfor
+
   return [
         \ s:blank(),
         \ s:prop_label('Recent'),
-        \ s:prop_item('                                   ',
-        \               [
-        \                 #{col:  4, length: 3, type: 'C1'},
-        \                 #{col:  7, length: 3, type: 'C2'},
-        \                 #{col: 10, length: 3, type: 'C3'},
-        \                 #{col: 13, length: 3, type: 'C4'},
-        \                 #{col: 16, length: 3, type: 'C5'},
-        \               ]),
-        \s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
+        \ s:prop_item(repeat(' ', s:width), l:props),
+        \ s:prop_indented_label(' ' .. join(range(len(s:recent_colors)), '   ')),
         \]
 endf
 " }}}
 " Favorites section {{{
+let s:favorites = []                        " List of favorite colors
+
 fun! s:favorites_section() " -> List of Dictionaries
   return [
         \ s:prop_label('Favorites'),
@@ -607,6 +639,7 @@ endf
 
 fun! s:yank()
   let @"=s:col(s:coltype)
+  call s:save_to_recent(s:col(s:coltype))
   call s:notification('Color yanked')
   return 1
 endf
@@ -971,6 +1004,7 @@ fun! colortemplate#style#open(...)
         \ })
   let s:active_line = 3
   call s:add_prop_types()
+  call s:add_mru_prop_types()
   call s:redraw()
   return s:popup_id
 endf

@@ -166,7 +166,10 @@ fun! s:save_popup_position(id)
 endf
 
 fun! s:center(text, width)
-  return printf('%s%s', repeat(' ', (a:width - len(a:text)) / 2), a:text)
+  return printf('%s%s%s',
+        \ repeat(' ', (a:width - len(a:text)) / 2),
+        \ a:text,
+        \ repeat(' ', (a:width + 1 - len(a:text)) / 2))
 endf
 " }}}
 " Notification popup {{{

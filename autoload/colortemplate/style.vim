@@ -15,18 +15,19 @@ let s:strike    = 0
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
 " Mode for attributes
 const s:attrmode = (has('gui_running') || (has('nvim' && has('termguicolors') && &termguicolors))) ? 'gui' : 'cterm'
-let s:key = {}                   " Dictionary of key controls (initialized below)
-let s:mark = ''                  " Marker for the current line (set when the popup is open)
-let s:width = 0                  " Popup width (set when the popup is open)
-let s:star = ''                  " Star for colors (set when the popup is open)
-let s:popup_x = 0                " Horizontal position of the popup (0=center)
-let s:popup_y = 0                " Vertical position of the popup (0=center)
-let s:popup_id = -1              " Popup buffer ID
-let s:active_line = 1            " Where the marker is located in the popup
-let s:pane = 'rgb'               " Current pane ('rgb', 'gray', 'hsb')
-let s:coltype = 'fg'             " Currently displayed color ('fg', 'bg', 'sp')
-let s:step = 1                   " Step for increasing/decreasing levels
-let s:step_reset = 1             " Status of the step counter
+let s:key = {}                           " Dictionary of key controls (initialized below)
+let s:mark = ''                          " Marker for the current line (set when the popup is open)
+let s:width = 0                          " Popup width (set when the popup is open)
+let s:star = ''                          " Star for colors (set when the popup is open)
+let s:popup_x = 0                        " Horizontal position of the popup (0=center)
+let s:popup_y = 0                        " Vertical position of the popup (0=center)
+let s:popup_id = -1                      " Popup buffer ID
+let s:active_line = 1                    " Where the marker is located in the popup
+let s:pane = 'rgb'                       " Current pane ('rgb', 'gray', 'hsb')
+let s:coltype = 'fg'                     " Currently displayed color ('fg', 'bg', 'sp')
+let s:color_edited = #{fg:0, bg:0, sp:0} " Set to 1 when the current color has been modified
+let s:step = 1                           " Step for increasing/decreasing levels
+let s:step_reset = 1                     " Status of the step counter
 let s:sample_texts = get(g:, 'colortemplate_popup_quotes', [
       \ "Absentem edit cum ebrio qui litigat",
       \ "Accipere quam facere praestat iniuriam",
@@ -107,18 +108,19 @@ fun! s:stars(c1, c2)
 endf
 
 fun! s:set_higroup(name)
-  let s:higroup     = empty(a:name) ? 'Normal' : a:name
-  let l:id          = hlID(s:higroup)
-  let s:color.fg    = colortemplate#syn#higroup2hex(a:name, 'fg')
-  let s:color.bg    = colortemplate#syn#higroup2hex(a:name, 'bg')
-  let s:color.sp    = colortemplate#syn#higroup2hex(a:name, 'sp')
-  let s:bold        = synIDattr(l:id, 'bold',      s:attrmode) ==# '1' ? 1 : 0
-  let s:italic      = synIDattr(l:id, 'italic',    s:attrmode) ==# '1' ? 1 : 0
-  let s:inverse     = synIDattr(l:id, 'reverse',   s:attrmode) ==# '1' ? 1 : 0
-  let s:standout    = synIDattr(l:id, 'standout',  s:attrmode) ==# '1' ? 1 : 0
-  let s:underline   = synIDattr(l:id, 'underline', s:attrmode) ==# '1' ? 1 : 0
-  let s:undercurl   = synIDattr(l:id, 'undercurl', s:attrmode) ==# '1' ? 1 : 0
-  let s:strike      = synIDattr(l:id, 'strike',    s:attrmode) ==# '1' ? 1 : 0
+  let s:higroup      = empty(a:name) ? 'Normal' : a:name
+  let l:id           = hlID(s:higroup)
+  let s:color.fg     = colortemplate#syn#higroup2hex(a:name, 'fg')
+  let s:color.bg     = colortemplate#syn#higroup2hex(a:name, 'bg')
+  let s:color.sp     = colortemplate#syn#higroup2hex(a:name, 'sp')
+  let s:color_edited = #{fg: 0, bg: 0, sp: 0}
+  let s:bold         = synIDattr(l:id, 'bold',      s:attrmode) ==# '1' ? 1 : 0
+  let s:italic       = synIDattr(l:id, 'italic',    s:attrmode) ==# '1' ? 1 : 0
+  let s:inverse      = synIDattr(l:id, 'reverse',   s:attrmode) ==# '1' ? 1 : 0
+  let s:standout     = synIDattr(l:id, 'standout',  s:attrmode) ==# '1' ? 1 : 0
+  let s:underline    = synIDattr(l:id, 'underline', s:attrmode) ==# '1' ? 1 : 0
+  let s:undercurl    = synIDattr(l:id, 'undercurl', s:attrmode) ==# '1' ? 1 : 0
+  let s:strike       = synIDattr(l:id, 'strike',    s:attrmode) ==# '1' ? 1 : 0
   return 1
 endf
 
@@ -141,6 +143,7 @@ fun! s:choose_gui_color()
       let l:col = repeat(l:col, 6 /  len(l:col))
     endif
     if len(l:col) == 6
+      call s:save_to_recent(s:col(s:coltype))
       call s:set_color(s:coltype, '#'..l:col)
       call s:apply_color()
       call s:redraw()
@@ -154,6 +157,7 @@ fun! s:choose_term_color()
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
   if l:col =~# '\m^[0-9]\{1,3}$' && str2nr(l:col) > 15 && str2nr(l:col) < 256
+    call s:save_to_recent(s:col(s:coltype))
     call s:set_color(s:coltype, colortemplate#colorspace#xterm256_hexvalue(str2nr(l:col)))
     call s:apply_color()
     call s:redraw()
@@ -412,11 +416,25 @@ fun! s:save_to_recent(color)
   endif
 endf
 
-fun! s:pick_recent()
-  echo '[Colortemplate] Which color? '
+fun! s:remove_recent()
+  echo printf('[Colortemplate] Remove color (0-%d)? ', len(s:recent_colors) - 1)
   let l:n = nr2char(getchar())
+  echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
-    call s:set_color(s:coltype, s:recent_colors[str2nr(l:n)])
+    call remove(s:recent_colors, str2nr(l:n))
+    call s:redraw()
+  endif
+  return 1
+endf
+
+fun! s:pick_recent()
+  echo printf('[Colortemplate] Which color (0-%d)? ', len(s:recent_colors) - 1)
+  let l:n = nr2char(getchar())
+  echo "\r"
+  if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
+    let l:new = s:recent_colors[str2nr(l:n)]
+    call s:save_to_recent(s:col(s:coltype))
+    call s:set_color(s:coltype, l:new)
     call s:apply_color()
     call s:redraw()
   endif
@@ -431,6 +449,9 @@ fun! s:add_mru_prop_types()
 endf
 
 fun! s:recent_section() " -> List of Dictionaries
+  if len(s:recent_colors) == 0
+    return []
+  endif
   let l:props = [#{ col: 1, length: 0, type: '_mru_' }]
   for l:i in range(len(s:recent_colors))
     let l:approx = colortemplate#colorspace#approx(s:recent_colors[l:i])['index']
@@ -536,6 +557,10 @@ fun! s:rgb_increase_level(props, value)
     let l:b += a:value
     if l:b > 255 | let l:b = 255 | endif
   endif
+if !s:color_edited[s:coltype]
+    call s:save_to_recent(s:col(s:coltype))
+    let s:color_edited[s:coltype] = 1
+  endif
   call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
 endf
 
@@ -550,6 +575,10 @@ fun! s:rgb_decrease_level(props, value)
   elseif s:has_property(a:props, '_blue')
     let l:b -= a:value
     if l:b < 0 | let l:b = 0 | endif
+  endif
+  if !s:color_edited[s:coltype]
+    call s:save_to_recent(s:col(s:coltype))
+    let s:color_edited[s:coltype] = 1
   endif
   call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
 endf
@@ -609,7 +638,7 @@ fun! s:redraw_help()
         \ s:noprop('[↓] Move down         [H] HSB'),
         \ s:noprop('[T] Go to top         [G] Grayscale'),
         \ s:noprop('[Tab] fg->bg->sp      [x] Close'),
-        \ s:noprop('[S-Tab] sp->bg->fg    [X] Cancel'),
+        \ s:noprop('[S-Tab] sp->bg->fg    [X] Close and reset'),
         \ s:noprop('[?] Help pane'),
         \ s:blank(),
         \ s:prop_label('Attributes'),
@@ -622,6 +651,9 @@ fun! s:redraw_help()
         \ s:noprop('[→] Increment value   [E] New value'),
         \ s:noprop('[←] Decrement value   [N] New hi group'),
         \ s:noprop('[Y] Yank color        [Z] Clear color'),
+        \ s:blank(),
+        \ s:prop_label('Recent & Favorites'),
+        \ s:noprop('[Enter] Pick color    [D] Delete color'),
         \ ]))
   call prop_add(1, 42, #{bufnr: winbufnr(s:popup_id), length: 1, type: '_labe'})
 endf
@@ -643,8 +675,8 @@ endf
 fun! s:yank()
   let @"=s:col(s:coltype)
   call s:save_to_recent(s:col(s:coltype))
+  call s:redraw()
   call s:notification('Color yanked')
-  return 1
 endf
 
 fun! s:mouse_clicked()
@@ -672,7 +704,6 @@ endf
 
 fun! s:update_higroup()
   if s:update_higroup_under_cursor()
-    " TODO: save current color to recent colors if modified
     call s:redraw()
   endif
   return 1
@@ -696,6 +727,17 @@ fun! s:pick_color()
     return s:pick_recent()
   elseif s:has_property(l:props, '_fav_')
     return s:pick_favorite()
+  else
+    return 0
+  endif
+endf
+
+fun! s:remove_color()
+  let l:props = s:get_properties(s:active_line)
+  if s:has_property(l:props, '_mru_')
+    return s:remove_recent()
+  elseif s:has_property(l:props, '_fav_')
+    return s:remove_favorite()
   else
     return 0
   endif
@@ -757,6 +799,7 @@ fun! s:clear_color()
   let l:ct = (s:mode ==# 'cterm' && s:coltype ==# 'sp' ? 'ul' : s:coltype)
   execute "hi!" s:higroup s:mode..l:ct.."=NONE"
   call s:notification('Color cleared')
+  call s:save_to_recent(s:col(s:coltype))
   call s:set_higroup(s:higroup)
   call s:redraw()
   return 1
@@ -768,6 +811,7 @@ fun! s:edit_name()
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
   if l:name =~# '\m^\w\+$'
+    call s:save_to_recent(s:col(s:coltype))
     call s:set_higroup(l:name)
     call s:redraw()
   endif
@@ -871,7 +915,8 @@ let s:key = extend({
       \ 'increment':        "\<right>",
       \ 'fg>bg>sp':         "\<tab>",
       \ 'fg<bg<sp':         "\<s-tab>",
-      \ 'pick-color':       "+",
+      \ 'pick-color':       "\<enter>",
+      \ 'remove-color':     "D",
       \ 'toggle-bold':      "B",
       \ 'toggle-italic':    "I",
       \ 'toggle-underline': "U",
@@ -904,6 +949,7 @@ let s:keymap = {
       \ s:key['fg>bg>sp']:         function('s:fgbgsp_next'),
       \ s:key['fg<bg<sp']:         function('s:fgbgsp_prev'),
       \ s:key['pick-color']:       function('s:pick_color'),
+      \ s:key['remove-color']:     function('s:remove_color'),
       \ s:key['toggle-bold']:      function('s:toggle_bold'),
       \ s:key['toggle-italic']:    function('s:toggle_italic'),
       \ s:key['toggle-underline']: function('s:toggle_underline'),

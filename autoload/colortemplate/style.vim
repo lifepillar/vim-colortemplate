@@ -299,6 +299,10 @@ fun! s:prop_label(t)
   return s:prop(a:t, [#{ col: 1, length: s:width, type: '_labe' }])
 endf
 
+fun! s:prop_indented_label(t)
+  return s:prop(repeat(' ', len(s:mark))..a:t, [#{ col: 1, length: s:width, type: '_labe' }])
+endf
+
 fun! s:prop_current(t)
   return s:prop(a:t, [#{ col: 1, length: s:width, type: '_curr' }])
 endf

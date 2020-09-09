@@ -18,6 +18,7 @@ const s:attrmode = (has('gui_running') || (has('nvim' && has('termguicolors') &&
 let s:key = {}                           " Dictionary of key controls (initialized below)
 let s:mark = ''                          " Marker for the current line (set when the popup is open)
 let s:width = 0                          " Popup width (set when the popup is open)
+let s:popup_bg = ''                      " Popup background (initialized below)
 let s:star = ''                          " Star for colors (set when the popup is open)
 let s:popup_x = 0                        " Horizontal position of the popup (0=center)
 let s:popup_y = 0                        " Vertical position of the popup (0=center)
@@ -956,7 +957,7 @@ fun! colortemplate#style#open(...)
         \ drag: 1,
         \ filter: 'colortemplate#style#filter',
         \ filtermode: 'n',
-        \ highlight: 'Normal',
+        \ highlight: get(g:, 'colortemplate_popup_bg', 'Normal'),
         \ mapping: get(g:, 'colortemplate_popup_mapping', 1),
         \ maxwidth: s:width,
         \ minwidth: s:width,

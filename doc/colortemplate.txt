@@ -820,6 +820,12 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
+						*g:colortemplate_popup_bg*
+The name of a highlight group to be used for the background of the style
+picker.
+>
+	let g:colortemplate_popup_bg = 'Normal'
+<
 						*g:colortemplate_popup_keys*
 A Dictionary used to customize the keys used by the style picker. For example,
 to use `q` to close the popup, put this in your |vimrc|:

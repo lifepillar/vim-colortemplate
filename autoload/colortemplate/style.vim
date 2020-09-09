@@ -654,6 +654,17 @@ fun! s:fgbgsp_prev()
   return 1
 endf
 
+fun! s:pick_color()
+  let l:props = s:get_properties(s:active_line)
+  if s:has_property(l:props, '_mru_')
+    return s:pick_recent()
+  elseif s:has_property(l:props, '_fav_')
+    return s:pick_favorite()
+  else
+    return 0
+  endif
+endf
+
 fun! s:toggle_attribute(attrname)
   if s:higroup == 'Normal'
     call s:notification('You cannot set Normal attributes')
@@ -822,8 +833,9 @@ let s:key = extend({
       \ 'top':              "T",
       \ 'decrement':        "\<left>",
       \ 'increment':        "\<right>",
-      \ 'next-color':       "\<tab>",
-      \ 'prev-color':       "\<s-tab>",
+      \ 'fg>bg>sp':         "\<tab>",
+      \ 'fg<bg<sp':         "\<s-tab>",
+      \ 'pick-color':       "+",
       \ 'toggle-bold':      "B",
       \ 'toggle-italic':    "I",
       \ 'toggle-underline': "U",
@@ -853,8 +865,9 @@ let s:keymap = {
       \ s:key['top']:              function('s:go_to_top'),
       \ s:key['decrement']:        function('s:move_left'),
       \ s:key['increment']:        function('s:move_right'),
-      \ s:key['next-color']:       function('s:fgbgsp_next'),
-      \ s:key['prev-color']:       function('s:fgbgsp_prev'),
+      \ s:key['fg>bg>sp']:         function('s:fgbgsp_next'),
+      \ s:key['fg<bg<sp']:         function('s:fgbgsp_prev'),
+      \ s:key['pick-color']:       function('s:pick_color'),
       \ s:key['toggle-bold']:      function('s:toggle_bold'),
       \ s:key['toggle-italic']:    function('s:toggle_italic'),
       \ s:key['toggle-underline']: function('s:toggle_underline'),
@@ -875,6 +888,7 @@ fun! colortemplate#style#filter(winid, key)
   if s:pane ==# 'help' && a:key !~# s:pane_key
     return 0
   endif
+
   if a:key =~ '\m\d'
     return s:handle_digit(a:key)
   endif

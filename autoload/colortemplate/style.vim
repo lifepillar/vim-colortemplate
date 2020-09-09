@@ -207,13 +207,6 @@ fun! s:set_highlight()
   execute printf("hi! ColortemplatePopupInvr %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
   execute printf("hi! ColortemplatePopupStrk %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
   execute printf("hi! ColortemplatePopupWarn %sfg=%s cterm=bold gui=bold", s:mode, l:warncol)
-
-  " FIXME: decorative highlights, to be eliminated:
-  hi! ColortemplateC1 guibg=#a62317 ctermbg=124
-  hi! ColortemplateC2 guibg=#ff966e ctermbg=209
-  hi! ColortemplateC3 guibg=#d5b088 ctermbg=180
-  hi! ColortemplateC4 guibg=#0c594e ctermbg=23
-  hi! ColortemplateC5 guibg=#ffd393 ctermbg=222
 endf
 
 fun! s:add_prop_types()
@@ -253,13 +246,6 @@ fun! s:add_prop_types()
   call prop_type_add('_red_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   call prop_type_add('_gree', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
   call prop_type_add('_blue', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
-
-  " FIXME: decorative types, to be eliminated
-  call prop_type_add('C1', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC1'})
-  call prop_type_add('C2', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC2'})
-  call prop_type_add('C3', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC3'})
-  call prop_type_add('C4', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC4'})
-  call prop_type_add('C5', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplateC5'})
 endf
 
 fun! s:init_pane()
@@ -472,75 +458,9 @@ let s:favorites = []                        " List of favorite colors
 
 fun! s:favorites_section() " -> List of Dictionaries
   return [
+        \ s:blank(),
         \ s:prop_label('Favorites'),
-        \ s:prop_item('                                       ',
-        \               [
-        \                 #{col:  4, length: 3, type: 'C4'},
-        \                 #{col:  7, length: 3, type: 'C1'},
-        \                 #{col: 10, length: 3, type: 'C5'},
-        \                 #{col: 13, length: 3, type: 'C3'},
-        \                 #{col: 16, length: 3, type: 'C2'},
-        \                 #{col: 19, length: 3, type: 'C1'},
-        \                 #{col: 22, length: 3, type: 'C4'},
-        \                 #{col: 25, length: 3, type: 'C2'},
-        \                 #{col: 28, length: 3, type: 'C5'},
-        \                 #{col: 31, length: 3, type: 'C1'},
-        \                 #{col: 34, length: 3, type: 'C4'},
-        \                 #{col: 37, length: 3, type: 'C3'},
-        \                 #{col: 40, length: 3, type: 'C5'},
-        \               ]),
-        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
-        \ s:prop_item('                                       ',
-        \               [
-        \                 #{col:  4, length: 3, type: 'C1'},
-        \                 #{col:  7, length: 3, type: 'C3'},
-        \                 #{col: 10, length: 3, type: 'C2'},
-        \                 #{col: 13, length: 3, type: 'C5'},
-        \                 #{col: 16, length: 3, type: 'C4'},
-        \                 #{col: 19, length: 3, type: 'C1'},
-        \                 #{col: 22, length: 3, type: 'C2'},
-        \                 #{col: 25, length: 3, type: 'C5'},
-        \                 #{col: 28, length: 3, type: 'C3'},
-        \                 #{col: 31, length: 3, type: 'C1'},
-        \                 #{col: 34, length: 3, type: 'C4'},
-        \                 #{col: 37, length: 3, type: 'C5'},
-        \                 #{col: 40, length: 3, type: 'C2'},
-        \               ]),
-        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
-        \ s:prop_item('                                       ',
-        \               [
-        \                 #{col:  4, length: 3, type: 'C4'},
-        \                 #{col:  7, length: 3, type: 'C1'},
-        \                 #{col: 10, length: 3, type: 'C5'},
-        \                 #{col: 13, length: 3, type: 'C3'},
-        \                 #{col: 16, length: 3, type: 'C2'},
-        \                 #{col: 19, length: 3, type: 'C1'},
-        \                 #{col: 22, length: 3, type: 'C4'},
-        \                 #{col: 25, length: 3, type: 'C2'},
-        \                 #{col: 28, length: 3, type: 'C5'},
-        \                 #{col: 31, length: 3, type: 'C1'},
-        \                 #{col: 34, length: 3, type: 'C4'},
-        \                 #{col: 37, length: 3, type: 'C3'},
-        \                 #{col: 40, length: 3, type: 'C5'},
-        \               ]),
-        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
-        \ s:prop_item('                                       ',
-        \               [
-        \                 #{col:  4, length: 3, type: 'C1'},
-        \                 #{col:  7, length: 3, type: 'C3'},
-        \                 #{col: 10, length: 3, type: 'C2'},
-        \                 #{col: 13, length: 3, type: 'C5'},
-        \                 #{col: 16, length: 3, type: 'C4'},
-        \                 #{col: 19, length: 3, type: 'C1'},
-        \                 #{col: 22, length: 3, type: 'C2'},
-        \                 #{col: 25, length: 3, type: 'C5'},
-        \                 #{col: 28, length: 3, type: 'C3'},
-        \                 #{col: 31, length: 3, type: 'C1'},
-        \                 #{col: 34, length: 3, type: 'C4'},
-        \                 #{col: 37, length: 3, type: 'C5'},
-        \                 #{col: 40, length: 3, type: 'C2'},
-        \               ]),
-        \ s:prop_label('    a  b  c  d  e  f  g  h  i  j  k  l  m'),
+        \ s:noprop("NOT IMPLEMENTED YED"),
         \]
 endf
 " }}}

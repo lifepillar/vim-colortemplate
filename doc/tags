@@ -26,6 +26,7 @@ colortemplate-intro	colortemplate.txt	/*colortemplate-intro*
 colortemplate-mappings	colortemplate.txt	/*colortemplate-mappings*
 colortemplate-meta	colortemplate.txt	/*colortemplate-meta*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
+colortemplate-popup	colortemplate.txt	/*colortemplate-popup*
 colortemplate-quickstart	colortemplate.txt	/*colortemplate-quickstart*
 colortemplate-stats	colortemplate.txt	/*colortemplate-stats*
 colortemplate-structure	colortemplate.txt	/*colortemplate-structure*

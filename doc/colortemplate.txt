@@ -37,9 +37,10 @@ CONTENTS					*ft-colortemplate*
    16. Options .............. |colortemplate-options|
    17. Commands ............. |colortemplate-commands|
    18. Window toolbar ....... |colortemplate-toolbar|
-   19. Functions ............ |colortemplate-functions|
-   20. Best practices ....... |colortemplate-best-practices|
-   21. Providing feedback ... |colortemplate-feedback|
+   19. The style picker ..... |colortemplate-popup|
+   20. Functions ............ |colortemplate-functions|
+   21. Best practices ....... |colortemplate-best-practices|
+   22. Providing feedback ... |colortemplate-feedback|
 
 ==============================================================================
 Color templates					*colortemplate-intro*
@@ -873,7 +874,7 @@ the style picker adapts to accommodate symbols of arbitrary length.
 	let g:colortemplate_popup_marker = '=> '
 <
 						*g:colortemplate_popup_notifications*
-Set to 0 if you want to suppress the notifications popups (such as 'Color
+Set to 0 if you want to suppress the notification popups (such as 'Color
 cleared', 'Color yanked', etc.) in the style picker.
 >
 	let g:colortemplate_popup_notifications = 1
@@ -983,85 +984,8 @@ has been opened.
 
 						*:ColortemplateStyle*
 Opens a |popup| window that allows you to dynamically change the colors and
-style of a highlight group. When the command is used without arguments, the
-popup will reflect the status of the highlight group under the cursor. The
-command also accepts an optional highlight group: this is useful to style 
-not editable elements, such as status lines. If this is the first time you
-use the style picker, you may want to open it now and to try using it while
-reading this section.
-
-The popup window consists of four panes: RGB, HSL, Grayscale, and Help, which
-can be selected by pressing |R|, |H|, |G|, and |?|, respectively. Currently,
-only the RGB and Help panes are implemented.
-
-Use up and down arrow keys to choose an item in the popup. The current item
-has a marker on the side. When a level bar is selected, you may change the
-corresponding value with the left and right keys. Changes are applied
-immediately. The amount by which a slider is changed can be set by simply
-typing a number between 1 and 99 while the marker is on a level bar. The
-current step is shown below the sliders. When the marker is elsewhere, the
-numbers you type are passed to the underlying buffer, so you can continue
-using counts with your mappings (e.g., you may type `5j` to move down five
-lines).
-
-To choose a new color, press |E|. If the environment supports millions of
-colors, you will be asked to enter a hex value. If the value has one, two, or
-three characters, it will be automatically expanded to its six character
-version (e.g., `#cd` will be interpreted as `#cdcdcd`). In the environment
-does not support true colors, you will be asked to enter a new terminal color,
-i.e., a value between 16 and 255.
-
-To choose a specific highlight group, press |N|. Attributes such as boldface,
-italics, and so on, can also be toggled by pressing a key: |B| for bolface,
-|I| for italics, etc. See the Help pane for the details. Press |Tab| or
-|S-Tab| to cycle through the foreground, background, and special color for the
-current highlight group.
-
-Press |x| or click on the upper-right corner of the popup window to dismiss
-it. If you want to revert your changes, press |X| instead.
-
-You may drag the popup around with the mouse. The window is not resizable.
-
-In the middle of the pane, some information is displayed about the current
-color. It looks as follows:
->
-	██ #9fbec6 ****  ██ 109 **    Δ7.1 BIUSV~-
-<
-Here you may see the hex value of the color (`#9fbec6`), its best terminal
-approximation (`109`), the difference between the GUI and terminal color
-(`7.1`, see |colortemplate-stats|), and which attributes are applied to the
-current highlight group (`BIUSV~-`, attributes that are active are
-highlighted). Besides, an evaluation of the quality of the GUI and terminal
-colors against the background of the current highlight group are provided in
-the form of stars. A color can have up to five stars, according to how many of
-the following tests it passes:
-
-- the contrast ratio (CR) between the color and the background is >=3.0;
-- CR >= 4.5;
-- CR >= 7.0;
-- the color difference between the color and the background is >=500;
-- the brightness difference between the color and the background is >=125.
-
-The thresholds are based on W3C guidelines:
-
-    https://www.w3.org/TR/AERT/
-    https://www.w3.org/TR/2008/REC-WCAG20-20081211/
-
-Generally speaking, I'd say that you should aim at getting at least two/three
-stars for each highlight group, and at least four/five for the |Normal| group.
-This will ensure that your color scheme will have good legibility, even for
-people with color deficits. That said, use with a grain of salt: if you are
-developing a low-contrast color scheme for your programming night sessions,
-your colors will often get zero or one star.
-
-Note: when the popup is open all keystrokes are filtered by the popup. Only
-the keys that are not used by the popup are "passed through" to the underlying
-buffer. That means that none of the keys used by the popup are available to
-the underlying buffer. For instance, you cannot select text with |V| while the
-popup is open, because |V| is used by the popup to toggle reverse text. But
-you can still use |v|, because the style popup does not map that key.
-
-Note: |popup| is a feature of Vim 8.1.1705 or later.
+style of highlight groups. The command takes the name of a highlight group as
+an optional argument. See |colortemplate-popup| for the details.
 
 Buffer-local commands ~
 						*:Colortemplate[!]*
@@ -1137,6 +1061,108 @@ Enables the color scheme and executes `runtime` `syntax/hitest.vim`.
 OutDir ~
 Shows the current output directory and allows you to change it. See
 |b:colortemplate_oudir|.
+
+==============================================================================
+The style picker				*colortemplate-popup*
+
+Colortemplate implements a sophisticated "style picker", with which you can
+modify a color scheme in real time. This enables frictionless experimentation
+with color schemes directly within Vim. This feature is based on Vim's |popup|
+and |text-properties|.
+
+The style picker can be opened with |gs|, |ColortemplateStyle| or by invoking
+|colortemplate#style#open()|. Both the command and the function take the name
+of a highlight group as an optional argument. When no argument is given, the
+popup reflects the status of the highlight group under the cursor. Providing
+a highlight group is necessary for editing the elements of Vim's interface
+that are not inside buffers, such as status lines. Note that |gs| is
+a filetype-specific mapping and |ColortemplateStyle| becomes available only
+after opening a Colortemplate buffer. The function, however, can be invoked
+anywhere. See |colortemplate-mappings| if you want to open the style picker
+from any buffer.
+
+If this is the first time you use the style picker, you may want to open it
+now and try using it while reading this section.
+
+The popup window consists of four panes: RGB, HSL, Grayscale, and Help, which
+can be selected by pressing |R|, |H|, |G|, and |?|, respectively. Currently,
+only the RGB and Help panes are implemented.
+
+Use up and down arrow keys to choose an item in the popup. The current item
+has a marker on the side. When a level bar is selected, you may change the
+corresponding value with the left and right keys. Changes are applied
+immediately. The amount by which a slider is changed can be set by simply
+typing a number between 1 and 99 while the marker is on a level bar. The
+current step is shown below the sliders. When the marker is elsewhere, the
+numbers you type are passed to the underlying buffer, so you can continue
+using counts with your mappings (e.g., you may type `5j` to move down five
+lines).
+
+To choose a new color, press |E|. If the environment supports millions of
+colors, you will be asked to enter a hex value. If the value has one, two, or
+three characters, it will be automatically expanded to its six character
+version (e.g., `#cd` will be interpreted as `#cdcdcd`). In the environment
+does not support true colors, you will be asked to enter a new terminal color,
+i.e., a value between 16 and 255.
+
+To choose a specific highlight group, press |N|. Attributes such as boldface,
+italics, and so on, can also be toggled by pressing a key: |B| for bolface,
+|I| for italics, etc. See the Help pane for the details. Press |Tab| or
+|S-Tab| to cycle through the foreground, background, and special color for the
+current highlight group.
+
+In the middle of the pane, some information is displayed about the current
+color. It looks as follows:
+>
+	██ #9fbec6 ****  ██ 109 **    Δ7.1 BIUSV~-
+<
+Here you may see the hex value of the color (`#9fbec6`), its best terminal
+approximation (`109`), the difference between the GUI and terminal color
+(`7.1`, see |colortemplate-stats|), and which attributes are applied to the
+current highlight group (`BIUSV~-`, attributes that are active are
+highlighted). Besides, an evaluation of the "quality" of the GUI and terminal
+colors against the background of the current highlight group are provided in
+the form of stars. A color can have up to five stars, according to how many of
+the following tests it passes:
+
+- the contrast ratio (CR) between the color and the background is >=3.0;
+- CR >= 4.5;
+- CR >= 7.0;
+- the color difference between the color and the background is >=500;
+- the brightness difference between the color and the background is >=125.
+
+The thresholds are based on W3C guidelines:
+
+    https://www.w3.org/TR/AERT/
+    https://www.w3.org/TR/2008/REC-WCAG20-20081211/
+
+Generally speaking, I'd say that you should aim at getting at least two/three
+stars for each highlight group, and at least four/five for the |Normal| group.
+This will ensure that your color scheme will have good legibility, even for
+people with color deficits. That said, use with a grain of salt: if you are
+developing a low-contrast color scheme for your programming night sessions,
+your colors will often get zero or one star. That does not necessarily make
+your color scheme a "bad" color scheme, just one that can be used subject to
+some constraints (e.g, low-light conditions and visually unimpaired users).
+
+As you modify a color scheme, the style picker remembers the ten most recently
+used colors. With the marker in the Recent section, you may press |Enter| to
+select a recent color, or |D| to remove a color from the the list.
+
+Press |x| or click on the upper-right corner of the popup window to dismiss
+it. If you want to revert your changes by resetting the current color scheme,
+press |X| instead.
+
+You may drag the popup around with the mouse. The window is not resizable.
+
+Note: when the popup is open all keystrokes are filtered by the popup. Only
+the keys that are not used by the popup are "passed through" to the underlying
+buffer. That means that none of the keys used by the popup are available to
+the underlying buffer. For instance, you cannot select text with |V| while the
+popup is open, because |V| is used by the popup to toggle reverse text. But
+you can still use |v|, because the style popup does not map that key.
+
+
 
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*

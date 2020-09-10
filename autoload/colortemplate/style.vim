@@ -577,6 +577,7 @@ fun! s:redraw_help()
         \ s:noprop('[→] Increment value   [E] New value'),
         \ s:noprop('[←] Decrement value   [N] New hi group'),
         \ s:noprop('[Y] Yank color        [Z] Clear color'),
+        \ s:noprop('[P] Paste color                      '),
         \ s:blank(),
         \ s:prop_label('Recent & Favorites'),
         \ s:noprop('[Enter] Pick color    [D] Delete color'),
@@ -603,6 +604,18 @@ fun! s:yank()
   call s:save_to_recent(s:col(s:coltype))
   call s:redraw()
   call s:notification('Color yanked')
+  return 1
+endf
+
+fun! s:paste()
+  if @" =~# '\m^#\=[A-Fa-f0-9]\{6}$'
+    call s:save_to_recent(s:col(s:coltype))
+    call s:set_color(s:coltype, @"[0] ==# '#' ? @" : '#'..@")
+    call s:apply_color()
+    call s:redraw()
+    return 1
+  endif
+  return 0
 endf
 
 fun! s:mouse_clicked()
@@ -834,6 +847,7 @@ let s:key = extend({
       \ 'close':            "x",
       \ 'cancel':           "X",
       \ 'yank':             "Y",
+      \ 'paste':            "P",
       \ 'down':             "\<down>",
       \ 'up':               "\<up>",
       \ 'top':              "T",
@@ -867,6 +881,7 @@ let s:keymap = {
       \ s:key['close']:            function('s:commit'),
       \ s:key['cancel']:           function('s:cancel'),
       \ s:key['yank']:             function('s:yank'),
+      \ s:key['paste']:            function('s:paste'),
       \ s:key['down']:             function('s:select_next_item'),
       \ s:key['up']:               function('s:select_prev_item'),
       \ s:key['top']:              function('s:go_to_top'),

@@ -109,6 +109,9 @@ fun! s:stars(c1, c2)
 endf
 
 fun! s:set_higroup(name)
+  if s:color_edited[s:coltype]
+    call s:save_to_recent(s:col(s:coltype))
+  endif
   let s:higroup      = empty(a:name) ? 'Normal' : a:name
   let l:id           = hlID(s:higroup)
   let s:color.fg     = colortemplate#syn#higroup2hex(a:name, 'fg')

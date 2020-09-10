@@ -139,6 +139,7 @@ endf
 
 fun! s:choose_gui_color()
   let l:col = input('New color: #', '')
+  echo "\r"
   if !has('patch-8.1.1456')
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
@@ -157,6 +158,7 @@ endf
 
 fun! s:choose_term_color()
   let l:col = input('New terminal color [16-255]: ', '')
+  echo "\r"
   if !has('patch-8.1.1456')
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
@@ -731,11 +733,11 @@ endf
 
 fun! s:edit_name()
   let l:name = input('Highlight group: ', '', 'highlight')
+  echo "\r"
   if !has('patch-8.1.1456')
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
   if l:name =~# '\m^\w\+$'
-    call s:save_to_recent(s:col(s:coltype))
     call s:set_higroup(l:name)
     call s:redraw()
   endif

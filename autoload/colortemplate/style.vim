@@ -940,7 +940,7 @@ fun! colortemplate#style#open(...)
     return s:popup_id
   endif
 
-  let s:mark    = get(g:, 'colortemplate_popup_marker', '=> ')
+  let s:mark    = get(g:, 'colortemplate_popup_marker', '> ')
   let s:width   = max([39 + len(s:mark), 42])
   let s:star    = get(g:, 'colortemplate_popup_star', '*')
   let s:sample_text = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)

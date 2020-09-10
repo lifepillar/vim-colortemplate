@@ -1,4 +1,4 @@
-*colortemplate.txt*	For Vim version 8.1	Last change: 2019 Jul 2
+*colortemplate.txt*	For Vim version 8.2	Last change: 2020 Sep 10
 
 	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
 	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~
@@ -17,7 +17,7 @@
 	Author:  Lifepillar <https://github.com/lifepillar>
 	License: Same terms as Vim itself (see |license|)
 ==============================================================================
-CONTENTS					*ft-colortemplate*
+CONTENTS						*ft-colortemplate*
 
     1. Introduction ......... |colortemplate-intro|
     2. Getting started ...... |colortemplate-quickstart|
@@ -289,7 +289,7 @@ Template code in the scope of `any` background will be put in the "local
 preamble", i.e., before checking the value of |background|.
 
 ==============================================================================
-Variants					*colortemplate-variants*
+Variants						*colortemplate-variants*
 
 A `Variant` directive declares to which environments the subsequent
 definitions apply. All definitions appearing after a `Variant` directive until
@@ -336,7 +336,7 @@ for backward compatibility: it is recommended to always use `Variant`
 explicitly before specifying the background.
 
 ==============================================================================
-Color definitions				*colortemplate-colors*
+Color definitions					*colortemplate-colors*
 
 Color definitions consist of lines with the following syntax:
 >
@@ -570,7 +570,7 @@ the output directory. You may suppress the generation of the help file with
 |g:colortemplate_no_doc|.
 
 ==============================================================================
-Auxiliary files				       	*colortemplate-auxfiles*
+Auxiliary files					*colortemplate-auxfiles*
 
 If you want to generate additional files besides the color scheme itself, you
 may put the content of each file into a separate `auxfile` block. For example:
@@ -608,7 +608,7 @@ You may suppress the generation of all auxiliary files
 (including the help file) with |g:colortemplate_no_aux_files|.
 
 ==============================================================================
-Include directive		       		*colortemplate-include*
+Include directive					*colortemplate-include*
 
 You may split your template into several files, and include snippets from one
 file into another. You do so with an `Include` directive. For example, you
@@ -641,7 +641,7 @@ NOTE: avoid cyclic inclusions: they will cause Colortemplate to run into an
 infinite loop!
 
 ==============================================================================
-Colors statistics				*colortemplate-stats*
+Colors statistics					*colortemplate-stats*
 
 Colortemplate can compute some useful statistics to help you assess the
 quality of your color scheme. Such information is displayed in a scratch
@@ -987,7 +987,7 @@ Set to 0 if you want Colortemplate to report only errors (not recommended).
 	let g:colortemplate_warnings = 1
 <
 ==============================================================================
-Colortemplate commands		       		*colortemplate-commands*
+Colortemplate commands				*colortemplate-commands*
 
 Global commands ~
 
@@ -1029,7 +1029,7 @@ Computes some color statistics and shows them in a scratch buffer.
 See |colortemplate-stats| for more information.
 
 ==============================================================================
-Window toolbar		       			*colortemplate-toolbar*
+Window toolbar					*colortemplate-toolbar*
 
 The window toolbar (|WinBar|) is available in Vim 8.0.1123 or later and
 provides a quick way to execute the most common tasks, streamlining your
@@ -1075,7 +1075,7 @@ Shows the current output directory and allows you to change it. See
 |b:colortemplate_oudir|.
 
 ==============================================================================
-The style picker				*colortemplate-popup*
+The style picker					*colortemplate-popup*
 
 Colortemplate implements a sophisticated "style picker", with which you can
 modify a color scheme in real time. This enables frictionless experimentation
@@ -1090,8 +1090,8 @@ a highlight group is necessary for editing the elements of Vim's interface
 that are not inside buffers, such as status lines. Note that |gs| is
 a filetype-specific mapping and |ColortemplateStyle| becomes available only
 after opening a Colortemplate buffer. The function, however, can be invoked
-anywhere. See |colortemplate-mappings| if you want to open the style picker
-from any buffer.
+anywhere at any time. See |colortemplate-mappings| if you want to open the
+style picker from any buffer.
 
 If this is the first time you use the style picker, you may want to open it
 now and try using it while reading this section.
@@ -1113,15 +1113,16 @@ lines).
 To choose a new color, press |E|. If the environment supports millions of
 colors, you will be asked to enter a hex value. If the value has one, two, or
 three characters, it will be automatically expanded to its six character
-version (e.g., `#cd` will be interpreted as `#cdcdcd`). In the environment
+version (e.g., `#cd` will be interpreted as `#cdcdcd`). If the environment
 does not support true colors, you will be asked to enter a new terminal color,
-i.e., a value between 16 and 255.
+i.e., a value between 16 and 255. To clear a color (i.e., to set it to
+`NONE`), press |Z|.
 
 To choose a specific highlight group, press |N|. Attributes such as boldface,
-italics, and so on, can also be toggled by pressing a key: |B| for bolface,
-|I| for italics, etc. See the Help pane for the details. Press |Tab| or
-|S-Tab| to cycle through the foreground, background, and special color for the
-current highlight group.
+italics, and so on, can be toggled by pressing a key: |B| for bolface, |I| for
+italics, etc. See the Help pane for the details. Press |Tab| or |S-Tab| to
+cycle through the foreground, background, and special color for the current
+highlight group.
 
 In the middle of the pane, some information is displayed about the current
 color. It looks as follows:
@@ -1137,11 +1138,15 @@ colors against the background of the current highlight group are provided in
 the form of stars. A color can have up to five stars, according to how many of
 the following tests it passes:
 
-- the contrast ratio (CR) between the color and the background is >=3.0;
+- the contrast ratio (CR) between the (foreground/special) color and the
+  background is >=3.0;
 - CR >= 4.5;
 - CR >= 7.0;
 - the color difference between the color and the background is >=500;
 - the brightness difference between the color and the background is >=125.
+
+When the background color is active, the foreground of the highlight group is
+used for comparison.
 
 The thresholds are based on W3C guidelines:
 
@@ -1153,13 +1158,17 @@ stars for each highlight group, and at least four/five for the |Normal| group.
 This will ensure that your color scheme will have good legibility, even for
 people with color deficits. That said, use with a grain of salt: if you are
 developing a low-contrast color scheme for your programming night sessions,
-your colors will often get zero or one star. That does not necessarily make
-your color scheme a "bad" color scheme, just one that can be used subject to
-some constraints (e.g, low-light conditions and visually unimpaired users).
+your colors will most likely get zero or one star. That does not necessarily
+make your color scheme "bad"—just one that can be used subject to some
+constraints (e.g, low-light conditions and visually unimpaired users).
 
 As you modify a color scheme, the style picker remembers the ten most recently
 used colors. With the marker in the Recent section, you may press |Enter| to
 select a recent color, or |D| to remove a color from the the list.
+
+When you are satisfied with a color, you may yank it to the unnamed register
+with |Y|. The reverse is also possible: if the unnamed register contains a hex
+color, you may paste it into the style picker with |P|.
 
 Press |x| or click on the upper-right corner of the popup window to dismiss
 it. If you want to revert your changes by resetting the current color scheme,
@@ -1172,9 +1181,8 @@ the keys that are not used by the popup are "passed through" to the underlying
 buffer. That means that none of the keys used by the popup are available to
 the underlying buffer. For instance, you cannot select text with |V| while the
 popup is open, because |V| is used by the popup to toggle reverse text. But
-you can still use |v|, because the style popup does not map that key.
-
-
+you can still use |v|, because the style popup does not map that key. If the
+popup gets in the way, just close it with |x|.
 
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*

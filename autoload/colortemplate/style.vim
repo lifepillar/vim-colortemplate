@@ -309,6 +309,12 @@ fun! s:get_properties(linenr)
   return map(prop_list(a:linenr, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
 endf
 
+" Returns the id of the property of the specified type in the given line.
+" NOTE: the property must exist!
+fun! s:get_property_id(linenr, type)
+  return prop_find(#{bufnr: winbufnr(s:popup_id), lnum: a:linenr, col: 1, type: a:type})['id']
+endf
+
 fun! s:has_property(list, prop)
   return index(a:list, a:prop) != - 1
 endf
@@ -460,14 +466,96 @@ fun! s:recent_section() " -> List of Dictionaries
 endf
 " }}}
 " Favorites section {{{
-let s:favorites = []                        " List of favorite colors
+const s:segment_capacity = 10 " Number of colors per line
+let s:favorite_colors = ['#ffffff', '#abcdef', '#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29', '#819C5E', '#E86A59', '#A55A76', '#4F9300'] " List of favorite colors
+
+" Returns n colors, starting at index i.
+fun! s:segment(i, n)
+  return s:favorite_colors[(a:i):(a:i + a:n - 1)]
+endf
+
+fun! s:save_to_favorites()
+  let l:col = s:col(s:coltype)
+  if index(s:favorite_colors, l:col) != -1 " Do not add the same color twice
+    return
+  endif
+
+  " Define text property for the new element
+  let l:i = len(s:favorite_colors)
+  execute 'hi clear ColortemplatePopupFav' .. l:i
+  call prop_type_delete('_fav' .. l:i, #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_fav' .. l:i, #{ bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupFav' .. l:i})
+
+  call add(s:favorite_colors, l:col)
+  " TODO: persist to disk
+  call s:redraw()
+  return 1
+endf
+"
+fun! s:remove_favorite()
+  let l:segnum = s:get_property_id(s:active_line, '_fav_')
+  let l:colors = s:segment(l:segnum * s:segment_capacity, s:segment_capacity)
+  echo printf('[Colortemplate] Remove color (0-%d)? ', len(l:colors) - 1)
+  let l:n = nr2char(getchar())
+  echo "\r"
+  if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
+    " TODO: ask for confirmation?
+    call remove(s:favorite_colors, l:segnum * s:segment_capacity + str2nr(l:n))
+    call s:redraw()
+  endif
+  return 1
+endf
+"
+fun! s:pick_favorite()
+  let l:segnum = s:get_property_id(s:active_line, '_fav_')
+  let l:colors = s:segment(l:segnum * s:segment_capacity, s:segment_capacity)
+  echo printf('[Colortemplate] Which color (0-%d)? ', len(l:colors) - 1)
+  let l:n = nr2char(getchar())
+  echo "\r"
+  if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
+    let l:new = l:colors[str2nr(l:n)]
+    call s:save_to_recent(s:col(s:coltype))
+    call s:set_color(s:coltype, l:new)
+    call s:apply_color()
+    call s:redraw()
+  endif
+  return 1
+endf
+
+fun! s:add_fav_prop_types()
+  for l:i in range(len(s:favorite_colors))
+    execute 'hi clear ColortemplatePopupFav' .. i
+    call prop_type_add('_fav' .. l:i, #{ bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupFav' .. l:i})
+  endfo
+endf
 
 fun! s:favorites_section() " -> List of Dictionaries
-  return [
-        \ s:blank(),
-        \ s:prop_label('Favorites'),
-        \ s:noprop("NOT IMPLEMENTED YED"),
-        \]
+  if len(s:favorite_colors) == 0
+    return []
+  endif
+
+  let l:fav_section = [s:blank(), s:prop_label('Favorites')]
+  let l:i = 0
+
+  while l:i < len(s:favorite_colors)
+    let l:props = [#{ col: 1, length: 0, type: '_fav_', id: (l:i / s:segment_capacity) }]
+    let l:colors = s:segment(l:i, s:segment_capacity)
+
+    for l:j in range(len(l:colors))
+      let l:approx = colortemplate#colorspace#approx(l:colors[l:j])['index']
+      execute printf('hi ColortemplatePopupFav%d guibg=%s ctermbg=%s', (l:i + l:j), l:colors[l:j], l:approx)
+      call add(l:props, #{ col: 1 + len(s:mark) + 4 * l:j, length: 3, type: '_fav'.. (l:i + l:j) })
+    endfor
+
+    call extend(l:fav_section, [
+          \ s:prop_item(repeat(' ', s:width), l:props),
+          \ s:prop_indented_label(' ' .. join(range(len(l:colors)), '   ')),
+          \ ])
+
+    let l:i += s:segment_capacity
+  endwhile
+
+  return l:fav_section
 endf
 " }}}
 " RGB Pane {{{
@@ -581,6 +669,7 @@ fun! s:redraw_help()
         \ s:blank(),
         \ s:prop_label('Recent & Favorites'),
         \ s:noprop('[Enter] Pick color    [D] Delete color'),
+        \ s:noprop('[A] Add to favorite   [D] Delete color'),
         \ ]))
   call prop_add(1, 42, #{bufnr: winbufnr(s:popup_id), length: 1, type: '_labe'})
 endf
@@ -867,6 +956,7 @@ let s:key = extend({
       \ 'new-color':        "E",
       \ 'new-higroup':      "N",
       \ 'clear':            "Z",
+      \ 'add-to-fav':       "A",
       \ 'rgb':              "R",
       \ 'hsb':              "H",
       \ 'gray':             "G",
@@ -901,6 +991,7 @@ let s:keymap = {
       \ s:key['new-color']:        function('s:edit_color'),
       \ s:key['new-higroup']:      function('s:edit_name'),
       \ s:key['clear']:            function('s:clear_color'),
+      \ s:key['add-to-fav']:       function('s:save_to_favorites'),
       \ s:key['rgb']:              function('s:switch_to_rgb'),
       \ s:key['hsb']:              function('s:switch_to_hsb'),
       \ s:key['gray']:             function('s:switch_to_grayscale'),
@@ -995,6 +1086,7 @@ fun! colortemplate#style#open(...)
   let s:active_line = 3
   call s:add_prop_types()
   call s:add_mru_prop_types()
+  call s:add_fav_prop_types()
   call s:redraw()
   return s:popup_id
 endf

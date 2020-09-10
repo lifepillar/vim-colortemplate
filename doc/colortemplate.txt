@@ -1166,6 +1166,10 @@ As you modify a color scheme, the style picker remembers the ten most recently
 used colors. With the marker in the Recent section, you may press |Enter| to
 select a recent color, or |D| to remove a color from the the list.
 
+The bottom part of the style picker hosts a section for your favorite colors.
+To add the current color to the favorites, type |A|. Choosing or deleting
+a favorite color is done in the same way as for recent colors.
+
 When you are satisfied with a color, you may yank it to the unnamed register
 with |Y|. The reverse is also possible: if the unnamed register contains a hex
 color, you may paste it into the style picker with |P|.

@@ -221,15 +221,15 @@ fun! s:add_prop_types()
   " Title of the pane
   call prop_type_add('_titl', #{bufnr: winbufnr(s:popup_id), highlight: 'Title'})
   " Mark line as an item that can be selected
-  call prop_type_add('_item', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('_item', #{bufnr: winbufnr(s:popup_id)})
   " Mark line as a label
-  call prop_type_add('_labe', #{bufnr: winbufnr(s:popup_id), highlight: 'Label'})
+  call prop_type_add('_labe', #{bufnr: winbufnr(s:popup_id)})
   " Mark line as a level bar (slider)
-  call prop_type_add('_leve', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('_leve', #{bufnr: winbufnr(s:popup_id)})
   " Mark line as a "recent colors" line
-  call prop_type_add('_mru_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('_mru_', #{bufnr: winbufnr(s:popup_id)})
   " Mark line as a "favorite colors" line
-  call prop_type_add('_fav_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('_fav_', #{bufnr: winbufnr(s:popup_id)})
   " To highlight text with the currently selected highglight group
   call prop_type_add('_curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
   " Highlight for warning symbol
@@ -248,10 +248,10 @@ fun! s:add_prop_types()
   call prop_type_add('_strk', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupStrk'})
   call prop_type_add('_off_', #{bufnr: winbufnr(s:popup_id), highlight: 'Comment'})
   " RGB pane
-  call prop_type_add('_rgb_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
-  call prop_type_add('_red_', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
-  call prop_type_add('_gree', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
-  call prop_type_add('_blue', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('_rgb_', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_red_', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_gree', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_blue', #{bufnr: winbufnr(s:popup_id)})
 endf
 
 fun! s:init_pane()

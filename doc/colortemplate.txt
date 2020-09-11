@@ -820,6 +820,12 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
+						*g:colortemplate_popup_fav_path*
+The path where the style picker's favorite colors are saved.
+>
+	let g:colortemplate_popup_fav_path =
+	    \ '$HOME/.vim/colortemplate_favorites.txt'
+<
 						*g:colortemplate_popup_bg*
 The name of a highlight group to be used for the background of the style
 picker.
@@ -1167,8 +1173,11 @@ used colors. With the marker in the Recent section, you may press |Enter| to
 select a recent color, or |D| to remove a color from the the list.
 
 The bottom part of the style picker hosts a section for your favorite colors.
-To add the current color to the favorites, type |A|. Choosing or deleting
-a favorite color is done in the same way as for recent colors.
+To make a color a favorite one, type |A|. Choosing or deleting a favorite
+color is done in the same way as for recent colors. Favorite colors persist
+across Vim sessions: they are written to disk at the location specified by
+|g:colortemplate_fav_path|. The saved file is just a text file with one hex
+color per line; it can be easily edited by hand if desired.
 
 When you are satisfied with a color, you may yank it to the unnamed register
 with |Y|. The reverse is also possible: if the unnamed register contains a hex

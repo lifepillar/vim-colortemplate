@@ -250,9 +250,6 @@ fun! s:add_prop_types()
   call prop_type_add('_off_', #{bufnr: s:popup_bufnr, highlight: 'Comment'})
   " RGB pane
   call prop_type_add('_rgb_', #{bufnr: s:popup_bufnr})
-  call prop_type_add('_red_', #{bufnr: s:popup_bufnr})
-  call prop_type_add('_gree', #{bufnr: s:popup_bufnr})
-  call prop_type_add('_blue', #{bufnr: s:popup_bufnr})
 endf
 
 fun! s:init_pane()
@@ -287,10 +284,9 @@ fun! s:noprop(t)
   return s:prop(a:t, [])
 endfunc
 
-fun! s:prop_level_bar(t, pane, name)
-  return s:prop_item(a:t, [#{ col: 1, length: 0, type: '_leve' },
-        \                  #{ col: 1, length: 0, type: a:pane },
-        \                  #{ col: 1, length: 0, type: a:name }])
+fun! s:prop_level_bar(t, pane, id)
+  return s:prop_item(a:t, [#{ col: 1, length: 0, type: '_leve', id: a:id },
+        \                  #{ col: 1, length: 0, type: a:pane }])
 endf
 
 fun! s:prop_label(t)
@@ -560,15 +556,16 @@ fun! s:favorites_section() " -> List of Dictionaries
 endf
 " }}}
 " RGB Pane {{{
-fun! s:rgb_increase_level(props, value)
+fun! s:rgb_increase_level(value)
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:col(s:coltype))
-  if s:has_property(a:props, '_red_')
+  let l:id = s:get_property_id(s:active_line, '_leve')
+  if l:id == 1
     let l:r += a:value
     if l:r > 255 | let l:r = 255 | endif
-  elseif s:has_property(a:props, '_gree')
+  elseif l:id == 2
     let l:g += a:value
     if l:g > 255 | let l:g = 255 | endif
-  elseif s:has_property(a:props, '_blue')
+  elseif l:id == 3
     let l:b += a:value
     if l:b > 255 | let l:b = 255 | endif
   endif
@@ -579,15 +576,16 @@ if !s:color_edited[s:coltype]
   call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
 endf
 
-fun! s:rgb_decrease_level(props, value)
+fun! s:rgb_decrease_level(value)
  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:col(s:coltype))
-  if s:has_property(a:props, '_red_')
+  let l:id = s:get_property_id(s:active_line, '_leve')
+  if l:id == 1
     let l:r -= a:value
     if l:r < 0 | let l:r = 0 | endif
-  elseif s:has_property(a:props, '_gree')
+  elseif l:id == 2
     let l:g -= a:value
     if l:g < 0 | let l:g = 0 | endif
-  elseif s:has_property(a:props, '_blue')
+  elseif l:id == 3
     let l:b -= a:value
     if l:b < 0 | let l:b = 0 | endif
   endif
@@ -601,9 +599,9 @@ endf
 fun! s:rgb_slider(r, g, b) " -> List of Dictionaries
   return [
         \ s:blank(),
-        \ s:prop_level_bar(s:slider('R', a:r), '_rgb_', '_red_'),
-        \ s:prop_level_bar(s:slider('G', a:g), '_rgb_', '_gree'),
-        \ s:prop_level_bar(s:slider('B', a:b), '_rgb_', '_blue'),
+        \ s:prop_level_bar(s:slider('R', a:r), '_rgb_', 1),
+        \ s:prop_level_bar(s:slider('G', a:g), '_rgb_', 2),
+        \ s:prop_level_bar(s:slider('B', a:b), '_rgb_', 3),
         \ s:prop_label(printf('%s%02d', repeat(' ', len(s:mark) + 3), s:step)),
         \]
 endf
@@ -882,7 +880,7 @@ endf
 fun! s:move_right()
   let l:props = s:get_properties(s:active_line)
   if s:has_property(l:props, '_rgb_')
-    call s:rgb_increase_level(l:props, s:step)
+    call s:rgb_increase_level(s:step)
     call s:apply_color()
     call s:redraw()
   endif
@@ -892,7 +890,7 @@ endf
 fun! s:move_left()
   let l:props = s:get_properties(s:active_line)
   if s:has_property(l:props, '_rgb_')
-    call s:rgb_decrease_level(l:props, s:step)
+    call s:rgb_decrease_level(s:step)
     call s:apply_color()
     call s:redraw()
   endif

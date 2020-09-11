@@ -731,7 +731,7 @@ fun! s:redraw_help()
         \ s:blank(),
         \ s:prop_label('Recent & Favorites'),
         \ s:noprop('[Enter] Pick color    [D] Delete color'),
-        \ s:noprop('[A] Add to favorite   [D] Delete color'),
+        \ s:noprop('[A] Add to favorite                   '),
         \ ]))
   call prop_add(1, 42, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
 endf

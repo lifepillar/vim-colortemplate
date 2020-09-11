@@ -482,7 +482,8 @@ fun! s:segment(i, n)
 endf
 
 fun! s:save_favorite_colors()
-  let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_favorites_path', "$HOME/.vim/colortemplate_favorites.txt")), ":p")
+  let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_popup_fav_path',
+        \ "$HOME/.vim/colortemplate_favorites.txt")), ":p")
 
   if !filewritable(l:favpath)
    call s:msg(l:favpath .. ' is not writable', 'e')
@@ -510,7 +511,8 @@ fun! s:load_favorite_colors()
     return
   endif
 
-  let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_favorites_path', "$HOME/.vim/colortemplate_favorites.txt")), ":p")
+  let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_popup_fav_path',
+        \ "$HOME/.vim/colortemplate_favorites.txt")), ":p")
 
   if !filereadable(l:favpath)
     let s:favorite_colors = []

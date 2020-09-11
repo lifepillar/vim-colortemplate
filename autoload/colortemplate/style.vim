@@ -474,27 +474,78 @@ endf
 " }}}
 " Favorites section {{{
 const s:segment_capacity = 10 " Number of colors per line
-let s:favorite_colors = ['#ffffff', '#abcdef', '#405952', '#9C9B7A', '#FFD393', '#FF974F', '#F54F29', '#819C5E', '#E86A59', '#A55A76', '#4F9300'] " List of favorite colors
+let s:favorite_colors = []    " List of favorite colors
 
 " Returns n colors, starting at index i.
 fun! s:segment(i, n)
   return s:favorite_colors[(a:i):(a:i + a:n - 1)]
 endf
 
-fun! s:save_to_favorites()
-  let l:col = s:col(s:coltype)
-  if index(s:favorite_colors, l:col) != -1 " Do not add the same color twice
+fun! s:save_favorite_colors()
+  let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_favorites_path', "$HOME/.vim/colortemplate_favorites.txt")), ":p")
+
+  if !filewritable(l:favpath)
+   call s:msg(l:favpath .. ' is not writable', 'e')
+   return
+  endif
+
+  try " May raise an error, e.g., if a temporary file cannot be written
+    if writefile(s:favorite_colors, l:favpath, "s") < 0
+      call s:msg('Failed to write ' .. l:favpath, 'e')
+    endif
+  catch /.*/
+    call s:msg('Could not persist favorite colors: ' .. v:exception)
+  endtry
+endf
+
+fun! s:prop_type_add_fav(i, col)
+  let l:approx = colortemplate#colorspace#approx(a:col)['index']
+  execute printf('hi ColortemplatePopupFav%d guibg=%s ctermbg=%s', a:i, a:col, l:approx)
+  call prop_type_delete('_fav' .. a:i, #{bufnr: s:popup_bufnr})
+  call prop_type_add('_fav' .. a:i, #{ bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupFav' .. a:i})
+endf
+
+fun! s:load_favorite_colors()
+  if !empty(s:favorite_colors) " Already loaded
     return
   endif
 
-  " Define text property for the new element
-  let l:i = len(s:favorite_colors)
-  execute 'hi clear ColortemplatePopupFav' .. l:i
-  call prop_type_delete('_fav' .. l:i, #{bufnr: s:popup_bufnr})
-  call prop_type_add('_fav' .. l:i, #{ bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupFav' .. l:i})
+  let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_favorites_path', "$HOME/.vim/colortemplate_favorites.txt")), ":p")
 
+  if !filereadable(l:favpath)
+    let s:favorite_colors = []
+    return
+  endif
+
+  try
+    let s:favorite_colors = readfile(l:favpath)
+  catch /.*/
+    call s:msg('Could not load favorite colors: ' .. v:exception, 'e')
+    let s:favorite_colors = []
+    return
+  endtry
+
+  call map(s:favorite_colors, 'trim(v:val)')
+  call filter(s:favorite_colors, { i,v -> v =~ '\m^#[A-Fa-f0-9]\{6}$' })
+  for l:i in range(len(s:favorite_colors))
+    call s:prop_type_add_fav(l:i, s:favorite_colors[l:i])
+  endfor
+endf
+
+fun! s:add_to_favorite()
+  " Do not add the same color twice
+  let l:col = s:col(s:coltype)
+  if index(s:favorite_colors, l:col) != -1
+    return
+  endif
+
+  " Define a text property for the new element
+  let l:i = len(s:favorite_colors)
+  call s:prop_type_add_fav(l:i, l:col)
+
+  " Add and save to disk
   call add(s:favorite_colors, l:col)
-  " TODO: persist to disk
+  call s:save_favorite_colors()
   call s:redraw()
   return 1
 endf
@@ -508,6 +559,7 @@ fun! s:remove_favorite()
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
     " TODO: ask for confirmation?
     call remove(s:favorite_colors, l:segnum * s:segment_capacity + str2nr(l:n))
+    call s:save_favorite_colors()
     call s:redraw()
   endif
   return 1
@@ -549,8 +601,7 @@ fun! s:favorites_section() " -> List of Dictionaries
     let l:colors = s:segment(l:i, s:segment_capacity)
 
     for l:j in range(len(l:colors))
-      let l:approx = colortemplate#colorspace#approx(l:colors[l:j])['index']
-      execute printf('hi ColortemplatePopupFav%d guibg=%s ctermbg=%s', (l:i + l:j), l:colors[l:j], l:approx)
+      call s:prop_type_add_fav(l:i + l:j, l:colors[l:j])
       call add(l:props, #{ col: 1 + len(s:mark) + 4 * l:j, length: 3, type: '_fav'.. (l:i + l:j) })
     endfor
 
@@ -1000,7 +1051,7 @@ let s:keymap = {
       \ s:key['new-color']:        function('s:edit_color'),
       \ s:key['new-higroup']:      function('s:edit_name'),
       \ s:key['clear']:            function('s:clear_color'),
-      \ s:key['add-to-fav']:       function('s:save_to_favorites'),
+      \ s:key['add-to-fav']:       function('s:add_to_favorite'),
       \ s:key['rgb']:              function('s:switch_to_rgb'),
       \ s:key['hsb']:              function('s:switch_to_hsb'),
       \ s:key['gray']:             function('s:switch_to_grayscale'),
@@ -1095,6 +1146,7 @@ fun! colortemplate#style#open(...)
   call s:add_prop_types()
   call s:add_mru_prop_types()
   call s:add_fav_prop_types()
+  call s:load_favorite_colors()
   call s:redraw()
   return s:popup_winid
 endf

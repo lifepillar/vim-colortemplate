@@ -111,7 +111,7 @@ endf
 
 fun! s:set_higroup(name)
   if s:color_edited[s:coltype]
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
   endif
   let s:higroup      = empty(a:name) ? 'Normal' : a:name
   let l:id           = hlID(s:higroup)
@@ -149,7 +149,7 @@ fun! s:choose_gui_color()
       let l:col = repeat(l:col, 6 /  len(l:col))
     endif
     if len(l:col) == 6
-      call s:save_to_recent(s:col(s:coltype))
+      call s:add_to_recent(s:col(s:coltype))
       call s:set_color(s:coltype, '#'..l:col)
       call s:apply_color()
       call s:redraw()
@@ -164,7 +164,7 @@ fun! s:choose_term_color()
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
   if l:col =~# '\m^[0-9]\{1,3}$' && str2nr(l:col) > 15 && str2nr(l:col) < 256
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
     call s:set_color(s:coltype, colortemplate#colorspace#xterm256_hexvalue(str2nr(l:col)))
     call s:apply_color()
     call s:redraw()
@@ -400,7 +400,7 @@ endf
 const s:recent_capacity = 10 " Number of colors to remember
 let s:recent_colors  = []
 
-fun! s:save_to_recent(color)
+fun! s:add_to_recent(color)
   if index(s:recent_colors, a:color) != -1 " Do not add the same color twice
     return
   endif
@@ -428,7 +428,7 @@ fun! s:pick_recent()
   echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
     let l:new = s:recent_colors[str2nr(l:n)]
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
     call s:set_color(s:coltype, l:new)
     call s:apply_color()
     call s:redraw()
@@ -511,7 +511,7 @@ fun! s:pick_favorite()
   echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
     let l:new = l:colors[str2nr(l:n)]
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
     call s:set_color(s:coltype, l:new)
     call s:apply_color()
     call s:redraw()
@@ -570,7 +570,7 @@ fun! s:rgb_increase_level(value)
     if l:b > 255 | let l:b = 255 | endif
   endif
 if !s:color_edited[s:coltype]
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
     let s:color_edited[s:coltype] = 1
   endif
   call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
@@ -590,7 +590,7 @@ fun! s:rgb_decrease_level(value)
     if l:b < 0 | let l:b = 0 | endif
   endif
   if !s:color_edited[s:coltype]
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
     let s:color_edited[s:coltype] = 1
   endif
   call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
@@ -689,7 +689,7 @@ endf
 
 fun! s:yank()
   let @"=s:col(s:coltype)
-  call s:save_to_recent(s:col(s:coltype))
+  call s:add_to_recent(s:col(s:coltype))
   call s:redraw()
   call s:notification('Color yanked')
   return 1
@@ -697,7 +697,7 @@ endf
 
 fun! s:paste()
   if @" =~# '\m^#\=[A-Fa-f0-9]\{6}$'
-    call s:save_to_recent(s:col(s:coltype))
+    call s:add_to_recent(s:col(s:coltype))
     call s:set_color(s:coltype, @"[0] ==# '#' ? @" : '#'..@")
     call s:apply_color()
     call s:redraw()
@@ -826,7 +826,7 @@ fun! s:clear_color()
   let l:ct = (s:mode ==# 'cterm' && s:coltype ==# 'sp' ? 'ul' : s:coltype)
   execute "hi!" s:higroup s:mode..l:ct.."=NONE"
   call s:notification('Color cleared')
-  call s:save_to_recent(s:col(s:coltype))
+  call s:add_to_recent(s:col(s:coltype))
   call s:set_higroup(s:higroup)
   call s:redraw()
   return 1

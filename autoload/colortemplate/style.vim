@@ -427,6 +427,9 @@ fun! s:remove_recent()
   echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
     call remove(s:recent_colors, str2nr(l:n))
+    if (len(s:recent_colors) % s:recent_capacity == 0)
+      call s:select_prev_item()
+    endif
     call s:redraw()
   endif
   return 1
@@ -559,8 +562,10 @@ fun! s:remove_favorite()
   let l:n = nr2char(getchar())
   echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
-    " TODO: ask for confirmation?
     call remove(s:favorite_colors, l:segnum * s:segment_capacity + str2nr(l:n))
+    if (len(s:favorite_colors) % s:segment_capacity == 0)
+      call s:select_prev_item()
+    endif
     call s:save_favorite_colors()
     call s:redraw()
   endif

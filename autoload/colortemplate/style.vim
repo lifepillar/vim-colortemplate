@@ -182,6 +182,16 @@ fun! s:center(text, width)
         \ a:text,
         \ repeat(' ', (a:width + 1 - len(a:text)) / 2))
 endf
+
+fun! s:msg(msg, type = 'w')
+  if a:type ==# 'e'
+    echohl Error
+  else
+    echohl WarningMsg
+  endif
+  echomsg '[Colortemplate]' a:msg .. '.'
+  echohl None
+endf
 " }}}
 " Notification popup {{{
 fun! s:notification(msg, duration = 2000)
@@ -1037,9 +1047,7 @@ fun! colortemplate#style#open(...)
 
   call s:set_slider_symbols(0)
   if len(s:slider_symbols) != 9
-    echohl WarningMsg
-    echomsg '[Colortemplate] g:colortemplate_slider_symbols must be a List with 9 elements.'
-    echohl None
+    call s:msg('g:colortemplate_slider_symbols must be a List with 9 elements')
     call s:set_slider_symbols(1)
   endif
 

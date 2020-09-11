@@ -22,7 +22,8 @@ let s:popup_bg = ''                      " Popup background (initialized below)
 let s:star = ''                          " Star for colors (set when the popup is open)
 let s:popup_x = 0                        " Horizontal position of the popup (0=center)
 let s:popup_y = 0                        " Vertical position of the popup (0=center)
-let s:popup_id = -1                      " Popup buffer ID
+let s:popup_winid = -1                   " Popup window ID
+let s:popup_bufnr = -1                   " Popup buffer number
 let s:active_line = 1                    " Where the marker is located in the popup
 let s:pane = 'rgb'                       " Current pane ('rgb', 'gray', 'hsb')
 let s:coltype = 'fg'                     " Currently displayed color ('fg', 'bg', 'sp')
@@ -187,8 +188,8 @@ fun! s:notification(msg, duration = 2000)
   if get(g:, 'colortemplate_popup_notifications', 1)
     call popup_notification(s:center(a:msg, s:width), #{
           \ pos: 'topleft',
-          \ line: popup_getoptions(s:popup_id)['line'],
-          \ col: popup_getoptions(s:popup_id)['col'],
+          \ line: popup_getoptions(s:popup_winid)['line'],
+          \ col: popup_getoptions(s:popup_winid)['col'],
           \ highlight: 'Normal',
           \ time: a:duration,
           \ moved: 'any',
@@ -217,41 +218,41 @@ endf
 
 fun! s:add_prop_types()
   " Property for Normal text
-  call prop_type_add('_norm', #{bufnr: winbufnr(s:popup_id), highlight: 'Normal'})
+  call prop_type_add('_norm', #{bufnr: s:popup_bufnr, highlight: 'Normal'})
   " Title of the pane
-  call prop_type_add('_titl', #{bufnr: winbufnr(s:popup_id), highlight: 'Title'})
+  call prop_type_add('_titl', #{bufnr: s:popup_bufnr, highlight: 'Title'})
   " Mark line as an item that can be selected
-  call prop_type_add('_item', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_item', #{bufnr: s:popup_bufnr})
   " Mark line as a label
-  call prop_type_add('_labe', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_labe', #{bufnr: s:popup_bufnr})
   " Mark line as a level bar (slider)
-  call prop_type_add('_leve', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_leve', #{bufnr: s:popup_bufnr})
   " Mark line as a "recent colors" line
-  call prop_type_add('_mru_', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_mru_', #{bufnr: s:popup_bufnr})
   " Mark line as a "favorite colors" line
-  call prop_type_add('_fav_', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_fav_', #{bufnr: s:popup_bufnr})
   " To highlight text with the currently selected highglight group
-  call prop_type_add('_curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
+  call prop_type_add('_curr', #{bufnr: s:popup_bufnr, highlight: s:higroup})
   " Highlight for warning symbol
-  call prop_type_add('_warn', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupWarn'})
+  call prop_type_add('_warn', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupWarn'})
   " Highglight for the current GUI color
-  call prop_type_add('_gcol', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupGCol'})
+  call prop_type_add('_gcol', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupGCol'})
   " Highlight for the current cterm color
-  call prop_type_add('_tcol', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupTCol'})
+  call prop_type_add('_tcol', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupTCol'})
   " Highlight for attributes
-  call prop_type_add('_bold', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupBold'})
-  call prop_type_add('_ital', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupItal'})
-  call prop_type_add('_ulin', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupULin'})
-  call prop_type_add('_curl', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupCurl'})
-  call prop_type_add('_sout', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupSOut'})
-  call prop_type_add('_invr', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupInvr'})
-  call prop_type_add('_strk', #{bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupStrk'})
-  call prop_type_add('_off_', #{bufnr: winbufnr(s:popup_id), highlight: 'Comment'})
+  call prop_type_add('_bold', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupBold'})
+  call prop_type_add('_ital', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupItal'})
+  call prop_type_add('_ulin', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupULin'})
+  call prop_type_add('_curl', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupCurl'})
+  call prop_type_add('_sout', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupSOut'})
+  call prop_type_add('_invr', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupInvr'})
+  call prop_type_add('_strk', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupStrk'})
+  call prop_type_add('_off_', #{bufnr: s:popup_bufnr, highlight: 'Comment'})
   " RGB pane
-  call prop_type_add('_rgb_', #{bufnr: winbufnr(s:popup_id)})
-  call prop_type_add('_red_', #{bufnr: winbufnr(s:popup_id)})
-  call prop_type_add('_gree', #{bufnr: winbufnr(s:popup_id)})
-  call prop_type_add('_blue', #{bufnr: winbufnr(s:popup_id)})
+  call prop_type_add('_rgb_', #{bufnr: s:popup_bufnr})
+  call prop_type_add('_red_', #{bufnr: s:popup_bufnr})
+  call prop_type_add('_gree', #{bufnr: s:popup_bufnr})
+  call prop_type_add('_blue', #{bufnr: s:popup_bufnr})
 endf
 
 fun! s:init_pane()
@@ -306,13 +307,13 @@ endf
 
 " Returns the list of the names of the text properties for the given line
 fun! s:get_properties(linenr)
-  return map(prop_list(a:linenr, #{bufnr: winbufnr(s:popup_id)}), { i,v -> v.type })
+  return map(prop_list(a:linenr, #{bufnr: s:popup_bufnr}), { i,v -> v.type })
 endf
 
 " Returns the id of the property of the specified type in the given line.
 " NOTE: the property must exist!
 fun! s:get_property_id(linenr, type)
-  return prop_find(#{bufnr: winbufnr(s:popup_id), lnum: a:linenr, col: 1, type: a:type})['id']
+  return prop_find(#{bufnr: s:popup_bufnr, lnum: a:linenr, col: 1, type: a:type})['id']
 endf
 
 fun! s:has_property(list, prop)
@@ -320,23 +321,23 @@ fun! s:has_property(list, prop)
 endf
 
 fun! s:select_first_item(linenr)
-  let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: 1, col: 1}, 'f')
+  let l:next = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: 1, col: 1}, 'f')
   return empty(l:next) ? a:linenr : l:next.lnum
 endf
 
 " Returns the next line after linenr, which has an 'item' property.
 " It wraps at the last item.
 fun! s:find_next_item(linenr)
-  let l:next = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: a:linenr, col: 1, skipstart: 1}, 'f')
+  let l:next = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: a:linenr, col: 1, skipstart: 1}, 'f')
   return empty(l:next) ? s:select_first_item(a:linenr) : l:next.lnum
 endf
 
 " Returns the previous line before linenr, which has an 'item' property.
 " It wraps at the first item.
 fun! s:find_prev_item(linenr)
-  let l:prev = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: a:linenr - 1, col: 1,}, 'b')
+  let l:prev = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: a:linenr - 1, col: 1,}, 'b')
   if empty(l:prev)
-    let l:prev = prop_find(#{bufnr: winbufnr(s:popup_id), type: '_item', lnum: line('$', s:popup_id), col: 1}, 'b')
+    let l:prev = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: line('$', s:popup_winid), col: 1}, 'b')
   endif
   return empty(l:prev) ? a:linenr : l:prev.lnum
 endf
@@ -371,7 +372,7 @@ fun! s:info_section() " -> List of Dictionaries
     execute printf('hi! ColortemplatePopupGCol guibg=%s ctermbg=%d', s:col(s:coltype), l:termcol[s:coltype]['index'])
   endif
   execute printf('hi! ColortemplatePopupTCol guibg=%s ctermbg=%d', l:termhex[s:coltype], l:termcol[s:coltype]['index'])
-  call prop_type_change('_curr', #{bufnr: winbufnr(s:popup_id), highlight: s:higroup})
+  call prop_type_change('_curr', #{bufnr: s:popup_bufnr, highlight: s:higroup})
   let l:delta = l:termcol[s:coltype]['delta']
   let l:warn = !s:is_good(s:coltype)
   let l:excl = (l:warn ? '!' : ' ')
@@ -442,7 +443,7 @@ endf
 fun! s:add_mru_prop_types()
   for l:i in range(s:recent_capacity)
     execute 'hi clear ColortemplatePopupMRU' .. i
-    call prop_type_add('_mru' .. l:i, #{ bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupMRU' .. l:i})
+    call prop_type_add('_mru' .. l:i, #{ bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupMRU' .. l:i})
   endfor
 endf
 
@@ -483,8 +484,8 @@ fun! s:save_to_favorites()
   " Define text property for the new element
   let l:i = len(s:favorite_colors)
   execute 'hi clear ColortemplatePopupFav' .. l:i
-  call prop_type_delete('_fav' .. l:i, #{bufnr: winbufnr(s:popup_id)})
-  call prop_type_add('_fav' .. l:i, #{ bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupFav' .. l:i})
+  call prop_type_delete('_fav' .. l:i, #{bufnr: s:popup_bufnr})
+  call prop_type_add('_fav' .. l:i, #{ bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupFav' .. l:i})
 
   call add(s:favorite_colors, l:col)
   " TODO: persist to disk
@@ -525,7 +526,7 @@ endf
 fun! s:add_fav_prop_types()
   for l:i in range(len(s:favorite_colors))
     execute 'hi clear ColortemplatePopupFav' .. i
-    call prop_type_add('_fav' .. l:i, #{ bufnr: winbufnr(s:popup_id), highlight: 'ColortemplatePopupFav' .. l:i})
+    call prop_type_add('_fav' .. l:i, #{ bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupFav' .. l:i})
   endfo
 endf
 
@@ -610,7 +611,7 @@ endf
 fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:col(s:coltype))
   call s:init_pane()
-  call popup_settext(s:popup_id,
+  call popup_settext(s:popup_winid,
         \ extend(extend(extend(extend(
         \   s:title_section('R'),
         \   s:rgb_slider(l:r, l:g, l:b)),
@@ -622,29 +623,29 @@ endf
 " }}}
 " HSB Pane {{{
 fun! s:redraw_hsb()
-  call popup_settext(s:popup_id,
+  call popup_settext(s:popup_winid,
         \ extend(s:title_section('H'), [
         \ s:blank(),
         \ s:prop_label('Not implemented yet.'),
         \ s:prop_label('Please switch back to R.'),
         \ ]))
-  call prop_add(1, 40, #{bufnr: winbufnr(s:popup_id), length: 1, type: '_labe'})
+  call prop_add(1, 40, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
 endf
 " }}}
 " Grayscale Pane {{{
 fun! s:redraw_gray()
-  call popup_settext(s:popup_id,
+  call popup_settext(s:popup_winid,
         \ extend(s:title_section('G'), [
         \ s:blank(),
         \ s:prop_label('Not implemented yet.'),
         \ s:prop_label('Please switch back to R.'),
         \ ]))
-  call prop_add(1, 41, #{bufnr: winbufnr(s:popup_id), length: 1, type: '_labe'})
+  call prop_add(1, 41, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
 endf
 " }}}
 " Help pane {{{
 fun! s:redraw_help()
-  call popup_settext(s:popup_id,
+  call popup_settext(s:popup_winid,
         \ extend(s:title_section('?'), [
         \ s:blank(),
         \ s:prop_label('Popup'),
@@ -671,17 +672,17 @@ fun! s:redraw_help()
         \ s:noprop('[Enter] Pick color    [D] Delete color'),
         \ s:noprop('[A] Add to favorite   [D] Delete color'),
         \ ]))
-  call prop_add(1, 42, #{bufnr: winbufnr(s:popup_id), length: 1, type: '_labe'})
+  call prop_add(1, 42, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
 endf
 " }}}
 " Popup actions {{{
 fun! s:commit()
-  call popup_close(s:popup_id)
+  call popup_close(s:popup_winid)
   return 1
 endf
 
 fun! s:cancel()
-  call popup_close(s:popup_id)
+  call popup_close(s:popup_winid)
   if exists('g:colors_name') && !empty('g:colors_name')
     execute 'colorscheme' g:colors_name
   endif
@@ -708,7 +709,7 @@ fun! s:paste()
 endf
 
 fun! s:mouse_clicked()
-  echo string(s:popup_id) . ' ' . string(getmousepos())
+  echo string(s:popup_winid) . ' ' . string(getmousepos())
   return 1
 endf
 
@@ -1021,14 +1022,14 @@ fun! colortemplate#style#closed(id, result)
     augroup! colortemplate_popup
   endif
   call s:save_popup_position(a:id)
-  let s:popup_id = -1
+  let s:popup_winid = -1
 endf
 
 " Optional argument is the name of a highlight group
 " If no name is used, then the popup updates as the cursor moves.
 fun! colortemplate#style#open(...)
-  if s:popup_id > -1 " Already open
-    return s:popup_id
+  if s:popup_winid > -1 " Already open
+    return s:popup_winid
   endif
 
   let s:mark    = get(g:, 'colortemplate_popup_marker', '> ')
@@ -1059,7 +1060,7 @@ fun! colortemplate#style#open(...)
     autocmd ColorScheme * call s:set_highlight()
   augroup END
 
-  let s:popup_id = popup_create('', #{
+  let s:popup_winid = popup_create('', #{
         \ border: [1,1,1,1],
         \ borderchars: ['-', '|', '-', '|', '┌', '┐', '┘', '└'],
         \ callback: 'colortemplate#style#closed',
@@ -1083,15 +1084,16 @@ fun! colortemplate#style#open(...)
         \ wrap: 0,
         \ zindex: 200,
         \ })
+  let s:popup_bufnr = winbufnr(s:popup_winid)
   let s:active_line = 3
   call s:add_prop_types()
   call s:add_mru_prop_types()
   call s:add_fav_prop_types()
   call s:redraw()
-  return s:popup_id
+  return s:popup_winid
 endf
 
 fun! colortemplate#style#popup_id()
-  return s:popup_id
+  return s:popup_winid
 endf
 " }}}

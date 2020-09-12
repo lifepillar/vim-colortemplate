@@ -371,6 +371,11 @@ fun! s:select_first_item(linenr)
   return empty(l:next) ? a:linenr : l:next.lnum
 endf
 
+fun! s:select_last_item(linenr)
+  let l:prev = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: line('$', s:popup_winid), col: 1}, 'b')
+  return empty(l:prev) ? a:linenr : l:prev.lnum
+endf
+
 " Returns the next line after linenr, which has an 'item' property.
 " It wraps at the last item.
 fun! s:find_next_item(linenr)
@@ -382,12 +387,8 @@ endf
 " It wraps at the first item.
 fun! s:find_prev_item(linenr)
   let l:prev = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: a:linenr - 1, col: 1,}, 'b')
-  if empty(l:prev)
-    let l:prev = prop_find(#{bufnr: s:popup_bufnr, type: '_item', lnum: line('$', s:popup_winid), col: 1}, 'b')
-  endif
-  return empty(l:prev) ? a:linenr : l:prev.lnum
+  return empty(l:prev) ? s:select_last_item(a:linenr) : l:prev.lnum
 endf
-
 " }}}
 " Title of a pane {{{
 fun! s:title_section(pane) " -> List of Dictionaries

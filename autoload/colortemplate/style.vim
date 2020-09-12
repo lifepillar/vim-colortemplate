@@ -761,8 +761,10 @@ endf
 fun! s:gray_slider(shade) " -> List of Dictionaries
   return [
         \ s:blank(),
-        \ s:prop_indented_label('Grayscale'),
         \ s:prop_level_bar(s:slider(' ', a:shade), '_gray', 1),
+        \ s:prop_label(printf('%s%02d %s',
+        \                     repeat(' ', len(s:mark) + 3), s:step,
+        \                     s:center('Grayscale', 32))),
         \ s:prop(repeat(' ', s:width), [
         \ #{ col:  8, length: 2, type: '_g000'},
         \ #{ col: 16, length: 2, type: '_g025'},
@@ -770,7 +772,6 @@ fun! s:gray_slider(shade) " -> List of Dictionaries
         \ #{ col: 32, length: 2, type: '_g075'},
         \ #{ col: 40, length: 2, type: '_g100'},
         \ ]),
-        \ s:prop_label(printf('%s%02d', repeat(' ', len(s:mark) + 3), s:step)),
         \]
 endf
 

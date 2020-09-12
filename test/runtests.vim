@@ -102,6 +102,19 @@ fun! Test_CT_xterm2hex()
   call assert_equal('#ffffff', colortemplate#colorspace#xterm256_hexvalue(231))
 endf
 
+fun! Test_CT_hex2gray()
+  call_assert_equal(0, colortemplate#colorspace#hex2gray('#000000'))
+  call_assert_equal(64, colortemplate#colorspace#hex2gray('#404040'))
+  call_assert_equal(127, colortemplate#colorspace#hex2gray('#7f7f7F'))
+  call_assert_equal(191, colortemplate#colorspace#hex2gray('#bfbfbf'))
+  call_assert_equal(255, colortemplate#colorspace#hex2gray('#ffffff'))
+  call_assert_equal(84, colortemplate#colorspace#hex2gray('#405952'))
+  call_assert_equal(153, colortemplate#colorspace#hex2gray('#9c9b7a'))
+  call_assert_equal(217, colortemplate#colorspace#hex2gray('#ffd393'))
+  call_assert_equal(176, colortemplate#colorspace#hex2gray('#ff974f'))
+  call_assert_equal(133, colortemplate#colorspace#hex2gray('#f54f29'))
+endf
+
 fun! Test_CT_fine()
   call s:assert_build('test1')
 endf

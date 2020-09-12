@@ -760,11 +760,10 @@ fun! s:redraw_help()
         \ s:noprop('[→] Increment value   [E] New value'),
         \ s:noprop('[←] Decrement value   [N] New hi group'),
         \ s:noprop('[Y] Yank color        [Z] Clear color'),
-        \ s:noprop('[P] Paste color                      '),
+        \ s:noprop('[P] Paste color       [A] Add to favorites'),
         \ s:blank(),
         \ s:prop_label('Recent & Favorites'),
         \ s:noprop('[Enter] Pick color    [D] Delete color'),
-        \ s:noprop('[A] Add to favorite                   '),
         \ ]))
   call prop_add(1, 42, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
 endf

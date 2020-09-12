@@ -234,7 +234,7 @@ fun! s:add_prop_types()
   " Mark line as an item that can be selected
   call prop_type_add('_item', #{bufnr: s:popup_bufnr})
   " Mark line as a label
-  call prop_type_add('_labe', #{bufnr: s:popup_bufnr})
+  call prop_type_add('_labe', #{bufnr: s:popup_bufnr, highlight: 'Label'})
   " Mark line as a level bar (slider)
   call prop_type_add('_leve', #{bufnr: s:popup_bufnr})
   " Mark line as a "recent colors" line

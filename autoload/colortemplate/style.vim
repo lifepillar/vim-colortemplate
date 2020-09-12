@@ -94,7 +94,7 @@ fun! s:slider(name, value, width = 32)
   let l:whole = a:value * a:width / 256
   let l:frac = a:value * a:width / 256.0 - l:whole
   let l:bar = repeat(s:slider_symbols[8], l:whole)
-  let l:part_width = float2nr(floor(l:frac * 8))
+  let l:part_width = 1 + float2nr(floor(l:frac * 8))
   let l:part_char = s:slider_symbols[l:part_width]
   let l:bar = printf("%s %3d %s", a:name, a:value, l:bar.l:part_char)
   return l:bar

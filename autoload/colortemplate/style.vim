@@ -90,9 +90,9 @@ endf
 " width: the maximum width of the bar
 "
 " NOTE: to be rendered correctly, ambiwidth must be set to 'single'.
-fun! s:slider(name, value, width = 32)
-  let l:whole = a:value * a:width / 256
-  let l:frac = a:value * a:width / 256.0 - l:whole
+fun! s:slider(name, value, max = 256, width = 32)
+  let l:whole = a:value * a:width / a:max
+  let l:frac = a:value * a:width / (1.0 * a:max) - l:whole
   let l:bar = repeat(s:slider_symbols[8], l:whole)
   let l:part_width = 1 + float2nr(floor(l:frac * 8))
   let l:part_char = s:slider_symbols[l:part_width]

@@ -485,9 +485,6 @@ fun! s:add_mru_prop_types()
 endf
 
 fun! s:recent_section() " -> List of Dictionaries
-  if len(s:recent_colors) == 0
-    return []
-  endif
   let l:props = [#{ col: 1, length: 0, type: '_mru_' }]
   for l:i in range(len(s:recent_colors))
     let l:approx = colortemplate#colorspace#approx(s:recent_colors[l:i])['index']
@@ -497,9 +494,9 @@ fun! s:recent_section() " -> List of Dictionaries
 
   return [
         \ s:blank(),
-        \ s:prop_label('Recent'),
-        \ s:prop_item(repeat(' ', s:width), l:props),
+        \ s:prop_indented_label('Recent'),
         \ s:prop_indented_label(' ' .. join(range(len(s:recent_colors)), '   ')),
+        \ (empty(s:recent_colors) ? s:blank() : s:prop_item(repeat(' ', s:width), l:props)),
         \]
 endf
 " }}}
@@ -628,7 +625,7 @@ fun! s:favorites_section() " -> List of Dictionaries
     return []
   endif
 
-  let l:fav_section = [s:blank(), s:prop_label('Favorites')]
+  let l:fav_section = [s:prop_indented_label('Favorites')]
   let l:i = 0
 
   while l:i < len(s:favorite_colors)

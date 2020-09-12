@@ -109,6 +109,34 @@ fun! s:stars(c1, c2)
   return repeat(s:star, (l:cr >= 3.0) + (l:cr >= 4.5) + (l:cr >= 7.0) + (l:cd >= 500) + (l:bd >= 125))
 endf
 
+fun! s:set_bold(id)
+  let s:bold = synIDattr(a:id, 'bold', s:attrmode) ==# '1' ? 1 : 0
+endf
+
+fun! s:set_italic(id)
+  let s:italic = synIDattr(a:id, 'italic', s:attrmode) ==# '1' ? 1 : 0
+endf
+
+fun! s:set_inverse(id)
+  let s:inverse = synIDattr(a:id, 'reverse', s:attrmode) ==# '1' ? 1 : 0
+endf
+
+fun! s:set_standout(id)
+  let s:standout = synIDattr(a:id, 'standout', s:attrmode) ==# '1' ? 1 : 0
+endf
+
+fun! s:set_underline(id)
+  let s:underline = synIDattr(a:id, 'underline', s:attrmode) ==# '1' ? 1 : 0
+endf
+
+fun! s:set_undercurl(id)
+  let s:undercurl = synIDattr(a:id, 'undercurl', s:attrmode) ==# '1' ? 1 : 0
+endf
+
+fun! s:set_strike(id)
+  let s:strike = synIDattr(a:id, 'strike', s:attrmode) ==# '1' ? 1 : 0
+endf
+
 fun! s:set_higroup(name)
   if s:color_edited[s:coltype]
     call s:add_to_recent(s:col(s:coltype))
@@ -119,13 +147,13 @@ fun! s:set_higroup(name)
   let s:color.bg     = colortemplate#syn#higroup2hex(a:name, 'bg')
   let s:color.sp     = colortemplate#syn#higroup2hex(a:name, 'sp')
   let s:color_edited = #{fg: 0, bg: 0, sp: 0}
-  let s:bold         = synIDattr(l:id, 'bold',      s:attrmode) ==# '1' ? 1 : 0
-  let s:italic       = synIDattr(l:id, 'italic',    s:attrmode) ==# '1' ? 1 : 0
-  let s:inverse      = synIDattr(l:id, 'reverse',   s:attrmode) ==# '1' ? 1 : 0
-  let s:standout     = synIDattr(l:id, 'standout',  s:attrmode) ==# '1' ? 1 : 0
-  let s:underline    = synIDattr(l:id, 'underline', s:attrmode) ==# '1' ? 1 : 0
-  let s:undercurl    = synIDattr(l:id, 'undercurl', s:attrmode) ==# '1' ? 1 : 0
-  let s:strike       = synIDattr(l:id, 'strike',    s:attrmode) ==# '1' ? 1 : 0
+  call s:set_bold(l:id)
+  call s:set_italic(l:id)
+  call s:set_underline(l:id)
+  call s:set_standout(l:id)
+  call s:set_inverse(l:id)
+  call s:set_undercurl(l:id)
+  call s:set_strike(l:id)
   return 1
 endf
 
@@ -844,37 +872,55 @@ fun! s:toggle_attribute(attrname)
     return 1
   endif
   call colortemplate#syn#toggle_attribute(hlID(s:higroup), a:attrname)
-  call s:set_higroup(s:higroup)
+endf
+
+fun! s:toggle_bold()
+  call s:toggle_attribute('bold')
+  call s:set_bold(hlID(s:higroup))
   call s:redraw()
   return 1
 endf
 
-fun! s:toggle_bold()
-  return s:toggle_attribute('bold')
-endf
-
 fun! s:toggle_italic()
-  return s:toggle_attribute('italic')
+  call s:toggle_attribute('italic')
+  call s:set_italic(hlID(s:higroup))
+  call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_underline()
-  return s:toggle_attribute('underline')
+  call s:toggle_attribute('underline')
+  call s:set_underline(hlID(s:higroup))
+  call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_undercurl()
-  return s:toggle_attribute('undercurl')
+  call s:toggle_attribute('undercurl')
+  call s:set_undercurl(hlID(s:higroup))
+  call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_standout()
-  return s:toggle_attribute('standout')
+  call s:toggle_attribute('standout')
+  call s:set_standout(hlID(s:higroup))
+  call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_inverse()
-  return s:toggle_attribute('inverse')
+  call s:toggle_attribute('inverse')
+  call s:set_inverse(hlID(s:higroup))
+  call s:redraw()
+  return 1
 endf
 
 fun! s:toggle_strike()
-  return s:toggle_attribute('strikethrough')
+  call s:toggle_attribute('strikethrough')
+  call s:set_strike(hlID(s:higroup))
+  call s:redraw()
+  return 1
 endf
 
 fun! s:edit_color()

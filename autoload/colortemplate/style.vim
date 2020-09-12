@@ -19,7 +19,7 @@ let s:key = {}                           " Dictionary of key controls (initializ
 let s:mark = ''                          " Marker for the current line (set when the popup is open)
 let s:width = 0                          " Popup width (set when the popup is open)
 let s:popup_bg = ''                      " Popup background (initialized below)
-let s:star = ''                          " Star for colors (set when the popup is open)
+let s:star = ''                          " Symbol for stars (set when the popup is open)
 let s:popup_x = 0                        " Horizontal position of the popup (0=center)
 let s:popup_y = 0                        " Vertical position of the popup (0=center)
 let s:popup_winid = -1                   " Popup window ID

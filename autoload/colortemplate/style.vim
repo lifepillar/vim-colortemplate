@@ -252,8 +252,14 @@ fun! s:set_highlight()
   execute printf("hi! ColortemplatePopupInvr %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
   execute printf("hi! ColortemplatePopupStrk %sfg=%s cterm=inverse gui=inverse", s:mode, l:labcol)
   execute printf("hi! ColortemplatePopupWarn %sfg=%s cterm=bold gui=bold", s:mode, l:warncol)
+  execute printf("hi! ColortemplatePopupG000 guibg=#000000 ctermbg=16")
+  execute printf("hi! ColortemplatePopupG025 guibg=#404040 ctermbg=238")
+  execute printf("hi! ColortemplatePopupG050 guibg=#7f7f7f ctermbg=244")
+  execute printf("hi! ColortemplatePopupG075 guibg=#bfbfbf ctermbg=250")
+  execute printf("hi! ColortemplatePopupG100 guibg=#ffffff ctermbg=231")
 endf
 
+" TODO: add text properties and types lazily
 fun! s:add_prop_types()
   " Property for Normal text
   call prop_type_add('_norm', #{bufnr: s:popup_bufnr, highlight: 'Normal'})
@@ -286,8 +292,14 @@ fun! s:add_prop_types()
   call prop_type_add('_invr', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupInvr'})
   call prop_type_add('_strk', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupStrk'})
   call prop_type_add('_off_', #{bufnr: s:popup_bufnr, highlight: 'Comment'})
-  " RGB pane
+  " Panes
   call prop_type_add('_rgb_', #{bufnr: s:popup_bufnr})
+  call prop_type_add('_gray', #{bufnr: s:popup_bufnr})
+  call prop_type_add('_g000', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupG000'})
+  call prop_type_add('_g025', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupG025'})
+  call prop_type_add('_g050', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupG050'})
+  call prop_type_add('_g075', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupG075'})
+  call prop_type_add('_g100', #{bufnr: s:popup_bufnr, highlight: 'ColortemplatePopupG100'})
 endf
 
 fun! s:init_pane()
@@ -724,14 +736,55 @@ fun! s:redraw_hsb()
 endf
 " }}}
 " Grayscale Pane {{{
-fun! s:redraw_gray()
-  call popup_settext(s:popup_winid,
-        \ extend(s:title_section('G'), [
+fun! s:gray_increase(value)
+  let l:g = colortemplate#colorspace#hex2gray(s:col(s:coltype))
+  let l:g += a:value
+  if l:g > 255 | let l:g = 255 | endif
+  if !s:color_edited[s:coltype]
+    call s:add_to_recent(s:col(s:coltype))
+    let s:color_edited[s:coltype] = 1
+  endif
+  call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
+endf
+
+fun! s:gray_decrease(value)
+  let l:g = colortemplate#colorspace#hex2gray(s:col(s:coltype))
+  let l:g -= a:value
+  if l:g < 0 | let l:g = 0 | endif
+  if !s:color_edited[s:coltype]
+    call s:add_to_recent(s:col(s:coltype))
+    let s:color_edited[s:coltype] = 1
+  endif
+  call s:set_color(s:coltype, colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
+endf
+
+fun! s:gray_slider(shade) " -> List of Dictionaries
+  return [
         \ s:blank(),
-        \ s:prop_label('Not implemented yet.'),
-        \ s:prop_label('Please switch back to R.'),
-        \ ]))
-  call prop_add(1, 41, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
+        \ s:prop_indented_label('Grayscale'),
+        \ s:prop_level_bar(s:slider(' ', a:shade), '_gray', 1),
+        \ s:prop(repeat(' ', s:width), [
+        \ #{ col:  8, length: 2, type: '_g000'},
+        \ #{ col: 16, length: 2, type: '_g025'},
+        \ #{ col: 24, length: 2, type: '_g050'},
+        \ #{ col: 32, length: 2, type: '_g075'},
+        \ #{ col: 40, length: 2, type: '_g100'},
+        \ ]),
+        \ s:prop_label(printf('%s%02d', repeat(' ', len(s:mark) + 3), s:step)),
+        \]
+endf
+
+fun! s:redraw_gray()
+  let l:g = colortemplate#colorspace#hex2gray(s:col(s:coltype))
+  call s:init_pane()
+  call popup_settext(s:popup_winid,
+        \ extend(extend(extend(extend(
+        \   s:title_section('G'),
+        \   s:gray_slider(l:g)),
+        \   s:info_section()),
+        \   s:recent_section()),
+        \   s:favorites_section())
+        \)
 endf
 " }}}
 " Help pane {{{
@@ -970,6 +1023,8 @@ fun! s:switch_to_hsb()
 endf
 
 fun! s:switch_to_grayscale()
+  let s:color_edited[s:coltype] = 0
+
   return s:set_pane('gray')
 endf
 
@@ -993,6 +1048,10 @@ fun! s:move_right()
     call s:rgb_increase_level(s:step)
     call s:apply_color()
     call s:redraw()
+  elseif s:has_property(l:props, '_gray')
+    call s:gray_increase(s:step)
+    call s:apply_color()
+    call s:redraw()
   endif
   return 1
 endf
@@ -1001,6 +1060,10 @@ fun! s:move_left()
   let l:props = s:get_properties(s:active_line)
   if s:has_property(l:props, '_rgb_')
     call s:rgb_decrease_level(s:step)
+    call s:apply_color()
+    call s:redraw()
+  elseif s:has_property(l:props, '_gray')
+    call s:gray_decrease(s:step)
     call s:apply_color()
     call s:redraw()
   endif

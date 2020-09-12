@@ -206,9 +206,9 @@ endf
 
 fun! s:center(text, width)
   return printf('%s%s%s',
-        \ repeat(' ', (a:width - len(a:text)) / 2),
+        \ repeat(' ', (a:width - strchars(a:text)) / 2),
         \ a:text,
-        \ repeat(' ', (a:width + 1 - len(a:text)) / 2))
+        \ repeat(' ', (a:width + 1 - strchars(a:text)) / 2))
 endf
 
 fun! s:msg(msg, type = 'w')
@@ -321,7 +321,7 @@ endf
 " selected, a marker is prepended to it.
 fun! s:prop_item(t, props = [])
   let s:__line__ += 1
-  return #{ text: (s:__line__ == s:active_line ? s:mark : repeat(' ', len(s:mark)))..a:t,
+  return #{ text: (s:__line__ == s:active_line ? s:mark : repeat(' ', strchars(s:mark)))..a:t,
         \   props: extend([#{ col: 1, length: 0, type: '_item' }], a:props),
         \}
 endf
@@ -344,7 +344,7 @@ fun! s:prop_label(t)
 endf
 
 fun! s:prop_indented_label(t)
-  return s:prop(repeat(' ', len(s:mark))..a:t, [#{ col: 1, length: s:width, type: '_labe' }])
+  return s:prop(repeat(' ', strchars(s:mark))..a:t, [#{ col: 1, length: s:width, type: '_labe' }])
 endf
 
 fun! s:prop_current(t)
@@ -396,7 +396,7 @@ fun! s:title_section(pane) " -> List of Dictionaries
   let l:title = (l:n == 4 ? 'Keyboard Controls' : printf('%s [%s]', s:higroup[0:s:width-12], l:ct))
   return [
         \ s:prop(
-        \   printf('%s%s%s', l:title, repeat(' ', s:width - len(l:title) - 4), 'RHG?'),
+        \   printf('%s%s%s', l:title, repeat(' ', s:width - strchars(l:title) - 4), 'RHG?'),
         \   [#{ col: 1, length: s:width, type: '_titl' }, #{ col: 38 + l:n, length: 1, type: '_labe' }],
         \ ),
         \]
@@ -501,7 +501,7 @@ fun! s:recent_section() " -> List of Dictionaries
   for l:i in range(len(s:recent_colors))
     let l:approx = colortemplate#colorspace#approx(s:recent_colors[l:i])['index']
     execute printf('hi ColortemplatePopupMRU%d guibg=%s ctermbg=%s', l:i, s:recent_colors[l:i], l:approx)
-    call add(l:props, #{ col: 1 + len(s:mark) + 4 * l:i, length: 3, type: '_mru'.. l:i })
+    call add(l:props, #{ col: 1 + strchars(s:mark) + 4 * l:i, length: 3, type: '_mru'.. l:i })
   endfor
 
   return [
@@ -646,7 +646,7 @@ fun! s:favorites_section() " -> List of Dictionaries
 
     for l:j in range(len(l:colors))
       call s:prop_type_add_fav(l:i + l:j, l:colors[l:j])
-      call add(l:props, #{ col: 1 + len(s:mark) + 4 * l:j, length: 3, type: '_fav'.. (l:i + l:j) })
+      call add(l:props, #{ col: (strchars(s:mark) + 1) + 4 * l:j, length: 3, type: '_fav'.. (l:i + l:j) })
     endfor
 
     call extend(l:fav_section, [
@@ -707,7 +707,7 @@ fun! s:rgb_slider(r, g, b) " -> List of Dictionaries
         \ s:prop_level_bar(s:slider('R', a:r), '_rgb_', 1),
         \ s:prop_level_bar(s:slider('G', a:g), '_rgb_', 2),
         \ s:prop_level_bar(s:slider('B', a:b), '_rgb_', 3),
-        \ s:prop_label(printf('%s%02d', repeat(' ', len(s:mark) + 3), s:step)),
+        \ s:prop_label(printf('%s%02d', repeat(' ', strchars(s:mark) + 3), s:step)),
         \]
 endf
 

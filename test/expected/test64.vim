@@ -19,7 +19,7 @@ if (has('termguicolors') && &termguicolors) || has('gui_running')
   elseif ok
   else
   endif
-  hi Normal guifg=#000000 guibg=#000000 guisp=NONE gui=NONE cterm=NONE
+  hi Normal guifg=#000000 guibg=#000000 gui=NONE cterm=NONE
   if 4
   elseif good
   else

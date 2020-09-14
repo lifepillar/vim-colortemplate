@@ -15,8 +15,8 @@ let g:colors_name = 'test5'
 let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2
 
 if (has('termguicolors') && &termguicolors) || has('gui_running')
-  hi ColorColumn guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE cterm=NONE
-  hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE cterm=NONE
+  hi ColorColumn guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
+  hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
   unlet s:t_Co
   finish
 endif

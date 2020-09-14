@@ -15,7 +15,7 @@ let g:colors_name = 'test50b'
 let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2
 
 if (has('termguicolors') && &termguicolors) || has('gui_running')
-  hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE cterm=NONE
+  hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
   let g:terminal_ansi_colors = ['#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000']
   unlet s:t_Co
   finish

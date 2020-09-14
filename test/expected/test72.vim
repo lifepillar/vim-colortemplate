@@ -17,12 +17,12 @@ if (has('termguicolors') && &termguicolors) || has('gui_running')
         \ '#000000', '#ffffff', '#000000', '#ffffff', '#000000', '#ffffff',
         \ '#000000', '#ffffff', '#000000', '#ffffff', '#000000', '#ffffff']
   if &background ==# 'dark'
-    hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE cterm=NONE
+    hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
     unlet s:t_Co
     finish
   endif
   " Light background
-  hi Normal guifg=#000000 guibg=#ffffff guisp=NONE gui=NONE cterm=NONE
+  hi Normal guifg=#000000 guibg=#ffffff gui=NONE cterm=NONE
   unlet s:t_Co
   finish
 endif

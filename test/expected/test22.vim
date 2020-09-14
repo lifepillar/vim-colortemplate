@@ -16,7 +16,7 @@ let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2
 let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')
 
 if (has('termguicolors') && &termguicolors) || has('gui_running')
-  hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE cterm=NONE
+  hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
   hi ColorColumn guifg=fg guibg=NONE guisp=#ffffff gui=bold,italic,nocombine,standout,undercurl,underline cterm=bold,italic,nocombine,standout,undercurl,underline
   if !s:italics
     hi ColorColumn gui=bold,nocombine,standout,undercurl,underline cterm=bold,nocombine,standout,undercurl,underline

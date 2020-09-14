@@ -316,7 +316,7 @@ For example, consider the following snippet:
 This will be translated into something similar to this:
 >
 	if (has('termguicolors') && &termguicolors) || has('gui_running')
-	  hi Normal guifg=#ebebeb guibg=#343436 guisp=NONE gui=NONE cterm=NONE
+	  hi Normal guifg=#ebebeb guibg=#343436 gui=NONE cterm=NONE
 	  finish
 	endif
 
@@ -423,7 +423,7 @@ highlight group specifications:
 >
 	Normal    white   black
 	DiffAdd   orange  blue   reverse
-	SpellBad  white   black  guisp=red
+	SpellBad  white   black  guisp=red underline
 <
 The foreground and background colors must always be present: if you want to
 skip a color, you may use the special keyword `omit` (see below). You may use
@@ -444,7 +444,7 @@ of `guisp=`, you may also use `s=`.
 The special keyword `omit` may be used when you want to inherit a color or an
 attribute from Vim's default color scheme. For instance, this directive:
 >
-	CursorLine  white  omit   t=underline g=omit s=omit
+	CursorLine  white  omit   t=underline g=omit
 <
 may generate something like this for the GUI:
 >
@@ -455,7 +455,9 @@ and for the terminal:
 	hi CursorLine ctermfg=255 cterm=underline
 <
 In both definitions, the background color is missing; additionally, for the
-GUI the special color and attributes are not specified either.
+GUI the special color and attributes are not specified either. Note that
+`omit` is the default for the special color, if the `guisp` attribute is not
+specified.
 
 Colortemplate also supports |highlight-start| and |highlight-stop|: the syntax
 is the same as in Vim color schemes.

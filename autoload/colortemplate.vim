@@ -481,7 +481,7 @@ fun! s:new_hi_group(name)
         \ 'name': a:name,
         \ 'fg': '',
         \ 'bg': '',
-        \ 'sp': 'none',
+        \ 'sp': 'omit',
         \ 'term': [],
         \ 'gui': [],
         \ 'start': '',

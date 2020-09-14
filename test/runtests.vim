@@ -110,9 +110,9 @@ fun! Test_CT_hex2gray()
   call assert_equal(255, colortemplate#colorspace#hex2gray('#ffffff'))
   call assert_equal(84, colortemplate#colorspace#hex2gray('#405952'))
   call assert_equal(153, colortemplate#colorspace#hex2gray('#9c9b7a'))
-  call assert_equal(217, colortemplate#colorspace#hex2gray('#ffd393'))
-  call assert_equal(176, colortemplate#colorspace#hex2gray('#ff974f'))
-  call assert_equal(133, colortemplate#colorspace#hex2gray('#f54f29'))
+  call assert_equal(218, colortemplate#colorspace#hex2gray('#ffd393'))
+  call assert_equal(177, colortemplate#colorspace#hex2gray('#ff974f'))
+  call assert_equal(137, colortemplate#colorspace#hex2gray('#f54f29'))
 endf
 
 fun! Test_CT_fine()

@@ -43,6 +43,15 @@ fun! colortemplate#colorspace#hex2gray(col)
   return float2nr(round(255 * colortemplate#colorspace#color2gray(l:r, l:g, l:b)))
 endf
 
+" Returns the color (black or white) which contrasts most with the given color
+" See: https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color/3943023#3943023
+fun! colortemplate#colorspace#contrast_color(col, term = 0)
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(a:col)
+  return (l:r * 0.299 + l:g * 0.587 + l:b * 0.114) > 186
+        \ ? (a:term ? 16 : '#000000')
+        \ : (a:term ? 231 : '#ffffff')
+endf
+
 " Convert an HSV color into RGB space.
 " Input values must be in the interval [0,1]
 " See: http://www.easyrgb.com/en/math.php

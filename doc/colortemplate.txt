@@ -1414,34 +1414,6 @@ Here are some guidelines to develop outstanding hackable color schemes:
   Similarly, in the former case there is only one long vertical split, while
   in the latter there are two independent vertical bars.
 
-- Avoid defining filetype-specific highlight groups. They override ftplugin
-  definitions causing highlighting to be messed up after switching color
-  schemes. For example, suppose that the Vim filetype defines `vimCommand` to
-  be a link to `Statement`. If your color scheme sets `vimCommand`'s
-  attributes, after switching away from your color scheme `vimCommand` will be
-  cleared, and not restored to a link to `Statement` as you might expect. Even
-  resetting the filetype will not fix that. If you instead link `vimCommand`
-  in your colorscheme, the linking will persist after switching to another
-  color scheme (so, again, the default link will not be restored), which will
-  likely result in a different highlighting than expected. If you absolutely
-  need filetype-specific highlight group definitions in your color scheme,
-  define an option that allows the user to turn them on/off (the default
-  should be off):
->
-	verbatim
-	if get(g:, '@optionprefix_extra_hi_groups', 0)
-	endverbatim
-	  " Filetype-specific highlight group definitions go here
-	verbatim
-	endif
-	endverbatim
-<
-  See also https://github.com/vim/vim/issues/4405.
-
-- For the same reason, plugin-specific highlight groups should be avoided. If
-  you really need to define plugin-specific highlight groups, provide an
-  option to suppress them (by default, they should be suppressed).
-
 - Some users like to use a transparent background (e.g., with custom images)
   in the terminal. You may easily support that by adapting this snippet:
   >

@@ -112,21 +112,21 @@ endf
 
 " Applies the current color to the color scheme.
 if s:mode ==# 'gui'
-  fun! s:__apply_color__()
+  fun! s:apply_color()
     execute printf('hi %s gui%s=%s', s:hlgroup, s:tab, s:colorset[s:tab].gui)
   endf
 
-  fun! s:__update_curr_text_property__()
+  fun! s:update_curr_text_property()
     execute printf('hi colortemplatePopupGCol guibg=%s', s:colorset[s:tab].gui)
     execute printf('hi colortemplatePopupTCol guibg=%s', s:colorset[s:tab].approx)
     call prop_type_change('_curr', #{ bufnr: s:popup_bufnr, highlight: s:hlgroup })
   endf
 else
-  fun! s:__apply_color__()
+  fun! s:apply_color()
     execute printf('hi %s cterm%s=%s', s:hlgroup, (s:tab ==# 'sp' ? 'ul' : s:tab), s:colorset[s:tab].index)
   endf
 
-  fun! s:__update_curr_text_property__()
+  fun! s:update_curr_text_property()
     execute printf('hi colortemplatePopupTCol ctermbg=%s', s:colorset[s:tab].index)
     call prop_type_change('_curr', #{ bufnr: s:popup_bufnr, highlight: s:hlgroup })
   endf
@@ -147,8 +147,8 @@ fun! s:set_color(hexvalue, guess = 0)
   call s:__setc__(a:hexvalue, s:tab, a:guess)
   let s:colorset[s:tab].edited = 0
   call s:__update_stars__(s:tab)
-  call s:__update_curr_text_property__()
-  call s:__apply_color__()
+  call s:update_curr_text_property()
+  call s:apply_color()
 endf
 
 " As above, but using an xterm color as input (16-255).
@@ -156,8 +156,8 @@ fun! s:set_cterm_color(num, guess = 0)
   call s:__setc__(colortemplate#colorspace#xterm256_hexvalue(a:num), s:tab, a:guess)
   let s:colorset[s:tab].edited = 0
   call s:__update_stars__(s:tab)
-  call s:__update_curr_text_property__()
-  call s:__apply_color__()
+  call s:update_curr_text_property()
+  call s:apply_color()
 endf
 
 " Modifies the current color (e.g., using a slider), marking it as 'edited'.
@@ -165,8 +165,8 @@ fun! s:change_color(hexvalue)
   call s:__setc__(a:hexvalue, s:tab, 0)
   let s:colorset[s:tab].edited = 1
   call s:__update_stars__(s:tab)
-  call s:__update_curr_text_property__()
-  call s:__apply_color__()
+  call s:update_curr_text_property()
+  call s:apply_color()
 endf
 
 fun! s:__read_color_from_hlgroup__(tab)
@@ -194,7 +194,7 @@ fun! s:set_hlgroup(name)
   call s:__update_stars__('fg')
   call s:__update_stars__('sp')
   let s:stars.bg = s:stars.fg
-  call s:__update_curr_text_property__()
+  call s:update_curr_text_property()
 endf
 
 fun! s:set_attr_state(attrname)
@@ -596,7 +596,7 @@ endf
 if s:mode ==# 'gui'
   fun! s:update_favorite_text_properties()
     let l:i = len(s:favorite_colors) - 1
-    execute printf('hi colortemplatePopupFav%d guibg=%s', l:i, a:col)
+    execute printf('hi colortemplatePopupFav%d guibg=%s', l:i, s:favorite_colors[l:i])
     call prop_type_delete('_fav' .. l:i, #{ bufnr: s:popup_bufnr })
     call prop_type_add('_fav' .. l:i, #{ bufnr: s:popup_bufnr, highlight: 'colortemplatePopupFav' .. l:i })
   endf
@@ -604,7 +604,7 @@ else
   fun! s:update_favorite_text_properties()
     let l:i = len(s:favorite_colors) - 1
     execute printf('hi colortemplatePopupFav%d ctermbg=%s', l:i,
-          \ colortemplate#colorspace#approx(a:col)['index'])
+          \ colortemplate#colorspace#approx(s:favorite_colors[l:i])['index'])
     call prop_type_delete('_fav' .. l:i, #{ bufnr: s:popup_bufnr })
     call prop_type_add('_fav' .. l:i, #{ bufnr: s:popup_bufnr, highlight: 'colortemplatePopupFav' .. l:i })
   endf
@@ -887,12 +887,14 @@ endf
 
 fun! s:action_fgbgsp_next()
   let s:tab = (s:tab == 'fg' ? 'bg' : (s:tab == 'bg' ? 'sp' : 'fg'))
+  call s:update_curr_text_property()
   call s:redraw()
   return 1
 endf
 
 fun! s:action_fgbgsp_prev()
   let s:tab = (s:tab == 'bg' ? 'fg' : (s:tab == 'fg' ? 'sp' : 'bg'))
+  call s:update_curr_text_property()
   call s:redraw()
   return 1
 endf

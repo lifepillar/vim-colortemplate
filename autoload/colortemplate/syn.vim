@@ -255,7 +255,7 @@ fun! s:fallback_color(type)
   return #{ hex: a:type ==# 'bg'
         \                   ? (&bg ==# 'dark' ? '#000000' : '#ffffff')
         \                   : (&bg ==# 'dark' ? '#ffffff' : '#000000'),
-        \   good: 0 }
+        \   guess: 1 }
 endf
 
 " Try (hard) to derive a more or less reasonable hex value for a given
@@ -275,14 +275,13 @@ endf
 "
 " Returns a Dictionary with two keys:
 " hex: the color value
-" good: a 0/1 flag indicating whether the color is likely a (bad)
-" approximation.
+" guess: a flag indicating whether the color is a guess (1) or exact (0)
 fun! colortemplate#syn#higroup2hex(name, type)
   if has('gui_running') || (has('termguicolors') && &termguicolors)
     let l:gui = synIDattr(synIDtrans(hlID(a:name)), a:type.'#', 'gui')
 
     if !empty(l:gui) " Fast path
-      return #{ hex: l:gui, good: 1}
+      return #{ hex: l:gui, guess: 0}
     endif
 
     if a:type ==# 'sp'
@@ -297,7 +296,7 @@ fun! colortemplate#syn#higroup2hex(name, type)
   let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
 
   if !empty(l:term) && str2nr(l:term) > 15 " Fast path
-    return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), good: 1}
+    return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), guess: 0}
   endif
 
   if empty(l:term)
@@ -310,7 +309,7 @@ fun! colortemplate#syn#higroup2hex(name, type)
   endif
 
   if l:term =~ '\m^\d\+$' " If it's a number, it must be between 0 and 15
-    return #{ hex: g:colortemplate#syn#ansi_colors[str2nr(l:term)], good: 0}
+    return #{ hex: g:colortemplate#syn#ansi_colors[str2nr(l:term)], guess: 1}
   endif
 
   if l:term =~# '\m^\(fg\|bg\|ul\)$' " fg/bg/ul
@@ -323,7 +322,7 @@ fun! colortemplate#syn#higroup2hex(name, type)
   " Term color is a color name
   try " to convert name to number
     let l:term = string(colortemplate#colorspace#ctermcolor(tolower(l:term), 16))
-    return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), good: 1}
+    return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), guess: 0}
   catch " What?!
     return s:fallback_color(a:type)
   endtry

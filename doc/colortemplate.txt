@@ -840,6 +840,12 @@ is, you may define:
 	hi MyBlack ctermbg=16 guibg=#000000
 	let g:colortemplate_popup_bg = 'MyBlack'
 <
+						*g:colortemplate_popup_default_pane*
+The default pane that should be presented to the user when the style picker is
+opened. The possible values are `'rgb'`, `'hsb'`, `'gray`', and `'help'`.
+>
+	let g:colortemplate_popup_default_pane = 'rgb'
+<
 						*g:colortemplate_popup_keys*
 A Dictionary used to customize the keys used by the style picker. For example,
 to use `q` to close the popup, put this in your |vimrc|:
@@ -1212,7 +1218,6 @@ something like:
 >
 	:call append('.', colortemplate#format_palette(some_color_dictionary))
 <
-
 					*colortemplate#import#run()*
 Creates a template document in a new buffer by extracting information from the
 currently defined highlight groups. For optimal results, it is recommended to
@@ -1241,6 +1246,12 @@ the saturation curve (allowed values are `'grey'`, `'flat'`, `'wflat'`,
 The color names are `g0`, `g1`, ... through `g7`.
 
 See also: https://github.com/nightsense/vimspectr
+
+					*colortemplate#style#favorite()*
+Returns the list of favorite colors in the style picker.
+
+					*colortemplate#style#recent()*
+Returns the list of recent colors currently in the style picker.
 
 					*colortemplate#syn#balloonexpr()*
 This function can be used to display some information about the highlight

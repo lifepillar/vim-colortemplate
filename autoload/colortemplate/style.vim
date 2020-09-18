@@ -389,10 +389,6 @@ fun! s:reset_info_section_highlight()
   execute printf("hi colortemplatePopupStrk %sfg=%s cterm=inverse gui=inverse", s:mode, l:labecol)
 endf
 
-fun! s:update_info_section_highlight()
-  let l:col = s:colorset[s:tab]
-endf
-
 fun! s:add_info_section_prop_types()
   " Highglight for the current GUI color
   call prop_type_add('_gcol', #{bufnr: s:popup_bufnr, highlight: 'colortemplatePopupGCol'})
@@ -409,7 +405,6 @@ fun! s:add_info_section_prop_types()
 endf
 
 fun! s:info_section() " -> List of Dictionaries
-  call s:update_info_section_highlight()
   let l:col = s:colorset[s:tab]
   let l:warn = l:col.guess
   let l:excl = (l:warn ? '!' : ' ')

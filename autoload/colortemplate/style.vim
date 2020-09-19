@@ -83,12 +83,6 @@ let s:tab = 'fg'   " Which color (foreground/background/special) is displayed
 " - delta: the difference between the GUI and the cterm color
 " - guess: a flag indicating whether the color is a guess (1) or not (0)
 " - edited: flag indicating if the color has been edited in the style picker
-" - h: H value for HSB
-" - s: S value for HSB
-" - b: B value for HSB
-" - gray: the shade of gray most similar to the color.
-"
-" The last four value are computed lazily, when the corresponding pane is active.
 let s:colorset = #{ fg: {}, bg: {}, sp: {} }
 
 " The attributes of the current highlight group
@@ -212,6 +206,23 @@ endf
 
 fun! s:set_attr_state(attrname)
   let s:attrs[a:attrname] = synIDattr(s:hlID, a:attrname, s:attrmode) ==# '1' ? 1 : 0
+endf
+" }}}
+" HSB values {{{
+" - h: the hue value of the color
+" - s: the saturation value of the color
+" - v/b: the brightness value of the color
+"
+" Note: HSV values must be stored, because RGB -> HSV and HSV -> RGB are not
+" inverse to each other. For instance, HSV(1,1,1) -> RGB(3,3,3), but when
+" converting back, RGB(3,3,3) -> HSV(0,0,1). We don't want the sliders to
+" appear to jump around randomly.
+let s:hsv_h = -1
+let s:hsv_s = -1
+let s:hsv_v = -1
+
+fun! s:set_hsb_color()
+  let [s:hsv_h, s:hsv_s, s:hsv_v] = colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
 endf
 " }}}
 " Notification popup {{{
@@ -730,71 +741,58 @@ endf
 " HSB pane {{{
 fun! s:hsb_increase_level(value)
   let l:id = s:get_prop_id('_leve')
-  let l:h = s:colorset[s:tab].h
-  let l:s = s:colorset[s:tab].s
-  let l:v = s:colorset[s:tab].v
   if l:id == 1
-    if l:h == 359 | return | endif
-    let l:h += a:value
-    if l:h > 359 | let l:h = 359 | endif
+    if s:hsv_h == 359 | return | endif
+    let s:hsv_h += a:value
+    if s:hsv_h > 359 | let s:hsv_h = 359 | endif
   elseif l:id == 2
-    if l:s == 100 | return | endif
-    let l:s += a:value
-    if l:s > 100 | let l:s = 100 | endif
+    if s:hsv_s == 100 | return | endif
+    let s:hsv_s += a:value
+    if s:hsv_s > 100 | let s:hsv_s = 100 | endif
   elseif l:id == 3
-    if l:v == 100 | return | endif
-    let l:v += a:value
-    if l:v > 100 | let l:v = 100 | endif
+    if s:hsv_v == 100 | return | endif
+    let s:hsv_v += a:value
+    if s:hsv_v > 100 | let s:hsv_v = 100 | endif
   endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
-  call s:change_color(colortemplate#colorspace#hsv2hex(l:h, l:s, l:v))
-  let s:colorset[s:tab].h = l:h
-  let s:colorset[s:tab].s = l:s
-  let s:colorset[s:tab].v = l:v
+  call s:change_color(colortemplate#colorspace#hsv2hex(s:hsv_h, s:hsv_s, s:hsv_v))
 endf
 
 fun! s:hsb_decrease_level(value)
   let l:id = s:get_prop_id('_leve')
-  let l:h = s:colorset[s:tab].h
-  let l:s = s:colorset[s:tab].s
-  let l:v = s:colorset[s:tab].v
   if l:id == 1
-    if l:h == 0 | return | endif
-    let l:h -= a:value
-    if l:h < 0 | let l:h = 0 | endif
+    if s:hsv_h == 0 | return | endif
+    let s:hsv_h -= a:value
+    if s:hsv_h < 0 | let s:hsv_h = 0 | endif
   elseif l:id == 2
-    if l:s == 0 | return | endif
-    let l:s -= a:value
-    if l:s < 0 | let l:s = 0 | endif
+    if s:hsv_s == 0 | return | endif
+    let s:hsv_s -= a:value
+    if s:hsv_s < 0 | let s:hsv_s = 0 | endif
   elseif l:id == 3
-    if l:v == 0 | return | endif
-    let l:v -= a:value
-    if l:v < 0 | let l:v = 0 | endif
+    if s:hsv_v == 0 | return | endif
+    let s:hsv_v -= a:value
+    if s:hsv_v < 0 | let s:hsv_v = 0 | endif
   endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
-  call s:change_color(colortemplate#colorspace#hsv2hex(l:h, l:s, l:v))
-  let s:colorset[s:tab].h = l:h
-  let s:colorset[s:tab].s = l:s
-  let s:colorset[s:tab].v = l:v
+  call s:change_color(colortemplate#colorspace#hsv2hex(s:hsv_h, s:hsv_s, s:hsv_v))
 endf
 
 fun! s:hsb_slider_section(text) " -> List of Dictionaries
   let l:lnum = len(a:text)
   return extend(a:text, [
         \ s:blank(),
-        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('H', s:colorset[s:tab].h, 359), 1),
-        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('S', s:colorset[s:tab].s, 100), 2),
-        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', s:colorset[s:tab].v, 100), 3),
+        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('H', s:hsv_h, 359), 1),
+        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('S', s:hsv_s, 100), 2),
+        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', s:hsv_v, 100), 3),
         \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
         \])
 endf
 
 fun! s:redraw_hsb()
-  let [l:h, l:s, l:v] = colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
   call popup_settext(s:popup_winid,
         \ s:favorite_section(
         \ s:recent_section(
@@ -931,6 +929,9 @@ fun! s:action_paste()
   if @" =~# '\m^#\=[A-Fa-f0-9]\{6}$'
     call s:save_to_recent()
     call s:set_color(@"[0] ==# '#' ? @" : '#'..@")
+    if s:pane ==# 'hsb'
+      call s:set_hsb_color()
+    endif
     call s:redraw()
     return 1
   endif
@@ -958,6 +959,9 @@ endf
 fun! s:action_fgbgsp_next()
   let s:tab = (s:tab == 'fg' ? 'bg' : (s:tab == 'bg' ? 'sp' : 'fg'))
   call s:update_curr_text_property()
+  if s:pane ==# 'hsb'
+    call s:set_hsb_color()
+  endif
   call s:redraw()
   return 1
 endf
@@ -965,6 +969,9 @@ endf
 fun! s:action_fgbgsp_prev()
   let s:tab = (s:tab == 'bg' ? 'fg' : (s:tab == 'fg' ? 'sp' : 'bg'))
   call s:update_curr_text_property()
+  if s:pane ==# 'hsb'
+    call s:set_hsb_color()
+  endif
   call s:redraw()
   return 1
 endf
@@ -983,6 +990,9 @@ fun! s:action_pick_recent()
     let l:col = s:recent_colors[str2nr(l:n)]
     call s:save_to_recent()
     call s:set_color(l:col)
+    if s:pane ==# 'hsb'
+      call s:set_hsb_color()
+    endif
     call s:redraw()
   endif
   return 1
@@ -998,6 +1008,9 @@ fun! s:action_pick_favorite()
     let l:new = l:colors[str2nr(l:n)]
     call s:save_to_recent()
     call s:set_color(l:new)
+    if s:pane ==# 'hsb'
+      call s:set_hsb_color()
+    endif
     call s:redraw()
   endif
   return 1
@@ -1115,6 +1128,9 @@ fun! s:choose_cterm_color()
   if l:col =~# '\m^[0-9]\{1,3}$' && str2nr(l:col) > 15 && str2nr(l:col) < 256
     call s:save_to_recent()
     call s:set_cterm_color(str2nr(l:col))
+    if s:pane ==# 'hsb'
+      call s:set_hsb_color()
+    endif
     call s:redraw()
   endif
 endf
@@ -1141,6 +1157,9 @@ fun! s:action_clear_color()
   call s:notification('Color cleared')
   call s:save_to_recent()
   call s:set_hlgroup(s:hlgroup)
+  if s:pane ==# 'hsb'
+    call s:set_hsb_color()
+  endif
   call s:redraw()
   return 1
 endf
@@ -1153,6 +1172,9 @@ fun! s:action_edit_name()
   endif
   if l:name =~# '\m^\w\+$'
     call s:set_hlgroup(l:name)
+    if s:pane ==# 'hsb'
+      call s:set_hsb_color()
+    endif
     call s:redraw()
   endif
   return 1
@@ -1235,6 +1257,9 @@ fun! s:update_hlgroup_when_cursor_moves()
     call s:save_to_recent()
   endif
   call s:set_hlgroup(synIDattr(l:synid, 'name'))
+  if s:pane ==# 'hsb'
+    call s:set_hsb_color()
+  endif
   call s:redraw()
 endf
 

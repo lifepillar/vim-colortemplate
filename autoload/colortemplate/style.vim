@@ -1111,6 +1111,9 @@ fun! s:choose_gui_color()
     if len(l:col) == 6
       call s:save_to_recent()
       call s:set_color('#'..l:col)
+      if s:pane ==# 'hsb'
+        call s:set_hsb_color()
+      endif
       call s:redraw()
     endif
   end

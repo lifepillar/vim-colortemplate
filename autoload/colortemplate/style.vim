@@ -640,7 +640,7 @@ endf
 
 fun! s:favorite_section(text) " -> List of Dictionaries
   if len(s:favorite_colors) == 0
-    return []
+    return a:text
   endif
 
   let l:fav_section = extend(a:text, [s:blank(), s:prop_label('Favorite colors')])

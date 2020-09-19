@@ -543,10 +543,6 @@ endf
 fun! s:save_favorite_colors()
   let l:favpath = fnamemodify(expand(get(g:, 'colortemplate_popup_fav_path',
         \ "$HOME/.vim/colortemplate_favorites.txt")), ":p")
-  if !filewritable(l:favpath)
-   call s:msg(l:favpath .. ' is not writable', 'e')
-   return
-  endif
   try " May raise an error, e.g., if a temporary file cannot be written
     if writefile(s:favorite_colors, l:favpath, "s") < 0
       call s:msg('Failed to write ' .. l:favpath, 'e')

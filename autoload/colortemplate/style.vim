@@ -931,6 +931,7 @@ fun! s:action_yank_favorite()
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
     let @" = l:colors[str2nr(l:n)]
     call s:notification('Color yanked: ' .. @")
+  endif
   return 1
 endf
 

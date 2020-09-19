@@ -852,7 +852,7 @@ fun! s:gray_slider_section(text, shade) " -> List of Dictionaries
         \ #{ col: 40, length: 2, type: '_g100'},
         \ ]),
         \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider(' ', a:shade), 1),
-        \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
+        \ s:noprop(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
         \])
 endf
 

@@ -73,49 +73,6 @@ take a look at some color schemes created with it:
 [Solarized 8](https://github.com/lifepillar/vim-solarized8) (complex).
 
 
-## Migrating from v1
-
-Users of Colortemplate v1 in most cases will still be able to build their color
-schemes, with just a couple of additional warnings. Anyway, to fully migrate to
-v2, the following must be taken into account:
-
-- The `Terminal Colors` directive has been deprecated in favor of the much more
-  flexible mechanism of *variants* (see below).
-- The ambiguous `@term<color>` interpolation pattern has been removed: use
-  `@term16<color>` or `@term256<color>` instead.
-- There is a new `Term Colors` key, which allows you specify the 16 ASCII colors
-  to be used in Vim terminal windows. If you were using `verbatim` blocks for
-  this, you should remove them: Colortemplate v2 automatically defines
-  `g:terminal_ansi_colors` (and the equivalent for NeoVim if enabled, see
-  below).
-- There is a new `Variant` directive, which specifies to which environments the
-  subsequent definitions apply. Replace `Terminal Colors: 256` with `Variant:
-  gui 256`; replace `Terminal Colors: 256 16` with `Variant: gui 256 16`; and so
-  on. See `:help colortemplate-variants` for more information.
-- There is a new `Neovim` key: when its value is `yes`, additional code to
-  support Neovim is generated (default is `no`).
-- The `Maintainer` key is now optional.
-- If you were using `verbatim` blocks to check for italics, you should remove
-  them: Colortemplate v2 deals with the `italic` attribute automatically. Just
-  define your highlight groups as if italics is available, and let Colortemplate
-  do the rest.
-- Many `verbatim` blocks may now be replaced with `#if`, `#let`, …, commands
-  (see `:help colortemplate-verbatim`).
-- Colortemplate v2 does not generate any help file by default any more (color
-  schemes have no settings by default). You may need to adjust your help
-  templates (see `templates/_help.colortemplate`).
-- `Background` directives accept a new value (`any`). You may switch between
-  `dark`, `light` and `any` an arbitrary number of times.
-- Anything before the first `Background` and `Variant` directives is considered
-  to be “in global scope” and put at the start of the generated color scheme.
-  You may put setup stuff in `verbatim` blocks there, or linked group
-  definitions that apply to all variants.
-- Validation is now performed with `$VIMRUNTIME/colors/tools/check_colors.vim`
-  (`:ColortemplateCheck` command or Check menu entry in the toolbar).
-- Statistics are generated separately from the color scheme
-  (`:ColortemplateStats` or Stats menu entry in the toolbar).
-- Try typing `3ga` with the cursor on a `Color` line!
-
 ## Contributions
 
 Do you want to contribute? Do you have any suggestions on how to improve

@@ -1280,7 +1280,7 @@ form:
 	vimVar ⊂ vimFuncBody xxx vimVar → Identifier
 	██ fg=14/#00aba5    bg=NONE/NONE    sp=NONE/NONE
 <
-From left to right, this shows:
+From left to right and top to bottom, this shows:
 
 - the nesting of highlight groups, or "synstack" (`⊂`);
 - a sample of how the text looks like with the current hi group (`xxx`);

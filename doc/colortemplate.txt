@@ -840,6 +840,13 @@ is, you may define:
 	hi MyBlack ctermbg=16 guibg=#000000
 	let g:colortemplate_popup_bg = 'MyBlack'
 <
+						*g:colortemplate_popup_borderchars*
+A list with eight character elements, which is used for drawing the border of
+the style picker. See |popup_create-arguments|.
+>
+	let g:colortemplate_popup_borderchars =
+	    \ ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+<
 						*g:colortemplate_popup_default_pane*
 The default pane that should be presented to the user when the style picker is
 opened. The possible values are `'rgb'`, `'hsb'`, `'gray`', and `'help'`.

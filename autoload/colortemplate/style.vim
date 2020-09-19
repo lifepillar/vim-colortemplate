@@ -1314,7 +1314,7 @@ fun! colortemplate#style#open(...)
 
   let s:popup_winid = popup_create('', #{
         \ border: [1,1,1,1],
-        \ borderchars: ['-', '|', '-', '|', '┌', '┐', '┘', '└'],
+        \ borderchars: get(g:, 'colortemplate_popup_borderchars', ['─', '│', '─', '│', '┌', '┐', '┘', '└']),
         \ callback: 'colortemplate#style#closed',
         \ close: 'button',
         \ cursorline: 0,
@@ -1337,6 +1337,7 @@ fun! colortemplate#style#open(...)
         \ zindex: 200,
         \ })
   let s:popup_bufnr = winbufnr(s:popup_winid)
+  call setbufvar(s:popup_bufnr, '&tabstop', &tabstop)  " Inherit global tabstop value
   let s:active_line = 3
   call s:add_prop_types(s:popup_bufnr)
 

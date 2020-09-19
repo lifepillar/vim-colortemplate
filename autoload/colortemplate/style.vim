@@ -472,7 +472,7 @@ endif
 " Adds the current color to the list of recent colors
 fun! s:save_to_recent()
   let l:col = s:colorset[s:tab].gui
-  if index(s:recent_colors, l:col) != -1 " Do not add the same color twice
+  if index(s:recent_colors, l:col) != -1
     return
   endif
   call add(s:recent_colors, l:col)
@@ -956,7 +956,7 @@ fun! s:action_remove_from_favorite()
   echo "\r"
   if l:n =~ '\m^\d$'
     call s:remove_from_favorite(l:lnum, str2nr(l:n))
-    if (len(s:favorite_colors) % s:fav_capacity == 0)
+    if (empty(s:favorite_line(l:lnum)))
       call s:action_select_prev()
     endif
     call s:redraw()

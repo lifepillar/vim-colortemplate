@@ -1117,7 +1117,7 @@ style picker from any buffer.
 If this is the first time you use the style picker, you may want to open it
 now and try using it while reading this section.
 
-The popup window consists of four panes: RGB, HSL, Grayscale, and Help, which
+The popup window consists of four panes: RGB, HSB, Grayscale, and Help, which
 can be selected by pressing |R|, |H|, |G|, and |?|, respectively.
 
 Use up and down arrow keys to choose an item in the popup. The current item

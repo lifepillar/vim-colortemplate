@@ -1118,7 +1118,7 @@ If this is the first time you use the style picker, you may want to open it
 now and try using it while reading this section.
 
 The popup window consists of four panes: RGB, HSB, Grayscale, and Help, which
-can be selected by pressing |R|, |H|, |G|, and |?|, respectively.
+can be selected by typing |R|, |H|, |G|, and |?|, respectively.
 
 Use up and down arrow keys to choose an item in the popup. The current item
 has a marker on the side. When a level bar is selected, you may change the
@@ -1184,20 +1184,19 @@ constraints (e.g, low-light conditions and visually unimpaired users).
 
 As you modify a color scheme, the style picker remembers the ten most recently
 used colors. With the marker in the Recent section, you may press |Enter| to
-select a recent color, or |D| to remove a color from the the list.
+select a recent color, |D| to remove a color from the the list, or |Y| to yank
+a recent color into the unnamed register.
 
 The bottom part of the style picker hosts a section for your favorite colors.
-To make a color a favorite one, type |A|. Choosing or deleting a favorite
-color is done in the same way as for recent colors. Favorite colors persist
-across Vim sessions: they are written to disk at the location specified by
-|g:colortemplate_fav_path|. The saved file is just a text file with one hex
-color per line; it can be easily edited by hand if desired.
+To make a color a favorite one, type |A|. Choosing, deleting or yanking
+a favorite color is done in the same way as for recent colors. Favorite colors
+persist across Vim sessions: they are written to disk at the location
+specified by |g:colortemplate_popup_fav_path|. The saved file is just a text
+file with one color per line; it can be easily edited by hand if desired.
 
-Press |Y| to yank a color. According to the position of the marker, you may
-yank the current color, a recent color or a favorite color. The reverse is
-also possible: if the unnamed register contains a hex color, you may paste it
-into the style picker with |P|. A color is always pasted as the new current
-color.
+When the marker is on a level bar, type |Y| to yank the current color. The
+reverse is also possible: if the unnamed register contains a hex color, you
+may paste it into the style picker as the current color by typing |P|.
 
 Press |x| or click on the upper-right corner of the popup window to dismiss
 it. If you want to revert your changes by resetting the current color scheme,

@@ -1339,7 +1339,6 @@ fun! colortemplate#style#open(...)
         \ })
   let s:popup_bufnr = winbufnr(s:popup_winid)
   call setbufvar(s:popup_bufnr, '&tabstop', &tabstop)  " Inherit global tabstop value
-  let s:active_line = 3
   call s:add_prop_types(s:popup_bufnr)
 
   if empty(a:000) || empty(a:1)
@@ -1352,6 +1351,7 @@ fun! colortemplate#style#open(...)
     call s:set_hlgroup(a:1)
   endif
 
+  let s:active_line = 3
   call s:redraw()
   return s:popup_winid
 endf

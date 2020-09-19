@@ -29,9 +29,11 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> ga    :<c-u>call colortemplate#getinfo(v:count1)<cr>
   nnoremap <silent> <buffer> <c-l> :<c-u>call colortemplate#toolbar#show()<cr><c-l>
   nnoremap <silent> <buffer> gl    :<c-u>call colortemplate#syn#toggle()<cr>
-  nnoremap <silent> <buffer> gs    :<c-u>call colortemplate#style#open()<cr>
   nnoremap <silent> <buffer> gx    :<c-u>call colortemplate#approx_color(v:count1)<cr>
   nnoremap <silent> <buffer> gy    :<c-u>call colortemplate#nearby_colors(v:count1)<cr>
+  if has('popupwin') && has('textprop')
+    nnoremap <silent> <buffer> gs    :<c-u>call colortemplate#style#open()<cr>
+  endif
 endif
 
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate silent call colortemplate#make(<q-args>, "<bang>")
@@ -40,7 +42,7 @@ command! -buffer -nargs=0 -bar                     ColortemplateCheck call color
 command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#askoutdir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 
-if has('patch-8.1.1705')
+if has('popupwin') && has('textprop')
   command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)
 endif
 

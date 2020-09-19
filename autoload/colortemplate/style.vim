@@ -911,11 +911,41 @@ fun! s:action_cancel()
   return 1
 endf
 
+fun! s:action_yank_recent()
+  echo printf('[Colortemplate] Which color (0-%d)? ', len(s:recent_colors) - 1)
+  let l:n = nr2char(getchar())
+  echo "\r"
+  if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
+    let @" = s:recent_colors[str2nr(l:n)]
+    call s:notification('Color yanked: ' .. @")
+  endif
+  return 1
+endf
+
+fun! s:action_yank_favorite()
+  let l:lnum = s:get_prop_id('_favl')
+  let l:colors = s:favorite_line(l:lnum)
+  echo printf('[Colortemplate] Which color (0-%d)? ', len(l:colors) - 1)
+  let l:n = nr2char(getchar())
+  echo "\r"
+  if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)
+    let @" = l:colors[str2nr(l:n)]
+    call s:notification('Color yanked: ' .. @")
+  return 1
+endf
+
 fun! s:action_yank()
-  let @" = s:colorset[s:tab].gui
-  call s:save_to_recent()
-  call s:redraw()
-  call s:notification('Color yanked')
+  let l:props = s:get_props()
+  if index(l:props, '_leve') != - 1
+    let @" = s:colorset[s:tab].gui
+    call s:save_to_recent()
+    call s:redraw()
+    call s:notification('Color yanked: ' .. @")
+  elseif index(l:props, '_mru_') != -1
+    call s:action_yank_recent()
+  elseif index(l:props, '_favl') != -1
+    call s:action_yank_favorite()
+  endif
   return 1
 endf
 

@@ -1193,9 +1193,11 @@ across Vim sessions: they are written to disk at the location specified by
 |g:colortemplate_fav_path|. The saved file is just a text file with one hex
 color per line; it can be easily edited by hand if desired.
 
-When you are satisfied with a color, you may yank it to the unnamed register
-with |Y|. The reverse is also possible: if the unnamed register contains a hex
-color, you may paste it into the style picker with |P|.
+Press |Y| to yank a color. According to the position of the marker, you may
+yank the current color, a recent color or a favorite color. The reverse is
+also possible: if the unnamed register contains a hex color, you may paste it
+into the style picker with |P|. A color is always pasted as the new current
+color.
 
 Press |x| or click on the upper-right corner of the popup window to dismiss
 it. If you want to revert your changes by resetting the current color scheme,

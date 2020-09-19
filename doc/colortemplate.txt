@@ -904,7 +904,7 @@ controls of the style picker. In such cases, you may set this to 0 or
 The String used to mark the selected line in the style picker. The width of
 the style picker adapts to accommodate symbols of arbitrary length.
 >
-	let g:colortemplate_popup_marker = '=> '
+	let g:colortemplate_popup_marker = '❯❯ '
 <
 					*g:colortemplate_popup_notifications*
 Set to 0 if you want to suppress the notification popups (such as 'Color

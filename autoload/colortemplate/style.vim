@@ -221,6 +221,7 @@ fun! s:notification(msg, duration = 2000)
           \ mousemoved: 'any',
           \ minwidth: s:width,
           \ maxwidth: s:width,
+          \ borderchars: get(g:, 'colortemplate_popup_borderchars', ['─', '│', '─', '│', '┌', '┐', '┘', '└']),
           \})
   endif
 endf

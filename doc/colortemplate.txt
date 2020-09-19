@@ -822,12 +822,6 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
-					*g:colortemplate_popup_fav_path*
-The path where the style picker's favorite colors are saved.
->
-	let g:colortemplate_popup_fav_path =
-	    \ '$HOME/.vim/colortemplate_favorites.txt'
-<
 					*g:colortemplate_popup_bg*
 The name of a highlight group to be used for the background of the style
 picker.
@@ -852,6 +846,12 @@ The default pane that should be presented to the user when the style picker is
 opened. The possible values are `'rgb'`, `'hsb'`, `'gray`', and `'help'`.
 >
 	let g:colortemplate_popup_default_pane = 'rgb'
+<
+					*g:colortemplate_popup_fav_path*
+The path where the style picker's favorite colors are saved.
+>
+	let g:colortemplate_popup_fav_path =
+	    \ '$HOME/.vim/colortemplate_favorites.txt'
 <
 					*g:colortemplate_popup_keys*
 A Dictionary used to customize the keys used by the style picker. For example,

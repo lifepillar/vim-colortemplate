@@ -53,17 +53,15 @@ fun! colortemplate#colorspace#contrast_color(col, term = 0)
 endf
 
 " Convert an HSV color into RGB space.
-" Input values must be in the interval [0,1]; output in in 0-255
+" Input values are in [0-359, 0-100, 0-100]; output in in 0-255
 " See: https://www.easyrgb.com/en/math.php
 fun! colortemplate#colorspace#hsv2rgb(h, s, v)
-  " Force values to be interpreted as floats
-  let l:h = a:h / 1.0
-  let l:s = a:s / 1.0
-  let l:v = a:v / 1.0
+  " Scale to 0.0-1.0
+  let l:h = a:h / 360.0
+  let l:s = a:s / 100.0
+  let l:v = a:v / 100.0
   if l:s == 0.0
-    return a:0 > 0 && a:1 == 1
-          \ ? [l:v, l:v, l:v]
-          \ : map([l:v, l:v, l:v], { _,v -> float2nr(round(255 * v)) })
+    return [float2nr(round(255 * l:v)), float2nr(round(255 * l:v)), float2nr(round(255 * l:v))]
   endif
   let l:var_h = l:h * 6.0
   if l:var_h >= 6.0
@@ -98,11 +96,11 @@ fun! colortemplate#colorspace#hsv2rgb(h, s, v)
     let l:var_g = l:var_1
     let l:var_b = l:var_2
   endif
-  return map([l:var_r, l:var_g, l:var_b], { _,v -> float2nr(round(255 * v)) })
+  return [float2nr(round(255 * l:var_r)), float2nr(round(255 * l:var_g)), float2nr(round(255 * l:var_b))]
 endf
 
 " See above
-" Input values must be in 0-255; output is in 0-1
+" Input values must be in 0-255; output is in 0-359° for h, and 0-100% for s,v.
 fun! colortemplate#colorspace#rgb2hsv(r, g, b)
   let l:var_r = a:r / 255.0
   let l:var_g = a:g / 255.0
@@ -137,12 +135,17 @@ fun! colortemplate#colorspace#rgb2hsv(r, g, b)
     if (l:h > 1.0) | let l:h -= 1.0 | endif
   endif
 
-  return [l:h, l:s, l:v]
+  return [float2nr(round(360 * l:h)) % 360, float2nr(round(100 * l:s)), float2nr(round(100 * l:v))]
 endf
 
 fun! colortemplate#colorspace#hsv2hex(h, s, v)
-  let [l:r, l:g, l:b] = colortemplate#colorspace#hsv2rgb(a:h, a:s, a:v, 256)
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hsv2rgb(a:h, a:s, a:v)
   return colortemplate#colorspace#rgb2hex(l:r, l:g, l:b)
+endf
+
+fun! colortemplate#colorspace#hex2hsv(hex)
+  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(a:hex)
+  return colortemplate#colorspace#rgb2hsv(l:r, l:g, l:b)
 endf
 
 " Without arguments, returns a Dictionary of the color names from $VIMRUNTIME/rgb.txt

@@ -822,27 +822,25 @@ fun! s:add_grayscale_prop_types()
 endf
 
 fun! s:gray_increase(value)
-  if s:colorset[s:tab].gray == 255 | return | endif
+  let l:g = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
+  if l:g == 255 | return | endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
-  let l:g = s:colorset[s:tab].gray
   let l:g += a:value
   if l:g > 255 | let l:g = 255 | endif
   call s:change_color(colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
-  let s:colorset[s:tab].gray = l:g
 endf
 
 fun! s:gray_decrease(value)
-  if s:colorset[s:tab].gray == 0 | return | endif
+  let l:g = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
+  if l:g == 0 | return | endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
-  let l:g = s:colorset[s:tab].gray
   let l:g -= a:value
   if l:g < 0 | let l:g = 0 | endif
   call s:change_color(colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
-  let s:colorset[s:tab].gray = l:g
 endf
 
 fun! s:gray_slider_section(text, shade) " -> List of Dictionaries
@@ -1197,14 +1195,12 @@ endf
 
 fun! s:action_switch_to_hsb()
   let s:colorset[s:tab].edited = 0
-  let [s:colorset[s:tab].h, s:colorset[s:tab].s, s:colorset[s:tab].v] =
-        \ colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
+  call s:set_hsb_color()
   return s:set_pane('hsb')
 endf
 
 fun! s:action_switch_to_grayscale()
   let s:colorset[s:tab].edited = 0
-  let s:colorset[s:tab].gray = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
   return s:set_pane('gray')
 endf
 

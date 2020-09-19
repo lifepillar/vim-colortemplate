@@ -923,7 +923,7 @@ The one-character symbol used for stars in the style picker.
 	let g:colortemplate_popup_marker = '*'
 <
 					*g:colortemplate_quiet*
-et to 0 if you want Colortemplate to open the generated color scheme in
+Set to 0 if you want Colortemplate to open the generated color scheme in
 a split window immediately after building it.
 >
 	let g:colortemplate_quiet = 1

@@ -83,6 +83,11 @@ let s:tab = 'fg'   " Which color (foreground/background/special) is displayed
 " - delta: the difference between the GUI and the cterm color
 " - guess: a flag indicating whether the color is a guess (1) or not (0)
 " - edited: flag indicating if the color has been edited in the style picker
+" - h: H value for HSB
+" - s: S value for HSB
+" - b: B value for HSB
+"
+" The last three value are computed lazily, when the HSB pane is active.
 let s:colorset = #{ fg: {}, bg: {}, sp: {} }
 
 " The attributes of the current highlight group
@@ -660,12 +665,15 @@ fun! s:rgb_increase_level(value)
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:colorset[s:tab].gui)
   let l:id = s:get_prop_id('_leve')
   if l:id == 1
+    if l:r == 255 | return | endif
     let l:r += a:value
     if l:r > 255 | let l:r = 255 | endif
   elseif l:id == 2
+    if l:g == 255 | return | endif
     let l:g += a:value
     if l:g > 255 | let l:g = 255 | endif
   elseif l:id == 3
+    if l:b == 255 | return | endif
     let l:b += a:value
     if l:b > 255 | let l:b = 255 | endif
   endif
@@ -679,12 +687,15 @@ fun! s:rgb_decrease_level(value)
  let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:colorset[s:tab].gui)
   let l:id = s:get_prop_id('_leve')
   if l:id == 1
+    if l:r == 0 | return | endif
     let l:r -= a:value
     if l:r < 0 | let l:r = 0 | endif
   elseif l:id == 2
+    if l:g == 0 | return | endif
     let l:g -= a:value
     if l:g < 0 | let l:g = 0 | endif
   elseif l:id == 3
+    if l:b == 0 | return | endif
     let l:b -= a:value
     if l:b < 0 | let l:b = 0 | endif
   endif
@@ -711,20 +722,73 @@ fun! s:redraw_rgb()
         \ s:favorite_section(
         \ s:recent_section(
         \ s:info_section(
-        \ s:rgb_slider_section(
-        \ s:title_section('R'), l:r, l:g, l:b)
+        \ s:rgb_slider_section(s:title_section('R'), l:r, l:g, l:b)
         \ ))))
 endf
 " }}}
 " HSB pane {{{
-fun! s:redraw_hsb()
-  call popup_settext(s:popup_winid,
-        \ extend(s:title_section('H'), [
+fun! s:hsb_increase_level(value)
+  let l:id = s:get_prop_id('_leve')
+  if l:id == 1
+    if s:colorset[s:tab].h == 359 | return | endif
+    let s:colorset[s:tab].h += a:value
+    if s:colorset[s:tab].h > 359 | let s:colorset[s:tab].h = 359 | endif
+  elseif l:id == 2
+    if s:colorset[s:tab].s == 100 | return | endif
+    let s:colorset[s:tab].s += a:value
+    if s:colorset[s:tab].s > 100 | let s:colorset[s:tab].s = 100 | endif
+  elseif l:id == 3
+    if s:colorset[s:tab].v == 100 | return | endif
+    let s:colorset[s:tab].v += a:value
+    if s:colorset[s:tab].v  > 100 | let s:colorset[s:tab].v  = 100 | endif
+  endif
+  if !s:colorset[s:tab].edited
+    call s:save_to_recent()
+  endif
+  call s:change_color(colortemplate#colorspace#hsv2hex(s:colorset[s:tab].h, s:colorset[s:tab].s, s:colorset[s:tab].v))
+endf
+
+fun! s:hsb_decrease_level(value)
+ let [l:h, l:s, l:v] = colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
+  let l:id = s:get_prop_id('_leve')
+  if l:id == 1
+    if s:colorset[s:tab].h == 0 | return | endif
+    let s:colorset[s:tab].h -= a:value
+    if s:colorset[s:tab].h  < 0 | let s:colorset[s:tab].h = 0 | endif
+  elseif l:id == 2
+    if s:colorset[s:tab].s == 0 | return | endif
+    let s:colorset[s:tab].s -= a:value
+    if s:colorset[s:tab].s < 0 | let s:colorset[s:tab].s = 0 | endif
+  elseif l:id == 3
+    if s:colorset[s:tab].v == 0 | return | endif
+    let s:colorset[s:tab].v -= a:value
+   if s:colorset[s:tab].v < 0 | let s:colorset[s:tab].v = 0 | endif
+  endif
+  if !s:colorset[s:tab].edited
+    call s:save_to_recent()
+  endif
+  call s:change_color(colortemplate#colorspace#hsv2hex(s:colorset[s:tab].h, s:colorset[s:tab].s, s:colorset[s:tab].v))
+endf
+
+fun! s:hsb_slider_section(text) " -> List of Dictionaries
+  let l:lnum = len(a:text)
+  return extend(a:text, [
         \ s:blank(),
-        \ s:prop_label('Not implemented yet.'),
-        \ s:prop_label('Please switch back to R.'),
-        \ ]))
-  call prop_add(1, 40, #{bufnr: s:popup_bufnr, length: 1, type: '_labe'})
+        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('H', s:colorset[s:tab].h, 359), 1),
+        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('S', s:colorset[s:tab].s, 100), 2),
+        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', s:colorset[s:tab].v, 100), 3),
+        \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
+        \])
+endf
+
+fun! s:redraw_hsb()
+  let [l:h, l:s, l:v] = colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
+  call popup_settext(s:popup_winid,
+        \ s:favorite_section(
+        \ s:recent_section(
+        \ s:info_section(
+        \ s:hsb_slider_section(s:title_section('H'))
+        \ ))))
 endf
 " }}}
 " Grayscale pane {{{
@@ -1094,6 +1158,9 @@ fun! s:action_switch_to_rgb()
 endf
 
 fun! s:action_switch_to_hsb()
+  let s:colorset[s:tab].edited = 0
+  let [s:colorset[s:tab].h, s:colorset[s:tab].s, s:colorset[s:tab].v] =
+        \ colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
   return s:set_pane('hsb')
 endf
 
@@ -1114,6 +1181,9 @@ fun! s:action_to_right()
   if s:pane ==# 'rgb'
     call s:rgb_increase_level(s:step)
     call s:redraw()
+  elseif s:pane ==# 'hsb'
+    call s:hsb_increase_level(s:step)
+    call s:redraw()
   elseif s:pane ==# 'gray'
     call s:gray_increase(s:step)
     call s:redraw()
@@ -1128,6 +1198,9 @@ fun! s:action_to_left()
   endif
   if s:pane ==# 'rgb'
     call s:rgb_decrease_level(s:step)
+    call s:redraw()
+  elseif s:pane ==# 'hsb'
+    call s:hsb_decrease_level(s:step)
     call s:redraw()
   elseif s:pane ==# 'gray'
     call s:gray_decrease(s:step)

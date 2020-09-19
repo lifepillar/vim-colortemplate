@@ -1299,7 +1299,7 @@ fun! colortemplate#style#open(...)
   endif
 
   let s:pane         = get(g:, 'colortemplate_popup_default_pane', 'rgb')
-  let s:mark_sym     = get(g:, 'colortemplate_popup_marker', '❯ ')
+  let s:mark_sym     = get(g:, 'colortemplate_popup_marker', '❯❯ ')
   let s:width        = max([39 + strdisplaywidth(s:mark_sym), 42])
   let s:gutter_width = strdisplaywidth(s:mark_sym, 0)
   let s:star_sym     = get(g:, 'colortemplate_popup_star', '*')

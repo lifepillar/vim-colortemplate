@@ -1,4 +1,4 @@
-*colortemplate.txt*	For Vim version 8.2	Last change: 2020 Sep 10
+*colortemplate.txt*	For Vim version 8.2	Last change: 2020 Sep 19
 
 	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
 	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~

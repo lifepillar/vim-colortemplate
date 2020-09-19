@@ -912,7 +912,7 @@ fun! s:action_cancel()
 endf
 
 fun! s:action_yank_recent()
-  echo printf('[Colortemplate] Which color (0-%d)? ', len(s:recent_colors) - 1)
+  echo printf('[Colortemplate] Yank color (0-%d)? ', len(s:recent_colors) - 1)
   let l:n = nr2char(getchar())
   echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(s:recent_colors)
@@ -925,7 +925,7 @@ endf
 fun! s:action_yank_favorite()
   let l:lnum = s:get_prop_id('_favl')
   let l:colors = s:favorite_line(l:lnum)
-  echo printf('[Colortemplate] Which color (0-%d)? ', len(l:colors) - 1)
+  echo printf('[Colortemplate] Yank color (0-%d)? ', len(l:colors) - 1)
   let l:n = nr2char(getchar())
   echo "\r"
   if l:n =~ '\m^\d$' && str2nr(l:n) < len(l:colors)

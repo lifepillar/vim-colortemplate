@@ -629,7 +629,7 @@ fun! s:favorite_section(text) " -> List of Dictionaries
     return []
   endif
 
-  let l:fav_section = extend(a:text, [s:blank(), s:prop_label('Favorites')])
+  let l:fav_section = extend(a:text, [s:blank(), s:prop_label('Favorite')])
   let l:lnum = len(a:text) + 2
   let l:i = 0
 

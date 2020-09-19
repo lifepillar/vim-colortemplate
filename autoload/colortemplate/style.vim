@@ -322,8 +322,8 @@ fun! s:noprop(t)
   return s:prop(a:t, [])
 endfunc
 
-fun! s:prop_level_bar(t, id)
-  return s:prop_item(a:t, [#{ col: 1, length: 0, type: '_leve', id: a:id }])
+fun! s:prop_level_bar(t, id, props = [])
+  return s:prop_item(a:t, extend([#{ col: 1, length: 0, type: '_leve', id: a:id }], a:props))
 endf
 
 fun! s:prop_label(t)
@@ -721,10 +721,10 @@ fun! s:rgb_slider_section(text, r, g, b) " -> List of Dictionaries
   let l:lnum = len(a:text)
   return extend(a:text, [
         \ s:blank(),
-        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('R', a:r), 1),
-        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('G', a:g), 2),
-        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', a:b), 3),
-        \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
+        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('R', a:r), 1, [#{ col: len(s:gutter(l:lnum + 2)) + 1, length: 1, type: '_labe' }]),
+        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('G', a:g), 2, [#{ col: len(s:gutter(l:lnum + 3)) + 1, length: 1, type: '_labe' }]),
+        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', a:b), 3, [#{ col: len(s:gutter(l:lnum + 4)) + 1, length: 1, type: '_labe' }]),
+        \ s:noprop(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
         \])
 endf
 
@@ -785,10 +785,10 @@ fun! s:hsb_slider_section(text) " -> List of Dictionaries
   let l:lnum = len(a:text)
   return extend(a:text, [
         \ s:blank(),
-        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('H', s:hsv_h, 359), 1),
-        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('S', s:hsv_s, 100), 2),
-        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', s:hsv_v, 100), 3),
-        \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
+        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('H', s:hsv_h, 359), 1, [#{ col: len(s:gutter(l:lnum + 2)) + 1, length: 1, type: '_labe' }]),
+        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('S', s:hsv_s, 100), 2, [#{ col: len(s:gutter(l:lnum + 3)) + 1, length: 1, type: '_labe' }]),
+        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', s:hsv_v, 100), 3, [#{ col: len(s:gutter(l:lnum + 4)) + 1, length: 1, type: '_labe' }]),
+        \ s:noprop(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
         \])
 endf
 

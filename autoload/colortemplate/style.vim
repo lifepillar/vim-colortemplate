@@ -503,7 +503,7 @@ fun! s:recent_section(text) " -> List of Dictionaries
         \ s:blank(),
         \ s:prop_label('Recent'),
         \ s:prop_label(' ' .. join(range(len(s:recent_colors)), '   ')),
-        \ (empty(s:recent_colors) ? s:blank() : s:prop_item(l:gutter .. repeat('x', s:width), l:props)),
+        \ (empty(s:recent_colors) ? s:blank() : s:prop_item(l:gutter .. repeat(' ', s:width - s:gutter_width), l:props)),
         \])
 endf
 " }}}
@@ -705,7 +705,6 @@ endf
 
 fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:colorset[s:tab].gui)
-  call s:init_pane()
   call popup_settext(s:popup_winid,
         \ s:favorite_section(
         \ s:recent_section(
@@ -785,7 +784,6 @@ endf
 
 fun! s:redraw_gray()
   let l:g = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
-  call s:init_pane()
   call popup_settext(s:popup_winid,
         \ s:favorite_section(
         \ s:recent_section(

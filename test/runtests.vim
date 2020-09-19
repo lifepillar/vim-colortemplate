@@ -50,6 +50,17 @@ fun! Test_CT_srgb2cielab238238239()
   call assert_true(-0.49221569623207895 - s:eps < b && b < -0.49221569623207895 + s:eps)
 endf
 
+fun! Test_CT_rgb2hsv()
+  let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 0, 0)
+  call assert_equal(0.0, h)
+  call assert_equal(0.0, s)
+  call assert_equal(0.0, v)
+  let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 255, 255)
+  call assert_equal(0.0, h)
+  call assert_equal(0.0, s)
+  call assert_equal(1.0, v)
+endf
+
 fun! Test_CT_delta_eeeeef()
   let l:res = colortemplate#colorspace#approx('#eeeeef')
   call assert_equal('#eeeeef', l:res['color'])

@@ -53,10 +53,9 @@ fun! colortemplate#colorspace#contrast_color(col, term = 0)
 endf
 
 " Convert an HSV color into RGB space.
-" Input values must be in the interval [0,1]
-" See: http://www.easyrgb.com/en/math.php
-" Last optional parameter may be 1 or 256 (default is 256)
-fun! colortemplate#colorspace#hsv2rgb(h, s, v, ...)
+" Input values must be in the interval [0,1]; output in in 0-255
+" See: https://www.easyrgb.com/en/math.php
+fun! colortemplate#colorspace#hsv2rgb(h, s, v)
   " Force values to be interpreted as floats
   let l:h = a:h / 1.0
   let l:s = a:s / 1.0
@@ -99,9 +98,46 @@ fun! colortemplate#colorspace#hsv2rgb(h, s, v, ...)
     let l:var_g = l:var_1
     let l:var_b = l:var_2
   endif
-  return a:0 > 0 && a:1 == 1
-        \ ? [l:var_r, l:var_g, l:var_b]
-        \ : map([l:var_r, l:var_g, l:var_b], { _,v -> float2nr(round(255 * v)) })
+  return map([l:var_r, l:var_g, l:var_b], { _,v -> float2nr(round(255 * v)) })
+endf
+
+" See above
+" Input values must be in 0-255; output is in 0-1
+fun! colortemplate#colorspace#rgb2hsv(r, g, b)
+  let l:var_r = a:r / 255.0
+  let l:var_g = a:g / 255.0
+  let l:var_b = a:b / 255.0
+  let l:var_min = (l:var_r < l:var_g
+        \          ? (l:var_r < l:var_b ? l:var_r : l:var_b)
+        \          : (l:var_g < l:var_b ? l:var_g : l:var_b))
+  let l:var_max = (l:var_r > l:var_g
+        \          ? (l:var_r > l:var_b ? l:var_r : l:var_b)
+        \          : (l:var_g > l:var_b ? l:var_g : l:var_b))
+  let l:del_max = l:var_max - l:var_min
+  let l:v = l:var_max
+
+  if l:del_max == 0.0  " This is gray, no chroma
+    let l:h = 0.0
+    let l:s = 0.0
+  else  " Chromatic data
+    let l:s = l:del_max / l:var_max
+    let l:del_r = (((l:var_max - l:var_r) / 6.0) + (l:del_max / 2.0)) / l:del_max
+    let l:del_g = (((l:var_max - l:var_g) / 6.0) + (l:del_max / 2.0)) / l:del_max
+    let l:del_b = (((l:var_max - l:var_b) / 6.0) + (l:del_max / 2.0)) / l:del_max
+
+    if l:var_r == l:var_max
+      let l:h = l:del_b - l:del_g
+    elseif l:var_g == l:var_max
+      let l:h = (1.0 / 3.0) + l:del_r - l:del_b
+    elseif l:var_b == l:var_max
+      let l:h = (2.0 / 3.0) + l:del_g - l:del_r
+    endif
+
+    if (l:h < 0.0) | let l:h += 1.0 | endif
+    if (l:h > 1.0) | let l:h -= 1.0 | endif
+  endif
+
+  return [l:h, l:s, l:v]
 endf
 
 fun! colortemplate#colorspace#hsv2hex(h, s, v)

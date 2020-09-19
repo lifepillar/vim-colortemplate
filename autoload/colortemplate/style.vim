@@ -2,7 +2,7 @@
 " Mode for colors
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
 " Mode for attributes
-const s:attrmode = (has('gui_running') || (has('nvim' && has('termguicolors') && &termguicolors))) ? 'gui' : 'cterm'
+const s:attrmode = (has('gui_running') ? 'gui' : 'cterm')
 " }}}
 " Popup configuration {{{
 let s:keymap = {}      " Dictionary of key controls (initialized below)

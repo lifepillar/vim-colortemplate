@@ -50,9 +50,9 @@ endf
 
 fun! s:center(text, width)
   return printf('%s%s%s',
-        \ repeat(' ', (a:width - strchars(a:text)) / 2),
+        \ repeat(' ', (a:width + 1 - strwidth(a:text)) / 2),
         \ a:text,
-        \ repeat(' ', (a:width + 1 - strchars(a:text)) / 2))
+        \ repeat(' ', (a:width  - strwidth(a:text)) / 2))
 endf
 
 fun! s:msg(msg, type = 'w')
@@ -420,7 +420,8 @@ fun! s:info_section(text) " -> List of Dictionaries
         \         #{ col: 43, length: 1, type: (s:attrs.strikethrough    ? '_strk' : '_off_') },
         \        ]),
         \ s:blank(),
-        \ s:prop(s:sample_text, [#{ col: 1, length: s:width, type: '_curr' }]),
+        \ s:prop(s:center(s:sample_text, s:width),
+        \       [#{ col: 1 + (s:width + 1 - strwidth(s:sample_text)) / 2, length: len(s:sample_text), type: '_curr' }]),
         \])
 endf
 " }}}
@@ -1303,7 +1304,7 @@ fun! colortemplate#style#open(...)
   let s:width        = max([39 + strdisplaywidth(s:mark_sym), 42])
   let s:gutter_width = strdisplaywidth(s:mark_sym, 0)
   let s:star_sym     = get(g:, 'colortemplate_popup_star', '*')
-  let s:sample_text  = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
+  let s:sample_text  = s:sample_texts[rand() % len(s:sample_texts)]
 
   call s:init_slider_symbols()
   call s:load_favorite_colors() " Must be done before resetting the highlight

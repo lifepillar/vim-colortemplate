@@ -601,7 +601,7 @@ endif
 
 fun! s:save_to_favorite(col)
   if index(s:favorite_colors, a:col) != -1
-    return " Do not add the same color twice
+    return
   endif
   " Add and save to disk
   call add(s:favorite_colors, a:col)

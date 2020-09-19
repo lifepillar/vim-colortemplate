@@ -502,7 +502,7 @@ fun! s:recent_section(text) " -> List of Dictionaries
   return extend(a:text, [
         \ s:blank(),
         \ s:prop_label('Recent'),
-        \ s:prop_label(' ' .. join(range(len(s:recent_colors)), '   ')),
+        \ s:prop_label(repeat(' ', s:gutter_width + 1) .. join(range(len(s:recent_colors)), '   ')),
         \ (empty(s:recent_colors) ? s:blank() : s:prop_item(l:gutter .. repeat(' ', s:width - s:gutter_width), l:props)),
         \])
 endf
@@ -1297,10 +1297,10 @@ fun! colortemplate#style#open(...)
     return s:popup_winid
   endif
 
-  let s:width        = max([39 + strchars(s:mark_sym), 42])
   let s:pane         = get(g:, 'colortemplate_popup_default_pane', 'rgb')
   let s:mark_sym     = get(g:, 'colortemplate_popup_marker', '> ')
-  let s:gutter_width = strdisplaywidth(s:mark_sym, 0)
+  let s:width        = max([39 + strdisplaywidth(s:mark_sym), 42])
+  let s:gutter_width = strdisplaywidth(s:mark_sym, -1)
   let s:star_sym     = get(g:, 'colortemplate_popup_star', '*')
   let s:sample_text  = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
 

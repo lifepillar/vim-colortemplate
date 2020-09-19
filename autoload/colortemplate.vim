@@ -1,5 +1,5 @@
 " vim: foldmethod=marker nowrap et ts=2 sw=2
-let s:VERSION = '2.0.0'
+let s:VERSION = '2.1.0'
 " Informal grammar {{{
 " <Template>                  ::= <Line>*
 " <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> |

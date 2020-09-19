@@ -1,4 +1,4 @@
-# Colortemplate: The Toolkit for Vim Color Scheme Designers!
+# The Toolkit for Vim Color Scheme Designers!
 
 Colortemplate is a 100% VimScript plugin for Vim 8 or later, which makes it easy
 to develop color schemes. Its ambitious goal is to become *the* way to create
@@ -80,7 +80,4 @@ take a look at some color schemes created with it:
 
 Do you want to contribute? Do you have any suggestions on how to improve
 Colortemplate? Open an issue or submit a pull request!
-
-See also [the discussion](https://github.com/vim/vim/issues/1665) that prompted
-the creation of this script.
 

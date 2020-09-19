@@ -1349,7 +1349,7 @@ fun! colortemplate#style#open(...)
       autocmd CursorMoved * call s:update_hlgroup_when_cursor_moves()
     augroup END
   else
-    call s:set_hlgroup(a:1, 1)
+    call s:set_hlgroup(a:1)
   endif
 
   call s:redraw()

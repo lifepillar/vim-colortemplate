@@ -86,8 +86,9 @@ let s:tab = 'fg'   " Which color (foreground/background/special) is displayed
 " - h: H value for HSB
 " - s: S value for HSB
 " - b: B value for HSB
+" - gray: the shade of gray most similar to the color.
 "
-" The last three value are computed lazily, when the HSB pane is active.
+" The last four value are computed lazily, when the corresponding pane is active.
 let s:colorset = #{ fg: {}, bg: {}, sp: {} }
 
 " The attributes of the current highlight group
@@ -729,45 +730,56 @@ endf
 " HSB pane {{{
 fun! s:hsb_increase_level(value)
   let l:id = s:get_prop_id('_leve')
+  let l:h = s:colorset[s:tab].h
+  let l:s = s:colorset[s:tab].s
+  let l:v = s:colorset[s:tab].v
   if l:id == 1
-    if s:colorset[s:tab].h == 359 | return | endif
-    let s:colorset[s:tab].h += a:value
-    if s:colorset[s:tab].h > 359 | let s:colorset[s:tab].h = 359 | endif
+    if l:h == 359 | return | endif
+    let l:h += a:value
+    if l:h > 359 | let l:h = 359 | endif
   elseif l:id == 2
-    if s:colorset[s:tab].s == 100 | return | endif
-    let s:colorset[s:tab].s += a:value
-    if s:colorset[s:tab].s > 100 | let s:colorset[s:tab].s = 100 | endif
+    if l:s == 100 | return | endif
+    let l:s += a:value
+    if l:s > 100 | let l:s = 100 | endif
   elseif l:id == 3
-    if s:colorset[s:tab].v == 100 | return | endif
-    let s:colorset[s:tab].v += a:value
-    if s:colorset[s:tab].v  > 100 | let s:colorset[s:tab].v  = 100 | endif
+    if l:v == 100 | return | endif
+    let l:v += a:value
+    if l:v > 100 | let l:v = 100 | endif
   endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
-  call s:change_color(colortemplate#colorspace#hsv2hex(s:colorset[s:tab].h, s:colorset[s:tab].s, s:colorset[s:tab].v))
+  call s:change_color(colortemplate#colorspace#hsv2hex(l:h, l:s, l:v))
+  let s:colorset[s:tab].h = l:h
+  let s:colorset[s:tab].s = l:s
+  let s:colorset[s:tab].v = l:v
 endf
 
 fun! s:hsb_decrease_level(value)
- let [l:h, l:s, l:v] = colortemplate#colorspace#hex2hsv(s:colorset[s:tab].gui)
   let l:id = s:get_prop_id('_leve')
+  let l:h = s:colorset[s:tab].h
+  let l:s = s:colorset[s:tab].s
+  let l:v = s:colorset[s:tab].v
   if l:id == 1
-    if s:colorset[s:tab].h == 0 | return | endif
-    let s:colorset[s:tab].h -= a:value
-    if s:colorset[s:tab].h  < 0 | let s:colorset[s:tab].h = 0 | endif
+    if l:h == 0 | return | endif
+    let l:h -= a:value
+    if l:h < 0 | let l:h = 0 | endif
   elseif l:id == 2
-    if s:colorset[s:tab].s == 0 | return | endif
-    let s:colorset[s:tab].s -= a:value
-    if s:colorset[s:tab].s < 0 | let s:colorset[s:tab].s = 0 | endif
+    if l:s == 0 | return | endif
+    let l:s -= a:value
+    if l:s < 0 | let l:s = 0 | endif
   elseif l:id == 3
-    if s:colorset[s:tab].v == 0 | return | endif
-    let s:colorset[s:tab].v -= a:value
-   if s:colorset[s:tab].v < 0 | let s:colorset[s:tab].v = 0 | endif
+    if l:v == 0 | return | endif
+    let l:v -= a:value
+    if l:v < 0 | let l:v = 0 | endif
   endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
-  call s:change_color(colortemplate#colorspace#hsv2hex(s:colorset[s:tab].h, s:colorset[s:tab].s, s:colorset[s:tab].v))
+  call s:change_color(colortemplate#colorspace#hsv2hex(l:h, l:s, l:v))
+  let s:colorset[s:tab].h = l:h
+  let s:colorset[s:tab].s = l:s
+  let s:colorset[s:tab].v = l:v
 endf
 
 fun! s:hsb_slider_section(text) " -> List of Dictionaries
@@ -812,23 +824,27 @@ fun! s:add_grayscale_prop_types()
 endf
 
 fun! s:gray_increase(value)
-  let l:g = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
-  let l:g += a:value
-  if l:g > 255 | let l:g = 255 | endif
+  if s:colorset[s:tab].gray == 255 | return | endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
+  let l:g = s:colorset[s:tab].gray
+  let l:g += a:value
+  if l:g > 255 | let l:g = 255 | endif
   call s:change_color(colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
+  let s:colorset[s:tab].gray = l:g
 endf
 
 fun! s:gray_decrease(value)
-  let l:g = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
-  let l:g -= a:value
-  if l:g < 0 | let l:g = 0 | endif
+  if s:colorset[s:tab].gray == 0 | return | endif
   if !s:colorset[s:tab].edited
     call s:save_to_recent()
   endif
+  let l:g = s:colorset[s:tab].gray
+  let l:g -= a:value
+  if l:g < 0 | let l:g = 0 | endif
   call s:change_color(colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
+  let s:colorset[s:tab].gray = l:g
 endf
 
 fun! s:gray_slider_section(text, shade) " -> List of Dictionaries
@@ -1166,6 +1182,7 @@ endf
 
 fun! s:action_switch_to_grayscale()
   let s:colorset[s:tab].edited = 0
+  let s:colorset[s:tab].gray = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
   return s:set_pane('gray')
 endf
 
@@ -1251,6 +1268,18 @@ fun! s:redraw()
     call s:redraw_gray()
   elseif s:pane ==# 'help'
     call s:redraw_help()
+  endif
+endf
+
+fun! s:switch_to_pane(pane)
+  if a:pane ==# 'rgb'
+    call s:action_switch_to_rgb()
+  elseif a:pane ==# 'hsb'
+    call s:action_switch_to_hsb()
+  elseif a:pane ==# 'gray'
+    call s:action_switch_to_grayscale()
+  else
+    call s:action_switch_to_help()
   endif
 endf
 " }}}
@@ -1372,7 +1401,6 @@ fun! colortemplate#style#open(...)
     return s:popup_winid
   endif
 
-  let s:pane         = get(g:, 'colortemplate_popup_default_pane', 'rgb')
   let s:mark_sym     = get(g:, 'colortemplate_popup_marker', '❯❯ ')
   let s:width        = max([39 + strdisplaywidth(s:mark_sym), 42])
   let s:gutter_width = strdisplaywidth(s:mark_sym, 0)
@@ -1426,7 +1454,8 @@ fun! colortemplate#style#open(...)
   endif
 
   let s:active_line = 3
-  call s:redraw()
+  call s:switch_to_pane(get(g:, 'colortemplate_popup_default_pane', 'rgb'))
+
   return s:popup_winid
 endf
 

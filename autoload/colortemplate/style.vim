@@ -1,26 +1,3 @@
-" Helper functions {{{
-fun! s:save_popup_position(id)
-  let s:popup_x = popup_getoptions(a:id)['col']
-  let s:popup_y = popup_getoptions(a:id)['line']
-endf
-
-fun! s:center(text, width)
-  return printf('%s%s%s',
-        \ repeat(' ', (a:width - strchars(a:text)) / 2),
-        \ a:text,
-        \ repeat(' ', (a:width + 1 - strchars(a:text)) / 2))
-endf
-
-fun! s:msg(msg, type = 'w')
-  if a:type ==# 'e'
-    echohl Error
-  else
-    echohl WarningMsg
-  endif
-  echomsg '[Colortemplate]' a:msg .. '.'
-  echohl None
-endf
-" }}}
 " Global constants {{{
 " Mode for colors
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
@@ -31,6 +8,7 @@ const s:attrmode = (has('gui_running') || (has('nvim' && has('termguicolors') &&
 let s:keymap = {}      " Dictionary of key controls (initialized below)
 let s:mark_sym = ''    " Marker for the current line (set when the popup is open)
 let s:width = 0        " Popup width (set when the popup is open)
+let s:gutter_width = 0 " The 'gutter' is the space reserved for the marker (set when the popup is open)
 let s:popup_bg = ''    " Popup background (initialized below)
 let s:star_sym = ''    " Symbol for stars (set when the popup is open)
 let s:popup_x = 0      " Horizontal position of the popup (0=center)
@@ -57,6 +35,35 @@ let s:sample_texts = get(g:, 'colortemplate_popup_quotes', [
       \ "Vana gloria spica ingens est sine grano",
       \])
 let s:sample_text = '' " Text displayed in the style picker
+" }}}
+" Helper functions {{{
+fun! s:save_popup_position(id)
+  let s:popup_x = popup_getoptions(a:id)['col']
+  let s:popup_y = popup_getoptions(a:id)['line']
+endf
+
+fun! s:gutter(lnum)
+  return (a:lnum == s:active_line)
+        \ ? s:mark_sym
+        \ : repeat(' ', strdisplaywidth(s:mark_sym, 0))
+endf
+
+fun! s:center(text, width)
+  return printf('%s%s%s',
+        \ repeat(' ', (a:width - strchars(a:text)) / 2),
+        \ a:text,
+        \ repeat(' ', (a:width + 1 - strchars(a:text)) / 2))
+endf
+
+fun! s:msg(msg, type = 'w')
+  if a:type ==# 'e'
+    echohl Error
+  else
+    echohl WarningMsg
+  endif
+  echomsg '[Colortemplate]' a:msg .. '.'
+  echohl None
+endf
 " }}}
 " Highlight groups {{{
 let s:hlgroup = '' " Name of the currently displayed highlight group
@@ -268,37 +275,25 @@ fun! s:add_common_prop_types()
   " Mark line as a 'recent colors' line
   call prop_type_add('_mru_', #{ bufnr: s:popup_bufnr })
   " Mark line as a 'favorite colors' line
-  call prop_type_add('_fav_', #{ bufnr: s:popup_bufnr })
+  call prop_type_add('_favl', #{ bufnr: s:popup_bufnr })
   " To highlight text with the currently selected highglight group
   call prop_type_add('_curr', #{ bufnr: s:popup_bufnr })
   " Highlight for warning symbols
   call prop_type_add('_warn', #{bufnr: s:popup_bufnr, highlight: 'colortemplatePopupWarn'})
 endf
 
-fun! s:init_pane()
-  let s:__line__ = 0 " Keeps track of the line being built
-endf
-
-" Defines a new generic, non-selectable, text line with properties.
+" Defines a new generic text line with properties.
 "
 " t: a String
 " props: an Array of text properties, as in popup_settext().
 "
 " Returns a Dictionary.
 fun! s:prop(t, props)
-  let s:__line__ += 1
   return #{ text: a:t, props: a:props }
 endf
 
-" Defines a new selectable line in the popup. If the line is currently
-" selected, a marker is prepended to it.
 fun! s:prop_item(t, props = [])
-  let s:__line__ += 1
-  return #{ text: (s:__line__ == s:active_line
-        \          ? s:mark_sym
-        \          : repeat(' ', strchars(s:mark_sym))) .. a:t,
-        \   props: extend([#{ col: 1, length: 0, type: '_item' }], a:props),
-        \}
+  return #{ text: a:t, props: extend([#{ col: 1, length: 0, type: '_item' }], a:props) }
 endf
 
 fun! s:blank()
@@ -315,10 +310,6 @@ endf
 
 fun! s:prop_label(t)
   return s:prop(a:t, [#{ col: 1, length: s:width, type: '_labe' }])
-endf
-
-fun! s:prop_indented_label(t)
-  return s:prop(repeat(' ', strchars(s:mark_sym))..a:t, [#{ col: 1, length: s:width, type: '_labe' }])
 endf
 
 fun! s:prop_current(t)
@@ -404,12 +395,12 @@ fun! s:add_info_section_prop_types()
   call prop_type_add('_strk', #{bufnr: s:popup_bufnr, highlight: 'colortemplatePopupStrk'})
 endf
 
-fun! s:info_section() " -> List of Dictionaries
+fun! s:info_section(text) " -> List of Dictionaries
   let l:col = s:colorset[s:tab]
   let l:warn = l:col.guess
   let l:excl = (l:warn ? '!' : ' ')
 
-  return [
+  return extend(a:text, [
         \ s:blank(),
         \ s:prop(printf('   %s%s%-5s    %3d%s%-5s Δ%.'..(l:col.delta>=10.0?'f  ':'1f ')..'BIUSV~-',
         \          l:col.gui, l:excl, s:stars[s:tab].gui, l:col.index, l:excl, s:stars[s:tab].cterm, l:col.delta),
@@ -429,7 +420,7 @@ fun! s:info_section() " -> List of Dictionaries
         \        ]),
         \ s:blank(),
         \ s:prop(s:sample_text, [#{ col: 1, length: s:width, type: '_curr' }]),
-        \]
+        \])
 endf
 " }}}
 " Recent colors section {{{
@@ -500,18 +491,20 @@ fun! s:remove_from_recent(n)
   endif
 endf
 
-fun! s:recent_section() " -> List of Dictionaries
+fun! s:recent_section(text) " -> List of Dictionaries
   let l:props = [#{ col: 1, length: 0, type: '_mru_' }]
+  let l:lnum = len(a:text) + 4
+  let l:gutter = s:gutter(l:lnum)
   for l:i in range(len(s:recent_colors))
-    call add(l:props, #{ col: 1 + strchars(s:mark_sym) + 4 * l:i, length: 3, type: '_mru'.. l:i })
+    call add(l:props, #{ col: 1 + len(l:gutter) + 4 * l:i, length: 3, type: '_mru'.. l:i })
   endfor
 
-  return [
+  return extend(a:text, [
         \ s:blank(),
-        \ s:prop_indented_label('Recent'),
-        \ s:prop_indented_label(' ' .. join(range(len(s:recent_colors)), '   ')),
-        \ (empty(s:recent_colors) ? s:blank() : s:prop_item(repeat(' ', s:width), l:props)),
-        \]
+        \ s:prop_label('Recent'),
+        \ s:prop_label(' ' .. join(range(len(s:recent_colors)), '   ')),
+        \ (empty(s:recent_colors) ? s:blank() : s:prop_item(l:gutter .. repeat('x', s:width), l:props)),
+        \])
 endf
 " }}}
 " Favorites section {{{
@@ -630,27 +623,30 @@ fun! s:favorite_line(i)
   return s:favorite_colors[(a:i * s:fav_capacity):(a:i * s:fav_capacity + s:fav_capacity - 1)]
 endf
 
-fun! s:favorite_section() " -> List of Dictionaries
+fun! s:favorite_section(text) " -> List of Dictionaries
   if len(s:favorite_colors) == 0
     return []
   endif
 
-  let l:fav_section = [s:prop_indented_label('Favorites')]
+  let l:fav_section = extend(a:text, [s:prop_label('Favorites')])
+  let l:lnum = len(a:text) + 1
   let l:i = 0
 
   while l:i < len(s:favorite_colors)
-    let l:props = [#{ col: 1, length: 0, type: '_fav_', id: (l:i / s:fav_capacity) }]
+    let l:gutter = s:gutter(l:lnum)
+    let l:props = [#{ col: 1, length: 0, type: '_favl', id: (l:i / s:fav_capacity) }]
     let l:colors = s:favorite_line(l:i / s:fav_capacity)
 
     for l:j in range(len(l:colors))
-      call add(l:props, #{ col: (strchars(s:mark_sym) + 1) + 4 * l:j, length: 3, type: '_fav'.. (l:i + l:j) })
+      call add(l:props, #{ col: 1 + len(l:gutter) + 4 * l:j, length: 3, type: '_fav'.. (l:i + l:j) })
     endfor
 
     call extend(l:fav_section, [
-          \ s:prop_item(repeat(' ', s:width), l:props),
-          \ s:prop_indented_label(' ' .. join(range(len(l:colors)), '   ')),
+          \ s:prop_item(l:gutter .. repeat(' ', s:width), l:props),
+          \ s:prop_label(repeat(' ', s:gutter_width + 1) .. join(range(len(l:colors)), '   ')),
           \ ])
 
+    let l:lnum += 2
     let l:i += s:fav_capacity
   endwhile
 
@@ -696,27 +692,27 @@ fun! s:rgb_decrease_level(value)
   call s:change_color(colortemplate#colorspace#rgb2hex(l:r, l:g, l:b))
 endf
 
-fun! s:rgb_slider(r, g, b) " -> List of Dictionaries
-  return [
+fun! s:rgb_slider_section(text, r, g, b) " -> List of Dictionaries
+  let l:lnum = len(a:text)
+  return extend(a:text, [
         \ s:blank(),
-        \ s:prop_level_bar(s:slider('R', a:r), 1),
-        \ s:prop_level_bar(s:slider('G', a:g), 2),
-        \ s:prop_level_bar(s:slider('B', a:b), 3),
-        \ s:prop_label(printf('%s%02d', repeat(' ', strchars(s:mark_sym) + 3), s:step)),
-        \]
+        \ s:prop_level_bar(s:gutter(l:lnum + 2) .. s:slider('R', a:r), 1),
+        \ s:prop_level_bar(s:gutter(l:lnum + 3) .. s:slider('G', a:g), 2),
+        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider('B', a:b), 3),
+        \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
+        \])
 endf
 
 fun! s:redraw_rgb()
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(s:colorset[s:tab].gui)
   call s:init_pane()
   call popup_settext(s:popup_winid,
-        \ extend(extend(extend(extend(
-        \   s:title_section('R'),
-        \   s:rgb_slider(l:r, l:g, l:b)),
-        \   s:info_section()),
-        \   s:recent_section()),
-        \   s:favorite_section())
-        \)
+        \ s:favorite_section(
+        \ s:recent_section(
+        \ s:info_section(
+        \ s:rgb_slider_section(
+        \ s:title_section('R'), l:r, l:g, l:b)
+        \ ))))
 endf
 " }}}
 " HSB pane {{{
@@ -770,10 +766,11 @@ fun! s:gray_decrease(value)
   call s:change_color(colortemplate#colorspace#rgb2hex(l:g, l:g, l:g))
 endf
 
-fun! s:gray_slider(shade) " -> List of Dictionaries
-  return [
+fun! s:gray_slider_section(text, shade) " -> List of Dictionaries
+  let l:lnum = len(a:text)
+  return extend(a:text, [
         \ s:blank(),
-        \ s:prop_indented_label('Grayscale'),
+        \ s:prop_label('Grayscale'),
         \ s:prop(repeat(' ', s:width), [
         \ #{ col:  8, length: 2, type: '_g000'},
         \ #{ col: 16, length: 2, type: '_g025'},
@@ -781,22 +778,20 @@ fun! s:gray_slider(shade) " -> List of Dictionaries
         \ #{ col: 32, length: 2, type: '_g075'},
         \ #{ col: 40, length: 2, type: '_g100'},
         \ ]),
-        \ s:prop_level_bar(s:slider(' ', a:shade), 1),
-        \ s:prop_label(printf('%s%02d', repeat(' ', strchars(s:mark_sym) + 3), s:step)),
-        \]
+        \ s:prop_level_bar(s:gutter(l:lnum + 4) .. s:slider(' ', a:shade), 1),
+        \ s:prop_label(printf('%s%02d', repeat(' ', s:gutter_width + 3), s:step)),
+        \])
 endf
 
 fun! s:redraw_gray()
   let l:g = colortemplate#colorspace#hex2gray(s:colorset[s:tab].gui)
   call s:init_pane()
   call popup_settext(s:popup_winid,
-        \ extend(extend(extend(extend(
-        \   s:title_section('G'),
-        \   s:gray_slider(l:g)),
-        \   s:info_section()),
-        \   s:recent_section()),
-        \   s:favorite_section())
-        \)
+        \ s:favorite_section(
+        \ s:recent_section(
+        \ s:info_section(
+        \ s:gray_slider_section(s:title_section('G'), l:g)
+        \ ))))
 endf
 " }}}
 " Help pane {{{
@@ -914,7 +909,7 @@ fun! s:action_pick_recent()
 endf
 
 fun! s:action_pick_favorite()
-  let l:lnum = s:get_prop_id('_fav_')
+  let l:lnum = s:get_prop_id('_favl')
   let l:colors = s:favorite_line(l:lnum)
   echo printf('[Colortemplate] Which color (0-%d)? ', len(l:colors) - 1)
   let l:n = nr2char(getchar())
@@ -932,7 +927,7 @@ fun! s:action_pick_color()
   let l:props = s:get_props()
   if index(l:props, '_mru_') != - 1
     return s:action_pick_recent()
-  elseif index(l:props, '_fav_') != - 1
+  elseif index(l:props, '_favl') != - 1
     return s:action_pick_favorite()
   else
     return 0
@@ -954,7 +949,7 @@ fun! s:action_remove_from_recent()
 endf
 
 fun! s:action_remove_from_favorite()
-  let l:lnum = s:get_prop_id('_fav_')
+  let l:lnum = s:get_prop_id('_favl')
   let l:colors = s:favorite_line(l:lnum)
   echo printf('[Colortemplate] Remove color (0-%d)? ', len(l:colors) - 1)
   let l:n = nr2char(getchar())
@@ -973,7 +968,7 @@ fun! s:action_remove_color()
   let l:props = s:get_props()
   if index(l:props, '_mru_') != - 1
     return s:action_remove_from_recent()
-  elseif index(l:props, '_fav_') != - 1
+  elseif index(l:props, '_favl') != - 1
     return s:action_remove_from_favorite()
   else
     return 0
@@ -1304,11 +1299,12 @@ fun! colortemplate#style#open(...)
     return s:popup_winid
   endif
 
-  let s:pane        = get(g:, 'colortemplate_popup_default_pane', 'rgb')
-  let s:mark_sym    = get(g:, 'colortemplate_popup_marker', '> ')
-  let s:width       = max([39 + strchars(s:mark_sym), 42])
-  let s:star_sym    = get(g:, 'colortemplate_popup_star', '*')
-  let s:sample_text = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
+  let s:width        = max([39 + strchars(s:mark_sym), 42])
+  let s:pane         = get(g:, 'colortemplate_popup_default_pane', 'rgb')
+  let s:mark_sym     = get(g:, 'colortemplate_popup_marker', '> ')
+  let s:gutter_width = strdisplaywidth(s:mark_sym, 0)
+  let s:star_sym     = get(g:, 'colortemplate_popup_star', '*')
+  let s:sample_text  = s:center(s:sample_texts[rand() % len(s:sample_texts)], s:width)
 
   call s:init_slider_symbols()
   call s:load_favorite_colors() " Must be done before resetting the highlight

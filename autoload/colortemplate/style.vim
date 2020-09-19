@@ -502,7 +502,7 @@ fun! s:recent_section(text) " -> List of Dictionaries
 
   return extend(a:text, [
         \ s:blank(),
-        \ s:prop_label('Recent'),
+        \ s:prop_label('Recent colors'),
         \ s:prop_label(repeat(' ', s:gutter_width + 1) .. join(range(len(s:recent_colors)), '   ')),
         \ (empty(s:recent_colors) ? s:blank() : s:prop_item(l:gutter .. repeat(' ', s:width - s:gutter_width), l:props)),
         \])
@@ -629,7 +629,7 @@ fun! s:favorite_section(text) " -> List of Dictionaries
     return []
   endif
 
-  let l:fav_section = extend(a:text, [s:blank(), s:prop_label('Favorite')])
+  let l:fav_section = extend(a:text, [s:blank(), s:prop_label('Favorite colors')])
   let l:lnum = len(a:text) + 2
   let l:i = 0
 

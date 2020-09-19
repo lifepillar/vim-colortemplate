@@ -19,7 +19,9 @@ if get(g:, 'colortemplate_rtp', 1)
   execute 'set runtimepath^='.b:colortemplate_outdir
 endif
 
-setlocal balloonexpr=colortemplate#syn#balloonexpr()
+if has('balloon_eval') || has('balloon_eval_term')
+  setlocal balloonexpr=colortemplate#syn#balloonexpr()
+endif
 setlocal commentstring=;%s
 setlocal omnifunc=syntaxcomplete#Complete
 

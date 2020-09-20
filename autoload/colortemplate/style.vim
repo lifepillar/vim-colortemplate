@@ -20,19 +20,19 @@ let s:pane = ''        " Current pane ('rgb', 'gray', 'hsb', 'help')
 let s:step = 1         " Step for increasing/decreasing the values of level bars
 let s:step_reset = 1   " Status of the step counter
 let s:sample_texts = get(g:, 'colortemplate_popup_quotes', [
-      \ "Absentem edit cum ebrio qui litigat",
+      \ "Absentem edit cum ebrio qui litigat.",
       \ "Accipere quam facere praestat iniuriam",
-      \ "Amicum cum vides obliviscere miserias",
-      \ "Diligite iustitiam qui iudicatis terram",
-      \ "Etiam capillus unus habet umbram suam",
-      \ "Impunitas semper ad deteriora invitat",
+      \ "Amicum cum vides obliviscere miserias.",
+      \ "Diligite iustitiam qui iudicatis terram.",
+      \ "Etiam capillus unus habet umbram suam.",
+      \ "Impunitas semper ad deteriora invitat.",
       \ "Mala tempora currunt sed peiora parantur",
       \ "Nec quod fuimusve sumusve, cras erimus",
       \ "Nec sine te, nec tecum vivere possum",
       \ "Quis custodiet ipsos custodes?",
-      \ "Quod non vetat lex, hoc vetat fieri pudor",
+      \ "Quod non vetat lex, hoc vetat fieri pudor.",
       \ "Vim vi repellere licet",
-      \ "Vana gloria spica ingens est sine grano",
+      \ "Vana gloria spica ingens est sine grano.",
       \])
 let s:sample_text = '' " Text displayed in the style picker
 " }}}

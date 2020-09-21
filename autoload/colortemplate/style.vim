@@ -1469,7 +1469,7 @@ fun! colortemplate#style#open(...)
 
   let s:popup_winid = popup_create('', #{
         \ border: [1,1,1,1],
-        \ borderchars: get(g:, 'colortemplate_popup_borderchars', ['─', '│', '─', '│', '┌', '┐', '┘', '└']),
+        \ borderchars: get(g:, 'colortemplate_popup_borderchars', ['─', '│', '─', '│', '╭', '╮', '╯', '╰']),
         \ callback: 'colortemplate#style#closed',
         \ close: 'button',
         \ cursorline: 0,

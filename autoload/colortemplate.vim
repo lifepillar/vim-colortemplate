@@ -3,9 +3,10 @@ let s:VERSION = '2.1.0'
 " Informal grammar {{{
 " <Template>                  ::= <Line>*
 " <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> |
-"                                 <VerbatimText>  | <Command> | <AuxFile> | <Documentation>
+"                                 <VerbatimText> | | <ResetBlock> | <Command> | <AuxFile> | <Documentation>
 " <Command>                   ::= #if <Anything> | #elseif <Anything> | #else | #endif
 " <VerbatimText>              ::= verbatim <Anything> endverbatim
+" <ResetBlock>                ::= reset <Anything> endreset
 " <AuxFile>                   ::= auxfile <Path> <Anything> endauxfile
 " <Path>                      ::= .+
 " <Documentation>             ::= documentation <Anything> enddocumentation
@@ -836,15 +837,16 @@ endf
 let s:GUI = '65536' " GUI or termguicolors
 
 fun! s:init_colorscheme_definition()
-  let s:data       = { 'global': { 'preamble': [] } }
-  let s:italics    = { 'global': {'preamble': [] } } " Global is never used for italics
-  let s:nvim       = { 'global': { 'preamble': [] } }
-  let s:has_normal = { }
-  let s:hi_groups  = { } " Set of defined highlight groups
+  let s:data        = { 'global': { 'preamble': [] } }
+  let s:italics     = { 'global': {'preamble': [] } } " Global is never used for italics
+  let s:nvim        = { 'global': { 'preamble': [] } }
+  let s:has_normal  = { }
+  let s:hi_groups   = { } " Set of defined highlight groups
+  let s:hi_reset    = []  " For custom reset/initialization block
 endf
 
 fun! s:destroy_colorscheme_definition()
-  unlet! s:data s:italics s:nvim s:has_normal s:hi_groups
+  unlet! s:data s:italics s:nvim s:has_normal s:hi_groups s:hi_reset
 endf
 
 fun! s:add_colorscheme_variant(v)
@@ -911,6 +913,10 @@ endf
 
 fun! s:add_verbatim_item(variant, section, item)
   call s:add_item(a:variant, a:section, a:item, 'verb')
+endf
+
+fun! s:add_hi_reset_item(item)
+  call add(s:hi_reset, a:item)
 endf
 
 fun! s:add_higroup_item(variant, section, hg)
@@ -1597,6 +1603,27 @@ fun! s:ifs_are_balanced()
   return 1
 endf
 " }}}
+" Reset block {{{
+fun! s:init_hi_reset_block()
+  let s:reset_block = 0
+endf
+
+fun! s:destroy_hi_reset_block()
+  unlet! s:reset_block
+endf
+
+fun! s:start_hi_reset_block()
+  let s:reset_block = 1
+endf
+
+fun! s:stop_hi_reset_block()
+  let s:reset_block = 0
+endf
+
+fun! s:is_hi_reset_block()
+  return s:reset_block
+endf
+" }}}
 " Aux files {{{
 fun! s:init_auxfiles_parsing()
   let s:is_aux = 0
@@ -1676,6 +1703,18 @@ fun! s:parse_verbatim_line()
   endif
 endf
 
+fun! s:parse_hi_reset_block()
+  call s:add_source_line(s:getl())
+  if s:getl() =~? '\m^\s*endreset'
+    call s:stop_hi_reset_block()
+    if s:getl() !~? '\m^\s*endreset\s*$'
+      throw "Extra characters after 'endreset'"
+    endif
+  else
+    call s:add_hi_reset_item({ 'line': s:getl(), 'linenr': s:linenr(), 'file': s:currfile() })
+  endif
+endf
+
 fun! s:parse_help_line()
   if s:getl() =~? '\m^\s*enddocumentation'
     call s:stop_help_file()
@@ -1724,6 +1763,11 @@ fun! s:parse_line()
         throw "Extra characters after 'documentation'"
       endif
       call s:start_help_file()
+    elseif s:token.value ==? 'reset'
+      if s:token.next().is_edible()
+        throw "Extra characters after 'reset'"
+      endif
+      call s:start_hi_reset_block()
     elseif s:getl() =~# '\m^[^;#]*:' " Look ahead
       call s:parse_key_value_pair()
     else
@@ -2115,6 +2159,7 @@ fun! s:init_parser()
   call s:init_active_section()
   call s:init_variants()
   call s:init_verbatim()
+  call s:init_hi_reset_block()
   call s:init_auxfiles_parsing()
 endf
 
@@ -2124,6 +2169,7 @@ fun! s:destroy_parser()
   call s:destroy_active_section()
   call s:destroy_variants()
   call s:destroy_verbatim()
+  call s:destroy_hi_reset_block()
   call s:destroy_auxfiles_parsing()
 endf
 " }}}
@@ -2289,13 +2335,19 @@ fun! s:print_header(bufnr)
     call s:put(a:bufnr, 'set background=light')
     call s:put(a:bufnr, ''                                                     )
   endif
-  call s:put(a:bufnr,   'hi clear'                                             )
-  call s:put(a:bufnr,   "if exists('syntax_on')"                               )
-  call s:put(a:bufnr,     'syntax reset'                                       )
-  call s:put(a:bufnr,   'endif'                                                )
-  call s:put(a:bufnr,   ''                                                     )
-  call s:put(a:bufnr,   "let g:colors_name = '" . s:shortname() . "'"          )
-  call s:put(a:bufnr,   ''                                                     )
+  if empty(s:hi_reset)
+    call s:put(a:bufnr,   'hi clear'                                             )
+    call s:put(a:bufnr,   "if exists('syntax_on')"                               )
+    call s:put(a:bufnr,     'syntax reset'                                       )
+    call s:put(a:bufnr,   'endif'                                                )
+    call s:put(a:bufnr,   ''                                                     )
+    call s:put(a:bufnr,   "let g:colors_name = '" . s:shortname() . "'"          )
+  else
+    for l:item in s:hi_reset
+      call s:put(a:bufnr, s:interpolate('global', 'preamble', l:item.line, l:item.linenr, l:item.file))
+    endfor
+  endif
+  call s:put(a:bufnr,   ''                                                                      )
   call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2")
   if s:uses_italics()
     let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
@@ -2536,6 +2588,8 @@ fun! colortemplate#parse(filename) abort
         call s:parse_auxfile_line()
       elseif s:is_help_file()
         call s:parse_help_line()
+      elseif s:is_hi_reset_block()
+        call s:parse_hi_reset_block()
       else
         call s:parse_line()
       endif

@@ -144,19 +144,18 @@ syn keyword colortemplateConstant     contained yellow1 yellow2 yellow3 yellow4 
 
 " These are defined for syntax completion. Since they are `contained`, but not
 " really contained into anything, this rule is never triggered.
-syn keyword colortemplateKeyword      contained auxfile endauxfile documentation enddocumentation verbatim endverbatim
-
-syn region auxfile matchgroup=colortemplateKeyword start=/auxfile\s\+\S.*$/ end=/endauxfile/ keepend
+syn keyword colortemplateKeyword      contained auxfile endauxfile documentation enddocumentation reset endreset verbatim endverbatim
 
 syn include @colortemplatevim syntax/vim.vim
 unlet b:current_syntax
-syn region colortemplatevim matchgroup=colortemplateKeyword start=/verbatim/ end=/endverbatim/ keepend contains=@colortemplatevim
-syn region auxfilevim       matchgroup=colortemplateKeyword start=/auxfile.*\.vim$/ end=/endauxfile/ keepend contains=@colortemplatevim
+syn region colortemplateVim matchgroup=colortemplateVerb start=/^\s*verbatim\>/ end=/^\s*endverbatim\>/ keepend contains=@colortemplatevim
+syn region colortemplateReset matchgroup=colortemplateVerb start=/^\s*reset\>/ end=/^\s*endreset\>/ keepend contains=@colortemplatevim
+syn region colortemplateAux   matchgroup=colortemplateVerb start=/^\s*auxfile\s\+.*$/ end=/^\s*endauxfile\>/ keepend contains=@colortemplatevim
 syn region colortemplateCommand matchgroup=colortemplateCommand start=/^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>/ end=/$/ keepend contains=@colortemplatevim
 
 syn include @colortemplatehelp syntax/help.vim
 unlet b:current_syntax
-syn region colortemplatehelp matchgroup=colortemplateKeyword start=/documentation/ end=/enddocumentation/ keepend contains=@colortemplatehelp
+syn region colortemplateHelp matchgroup=colortemplateVerb start=/documentation/ end=/enddocumentation/ keepend contains=@colortemplatehelp
 
 hi def link colortemplateArrow        Delimiter
 hi def link colortemplateAttr         Label
@@ -174,6 +173,7 @@ hi def link colortemplateKeyword      Keyword
 hi def link colortemplateSpecial      Boolean
 hi def link colortemplateTermCode     String
 hi def link colortemplateTodo         Todo
+hi def link colortemplateVerb         Title
 
 let b:current_syntax = "colortemplate"
 

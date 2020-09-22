@@ -1,10 +1,6 @@
-" Global constants {{{
-" Mode for colors
-const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
-" Mode for attributes
-const s:attrmode = (has('gui_running') ? 'gui' : (exists('t_Co') && &t_Co > 2 ? 'cterm' : 'term'))
-" }}}
 " Popup configuration {{{
+let s:mode = ''        " Mode for colors (gui/cterm, set when the popup is open)
+let s:attrmode = ''    " Mode for attributes (gui/cterm/term, set when the popup is open)
 let s:keymap = {}      " Dictionary of key controls (initialized below)
 let s:mark_sym = ''    " Marker for the current line (set when the popup is open)
 let s:width = 0        " Popup width (set when the popup is open)
@@ -1453,6 +1449,8 @@ fun! colortemplate#style#open(...)
     return s:popup_winid
   endif
 
+  let s:mode         = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
+  let s:attrmode     = (has('gui_running') ? 'gui' : (exists('&t_Co') && &t_Co > 2 ? 'cterm' : 'term'))
   let s:mark_sym     = get(g:, 'colortemplate_popup_marker', '❯❯ ')
   let s:width        = max([39 + strdisplaywidth(s:mark_sym), 42])
   let s:gutter_width = strdisplaywidth(s:mark_sym, 0)

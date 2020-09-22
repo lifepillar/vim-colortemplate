@@ -382,12 +382,12 @@ endf
 fun! s:reset_info_section_highlight()
   let l:labecol = synIDattr(synIDtrans(hlID('Label')), 'fg', s:mode)
   execute printf("hi colortemplatePopupBold %sfg=%s term=bold cterm=bold gui=bold", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupItal %sfg=%s term=bold,italic cterm=italic gui=italic", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupULin %sfg=%s term=bold,underline cterm=underline gui=underline", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupCurl %sfg=%s term=bold,inverse cterm=inverse gui=inverse", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupSOut %sfg=%s term=bold,standout cterm=standout gui=standout", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupInvr %sfg=%s term=bold,inverse cterm=inverse gui=inverse", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupStrk %sfg=%s term=bold,inverse cterm=inverse gui=inverse", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupItal %sfg=%s term=bold,italic cterm=bold,italic gui=bold,italic", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupULin %sfg=%s term=bold,underline cterm=bold,underline gui=bold,underline", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupCurl %sfg=%s term=bold,inverse cterm=bold,inverse gui=bold,inverse", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupSOut %sfg=%s term=bold,standout cterm=bold,standout gui=bold,standout", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupInvr %sfg=%s term=bold,inverse cterm=bold,inverse gui=bold,inverse", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupStrk %sfg=%s term=bold,inverse cterm=bold,inverse gui=bold,inverse", s:mode, l:labecol)
 endf
 
 fun! s:add_info_section_prop_types()

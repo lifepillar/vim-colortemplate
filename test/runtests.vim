@@ -1029,6 +1029,13 @@ fun! Test_CT_upper_case_hex_colors()
   call s:assert_build('test82')
 endf
 
+fun! Test_CT_reset_endreset()
+  call s:assert_build('test83')
+endf
+
+fun! Test_CT_gui_vs_term_attributes()
+  call s:assert_build('test84')
+endf
 
 "
 " Runner!

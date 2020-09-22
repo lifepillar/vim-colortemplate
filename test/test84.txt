@@ -1,0 +1,11 @@
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Full name:Test 82
+Short name:test84
+Author:y
+Background:dark
+Color:black rgb(0,0,0) 16 Black
+Color:white #ffffff 255 White
+Variant:gui 256
+Normal white black
+StatusLine black white g=bold,italic t=italic
+; vim: ft=colortemplate

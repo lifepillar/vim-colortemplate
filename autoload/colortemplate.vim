@@ -2236,18 +2236,19 @@ fun! s:eval(item, col, section)
       let l:fg = s:guifg(l:v, a:section)
       let l:bg = s:guibg(l:v, a:section)
       let l:sp = s:guisp(l:v, a:section)
-      let l:attr = s:gui_attr(l:v)
+      let l:guiattr = s:gui_attr(l:v)
+      let l:termattr = s:term_attr(l:v)
       " When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg/ctermbg
       " See https://github.com/lifepillar/vim-colortemplate/issues/15.
       " See also https://github.com/vim/vim/issues/1740
       let l:def = s:hi_item('guifg', l:fg)
             \ . s:hi_item('guibg', l:bg)
             \ . s:hi_item('guisp', l:sp)
-            \ . (l:attr ==# 'omit'
+            \ . (l:guiattr ==# 'omit'
             \   ? ''
-            \   : (' gui='.l:attr
+            \   : (' gui='.l:guiattr
             \   . (l:fg ==# 'NONE' && l:bg ==# 'NONE' ? ' ctermfg=NONE ctermbg=NONE' : '')
-            \   . ' cterm='.l:attr)
+            \   . ' cterm='.l:termattr)
             \   )
     elseif a:col > 16
       let l:fg = s:fg256(l:v, a:section)
@@ -2286,9 +2287,10 @@ fun! s:eval(item, col, section)
     return l:v
   elseif s:is_italic_type(a:item)
     if a:col > 256
-      let l:attr = s:gui_attr_no_italics(l:v)
-      " Need to set cterm even for termguicolors (see https://github.com/vim/vim/issues/1740)
-      return 'hi ' . s:hi_name(l:v) . ' gui='.l:attr . ' cterm='.l:attr
+      let l:guiattr = s:gui_attr_no_italics(l:v)
+      let l:termattr = s:term_attr_no_italics(l:v)
+      " cterm is for terminals with termguicolors (see https://github.com/vim/vim/issues/1740)
+      return 'hi ' . s:hi_name(l:v) . ' gui='.l:guiattr . ' cterm='.l:termattr
     else
       let l:attr = s:term_attr_no_italics(l:v)
       return 'hi ' . s:hi_name(l:v) . (a:col > 2 ? ' c' : ' ') . 'term='.l:attr

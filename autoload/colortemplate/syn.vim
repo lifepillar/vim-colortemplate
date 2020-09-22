@@ -29,7 +29,7 @@ fun! s:toggle_attribute(synid, attr)
   " when termguicolors is set (termguicolors is only about colors, not
   " attributes). NeoVim does not get it right, IMO (and Bram's), because it
   " uses gui attributes when termguicolors is set.
-  let l:mode = (has('gui_running') ? 'gui' : 'cterm')
+  let l:mode = (has('gui_running') ? 'gui' : (exists('&t_Co') && &t_Co > 2) ? 'cterm' : 'term')
   let l:synid = synIDtrans(a:synid)
   let l:old_attrs = colortemplate#syn#attributes(l:synid, l:mode)
   let l:name = synIDattr(l:synid, 'name')

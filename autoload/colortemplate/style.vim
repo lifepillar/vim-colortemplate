@@ -2,7 +2,7 @@
 " Mode for colors
 const s:mode = (has('gui_running') || (has('termguicolors') && &termguicolors) ? 'gui': 'cterm')
 " Mode for attributes
-const s:attrmode = (has('gui_running') ? 'gui' : 'cterm')
+const s:attrmode = (has('gui_running') ? 'gui' : (exists('t_Co') && &t_Co > 2 ? 'cterm' : 'term'))
 " }}}
 " Popup configuration {{{
 let s:keymap = {}      " Dictionary of key controls (initialized below)
@@ -389,13 +389,13 @@ endf
 " Info section {{{
 fun! s:reset_info_section_highlight()
   let l:labecol = synIDattr(synIDtrans(hlID('Label')), 'fg', s:mode)
-  execute printf("hi colortemplatePopupBold %sfg=%s cterm=bold gui=bold", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupItal %sfg=%s cterm=italic gui=italic", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupULin %sfg=%s cterm=underline gui=underline", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupCurl %sfg=%s cterm=inverse gui=inverse", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupSOut %sfg=%s cterm=standout gui=standout", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupInvr %sfg=%s cterm=inverse gui=inverse", s:mode, l:labecol)
-  execute printf("hi colortemplatePopupStrk %sfg=%s cterm=inverse gui=inverse", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupBold %sfg=%s term=bold cterm=bold gui=bold", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupItal %sfg=%s term=bold,italic cterm=italic gui=italic", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupULin %sfg=%s term=bold,underline cterm=underline gui=underline", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupCurl %sfg=%s term=bold,inverse cterm=inverse gui=inverse", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupSOut %sfg=%s term=bold,standout cterm=standout gui=standout", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupInvr %sfg=%s term=bold,inverse cterm=inverse gui=inverse", s:mode, l:labecol)
+  execute printf("hi colortemplatePopupStrk %sfg=%s term=bold,inverse cterm=inverse gui=inverse", s:mode, l:labecol)
 endf
 
 fun! s:add_info_section_prop_types()

@@ -1172,7 +1172,7 @@ fun! s:action_edit_name()
   if !has('patch-8.1.1456')
     redraw! " see https://github.com/vim/vim/issues/4473
   endif
-  if l:name =~# '\m^\w\+$'
+  if hlexists(l:name)
     call s:set_hlgroup(l:name)
     if s:pane ==# 'hsb'
       call s:set_hsb_color()

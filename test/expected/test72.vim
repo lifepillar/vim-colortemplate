@@ -4,10 +4,6 @@
 " License:      Vim License (see `:help license`)
 
 hi clear
-if exists('syntax_on')
-  syntax reset
-endif
-
 let g:colors_name = 'test72'
 
 let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2

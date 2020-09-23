@@ -2339,10 +2339,6 @@ fun! s:print_header(bufnr)
   endif
   if empty(s:hi_reset)
     call s:put(a:bufnr,   'hi clear'                                             )
-    call s:put(a:bufnr,   "if exists('syntax_on')"                               )
-    call s:put(a:bufnr,     'syntax reset'                                       )
-    call s:put(a:bufnr,   'endif'                                                )
-    call s:put(a:bufnr,   ''                                                     )
     call s:put(a:bufnr,   "let g:colors_name = '" . s:shortname() . "'"          )
   else
     for l:item in s:hi_reset

@@ -425,6 +425,8 @@ let s:default_hi_groups = [
       \ 'Ignore',
       \ 'IncSearch',
       \ 'LineNr',
+      \ 'LineNrAbove',
+      \ 'LineNrBelow',
       \ 'MatchParen',
       \ 'ModeMsg',
       \ 'MoreMsg',

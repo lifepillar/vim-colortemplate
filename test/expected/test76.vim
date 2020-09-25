@@ -35,6 +35,8 @@ hi! link QuickFixLine Search
 " @suppress Ignore
 " @suppress IncSearch
 " @suppress LineNr
+" @suppress LineNrAbove
+" @suppress LineNrBelow
 " @suppress MatchParen
 " @suppress ModeMsg
 " @suppress MoreMsg

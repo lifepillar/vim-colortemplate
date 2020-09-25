@@ -838,11 +838,27 @@ endf
 " Colorscheme definition {{{
 let s:GUI = '16777216' " GUI or termguicolors
 
+" The main data structure for storing a color scheme definition is s:data,
+" which is a dictionary of dictionaries. Maybe, some day I will implement
+" a proper syntax tree... The keys of s:data are *variants*, which can be:
+"
+" - 'global': anything before the first Variant or Background directive;
+" - 'gui': when has('gui_running') is 1 or termguicolors is 1
+" - a number (256, 88, 16, 8, etc.): the minimum t_Co value for the variant
+"
+" In turn, each variant is a dictionary with three keys:
+"
+" - 'preamble': anything that does not depend on a specific background;
+" - 'dark': anything that applies only to dark background;
+" - 'light': anything that applies only to light background.
+"
+" s:italics and s:nvim have a similar structure, but they are used to
+" collect definitions with italics and definitions for Neovim, respectively.
 fun! s:init_colorscheme_definition()
   let s:data        = { 'global': { 'preamble': [] } }
   let s:italics     = { 'global': {'preamble': [] } } " Global is never used for italics
   let s:nvim        = { 'global': { 'preamble': [] } }
-  let s:has_normal  = { }
+  let s:has_normal  = { } " Is Normal defined for the given variant?
   let s:hi_groups   = { } " Set of defined highlight groups
   let s:hi_reset    = []  " For custom reset/initialization block
 endf

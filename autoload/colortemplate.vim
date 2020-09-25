@@ -266,7 +266,7 @@ fun! s:show_errors(errmsg)
 endf
 " }}}
 " Misc {{{
-fun! s:has_gui()
+fun! s:has_guicolors()
   return has('gui_running') || (has('termguicolors') && &termguicolors)
 endf
 
@@ -2808,7 +2808,7 @@ fun! colortemplate#getinfo(n)
   let l:c256 = s:col256(l:name, 'dark') == -1 ? l:best['index'] : s:col256(l:name, 'dark')
   let [l:r, l:g, l:b] = colortemplate#colorspace#hex2rgb(l:hexc)
   echon printf('%s: %s/rgb(%d,%d,%d) ', l:name, l:hexc, l:r, l:g, l:b)
-  if s:has_gui()
+  if s:has_guicolors()
     try
       execute "hi!" "ColortemplateInfoFg" "ctermfg=".l:c256 "guifg=".l:hexc "ctermbg=NONE guibg=NONE"
       execute "hi!" "ColortemplateInfoBg" "ctermbg=".l:c256 "guibg=".l:hexc "ctermfg=NONE guifg=NONE"

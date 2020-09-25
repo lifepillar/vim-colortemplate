@@ -836,7 +836,7 @@ fun! s:optionprefix()
 endf
 " }}}
 " Colorscheme definition {{{
-let s:GUI = '65536' " GUI or termguicolors
+let s:GUI = '16777216' " GUI or termguicolors
 
 fun! s:init_colorscheme_definition()
   let s:data        = { 'global': { 'preamble': [] } }

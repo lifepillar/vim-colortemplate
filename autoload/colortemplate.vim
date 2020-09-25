@@ -2027,8 +2027,15 @@ endf
 
 fun! s:parse_color_value()
   let l:color = s:token.value
-  if !s:is_color_defined(l:color, s:active_section()) && l:color !~# '^\(fg\|bg\|none\|omit\)$'
-    throw 'Undefined color name: ' . l:color
+  if !s:is_color_defined(l:color, s:active_section())
+    if s:active_section() ==# 'preamble'
+          \ && (s:is_color_defined(l:color, 'dark') || s:is_color_defined(l:color, 'light'))
+      throw 'Ambiguous definition: must be in the scope of `Background: dark` or `Background: light`'
+    else
+      if l:color !~# '^\(fg\|bg\|none\|omit\)$'
+        throw 'Undefined color name: ' . l:color
+      endif
+    endif
   endif
   return l:color
 endf

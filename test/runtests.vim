@@ -1037,6 +1037,22 @@ fun! Test_CT_gui_vs_term_attributes()
   call s:assert_build('test84')
 endf
 
+fun! Test_CT_ambiguous_hi_group_color_definition()
+  edit test85.txt
+  Colortemplate!
+  let l:qflist = getqflist()
+  call assert_equal(2, len(l:qflist))
+  call assert_equal('Ambiguous definition: must be in the scope of `Background: dark` or `Background: light`', l:qflist[0]['text'])
+  call assert_equal(14, l:qflist[0]['lnum'])
+  call assert_equal(8, l:qflist[0]['col'])
+  call assert_equal('Please define the Normal highlight group for true-color variant', l:qflist[1]['text'])
+  call assert_equal(1, l:qflist[1]['lnum'])
+  call assert_equal(1, l:qflist[1]['col'])
+  cclose
+  bwipe test85.txt
+endf
+
+
 "
 " Runner!
 "

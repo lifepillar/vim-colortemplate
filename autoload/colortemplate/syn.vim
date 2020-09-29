@@ -58,7 +58,7 @@ hi clear ColortemplateInfoBg
 hi clear ColortemplateInfoSp
 hi ColortemplateInfoBlack ctermbg=16 guibg=#000000
 
-let s:cached_higroup = #{ synid: -1 }
+let s:cached_higroup = { 'synid': -1 }
 
 " Returns a Dictionary with information about the highlight group at the
 " specified position.
@@ -83,17 +83,17 @@ fun! s:get_higroup_info(line, col)
     let bggui  = synIDattr(synid, "bg#", "gui")
     let spterm = synIDattr(synid, "ul", "cterm") " TODO: Not implemented? Should be 'sp'?
     let spgui  = synIDattr(synid, "sp#", "gui")
-    let s:cached_higroup = #{
-          \ synid:     synid,
-          \ tname:     trans,
-          \ name:      higrp,
-          \ transname: logrp,
-          \ fgterm:    empty(fgterm) ? 'NONE' : fgterm,
-          \ fggui:     empty(fggui)  ? 'NONE' : fggui,
-          \ bgterm:    empty(bgterm) ? 'NONE' : bgterm,
-          \ bggui:     empty(bggui)  ? 'NONE' : bggui,
-          \ spterm:    empty(spterm) ? 'NONE' : spterm,
-          \ spgui:     empty(spgui)  ? 'NONE' : spgui,
+    let s:cached_higroup = {
+          \ 'synid':     synid,
+          \ 'tname':     trans,
+          \ 'name':      higrp,
+          \ 'transname': logrp,
+          \ 'fgterm':    empty(fgterm) ? 'NONE' : fgterm,
+          \ 'fggui':     empty(fggui)  ? 'NONE' : fggui,
+          \ 'bgterm':    empty(bgterm) ? 'NONE' : bgterm,
+          \ 'bggui':     empty(bggui)  ? 'NONE' : bggui,
+          \ 'spterm':    empty(spterm) ? 'NONE' : spterm,
+          \ 'spgui':     empty(spgui)  ? 'NONE' : spgui,
           \ }
   endif
   try " The following may raise an error, e.g., if CtrlP is opened while this is active
@@ -119,12 +119,14 @@ let s:balloon_id = 0
 let s:last_text = ''
 let s:ballon_text = []
 
-call prop_type_delete('ct_hifg')
-call prop_type_delete('ct_hibg')
-call prop_type_delete('ct_hisp')
-call prop_type_add('ct_hifg', #{ highlight: 'ColortemplateInfoFg' })
-call prop_type_add('ct_hibg', #{ highlight: 'ColortemplateInfoBg' })
-call prop_type_add('ct_hisp', #{ highlight: 'ColortemplateInfoSp' })
+if !has('nvim')
+  call prop_type_delete('ct_hifg')
+  call prop_type_delete('ct_hibg')
+  call prop_type_delete('ct_hisp')
+  call prop_type_add('ct_hifg', #{ highlight: 'ColortemplateInfoFg' })
+  call prop_type_add('ct_hibg', #{ highlight: 'ColortemplateInfoBg' })
+  call prop_type_add('ct_hisp', #{ highlight: 'ColortemplateInfoSp' })
+endif
 
 " Display info about the highlight group under the cursor in a popup when
 " ballooneval or balloonevalterm is set.
@@ -142,27 +144,27 @@ fun! colortemplate#syn#balloonexpr()
   let info = s:get_higroup_info(v:beval_lnum, v:beval_col)
   if !empty(info)
     let l:beval = [
-          \ #{ text: printf('%s%s%s',
+          \ { 'text': printf('%s%s%s',
           \                (info['tname'] == info['name'] ? '' : 'T:'..info['tname']..' → '),
           \                 info['name'],
           \                 info['name'] == info['transname'] ? '' :  ' → '..info['transname']
           \               ),
-          \    props: []
+          \    'props': []
           \  },
-          \ #{ text: printf('     Fg %7s %4s     ', info.fggui, info.fgterm),
-          \   props: [#{ col: 2, length:  2, type: 'ct_hifg' }]
+          \ { 'text': printf('     Fg %7s %4s     ', info.fggui, info.fgterm),
+          \   'props': [#{ col: 2, length:  2, type: 'ct_hifg' }]
           \  },
           \]
     if info.bggui != 'NONE' || info.bgterm != 'NONE'
       call add(l:beval,
-          \ #{ text: printf('     Bg %7s %4s     ', info.bggui, info.bgterm),
-          \   props: [#{ col: 2, length:  2, type: 'ct_hibg' }]
+          \ { 'text': printf('     Bg %7s %4s     ', info.bggui, info.bgterm),
+          \   'props': [#{ col: 2, length:  2, type: 'ct_hibg' }]
           \ })
     endif
     if info.spgui != 'NONE' || info.spterm != 'NONE'
       call add(l:beval,
-          \ #{ text: printf('     Sp %7s %4s     ', info.spgui, info.spterm),
-          \   props: [#{ col: 2, length:  2, type: 'ct_hisp' }]
+          \ { 'text': printf('     Sp %7s %4s     ', info.spgui, info.spterm),
+          \   'props': [#{ col: 2, length:  2, type: 'ct_hisp' }]
           \ })
     endif
     call add(l:beval, #{ text: join(info['synstack'], " ⊂ "), props: [] })
@@ -202,7 +204,7 @@ fun! colortemplate#syn#hi_group()
 endf
 
 fun! colortemplate#syn#toggle()
-  if get(g:, 'colortemplate_higroup_balloon', 1)
+  if get(g:, 'colortemplate_higroup_balloon', 1) && !has('nvim')
     if s:balloon_id && popup_getpos(s:balloon_id) != {}
       call popup_close(s:balloon_id)
     endif
@@ -214,7 +216,7 @@ fun! colortemplate#syn#toggle()
       augroup! colortemplate_syn_info
       echo "\r"
     else
-      let s:cached_higroup = #{ synid: -1 }
+      let s:cached_higroup = { 'synid': -1 }
       augroup colortemplate_syn_info
         autocmd CursorMoved * call colortemplate#syn#hi_group()
       augroup END
@@ -293,7 +295,7 @@ fun! colortemplate#syn#higroup2hex(name, type)
   endif
 
   " Assume 256-color terminal
-  let l:term = synIDattr(hlID(a:name), a:type, 'cterm')
+  let l:term = synIDattr(hlID(a:name), a:type ==# 'sp' ? 'ul' : a:type, 'cterm')
 
   if !empty(l:term) && str2nr(l:term) > 15 " Fast path
     return #{ hex: colortemplate#colorspace#xterm256_hexvalue(str2nr(l:term)), guess: 0}

@@ -1052,6 +1052,17 @@ fun! Test_CT_ambiguous_hi_group_color_definition()
   bwipe test85.txt
 endf
 
+" Verify that a color scheme can be loaded with compatible set (-C)
+fun! Test_CT_compatible_set()
+  edit test86.txt
+  Colortemplate!
+  call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  let l:opt = " -C -m -n -u NONE -i NONE --not-a-term --noplugin -c 'source " .. s:testdir .. "/colors/test86.vim' -c 'quit!'"
+  call assert_notmatch('E10', system(v:progpath .. l:opt))
+  call delete(s:testdir .. '/colors/test86.vim')
+  bwipe test86.txt
+endf
+
 
 "
 " Runner!

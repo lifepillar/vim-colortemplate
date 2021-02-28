@@ -2443,12 +2443,8 @@ fun! s:print_terminal_colors(bufnr, variant, section)
     return
   endif
   let l:tc = s:term_colors(a:section)
-  let l:col0_3 = join(map(copy(l:tc[0:3]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
-  let l:col4_9 = join(map(copy(l:tc[4:9]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
-  let l:col10_15 = join(map(copy(l:tc[10:15]), { _,c -> "'".s:guicol(c, a:section)."'" }), ', ')
-  call s:put(a:bufnr, 'let g:terminal_ansi_colors = ['.l:col0_3.',')
-  call s:put(a:bufnr, '\ '.l:col4_9.',')
-  call s:put(a:bufnr, '\ '.l:col10_15.']')
+  let l:col0_15 = join(map(copy(l:tc), { _,c -> "'" .. s:guicol(c, a:section) .. "'" }), ', ')
+  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
   if s:supports_neovim()
     let l:n = 0
     call s:put(a:bufnr, "if has('nvim')")

@@ -1371,10 +1371,14 @@ Here are some guidelines to develop outstanding hackable color schemes:
      |cursorcolumn| on. For this, you may need to use some GUI version of Vim,
      as most terminals override the cursor's color.
 
-  e. Matching parentheses (|hl-MatchParen|) and the cursor's appearance
-     against them. Is the cursor clearly visible over a parenthesis? Is the
+  e. Matching parentheses (|hl-MatchParen|) and cursor/visual highlighting.
+     Is the cursor clearly visible over a parenthesis? Is the
      matching parenthesis easily spotted? Even when |cursorline| and
      |cursorcolumn| are set?
+     Use different highlighting for |hl-MatchParen| and |hl-Visual|:
+     |hl-MatchParen| may be used to highlight several words or whole lines,
+     and you want a selection within an area highlighted with |hl-MatchParen|
+     to be distinguishable.
 
   f. Search highlight (|hl-Search|, |hl-IncSearch|), especially with
      |cursorline| and |cursorcolumn| on. The |hl-Search| and |hl-IncSearch|

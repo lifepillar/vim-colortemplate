@@ -1384,10 +1384,10 @@ Here are some guidelines to develop outstanding hackable color schemes:
      |cursorline| and |cursorcolumn| on. The |hl-Search| and |hl-IncSearch|
      highlight groups must be distinguishable: set |incsearch| and |hlsearch|,
      search for a pattern with multiple occurrences and move between them with
-     CTRL-G and CTRL-T. Can you spot where the cursor is?
-     With |cursorcolumn| and |cursorline| on, the highlighted column and
-     cursor line should "pass behind" highlighted search results. You may
-     achieve that effect by adapting the following snippet:
+     CTRL-G and CTRL-T. Can you spot where the cursor is? With |cursorcolumn|
+     and |cursorline| on, the highlighted column and cursor line should "pass
+     behind" highlighted search results. You may achieve that effect by
+     adapting the following snippet:
 >
 	CursorLine   none   grey            ; No foreground color
 	CursorColumn none   grey            ; No foreground color

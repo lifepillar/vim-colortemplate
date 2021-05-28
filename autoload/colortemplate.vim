@@ -41,7 +41,6 @@ fun! s:setwd(path)
     throw 'FATAL: Path is not a directory: ' . a:path
   endif
   let s:wd = fnamemodify(a:path, ":p")
-  execute 'lcd' s:wd
 endf
 
 fun! s:getwd()

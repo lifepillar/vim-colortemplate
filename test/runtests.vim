@@ -1063,6 +1063,21 @@ fun! Test_CT_compatible_set()
   bwipe test86.txt
 endf
 
+" See also: https://github.com/lifepillar/vim-colortemplate/issues/48
+fun! Test_CT_working_dir_is_not_changed()
+  try
+    edit test87/test87.txt
+    let l:wd = getcwd()
+    Colortemplate!
+    call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+    call assert_equal(l:wd, getcwd())
+    bwipe test87.txt
+  finally
+    execute 'lcd' s:testdir
+    call delete(s:testdir . '/test87/colors/test87.vim')
+    call delete(s:testdir . '/test87/colors/', 'd')
+  endtry
+  endf
 
 "
 " Runner!

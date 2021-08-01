@@ -169,7 +169,7 @@ flexibility, e.g.:
 	Background: any
 	  ; Defs. for both backgrounds, apply only to GUI
 	Background: dark
-	  ; Defs. or dark background, apply only to GUI
+	  ; Defs. for dark background, apply only to GUI
 	Variant: gui 256 16
 	  ; Defs. for dark background, apply to GUI/256/16 colors
 	Background: any
@@ -366,7 +366,7 @@ The `<Base-256 spec>` and `<Base-16 spec>` fields are used for terminals that
 do not support more than 256 colors, or when |termguicolors| is not set. For
 variants with at least 16 colors, the base-256 values are used; base-16 values
 are used for variants with no more than 16 colors. The color numbers must not
-exceeed the limits imposed by the current variants. For example, if you
+exceed the limits imposed by the current variants. For example, if you
 declare:
 >
 	Variant: 256 88
@@ -532,7 +532,7 @@ interpolated) to the output. So, for instance, this template:
 is translated into
 >
 	if get(g:, 'some_option', 0)
-	  let s:color  = '#abcef'
+	  let s:color  = '#abcdef'
 	endif
 
 	call foo()
@@ -1204,8 +1204,8 @@ constraints (e.g, low-light conditions and visually unimpaired users).
 
 As you modify a color scheme, the style picker remembers the ten most recently
 used colors. With the marker in the Recent section, you may press |Enter| to
-select a recent color, |D| to remove a color from the the list, or |Y| to yank
-a recent color into the unnamed register.
+select a recent color, |D| to remove a color from the list, or |Y| to yank a
+recent color into the unnamed register.
 
 The bottom part of the style picker hosts a section for your favorite colors.
 To make a color a favorite one, type |A|. Choosing, deleting or yanking

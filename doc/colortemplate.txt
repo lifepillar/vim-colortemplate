@@ -511,8 +511,9 @@ might generate the following code:
 <
 Other values may be interpolated: metadata keywords, converted to lower case
 and without spaces (e.g., `@shortname` may be used to insert the value of
-`Short name`); `@date` (to insert the current date) and `@vimversion` (to
-insert the current Vim version).
+`Short name`); `@date` (to insert the current date), `@background` (to insert
+the value of the current background: dark/light) and `@vimversion` (to insert
+the current Vim version).
 
 Verbatim blocks are most often used for conditionals or to set and get
 variables or to invoke functions. Therefore, Colortemplate provides convenient

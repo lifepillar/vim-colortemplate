@@ -1317,6 +1317,7 @@ fun! s:interpolate(variant, section, line, linenr, file)
     let l:line = substitute(l:line, '\(cterm[bf]g=\)@\(\w\+\)',       '\=submatch(1).s:termcol(submatch(2),"'.a:section.'","'.l:t_Co.'")', 'g')
     let l:line = substitute(l:line, '\(gui[bf]g=\|guisp=\)@\(\w\+\)', '\=submatch(1).s:guicol(submatch(2),"'.a:section.'")',               'g')
     let l:line = substitute(l:line, '@date',                          '\=strftime("%Y %b %d")',                                            'g')
+    let l:line = substitute(l:line, '@background',                    a:section,                                                           'g')
     let l:line = substitute(l:line, '@vimversion',                    '\=string(v:version/100).".".string(v:version%100)',                 'g')
     let l:line = substitute(l:line, '@\('.s:info_keys_regex().'\)',   '\=s:get_info(submatch(1))',                                         'g')
     return l:line

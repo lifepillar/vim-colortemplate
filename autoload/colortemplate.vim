@@ -181,9 +181,9 @@ endf
 fun! s:write_buffer(bufnr, path, env, overwrite)
   let l:path = s:full_path(a:path, a:env)
   call s:make_dir(fnamemodify(l:path, ":h"))
-  if bufloaded(l:path)
+  if bufexists(l:path)
     if a:overwrite
-      execute "bdelete!" bufname(a:path)
+      execute "bwipeout!" bufname(a:path)
     else
       throw "Buffer " . l:path . " exists. Use ! to overwrite."
     endif

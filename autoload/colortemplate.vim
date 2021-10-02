@@ -181,13 +181,6 @@ endf
 fun! s:write_buffer(bufnr, path, env, overwrite)
   let l:path = s:full_path(a:path, a:env)
   call s:make_dir(fnamemodify(l:path, ":h"))
-  if bufloaded(l:path)
-    if a:overwrite
-      execute "bdelete!" bufname(a:path)
-    else
-      throw "Buffer " . l:path . " exists. Use ! to overwrite."
-    endif
-  endif
   if a:overwrite || !filereadable(l:path)
     if writefile(s:getbufline(a:bufnr, 1, "$"), l:path) < 0
       throw 'Could not write ' . l:path . ': ' . v:exception

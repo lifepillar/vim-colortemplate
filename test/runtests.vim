@@ -1094,8 +1094,9 @@ fun! Test_CT_wiping_source_should_not_fail_with_E94()
     Colortemplate!
     call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   finally
-    call delete(s:testdir .. '/colors/test88.vim')
+    bwipe colors/test88.vim
     bwipe test88.txt
+    call delete(s:testdir .. '/colors/test88.vim')
   endtry
 endf
 

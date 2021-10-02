@@ -1077,7 +1077,27 @@ fun! Test_CT_working_dir_is_not_changed()
     call delete(s:testdir . '/test87/colors/test87.vim')
     call delete(s:testdir . '/test87/colors/', 'd')
   endtry
-  endf
+endf
+
+" See https://github.com/lifepillar/vim-colortemplate/issues/51
+fun! Test_CT_wiping_source_should_not_fail_with_E94()
+  try
+    edit test88.txt
+    Colortemplate!
+    call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+    edit colors/test88.vim
+    buffer #
+    Colortemplate!
+    call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+    buffer #
+    buffer #
+    Colortemplate!
+    call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  finally
+    call delete(s:testdir .. '/colors/test88.vim')
+    bwipe test88.txt
+  endtry
+endf
 
 "
 " Runner!

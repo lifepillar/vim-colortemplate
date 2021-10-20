@@ -1,4 +1,4 @@
-*colortemplate.txt*	For Vim version 8.2	Last change: 2020 Sep 19
+*colortemplate.txt*	For Vim version 8.2	Last change: 2021 Oct 20
 
 	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
 	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~
@@ -297,7 +297,7 @@ the end of the file or until another `Variant` directive apply to the
 specified variant(s).
 
 The allowed values are `gui` (for gVim or when |termguicolors| is set) or
-a number between `1` and `256` specifying the minimum |t_Co| required for the
+a number between `0` and `256` specifying the minimum |t_Co| required for the
 following definitions. Multiple values in the same directive are allowed,
 separated by spaces.
 

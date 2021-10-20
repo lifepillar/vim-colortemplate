@@ -8,7 +8,7 @@ set background=dark
 hi clear
 let g:colors_name = 'test70'
 
-let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2
+let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 1
 
 if (has('termguicolors') && &termguicolors) || has('gui_running')
   hi Normal guibg=#000000
@@ -24,7 +24,7 @@ if s:t_Co >= 8
   finish
 endif
 
-if s:t_Co >= 2
+if s:t_Co >= 0
   hi Normal term=NONE
   hi CursorLine term=underline
   unlet s:t_Co

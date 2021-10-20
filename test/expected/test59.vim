@@ -8,7 +8,7 @@ set background=light
 hi clear
 let g:colors_name = 'test59'
 
-let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2
+let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 1
 let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')
 
 if s:t_Co >= 256

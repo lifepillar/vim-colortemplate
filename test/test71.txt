@@ -3,13 +3,13 @@ Full name:Test 71
 Short name:test71
 Author:y
 Maintainer:w
-Variant: 8 2
+Variant: 8 0
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Variant: 8
 Normal omit omit omit
-Variant: 2
+Variant: 0
 Normal omit omit
 CursorLine omit omit omit
 

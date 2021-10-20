@@ -483,7 +483,7 @@ fun! Test_CT_invalid_gui_value()
   call assert_equal(10, l:qflist[1]['lnum'])
   call assert_equal("Please define the Normal highlight group for true-color variant", l:qflist[2]['text'])
   call assert_equal("Please define the Normal highlight group for 256-color variant", l:qflist[3]['text'])
-  call assert_equal("Please define the Normal highlight group for 2-color variant", l:qflist[4]['text'])
+  call assert_equal("Please define the Normal highlight group for 0-color variant", l:qflist[4]['text'])
   cclose
   bwipe test16.txt
 endf
@@ -970,7 +970,7 @@ fun! Test_CT_vacuous_hi_group()
   let l:qflist = getqflist()
   call assert_equal(2, len(l:qflist))
   call assert_equal('Vacuous definition for Normal (8 colors, dark background)', l:qflist[0]['text'])
-  call assert_equal('Vacuous definition for CursorLine (2 colors, dark background)', l:qflist[1]['text'])
+  call assert_equal('Vacuous definition for CursorLine (0 colors, dark background)', l:qflist[1]['text'])
   cclose
   bwipe test71.txt
 endf

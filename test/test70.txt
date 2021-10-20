@@ -3,14 +3,14 @@ Full name:Test 70
 Short name:test70
 Author:y
 Maintainer:w
-Variant: gui 8 2
+Variant: gui 8 0
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Variant: gui 8
 Normal omit black omit
 CursorLine white omit t=underline g=omit s=omit
-Variant: 2
+Variant: 0
 Background:dark
 Normal omit omit
 CursorLine omit omit underline

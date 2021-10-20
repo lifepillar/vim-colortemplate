@@ -2277,7 +2277,7 @@ fun! s:eval(item, col, section)
             \ . s:hi_item('cterm', l:attr)
             \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
             \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
-    elseif a:col > 2
+    elseif a:col > 1
       let l:fg = s:fg16(l:v, a:section)
       let l:bg = s:bg16(l:v, a:section)
       let l:attr = s:term_attr(l:v)
@@ -2286,7 +2286,7 @@ fun! s:eval(item, col, section)
             \ . s:hi_item('cterm', l:attr)
             \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
             \ . s:hi_item('stop', s:terminal_code(l:v, 'stop'))
-    elseif a:col > 0
+    elseif a:col >= 0
       let l:attr = s:term_attr(l:v)
       let l:def = s:hi_item('term', l:attr)
             \ . s:hi_item('start', s:terminal_code(l:v, 'start'))
@@ -2364,7 +2364,7 @@ fun! s:print_header(bufnr)
     endfor
   endif
   call s:put(a:bufnr,   ''                                                                      )
-  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 2")
+  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 1")
   if s:uses_italics()
     let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
     if s:supports_neovim()

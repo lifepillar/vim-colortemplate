@@ -1067,6 +1067,7 @@ endf
 " }}}
 " Colortemplate options {{{
 let s:defaultoptvalue = {
+      \ 'backward_compatible': 1,
       \ 'creator':        1,
       \ 'ignore_missing': 0,
       \ 'quiet':          1,
@@ -2454,7 +2455,7 @@ fun! s:print_colorscheme_defs(bufnr, variant, section)
   let l:ncols = str2nr(a:variant)
   for l:item in s:colorscheme_definitions(a:variant, a:section)
     call s:put(a:bufnr, s:eval(l:item, l:ncols, a:section))
-    if !s:is_gui(a:variant)
+    if !s:is_gui(a:variant) && s:getopt('backward_compatible')
       call s:check_bug_bg234(a:bufnr, a:section, l:item, l:ncols)
     endif
   endfor

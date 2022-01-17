@@ -1067,7 +1067,7 @@ endf
 " }}}
 " Colortemplate options {{{
 let s:defaultoptvalue = {
-      \ 'backward_compatible': 1,
+      \ 'backward_compatible': 0,
       \ 'creator':        1,
       \ 'ignore_missing': 0,
       \ 'quiet':          1,

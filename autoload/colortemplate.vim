@@ -2376,7 +2376,7 @@ fun! s:print_header(bufnr)
 endf
 
 fun! s:finish_endif(bufnr)
-  call s:put(a:bufnr, 'unlet s:t_Co' .. (s:uses_italics() ? ' s:italics' : ''))
+  call s:put(a:bufnr, 'unlet s:t_Co' . (s:uses_italics() ? ' s:italics' : ''))
   call s:put(a:bufnr, 'finish')
   call s:put(a:bufnr, 'endif')
 endf
@@ -2479,7 +2479,9 @@ endf
 
 fun! s:print_colorscheme(bufnr, variant)
   call s:put(a:bufnr, '')
-  if !s:is_gui(a:variant)
+  if s:is_gui(a:variant)
+    call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
+  else
     call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
   endif
   call s:print_colorscheme_defs(a:bufnr, a:variant, 'preamble')
@@ -2497,9 +2499,7 @@ fun! s:print_colorscheme(bufnr, variant)
     let l:background = s:has_dark() ? 'dark' : 'light'
     call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
   endif
-  if !s:is_gui(a:variant)
-    call s:finish_endif(a:bufnr) " endif t_Co
-  endif
+  call s:finish_endif(a:bufnr) " endif termguicolors/t_Co
 endf
 
 fun! s:generate_colorscheme(outdir, overwrite)

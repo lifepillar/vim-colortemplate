@@ -2438,7 +2438,9 @@ fun! s:print_terminal_colors(bufnr, variant, section)
   endif
   let l:tc = s:term_colors(a:section)
   let l:col0_15 = join(map(copy(l:tc), { _,c -> "'" .. s:guicol(c, a:section) .. "'" }), ', ')
-  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
+  call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
+  call s:put(a:bufnr, '  let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
+  call s:put(a:bufnr, "endif")
   if s:supports_neovim()
     let l:n = 0
     call s:put(a:bufnr, "if has('nvim')")

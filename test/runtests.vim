@@ -1100,6 +1100,10 @@ fun! Test_CT_wiping_source_should_not_fail_with_E94()
   endtry
 endf
 
+fun! Test_CT_backward_compatible_option()
+  call s:assert_build('test89')
+endf
+
 "
 " Runner!
 "

@@ -2376,7 +2376,7 @@ fun! s:print_header(bufnr)
 endf
 
 fun! s:finish_endif(bufnr)
-  call s:put(a:bufnr, 'unlet s:t_Co' . (s:uses_italics() ? ' s:italics' : ''))
+  call s:put(a:bufnr, 'unlet s:t_Co' .. (s:uses_italics() ? ' s:italics' : ''))
   call s:put(a:bufnr, 'finish')
   call s:put(a:bufnr, 'endif')
 endf
@@ -2438,7 +2438,9 @@ fun! s:print_terminal_colors(bufnr, variant, section)
   endif
   let l:tc = s:term_colors(a:section)
   let l:col0_15 = join(map(copy(l:tc), { _,c -> "'" .. s:guicol(c, a:section) .. "'" }), ', ')
-  call s:put(a:bufnr, 'let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
+  call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
+  call s:put(a:bufnr, '  let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
+  call s:put(a:bufnr, "endif")
   if s:supports_neovim()
     let l:n = 0
     call s:put(a:bufnr, "if has('nvim')")
@@ -2479,9 +2481,7 @@ endf
 
 fun! s:print_colorscheme(bufnr, variant)
   call s:put(a:bufnr, '')
-  if s:is_gui(a:variant)
-    call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
-  else
+  if !s:is_gui(a:variant)
     call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
   endif
   call s:print_colorscheme_defs(a:bufnr, a:variant, 'preamble')
@@ -2489,17 +2489,20 @@ fun! s:print_colorscheme(bufnr, variant)
     if s:has_colorscheme_definitions(a:variant, 'dark')
       call s:put(a:bufnr, "if &background ==# 'dark'")
       call s:print_colorscheme_defs(a:bufnr, a:variant, 'dark')
-      call s:finish_endif(a:bufnr) " endif dark background
     endif
     if s:has_colorscheme_definitions(a:variant, 'light')
+      call s:put(a:bufnr, "else")
       call s:put(a:bufnr, '" Light background')
       call s:print_colorscheme_defs(a:bufnr, a:variant, 'light')
+      call s:put(a:bufnr, "endif")
     endif
   else " One background
     let l:background = s:has_dark() ? 'dark' : 'light'
     call s:print_colorscheme_defs(a:bufnr, a:variant, l:background)
   endif
-  call s:finish_endif(a:bufnr) " endif termguicolors/t_Co
+  if !s:is_gui(a:variant)
+    call s:finish_endif(a:bufnr) " endif t_Co
+  endif
 endf
 
 fun! s:generate_colorscheme(outdir, overwrite)

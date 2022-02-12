@@ -10,17 +10,10 @@ let g:colors_name = 'test1'
 
 let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 1
 
-if (has('termguicolors') && &termguicolors) || has('gui_running')
-  hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
-  unlet s:t_Co
-  finish
-endif
+hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
 
 if s:t_Co >= 256
   hi Normal ctermfg=255 ctermbg=16 cterm=NONE
-  if !has('patch-8.0.0616') " Fix for Vim bug
-    set background=dark
-  endif
   unlet s:t_Co
   finish
 endif

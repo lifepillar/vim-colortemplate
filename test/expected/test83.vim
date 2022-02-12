@@ -22,12 +22,8 @@ let s:description     = 'Color scheme with custom reset block'
 
 let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 1
 
-if (has('termguicolors') && &termguicolors) || has('gui_running')
-  " Verbatim block 1
-  hi Normal guifg=#a34c9e guibg=#ffffff gui=NONE cterm=NONE
-  " Verbatim block 2
-  unlet s:t_Co
-  finish
-endif
+" Verbatim block 1
+hi Normal guifg=#a34c9e guibg=#ffffff gui=NONE cterm=NONE
+" Verbatim block 2
 
 " vim: et ts=2 sw=2

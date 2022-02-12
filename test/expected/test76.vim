@@ -77,9 +77,6 @@ hi! link QuickFixLine Search
 
 if s:t_Co >= 256
   hi Normal ctermfg=8 ctermbg=8 cterm=NONE
-  if !has('patch-8.0.0616') " Fix for Vim bug
-    set background=dark
-  endif
   unlet s:t_Co
   finish
 endif

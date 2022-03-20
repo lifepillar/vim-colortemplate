@@ -148,16 +148,17 @@ fun! colortemplate#colorspace#hex2hsv(hex)
   return colortemplate#colorspace#rgb2hsv(l:r, l:g, l:b)
 endf
 
-" Without arguments, returns a Dictionary of the color names from $VIMRUNTIME/rgb.txt
-" (converted to all lowercase), with the associated hex values.
-" If an argument is given, returns the hex value of the specified color name.
+if exists('v:colornames')
+  let s:rgb_colors = v:colornames
+endif
+
+" Without arguments, returns a Dictionary of the color names from v:colornames
+" or, for older Vim, from $VIMRUNTIME/rgb.txt (converted to all lowercase),
+" with the associated hex values. If an argument is given, returns the hex
+" value of the specified color name.
 fun! colortemplate#colorspace#rgbname2hex(...) abort
   if !exists('s:rgb_colors')
     let s:rgb_colors = {}
-    " Add some color names not in rgb.txt (see syntax.c for the values)
-    let s:rgb_colors['darkyellow']   = '#af5f00' " 130
-    let s:rgb_colors['lightmagenta'] = '#ffd7ff' " 225
-    let s:rgb_colors['lightred']     = '#ffd7d7' " 224
     let l:rgb = readfile($VIMRUNTIME . s:slash() . 'rgb.txt')
     for l:line in l:rgb
       let l:match = matchlist(l:line, '^\s*\(\d\+\)\s*\(\d\+\)\s*\(\d\+\)\s*\(.*\)$')

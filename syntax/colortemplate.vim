@@ -49,7 +49,7 @@ syn keyword colortemplateTodo         contained TODO FIXME XXX DEBUG NOTE
 " Basic color names
 syn keyword colortemplateConstant     contained Black Blue Brown Cyan DarkRed DarkGreen DarkYellow DarkBlue DarkMagenta DarkCyan Green LightGray LightGrey
 syn keyword colortemplateConstant     contained DarkGray DarkGrey Gray Grey LightRed LightGreen LightYellow LightBlue LightMagenta LightCyan Magenta Red Yellow White
-" Color names from $VIMRUNTIME/rgb.txt
+" Color names from $VIMRUNTIME/colors/lists/default.vim
 syn keyword colortemplateConstant     contained alice AliceBlue almond antique AntiqueWhite AntiqueWhite1 AntiqueWhite2 AntiqueWhite3
 syn keyword colortemplateConstant     contained AntiqueWhite4 aqua aquamarine aquamarine1 aquamarine2 aquamarine3 aquamarine4 azure
 syn keyword colortemplateConstant     contained azure1 azure2 azure3 azure4 beige bisque bisque1 bisque2

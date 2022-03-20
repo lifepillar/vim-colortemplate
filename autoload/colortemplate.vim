@@ -20,7 +20,7 @@ let s:VERSION = '2.2.0'
 " <GUIValue>                  ::= <HexValue> | <RGBValue> | <RGBColorName>
 " <HexValue>                  ::= #[A-Za-f0-9]{6}
 " <RGBValue>                  ::= rgb ( <8BitNumber> , <8BitNumber> , <8BitNumber> )
-" <RGBColorName>              ::= See $VIMRUNTIME/rgb.txt
+" <RGBColorName>              ::= v:colornames
 " <Base256Value>              ::= ~ | <8BitNumber>
 " <8BitNumber>                ::= 0 | 1 | ... | 255
 " <Base16Value>               ::= 0 | 1 | ... | 15 | Black | DarkRed | ...
@@ -1907,7 +1907,7 @@ fun! s:parse_gui_value()
     throw 'Invalid GUI color value'
   elseif s:token.value ==? 'rgb'
     return s:parse_rgb_value()
-  else " Assume RGB name from $VIMRUNTIME/rgb.txt
+  else " Assume RGB name from v:colornames
     let l:rgb_name = s:token.value
     while s:token.peek().kind ==# 'WORD'
       let l:rgb_name .= ' ' . s:token.next().value

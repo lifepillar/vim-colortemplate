@@ -23,6 +23,7 @@ Include: _help.colortemplate
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
+CurSearch         -> IncSearch
 Debug             -> Special
 Define            -> PreProc
 Delimiter         -> Special

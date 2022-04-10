@@ -75,6 +75,7 @@ Term Colors: darkgrey red green yellow blue magenta cyan white
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
+CurSearch         -> Search
 Debug             -> Special
 Define            -> PreProc
 Delimiter         -> Special

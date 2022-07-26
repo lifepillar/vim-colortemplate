@@ -2481,8 +2481,9 @@ endf
 
 fun! s:print_colorscheme(bufnr, variant)
   call s:put(a:bufnr, '')
+  let cmp = a:variant ? ">=" : "=="
   if !s:is_gui(a:variant)
-    call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
+    call s:put(a:bufnr, 'if s:t_Co ' . cmp . ' ' . a:variant)
   endif
   call s:print_colorscheme_defs(a:bufnr, a:variant, 'preamble')
   if s:has_dark_and_light()

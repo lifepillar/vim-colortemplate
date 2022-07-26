@@ -2365,7 +2365,7 @@ fun! s:print_header(bufnr)
     endfor
   endif
   call s:put(a:bufnr,   ''                                                                      )
-  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co > 1 ? &t_Co : 1")
+  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !empty(&t_Co) && &t_Co >= 0 ? &t_Co : -1")
   if s:uses_italics()
     let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
     if s:supports_neovim()
@@ -2481,9 +2481,8 @@ endf
 
 fun! s:print_colorscheme(bufnr, variant)
   call s:put(a:bufnr, '')
-  let cmp = a:variant ? ">=" : "=="
   if !s:is_gui(a:variant)
-    call s:put(a:bufnr, 'if s:t_Co ' . cmp . ' ' . a:variant)
+    call s:put(a:bufnr, 'if s:t_Co >= ' . a:variant)
   endif
   call s:print_colorscheme_defs(a:bufnr, a:variant, 'preamble')
   if s:has_dark_and_light()

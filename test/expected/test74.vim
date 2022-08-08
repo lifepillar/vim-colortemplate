@@ -8,7 +8,7 @@ set background=dark
 hi clear
 let g:colors_name = 'test74'
 
-let s:t_Co = exists('&t_Co') && &t_Co >= 0 ? (&t_Co ?? 0) : -1
+let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1
 
 if s:t_Co >= 16
   hi Normal ctermfg=15 ctermbg=NONE cterm=NONE

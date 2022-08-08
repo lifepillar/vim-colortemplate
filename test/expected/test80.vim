@@ -8,7 +8,7 @@ set background=light
 hi clear
 let g:colors_name = 'test80'
 
-let s:t_Co = exists('&t_Co') && &t_Co >= 0 ? (&t_Co ?? 0) : -1
+let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1
 
 silent! call foo()
 

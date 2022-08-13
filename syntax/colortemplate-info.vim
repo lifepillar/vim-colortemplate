@@ -1,7 +1,9 @@
-" Name:        Colortemplate
-" Author:      Lifepillar <lifepillar@lifepillar.me>
-" Maintainer:  Lifepillar <lifepillar@lifepillar.me>
-" License:     Vim license (see `:help license`)
+vim9script
+
+# Name:        Colortemplate
+# Author:      Lifepillar <lifepillar@lifepillar.me>
+# Maintainer:  Lifepillar <lifepillar@lifepillar.me>
+# License:     Vim license (see `:help license`)
 
 if exists("b:current_syntax")
   finish
@@ -9,7 +11,6 @@ endif
 
 syn case ignore
 syn sync fromstart
-
 
 syn match colortemplateInfoTitle /^\%({{{\|}}}\).*$/
 syn match colortemplateInfoDelta /\[delta=\%(\d\d\.\d\+\|[3456789]\.\d\+\|2\.[456789]\d*\)\]/ contained
@@ -41,4 +42,4 @@ hi def link colortemplateInfoW3C Keyword
 hi def link colortemplateInfoTitle Title
 hi def link colortemplateInfoUsedBy Comment
 
-" vim: nowrap et ts=2 sw=2
+# vim: nowrap et ts=2 sw=2 fdm=manual

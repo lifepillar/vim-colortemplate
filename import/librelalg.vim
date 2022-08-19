@@ -57,8 +57,8 @@ def CompareValues(v1: any, v2: any): number
   endif
 enddef
 
-def CompareTuples(t: dict<any>, u: dict<any>, listAttr: list<string>): number
-  for a in listAttr
+def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
+  for a in attrList
     const cmp = CompareValues(t[a], u[a])
     if cmp == 0
       continue
@@ -84,7 +84,7 @@ enddef
 # type Consumer     func(Tuple): void
 # type Continuation func(Consumer): void
 
-# Operators requiring a materialized relation as input {{{
+# Root operators (requiring a relation as input) {{{
 export def Scan(rel: list<dict<any>>): func(func(dict<any>))
   return (Emit: func(dict<any>)) => {
     for t in rel
@@ -96,71 +96,9 @@ enddef
 export def Foreach(rel: list<dict<any>>): func(func(dict<any>))
   return Scan(rel)
 enddef
-
-export def SortPred(rel: list<dict<any>>, ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
-  return sort(copy(rel), ComparisonFn)
-enddef
-
-export def SortedPredScan(rel: list<dict<any>>, ComparisonFn: func(dict<any>, dict<any>): number): func(func(dict<any>))
-  return SortPred(rel, ComparisonFn)->Scan()
-enddef
-
-export def Sort(rel: list<dict<any>>, listAttr: list<string>): list<dict<any>>
-  const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, listAttr)
-  return SortPred(rel, SortAttrPred)
-enddef
-
-export def SortedScan(rel: list<dict<any>>, listAttr: list<string>): func(func(dict<any>))
-  return Sort(rel, listAttr)->Scan()
-enddef
-
-export def GroupBy(rel: list<dict<any>>, attrList: list<string>, AggregateFn: func(func(func(dict<any>))): any, aggrName = 'AggregateValue'): func(func(dict<any>))
-  return (Emit: func(dict<any>)) => {
-    var fid: dict<list<dict<any>>> = {}
-
-    # Split into subrelations
-    for t in rel
-      const groupValue = mapnew(attrList, (_, attr) => t[attr])
-      const groupKey = String(groupValue)
-      if !fid->has_key(groupKey)
-        fid[groupKey] = []
-      endif
-      fid[groupKey]->add(t)
-    endfor
-
-    # Apply aggregate function to each subrelation
-    for groupKey in keys(fid)
-      const subrel = fid[groupKey]
-      var t0: dict<any> = {}
-      for attr in attrList
-        t0[attr] = subrel[0][attr]
-      endfor
-      t0[aggrName] = Scan(subrel)->AggregateFn()
-      Emit(t0)
-    endfor
-  }
-enddef
-
-# Returns all the tuples which, concatenated with a tuple of s, produce
-# a tuple of r. Relational division is a derived operator, defined as follows:
-#
-#     r ÷ s = r₁ - s₁,
-#
-# where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
-# appearing in r but not in s.
-export def Divide(r: list<dict<any>>, s: list<dict<any>>): func(func(dict<any>))
-  if empty(r) || empty(s)
-    return Scan(r)
-  endif
-  const attrS = keys(s[0])
-  const K = filter(keys(r[0]), (i, v) => index(attrS, v) == -1)
-  const r1 = Scan(r)->Project(K)->Materialize()
-  const s1 = Scan(s)->Product(r1)->Minus(r)->Project(K)->Materialize()
-  return Scan(r1)->Minus(s1)
-enddef
 # }}}
 
-# Operators materializing their input {{{
+# Leaf operators (returning a relation) {{{
 export def Materialize(Cont: func(func(dict<any>))): list<dict<any>>
   var rel: list<dict<any>> = []
   Cont((t) => {
@@ -171,6 +109,20 @@ enddef
 
 export def Query(Cont: func(func(dict<any>))): list<dict<any>>
   return Materialize(Cont)
+enddef
+
+export def Build(Cont: func(func(dict<any>))): list<dict<any>>
+  return Materialize(Cont)
+enddef
+
+export def Sort(Cont: func(func(dict<any>)), ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
+  var rel = Materialize(Cont)
+  return sort(rel, ComparisonFn)
+enddef
+
+export def SortBy(Cont: func(func(dict<any>)), attrList: list<string>): list<dict<any>>
+  const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList)
+  return Sort(Cont, SortAttrPred)
 enddef
 # }}}
 
@@ -326,6 +278,58 @@ export def AntiJoin(Cont: func(func(dict<any>)), rel: list<dict<any>>, Pred: fun
       Emit(t)
     })
   }
+enddef
+
+export def GroupBy(Cont: func(func(dict<any>)), attrList: list<string>, AggregateFn: func(func(func(dict<any>))): any, aggrName = 'AggregateValue'): func(func(dict<any>))
+  var fid: dict<list<dict<any>>> = {}
+
+  Cont((t) => {
+    # Materialize into subrelations
+    const groupValue = mapnew(attrList, (_, attr) => t[attr])
+    const groupKey = String(groupValue)
+    if !fid->has_key(groupKey)
+      fid[groupKey] = []
+    endif
+    fid[groupKey]->add(t)
+  })
+
+  return (Emit: func(dict<any>)) => {
+    # Apply aggregate function to each subrelation
+    for groupKey in keys(fid)
+      const subrel = fid[groupKey]
+      var t0: dict<any> = {}
+      for attr in attrList
+        t0[attr] = subrel[0][attr]
+      endfor
+      t0[aggrName] = Scan(subrel)->AggregateFn()
+      Emit(t0)
+    endfor
+  }
+enddef
+
+# Returns all the tuples which, concatenated with a tuple of s, produce
+# a tuple of r. Relational division is a derived operator, defined as follows:
+#
+#     r ÷ s = r₁ - s₁,
+#
+# where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
+# appearing in r but not in s.
+export def Divide(Cont: func(func(dict<any>)), s: list<dict<any>>): func(func(dict<any>))
+  if empty(s)
+    return Cont
+  endif
+
+  var r = Materialize(Cont)
+
+  if empty(r)
+    return Scan(r)
+  endif
+
+  const attrS = keys(s[0])
+  const K = filter(keys(r[0]), (i, v) => index(attrS, v) == -1)
+  const r1 = Scan(r)->Project(K)->Materialize()
+  const s1 = Scan(s)->Product(r1)->Minus(r)->Project(K)->Materialize()
+  return Scan(r1)->Minus(s1)
 enddef
 # }}}
 

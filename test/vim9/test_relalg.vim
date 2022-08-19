@@ -28,8 +28,7 @@ const Scan           = ra.Scan
 const Select         = ra.Select
 const SemiJoin       = ra.SemiJoin
 const Sort           = ra.Sort
-const SortPred       = ra.SortPred
-const SortedPredScan = ra.SortedPredScan
+const SortBy         = ra.SortBy
 const Str            = ra.Str
 const Sum            = ra.Sum
 
@@ -144,7 +143,7 @@ def g:Test_CT_Scan()
   assert_true(RelEq(expected, result), ErrMsg("Scan", expected, result))
 enddef
 
-def g:Test_CT_SortedPredScan()
+def g:Test_CT_Sort()
   const instance = [
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
@@ -161,11 +160,9 @@ def g:Test_CT_SortedPredScan()
   const r = R.instance
 
   const Cmp = (t1, t2) => t1.B == t2.B ? 0 : t1.B > t2.B ? 1 : -1
-  const result = Query(SortedPredScan(R.instance, Cmp))
 
-  assert_equal(expected, result)
-  assert_equal(expected, SortPred(r, Cmp))
-  assert_equal(Query(SortPred(r, Cmp)->Scan()), SortPred(r, Cmp))
+  assert_equal(expected, Scan(r)->Sort(Cmp))
+  assert_equal(expected, Scan(r)->SortBy(['B']))
   assert_equal(R.instance, r)
   assert_equal(instance, R.instance)
 enddef
@@ -256,9 +253,9 @@ def g:Test_CT_Project()
     {B: true,  C: 80},
   ]
 
-  assert_equal(expected1, Query(Scan(r)->Project(['A']))->Sort(['A']))
-  assert_equal(expected2, Query(Scan(r)->Project(['B']))->Sort(['B']))
-  assert_equal(expected3, Query(Scan(r)->Project(['B', 'C']))->Sort(['B', 'C']))
+  assert_equal(expected1, Scan(r)->Project(['A'])->SortBy(['A']))
+  assert_equal(expected2, Scan(r)->Project(['B'])->SortBy(['B']))
+  assert_equal(expected3, Scan(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
   assert_equal(instance, r)
 enddef
 
@@ -304,11 +301,11 @@ def g:Test_CT_Join()
     {B: 'three', C: 0, s_B: 'three', s_C: 0},
   ]
 
-  assert_equal(expected1, Query(Scan(r)->Join(s, (rt, st) => rt.B == st.B, 's_'))->Sort(['A']))
-  assert_equal(expected2, Query(Scan(s)->Join(r, (st, rt) => rt.B == st.B, 'r_'))->Sort(['r_A']))
-  assert_equal(expected3, Query(Scan(r)->Join(s, (rt, st) => rt.A <= st.C, 's_'))->Sort(['A', 's_B']))
-  assert_equal(expected4, Query(Scan(s)->Join(r, (st, rt) => rt.A <= st.C, 'r_'))->Sort(['C', 'r_A']))
-  assert_equal(expected5, Query(Scan(s)->Join(s, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_'))->Sort(['B']))
+  assert_equal(expected1, Scan(r)->Join(s, (rt, st) => rt.B == st.B, 's_')->SortBy(['A']))
+  assert_equal(expected2, Scan(s)->Join(r, (st, rt) => rt.B == st.B, 'r_')->SortBy(['r_A']))
+  assert_equal(expected3, Scan(r)->Join(s, (rt, st) => rt.A <= st.C, 's_')->SortBy(['A', 's_B']))
+  assert_equal(expected4, Scan(s)->Join(r, (st, rt) => rt.A <= st.C, 'r_')->SortBy(['C', 'r_A']))
+  assert_equal(expected5, Scan(s)->Join(s, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy(['B']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -399,8 +396,8 @@ def g:Test_CT_Product()
     {A: 2, B: 'two',  C: 90}
   ]
 
-  assert_equal(expected, Query(Scan(r)->Product(s))->Sort(['A', 'C']))
-  assert_equal(expected, Query(Scan(s)->Product(r))->Sort(['A', 'C']))
+  assert_equal(expected, Scan(r)->Product(s)->SortBy(['A', 'C']))
+  assert_equal(expected, Scan(s)->Product(r)->SortBy(['A', 'C']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -460,8 +457,8 @@ def g:Test_CT_Minus()
     {A: 2, B: 'two'}
   ]
 
-  assert_equal(expected1, Query(Scan(r)->Minus(s))->Sort(['A']))
-  assert_equal(expected2, Query(Scan(s)->Minus(r))->Sort(['A']))
+  assert_equal(expected1, Scan(r)->Minus(s)->SortBy(['A']))
+  assert_equal(expected2, Scan(s)->Minus(r)->SortBy(['A']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -505,10 +502,10 @@ def g:Test_CT_SemiJoin()
     {B: 'three', C: 0}
   ]
 
-  assert_equal(expected1, Query(Scan(r)->SemiJoin(s, (rt, st) => rt.B == st.B))->Sort(['A']))
+  assert_equal(expected1, Scan(r)->SemiJoin(s, (rt, st) => rt.B == st.B)->SortBy(['A']))
   assert_equal(expected2, Query(Scan(s)->SemiJoin(r, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, Query(Scan(r)->SemiJoin(s, (rt, st) => rt.A <= st.C))->Sort(['A']))
-  assert_equal(expected4, Query(Scan(s)->SemiJoin(r, (st, rt) => rt.A <= st.C))->Sort(['B']))
+  assert_equal(expected3, Scan(r)->SemiJoin(s, (rt, st) => rt.A <= st.C)->SortBy(['A']))
+  assert_equal(expected4, Scan(s)->SemiJoin(r, (st, rt) => rt.A <= st.C)->SortBy(['B']))
   assert_equal(expected5, Query(Scan(s)->SemiJoin(s, (s1, s2) => s1.C >= s2.C && s2.C == 0)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
@@ -549,8 +546,8 @@ def g:Test_CT_AntiJoin()
 
   assert_equal(expected1, Query(Scan(r)->AntiJoin(s, (rt, st) => rt.B == st.B)))
   assert_equal(expected2, Query(Scan(s)->AntiJoin(r, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, Query(Scan(r)->AntiJoin(s, (rt, st) => rt.A <= st.C))->Sort(['A']))
-  assert_equal(expected4, Query(Scan(s)->AntiJoin(r, (st, rt) => rt.A <= st.C))->Sort(['B']))
+  assert_equal(expected3, SortBy(Scan(r)->AntiJoin(s, (rt, st) => rt.A <= st.C), ['A']))
+  assert_equal(expected4, SortBy(Scan(s)->AntiJoin(r, (st, rt) => rt.A <= st.C), ['B']))
   assert_equal(expected5, Query(Scan(s)->AntiJoin(s, (s1, s2) => s1.C > s2.C)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
@@ -661,7 +658,7 @@ def g:Test_CT_GroupBy()
     {name: 'A', total: 14.0},
     {name: 'B', total: -0.5}
   ]
-  const result = Query(GroupBy(r, ['name'], (Cont) => Sum(Cont, 'balance'), 'total'))->Sort(['name'])
+  const result = Scan(r)->GroupBy(['name'], (Cont) => Sum(Cont, 'balance'), 'total')->SortBy(['name'])
 
   assert_equal(5, numInserted)
   assert_equal(2, len(result))
@@ -701,7 +698,7 @@ def g:Test_CT_Divide()
     {'student': '123'},
     {'student': '283'},
   ]
-  const result = Query(Divide(subscription, session))->Sort(['student'])
+  const result = Scan(subscription)->Divide(session)->SortBy(['student'])
 
   assert_equal(expected, result)
   assert_equal(subscription_instance, subscription)

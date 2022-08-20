@@ -4,6 +4,7 @@ import '../../import/librelalg.vim' as ra
 
 const AntiJoin       = ra.AntiJoin
 const Bool           = ra.Bool
+const Build          = ra.Build
 const Count          = ra.Count
 const Delete         = ra.Delete
 const Divide         = ra.Divide
@@ -747,4 +748,73 @@ def g:Test_CT_Divide()
   assert_equal(subscription_instance, subscription)
   assert_equal(session_instance, session)
 enddef
+
+def g:Test_CT_DeeDum()
+  RR = Relation('Dee', {}, [[]])
+  assert_equal(0, len(RR.instance))
+  assert_fails("RR->Insert({A: 0})", "Expected a tuple on schema {}")
+
+  RR->Insert({})
+
+  assert_equal(1, len(RR.instance))
+  assert_fails("RR->Insert({})", "Duplicate key")
+
+  var Dum = Relation('Dum', {}, [[]])
+  var Dee = RR
+  const dum = Dum.instance
+  const dee = Dee.instance
+  const r   = [{A: 1}, {A: 2}]
+
+  assert_equal([],   Scan(r)->NatJoin(dum)->Build(),           "r ⨝ dum")
+  assert_equal(r,    Scan(r)->NatJoin(dee)->Build(),           "r ⨝ dee")
+  assert_equal([],   Scan(dum)->NatJoin(r)->Build(),           "dum ⨝ r")
+  assert_equal(r,    Scan(dee)->NatJoin(r)->Build(),           "dee ⨝ r")
+
+  assert_equal([],   Scan(dum)->NatJoin(dum)->Build(),         "dum ⨝ dum")
+  assert_equal([],   Scan(dum)->NatJoin(dee)->Build(),         "dum ⨝ dee")
+  assert_equal([],   Scan(dee)->NatJoin(dum)->Build(),         "dee ⨝ dum")
+  assert_equal([{}], Scan(dee)->NatJoin(dee)->Build(),         "dee ⨝ dee")
+
+  assert_equal([],           Scan(dum)->Select((t) => true)->Build(),              "σ[true](dum)")
+  assert_equal([],           Scan(dum)->Select((t) => false)->Build(),             "σ[false](dum)")
+  assert_equal([{}],         Scan(dee)->Select((t) => true)->Build(),              "σ[true](dee)")
+  assert_equal([],           Scan(dee)->Select((t) => false)->Build(),             "σ[false](dee)")
+
+  assert_equal([],           Scan(dum)->Project([])->Build(),                      "π[](dum)")
+  assert_equal([{}],         Scan(dee)->Project([])->Build(),                      "π[](dee)")
+
+  assert_equal([],           Scan(dum)->Product(dum)->Build(),                     "dum × dum")
+  assert_equal([],           Scan(dum)->Product(dee)->Build(),                     "dum × dee")
+  assert_equal([],           Scan(dee)->Product(dum)->Build(),                     "dee × dum")
+  assert_equal([{}],         Scan(dee)->Product(dee)->Build(),                     "dee × dee")
+
+  assert_equal([],           Scan(dum)->Intersect(dum)->Build(),                   "dum ∩ dum")
+  assert_equal([],           Scan(dum)->Intersect(dee)->Build(),                   "dum ∩ dee")
+  assert_equal([],           Scan(dee)->Intersect(dum)->Build(),                   "dee ∩ dum")
+  assert_equal([{}],         Scan(dee)->Intersect(dee)->Build(),                   "dee ∩ dee")
+
+  assert_equal([],           Scan(dum)->Minus(dum)->Build(),                       "dum - dum")
+  assert_equal([],           Scan(dum)->Minus(dee)->Build(),                       "dum - dee")
+  assert_equal([{}],         Scan(dee)->Minus(dum)->Build(),                       "dee - dum")
+  assert_equal([],           Scan(dee)->Minus(dee)->Build(),                       "dee - dee")
+
+  assert_equal([],           Scan(dum)->SemiJoin(dum, (t1, t2) => true)->Build(),  "dum ⋉ dum")
+  assert_equal([],           Scan(dum)->SemiJoin(dee, (t1, t2) => true)->Build(),  "dum ⋉ dee")
+  assert_equal([],           Scan(dee)->SemiJoin(dum, (t1, t2) => true)->Build(),  "dee ⋉ dum")
+  assert_equal([{}],         Scan(dee)->SemiJoin(dee, (t1, t2) => true)->Build(),  "dee ⋉ dee")
+
+  assert_equal([],           Scan(dum)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dum ▷ dum")
+  assert_equal([],           Scan(dum)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dum ▷ dee")
+  assert_equal([{}],         Scan(dee)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dee ▷ dum")
+  assert_equal([],           Scan(dee)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dee ▷ dee")
+
+  assert_equal([],           Scan(dum)->GroupBy([], Count, 'agg')->Build(), "dum group by []")
+  assert_equal([{'agg': 1}], Scan(dee)->GroupBy([], Count, 'agg')->Build(), "dee group by []")
+
+  assert_equal([],           Scan(dum)->Divide(dum)->Build(),                "dum ÷ dum")
+  assert_equal([],           Scan(dum)->Divide(dee)->Build(),                "dum ÷ dee")
+  assert_equal([{}],         Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
+  assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
+enddef
+
 

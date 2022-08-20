@@ -34,7 +34,7 @@ enddef
 # }}}
 
 # Test files
-source <sfile>:h/vim9/test_relalg.vim
+source <sfile>:h/vim9/test_librelalg.vim
 
 # Runner!
 const success = tt.RunBabyRun(get(g:, 'test', '_CT'))

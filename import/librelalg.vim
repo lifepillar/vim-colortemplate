@@ -1,6 +1,10 @@
 vim9script
 
 # Error messages {{{
+def ErrNoKey(relname: string): string
+  return printf("No key specified for relation %s", relname)
+enddef
+
 def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
   return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
 enddef
@@ -520,6 +524,10 @@ enddef
 
 
 export def Relation(name: string, schema: dict<number>, keys: list<list<string>>, constraints: list<func> = [], checkType = true): dict<any>
+  if empty(keys)
+    throw ErrNoKey(name)
+  endif
+
   final indexes: any = {}
   final integrity_constraints: list<func> = []
 

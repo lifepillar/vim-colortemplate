@@ -402,14 +402,14 @@ const TypeString = {
 
 # Indexes {{{
 def MakeIndex(key: list<string>): dict<any>
-  return {key: copy(key), data: {}}
+  return {key: key, data: {}}
 enddef
 
-def AddKey(index: dict<any>, t: dict<any>, rowNumber: number): void
+def AddKey(index: dict<any>, t: dict<any>): void
   const key = index.key
 
   if len(key) == 0
-    index.row = rowNumber
+    index.row = t
     return
   endif
 
@@ -419,21 +419,23 @@ def AddKey(index: dict<any>, t: dict<any>, rowNumber: number): void
     index.data[value] = MakeIndex(key[1 : ])
   endif
 
-  index.data[value]->AddKey(t, rowNumber)
+  index.data[value]->AddKey(t)
 enddef
 
+const KEY_NOT_FOUND: dict<bool> = {}
+
 # Search for a tuple in R with the same key as t using an index
-def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): number
+def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): dict<any>
   const key = index.key
 
   if empty(key)
-    return index->has_key('row') ? index.row : -1
+    return index->has_key('row') ? index.row : KEY_NOT_FOUND
   endif
 
   const value = t[alias[0]]
 
   if !index.data->has_key(String(value))
-    return -1
+    return KEY_NOT_FOUND
   endif
 
   return index.data[value]->SearchKey(t, alias[1 : ])
@@ -481,7 +483,7 @@ export def KeyConstraint(key: list<string>, index: dict<any>): func(dict<any>): 
   const keyStr = string(key)
 
   return (t: dict<any>): void => {
-    if index->SearchKey(t) != -1
+    if !(index->SearchKey(t) is KEY_NOT_FOUND)
       throw ErrDuplicateKey(key, t)
     endif
   }
@@ -499,7 +501,7 @@ export def ForeignKeyConstraint(R: dict<any>, key: list<string>, attrList = key)
   const keyStr = string(key)
 
   return (t: dict<any>): void => {
-    if R.indexes[keyStr]->SearchKey(t, attrList) == -1
+    if R.indexes[keyStr]->SearchKey(t, attrList) is KEY_NOT_FOUND
       throw ErrForeignKey(R.name, key, t, attrList)
     endif
   }
@@ -534,7 +536,7 @@ export def Relation(name: string, schema: dict<number>, keys: list<list<string>>
   }
 enddef
 
-export def Insert(R: dict<any>, t: dict<any>): number
+export def Insert(R: dict<any>, t: dict<any>): void
   # Check constraints
   for CheckConstraint in R.constraints
     CheckConstraint(t)
@@ -542,15 +544,12 @@ export def Insert(R: dict<any>, t: dict<any>): number
 
   # Insert
   R.instance->add(t)
-  const rowNumber = len(R.instance) - 1
 
   # Update indexes
   for key in R.keys
     const index = R.indexes[string(key)]
-    index->AddKey(t, rowNumber)
+    index->AddKey(t)
   endfor
-
-  return rowNumber
 enddef
 
 export def InsertMany(R: dict<any>, tuples: list<dict<any>>): number

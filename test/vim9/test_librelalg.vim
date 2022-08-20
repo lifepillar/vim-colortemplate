@@ -59,17 +59,16 @@ def g:Test_CT_CreateEmptyRelation()
   assert_true(!empty(R.constraints),     "R does not have any associated constraint")
 enddef
 
+
 def g:Test_CT_Insert()
   RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
 
-  var rowNumber = RR->Insert({A: 0, B: 'b0', C: true, D: 1.2})
+  RR->Insert({A: 0, B: 'b0', C: true, D: 1.2})
 
-  assert_equal(0, rowNumber)
   assert_equal(1, len(RR.instance))
 
-  rowNumber = RR->Insert({A: 0, B: 'b1', C: false, D: 0.2})
+  RR->Insert({A: 0, B: 'b1', C: false, D: 0.2})
 
-  assert_equal(1, rowNumber)
   assert_equal(2, len(RR.instance))
   assert_equal(
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
@@ -107,23 +106,28 @@ def g:Test_CT_Index()
   assert_equal(key, index.key)
   assert_equal({}, index.data)
 
-  R->Insert({'A': 9, 'B': 'veni'})
-  R->Insert({'A': 3, 'B': 'vici'})
-  R->Insert({'A': 9, 'B': 'vidi'})
+  const t0 = {A: 9, B: 'veni'}
+  const t1 = {A: 3, B: 'vici'}
+  const t2 = {A: 9, B: 'vidi'}
+  R->Insert(t0)
+  R->Insert(t1)
+  R->Insert(t2)
 
   assert_equal(
       { 'key':  ['A', 'B'],
         'data': { '3': {
                     'key': ['B'],
-                    'data': { 'vici': { 'key': [], 'data': {}, 'row': 1 } }
-                        },
+                    'data': {
+                      'vici': { 'key': [], 'data': {}, 'row': t1 }
+                    },
+                  },
                   '9': {
                     'key': ['B'],
                     'data': {
-                              'veni': { 'key': [], 'data': {}, 'row': 0 },
-                              'vidi': { 'key': [], 'data': {}, 'row': 2 }
-                            }
-                      }
+                      'veni': { 'key': [], 'data': {}, 'row': t0 },
+                      'vidi': { 'key': [], 'data': {}, 'row': t2 }
+                    }
+                  }
                 }
       },
       index)

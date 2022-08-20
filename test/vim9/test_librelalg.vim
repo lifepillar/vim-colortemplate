@@ -36,6 +36,7 @@ const Sort           = ra.Sort
 const SortBy         = ra.SortBy
 const Str            = ra.Str
 const Sum            = ra.Sum
+const Upsert         = ra.Upsert
 
 # This is defined at the script level to allow for the use of assert_fails().
 # See also: https://github.com/vim/vim/issues/6868
@@ -101,6 +102,28 @@ def g:Test_CT_Insert()
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
     RR.instance
   )
+enddef
+
+def g:Test_CT_Upsert()
+  RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
+  const rr = RR.instance
+  RR->InsertMany([
+    {A: 0, B: 'x', C: true, D: 'd1'},
+    {A: 1, B: 'x', C: false, D: 'd2'},
+  ])
+
+  RR->Upsert({A: 2, B: 'y', C: true, D: 'd3'})
+  RR->Upsert({A: 0, B: 'x', C: true, D: 'new-d1'})
+
+  const expected = [
+    {A: 0, B: 'x', C: true, D: 'new-d1'},
+    {A: 1, B: 'x', C: false, D: 'd2'},
+    {A: 2, B: 'y', C: true, D: 'd3'}
+  ]
+
+  assert_true(RelEq(expected, rr))
+  assert_fails("RR->Upsert({A: 0, B: 'x', C: false, D: ''})",
+    "Key attribute C in RR cannot be changed")
 enddef
 
 def g:Test_CT_Index()

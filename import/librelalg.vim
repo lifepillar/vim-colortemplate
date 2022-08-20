@@ -9,6 +9,10 @@ def ErrNoKey(relname: string): string
   return printf("No key specified for relation %s", relname)
 enddef
 
+def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
+  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
+enddef
+
 def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
   return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
 enddef
@@ -82,6 +86,18 @@ def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
     u[attr] = t[attr]
   endfor
   return u
+enddef
+
+# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
+def Zip(l1: list<any>, l2: list<any>): dict<any>
+  const n = len(l1)
+  var zipdict: dict<any> = {}
+  var i = 0
+  while i < n
+    zipdict[String(l1[i])] = l2[i]
+    ++i
+  endwhile
+  return zipdict
 enddef
 # }}}
 
@@ -435,7 +451,7 @@ def AddKey(index: dict<any>, t: dict<any>): void
   index.data[value]->AddKey(t)
 enddef
 
-const KEY_NOT_FOUND: dict<bool> = {}
+export const KEY_NOT_FOUND: dict<bool> = {}
 
 # Search for a tuple in R with the same key as t using an index
 def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): dict<any>
@@ -468,6 +484,14 @@ def RemoveKey(index: dict<any>, t: dict<any>): void
   if empty(index.data[value].data)
     index.data->remove(value)
   endif
+enddef
+
+export def Lookup(R: dict<any>, key: list<string>, value: list<any>): dict<any>
+  if index(R.keys, key) == -1
+    throw ErrNotAKey(key, R)
+  endif
+  const index = R.indexes[string(key)]
+  return SearchKey(index, Zip(key, value))
 enddef
 # }}}
 
@@ -598,6 +622,30 @@ export def InsertMany(R: dict<any>, tuples: list<dict<any>>): number
     Insert(R, t)
   endfor
   return len(tuples)
+enddef
+
+export def Upsert(R: dict<any>, t: dict<any>): void
+  const key = R.keys[0]
+  var keyValue = []
+  for a in key
+    keyValue->add(t[a])
+  endfor
+  const oldt = Lookup(R, key, keyValue)
+
+  if oldt is KEY_NOT_FOUND
+    Insert(R, t)
+    return
+  endif
+
+  # Update
+  for attr in KeyAttributes(R)
+    if t[attr] != oldt[attr]
+      throw ErrUpdateKeyAttribute(R.name, attr, t, oldt)
+    endif
+  endfor
+  for attr in Descriptors(R)
+    oldt[attr] = t[attr]
+  endfor
 enddef
 
 export def Delete(R: dict<any>, Pred: func(dict<any>): bool): void

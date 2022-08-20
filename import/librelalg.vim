@@ -1,6 +1,10 @@
 vim9script
 
 # Error messages {{{
+def ErrNotAKey(key: list<string>, R: dict<any>): string
+  return printf("%s is not a key of %s", key, R.name)
+enddef
+
 def ErrNoKey(relname: string): string
   return printf("No key specified for relation %s", relname)
 enddef

@@ -440,9 +440,23 @@ def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): dict<any>
 
   return index.data[value]->SearchKey(t, alias[1 : ])
 enddef
-# }}}
 
+def RemoveKey(index: dict<any>, t: dict<any>): void
+  const key = index.key
+
+  if empty(key)
+    index->remove('row')
+    return
+  endif
+
+  const value = t[key[0]]
+  index.data[value]->RemoveKey(t)
+
+  if empty(index.data[value].data)
+    index.data->remove(value)
+  endif
 enddef
+# }}}
 
 def TypeName(atype: number): string
   return get(TypeString, atype, 'unknown')
@@ -557,8 +571,17 @@ export def InsertMany(R: dict<any>, tuples: list<dict<any>>): number
 enddef
 
 export def Delete(R: dict<any>, Pred: func(dict<any>): bool): void
-  R.instance->filter((_, v) => !Pred(v))
-  # FIXME: update/rebuild the indexes!
+  const DeletePred = (i: number, t: dict<any>): bool => {
+    if Pred(t)
+      for key in R.keys
+        const index = R.indexes[string(key)]
+        index->RemoveKey(t)
+      endfor
+      return false
+    endif
+    return true
+  }
+  filter(R.instance, DeletePred)
 enddef
 # }}}
 

@@ -5,6 +5,7 @@ import '../../import/librelalg.vim' as ra
 const AntiJoin       = ra.AntiJoin
 const Bool           = ra.Bool
 const Count          = ra.Count
+const Delete         = ra.Delete
 const Divide         = ra.Divide
 const Float          = ra.Float
 const GroupBy        = ra.GroupBy
@@ -131,6 +132,44 @@ def g:Test_CT_Index()
                 }
       },
       index)
+enddef
+
+def g:Test_CT_Delete()
+  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const empty_indexes = deepcopy(R.indexes)
+  var r = R.instance
+
+  R->InsertMany([
+    {A: 0, B: 'X'},
+    {A: 1, B: 'Y'},
+    {A: 2, B: 'Z'},
+    {A: 3, B: 'Y'},
+    {A: 4, B: 'Z'}
+  ])
+
+  const expected1 = [
+    {A: 1, B: 'Y'},
+    {A: 2, B: 'Z'},
+    {A: 3, B: 'Y'},
+    {A: 4, B: 'Z'}
+  ]
+  const expected2 = [
+    {A: 1, B: 'Y'},
+    {A: 4, B: 'Z'}
+  ]
+
+  R->Delete((t) => t.B == 'X')
+
+  assert_equal(expected1, r)
+
+  R->Delete((t) => t.A == 2 || t.A == 3)
+
+  assert_equal(expected2, r)
+
+  R->Delete((t) => true)
+
+  assert_equal([], r)
+  assert_equal(empty_indexes, R.indexes)
 enddef
 
 def g:Test_CT_Scan()

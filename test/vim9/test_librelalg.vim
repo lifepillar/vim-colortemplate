@@ -3,10 +3,12 @@ vim9script
 import '../../import/librelalg.vim' as ra
 
 const AntiJoin       = ra.AntiJoin
+const Attributes     = ra.Attributes
 const Bool           = ra.Bool
 const Build          = ra.Build
 const Count          = ra.Count
 const Delete         = ra.Delete
+const Descriptors    = ra.Descriptors
 const Divide         = ra.Divide
 const Float          = ra.Float
 const GroupBy        = ra.GroupBy
@@ -15,6 +17,7 @@ const InsertMany     = ra.InsertMany
 const Int            = ra.Int
 const Intersect      = ra.Intersect
 const Join           = ra.Join
+const KeyAttributes  = ra.KeyAttributes
 const Max            = ra.Max
 const Min            = ra.Min
 const Minus          = ra.Minus
@@ -43,6 +46,9 @@ def ErrMsg(context: string, expected: any, result: any): string
 enddef
 
 def g:Test_CT_CreateEmptyRelation()
+  # Every relation must have at least one key
+  assert_fails("Relation('R', {A: Int, B: Str}, [])", "No key")
+
   var R = Relation('R', {A: Int, B: Str}, [['A']])
 
   assert_true(R->has_key('name'),        "R does not have key 'name'")
@@ -59,6 +65,9 @@ def g:Test_CT_CreateEmptyRelation()
   assert_equal(1, len(keys(R.indexes)))
   assert_equal("['A']", keys(R.indexes)[0])
   assert_true(!empty(R.constraints),     "R does not have any associated constraint")
+  assert_equal(['A', 'B'], sort(Attributes(R)))
+  assert_equal(['A'], KeyAttributes(R))
+  assert_equal(['B'], Descriptors(R))
 enddef
 
 

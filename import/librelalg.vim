@@ -560,6 +560,19 @@ export def Relation(name: string, schema: dict<number>, keys: list<list<string>>
   }
 enddef
 
+export def Attributes(R: dict<any>): list<string>
+  return keys(R.schema)
+enddef
+
+export def KeyAttributes(R: dict<any>): list<string>
+  return flattennew(R.keys)->sort()->uniq()
+enddef
+
+export def Descriptors(R: dict<any>): list<string>
+  const keyAttributes = KeyAttributes(R)
+  return filter(Attributes(R), (_, a) => index(keyAttributes, a) == -1)
+enddef
+
 export def Insert(R: dict<any>, t: dict<any>): void
   # Check constraints
   for CheckConstraint in R.constraints

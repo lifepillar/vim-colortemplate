@@ -442,9 +442,6 @@ def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): dict<any>
 enddef
 # }}}
 
-def SchemaToString(schema: dict<number>): string
-  const schemaStr = mapnew(schema, (attr, atype): string => printf("%s: %s", attr, TypeString[atype]))
-  return '{' .. join(values(schemaStr), ', ') .. '}'
 enddef
 
 def TypeName(atype: number): string

@@ -71,6 +71,14 @@ def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
   endfor
   return 0
 enddef
+
+def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
+  var u = {}
+  for attr in attrList
+    u[attr] = t[attr]
+  endfor
+  return u
+enddef
 # }}}
 
 # Relational Algebra {{{
@@ -167,10 +175,7 @@ export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(fu
   return (Emit: func(dict<any>)) => {
     var seen: dict<bool> = {}
     def Proj(t: dict<any>)
-      var u = {}
-      for attr in attrList
-        u[attr] = t[attr]
-      endfor
+      var u = ProjectTuple(t, attrList)
       if !seen->has_key(String(u))
         seen[String(u)] = true
         Emit(u)

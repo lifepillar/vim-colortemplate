@@ -1,31 +1,6 @@
 vim9script
 
 # Error messages {{{
-def ErrNotAKey(relname: string, key: list<string>): string
-  return printf("%s is not a key of %s", key, relname)
-enddef
-
-def ErrNoKey(relname: string): string
-  return printf("No key specified for relation %s", relname)
-enddef
-
-def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
-  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
-enddef
-
-def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
-  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
-enddef
-
-def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
-  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
-enddef
-
-def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
-  const schemaStr = SchemaAsString(schema)
-  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
-enddef
-
 def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
   const value = t[attr]
   const wrongType = TypeName(type(value))
@@ -39,12 +14,8 @@ def ErrDuplicateKey(key: list<string>, t: dict<any>): string
   return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
 enddef
 
-def ErrForeignKeyTarget(relname: string, key: list<string>): string
-  return printf("Wrong foreign key: %s is not a key of relation %s", key, relname)
-enddef
-
-def ErrForeignKeySource(relname: string, key: list<string>, attrList: list<string>): string
-  return printf("Wrong foreign key: %s -> %s(%s)", attrList, relname, key)
+def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
+  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
 enddef
 
 def ErrForeignKey(relname: string, key: list<string>, t: dict<any>, attrList: list<string>): string
@@ -52,6 +23,34 @@ def ErrForeignKey(relname: string, key: list<string>, t: dict<any>, attrList: li
   return printf('Foreign key error: %s = (%s) is not present in %s', key, tStr, relname)
 enddef
 
+def ErrForeignKeySource(relname: string, key: list<string>, attrList: list<string>): string
+  return printf("Wrong foreign key: %s -> %s(%s)", attrList, relname, key)
+enddef
+
+def ErrForeignKeyTarget(relname: string, key: list<string>): string
+  return printf("Wrong foreign key: %s is not a key of relation %s", key, relname)
+enddef
+
+def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
+  const schemaStr = SchemaAsString(schema)
+  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
+enddef
+
+def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
+  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
+enddef
+
+def ErrNoKey(relname: string): string
+  return printf("No key specified for relation %s", relname)
+enddef
+
+def ErrNotAKey(relname: string, key: list<string>): string
+  return printf("%s is not a key of %s", key, relname)
+enddef
+
+def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
+  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
+enddef
 # }}}
 
 # Helper functions {{{

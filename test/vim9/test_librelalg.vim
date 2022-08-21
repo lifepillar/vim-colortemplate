@@ -26,7 +26,6 @@ const Noop           = ra.Noop
 const Product        = ra.Product
 const Project        = ra.Project
 const Query          = ra.Query
-const RelEq          = ra.RelEq
 const Relation       = ra.Relation
 const Rename         = ra.Rename
 const Scan           = ra.Scan
@@ -41,10 +40,6 @@ const Update         = ra.Update
 # This is defined at the script level to allow for the use of assert_fails().
 # See also: https://github.com/vim/vim/issues/6868
 var RR: dict<any> # TRelSchema
-
-def ErrMsg(context: string, expected: any, result: any): string
-  return printf("%s: Expected %s, but got %s", context, result, expected)
-enddef
 
 def g:Test_CT_CreateEmptyRelation()
   # Every relation must have at least one key
@@ -70,7 +65,6 @@ def g:Test_CT_CreateEmptyRelation()
   assert_equal(['A'], KeyAttributes(R))
   assert_equal(['B'], Descriptors(R))
 enddef
-
 
 def g:Test_CT_Insert()
   RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
@@ -120,7 +114,7 @@ def g:Test_CT_Update()
     {A: 1, B: 'x', C: false, D: 'new-d2'}
   ]
 
-  assert_true(RelEq(expected, rr))
+  assert_equal(expected, rr)
   assert_fails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
     "Key attribute C in RR cannot be changed")
   assert_fails("RR->Update({A: 2, B: 'y', C: true, D: 'd3'})",
@@ -144,7 +138,7 @@ def g:Test_CT_Upsert()
     {A: 2, B: 'y', C: true, D: 'd3'}
   ]
 
-  assert_true(RelEq(expected, rr))
+  assert_equal(expected, rr)
   assert_fails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
     "Key attribute C in RR cannot be changed")
 enddef
@@ -152,7 +146,7 @@ enddef
 def g:Test_CT_Delete()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
   const empty_indexes = deepcopy(R.indexes)
-  var r = R.instance
+  const r = R.instance
 
   R->InsertMany([
     {A: 0, B: 'X'},
@@ -232,39 +226,44 @@ def g:Test_CT_Index()
 enddef
 
 def g:Test_CT_Scan()
-  const expected = [
-    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
-    {A: 2, B:  0.0, C: false, D: 'tuple2'},
-    {A: 3, B: -1.0, C: false, D: 'tuple3'},
-  ]
   var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
-  R->InsertMany(expected)
+  const r = R.instance
 
-  const result1 = Query(Scan(R))
-  const result2 = Query(Scan(R.instance))
-
-  assert_true(RelEq(expected, result1), ErrMsg("Scan", expected, result1))
-  assert_true(RelEq(expected, result2), ErrMsg("Scan", expected, result2))
-
-enddef
-
-def g:Test_CT_Sort()
   const instance = [
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
   ]
+  R->InsertMany(instance)
+
+  const result1 = Query(Scan(R))
+  const result2 = Query(Scan(r))
+
+  const expected = instance
+
+  assert_equal(expected, result1)
+  assert_equal(expected, result2)
+  assert_equal(instance, r)
+enddef
+
+def g:Test_CT_Sort()
+  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  const r = R.instance
+
+  const instance = [
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+  ]
+  R->InsertMany(instance)
+
+  const Cmp = (t1, t2) => t1.B == t2.B ? 0 : t1.B > t2.B ? 1 : -1
+
   const expected = [
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
   ]
-  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
-  R->InsertMany(instance)
-
-  const r = R.instance
-
-  const Cmp = (t1, t2) => t1.B == t2.B ? 0 : t1.B > t2.B ? 1 : -1
 
   assert_equal(expected, Scan(r)->Sort(Cmp))
   assert_equal(expected, Scan(r)->SortBy(['B']))
@@ -274,35 +273,36 @@ enddef
 
 def g:Test_CT_Noop()
   var R = Relation('R', {A: Int}, [['A']])
+
   R->Insert({A: 42})
 
-  const r = R.instance
-
-  assert_equal(Query(Scan(r)), Query(Scan(r)->Noop()->Noop()))
+  assert_equal(Query(Scan(R)), Query(Scan(R)->Noop()->Noop()))
 enddef
 
 def g:Test_CT_Rename()
   var R = Relation('R', {A: Str, B: Float, C: Int}, [['A']])
+  const r = R.instance
+
   const instance = [
     {A: 'a1', B: 4.0, C: 40},
     {A: 'a2', B: 2.0, C: 80}
   ]
   R->InsertMany(instance)
 
-  const r = R.instance
-
   const expected = [
     {X: 'a1', B: 4.0, W: 40},
     {X: 'a2', B: 2.0, W: 80}
   ]
 
-  assert_equal(instance, Query(Scan(r)->Rename([], [])))
-  assert_equal(expected, Query(Scan(r)->Rename(['A', 'C'], ['X', 'W'])))
+  assert_equal(instance, Scan(R)->Rename([], [])->Build())
+  assert_equal(expected, Scan(R)->Rename(['A', 'C'], ['X', 'W'])->Build())
   assert_equal(instance, r)
 enddef
 
 def g:Test_CT_Select()
   var R = Relation('R', {A: Str, B: Float, C: Int}, [['A']])
+  const r = R.instance
+
   const instance = [
     {A: 'a1', B: 4.0, C: 40},
     {A: 'a2', B: 2.0, C: 80},
@@ -311,8 +311,6 @@ def g:Test_CT_Select()
     {A: 'a5', B: 4.0, C: 20},
   ]
   R->InsertMany(instance)
-
-  const r = R.instance
 
   const expected1 = [
     {A: 'a1', B: 4.0, C: 40}
@@ -329,6 +327,8 @@ enddef
 
 def g:Test_CT_Project()
   var R = Relation('R', {A: Str, B: Bool, C: Int}, [['A']])
+  const r = R.instance
+
   const instance = [
     {A: 'a1', B: true,  C: 40},
     {A: 'a2', B: false, C: 80},
@@ -337,8 +337,6 @@ def g:Test_CT_Project()
     {A: 'a5', B: false, C: 20},
   ]
   R->InsertMany(instance)
-
-  const r = R.instance
 
   const expected1 = [
     {A: 'a1'},
@@ -366,6 +364,8 @@ enddef
 
 def g:Test_CT_Join()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -374,14 +374,14 @@ def g:Test_CT_Join()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {B: Str, C: Int}, [['C']])
+  const s = S.instance
+
   const instanceS = [
     {B: 'one', C: 1},
     {B: 'three', C: 0}
   ]
   S->InsertMany(instanceS)
 
-  const r = R.instance
-  const s = S.instance
 
   const expected1 = [
     {A: 1, B: 'one', s_B: 'one', s_C: 1},
@@ -406,17 +406,19 @@ def g:Test_CT_Join()
     {B: 'three', C: 0, s_B: 'three', s_C: 0},
   ]
 
-  assert_equal(expected1, Scan(r)->Join(s, (rt, st) => rt.B == st.B, 's_')->SortBy(['A']))
-  assert_equal(expected2, Scan(s)->Join(r, (st, rt) => rt.B == st.B, 'r_')->SortBy(['r_A']))
-  assert_equal(expected3, Scan(r)->Join(s, (rt, st) => rt.A <= st.C, 's_')->SortBy(['A', 's_B']))
-  assert_equal(expected4, Scan(s)->Join(r, (st, rt) => rt.A <= st.C, 'r_')->SortBy(['C', 'r_A']))
-  assert_equal(expected5, Scan(s)->Join(s, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy(['B']))
+  assert_equal(expected1, Scan(R)->Join(S, (rt, st) => rt.B == st.B, 's_')->SortBy(['A']))
+  assert_equal(expected2, Scan(S)->Join(R, (st, rt) => rt.B == st.B, 'r_')->SortBy(['r_A']))
+  assert_equal(expected3, Scan(R)->Join(S, (rt, st) => rt.A <= st.C, 's_')->SortBy(['A', 's_B']))
+  assert_equal(expected4, Scan(S)->Join(R, (st, rt) => rt.A <= st.C, 'r_')->SortBy(['C', 'r_A']))
+  assert_equal(expected5, Scan(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy(['B']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
 
 def g:Test_CT_NatJoin()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -425,6 +427,8 @@ def g:Test_CT_NatJoin()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {B: Str, C: Int}, [['C']])
+  const s = S.instance
+
   const instanceS = [
     {B: 'one', C: 1},
     {B: 'three', C: 0}
@@ -432,6 +436,8 @@ def g:Test_CT_NatJoin()
   S->InsertMany(instanceS)
 
   var T = Relation('T', {D: Int}, [['D']])
+  const t = T.instance
+
   const instanceT = [
     {D: 8},
     {D: 9}
@@ -439,17 +445,14 @@ def g:Test_CT_NatJoin()
   T->InsertMany(instanceT)
 
   var U = Relation('U', {A: Int, B: Str}, [['A', 'B']])
+  const u = U.instance
+
   const instanceU = [
     {A: 0, B: 'many'},
     {A: 1, B: 'one'},
     {A: 2, B: 'two'}
   ]
   U->InsertMany(instanceU)
-
-  const r = R.instance
-  const s = S.instance
-  const t = T.instance
-  const u = U.instance
 
   const expected1 = [
     {A: 1, B: 'one', C: 1},
@@ -461,12 +464,13 @@ def g:Test_CT_NatJoin()
     {B: 'three', C: 0, D: 8}
     {B: 'three', C: 0, D: 9}
   ]
-  assert_equal(expected1, Query(Scan(r)->NatJoin(s)))
-  assert_equal(expected1, Query(Scan(s)->NatJoin(r)))
-  assert_equal(expected2, Query(Scan(s)->NatJoin(t)))
-  assert_equal(r, Query(Scan(r)->NatJoin(r)))
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(r)->NatJoin(u)))
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(u)->NatJoin(r)))
+
+  assert_equal(expected1, Query(Scan(R)->NatJoin(S)))
+  assert_equal(expected1, Query(Scan(S)->NatJoin(R)))
+  assert_equal(expected2, Query(Scan(S)->NatJoin(T)))
+  assert_equal(r, Query(Scan(R)->NatJoin(R)))
+  assert_equal([{A: 1, B: 'one'}], Query(Scan(R)->NatJoin(U)))
+  assert_equal([{A: 1, B: 'one'}], Query(Scan(U)->NatJoin(R)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
   assert_equal(instanceT, t)
@@ -475,6 +479,8 @@ enddef
 
 def g:Test_CT_Product()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -483,14 +489,13 @@ def g:Test_CT_Product()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {C: Int}, [['C']])
+  const s = S.instance
+
   const instanceS = [
     {C: 10},
     {C: 90}
   ]
   S->InsertMany(instanceS)
-
-  const r = R.instance
-  const s = S.instance
 
   const expected = [
     {A: 0, B: 'zero', C: 10},
@@ -501,14 +506,16 @@ def g:Test_CT_Product()
     {A: 2, B: 'two',  C: 90}
   ]
 
-  assert_equal(expected, Scan(r)->Product(s)->SortBy(['A', 'C']))
-  assert_equal(expected, Scan(s)->Product(r)->SortBy(['A', 'C']))
+  assert_equal(expected, Scan(R)->Product(S)->SortBy(['A', 'C']))
+  assert_equal(expected, Scan(S)->Product(R)->SortBy(['A', 'C']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
 
 def g:Test_CT_Intersect()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -517,6 +524,8 @@ def g:Test_CT_Intersect()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {A: Int, B: Str}, [['A', 'B']])
+  const s = S.instance
+
   const instanceS = [
     {A: 0, B: 'many'},
     {A: 1, B: 'one'},
@@ -524,17 +533,16 @@ def g:Test_CT_Intersect()
   ]
   S->InsertMany(instanceS)
 
-  const r = R.instance
-  const s = S.instance
-
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(r)->Intersect(s)))
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(s)->Intersect(r)))
+  assert_equal([{A: 1, B: 'one'}], Query(Scan(R)->Intersect(S)))
+  assert_equal([{A: 1, B: 'one'}], Query(Scan(S)->Intersect(R)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
 
 def g:Test_CT_Minus()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -543,15 +551,14 @@ def g:Test_CT_Minus()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {A: Int, B: Str}, [['A', 'B']])
+  const s = S.instance
+
   const instanceS = [
     {A: 0, B: 'many'},
     {A: 1, B: 'one'},
     {A: 2, B: 'two'}
   ]
   S->InsertMany(instanceS)
-
-  const r = R.instance
-  const s = S.instance
 
   const expected1 = [
     {A: 0, B: 'zero'},
@@ -562,14 +569,16 @@ def g:Test_CT_Minus()
     {A: 2, B: 'two'}
   ]
 
-  assert_equal(expected1, Scan(r)->Minus(s)->SortBy(['A']))
-  assert_equal(expected2, Scan(s)->Minus(r)->SortBy(['A']))
+  assert_equal(expected1, Scan(R)->Minus(S)->SortBy(['A']))
+  assert_equal(expected2, Scan(S)->Minus(R)->SortBy(['A']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
 
 def g:Test_CT_SemiJoin()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -578,14 +587,13 @@ def g:Test_CT_SemiJoin()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {B: Str, C: Int}, [['C']])
+  const s = S.instance
+
   const instanceS = [
     {B: 'one', C: 1},
     {B: 'three', C: 0}
   ]
   S->InsertMany(instanceS)
-
-  const r = R.instance
-  const s = S.instance
 
   const expected1 = [
     {A: 1, B: 'one'},
@@ -607,17 +615,19 @@ def g:Test_CT_SemiJoin()
     {B: 'three', C: 0}
   ]
 
-  assert_equal(expected1, Scan(r)->SemiJoin(s, (rt, st) => rt.B == st.B)->SortBy(['A']))
-  assert_equal(expected2, Query(Scan(s)->SemiJoin(r, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, Scan(r)->SemiJoin(s, (rt, st) => rt.A <= st.C)->SortBy(['A']))
-  assert_equal(expected4, Scan(s)->SemiJoin(r, (st, rt) => rt.A <= st.C)->SortBy(['B']))
-  assert_equal(expected5, Query(Scan(s)->SemiJoin(s, (s1, s2) => s1.C >= s2.C && s2.C == 0)))
+  assert_equal(expected1, Scan(R)->SemiJoin(S, (rt, st) => rt.B == st.B)->SortBy(['A']))
+  assert_equal(expected2, Query(Scan(S)->SemiJoin(R, (st, rt) => rt.B == st.B)))
+  assert_equal(expected3, Scan(R)->SemiJoin(S, (rt, st) => rt.A <= st.C)->SortBy(['A']))
+  assert_equal(expected4, Scan(S)->SemiJoin(R, (st, rt) => rt.A <= st.C)->SortBy(['B']))
+  assert_equal(expected5, Query(Scan(S)->SemiJoin(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
 
 def g:Test_CT_AntiJoin()
   var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
@@ -626,14 +636,13 @@ def g:Test_CT_AntiJoin()
   R->InsertMany(instanceR)
 
   var S = Relation('S', {B: Str, C: Int}, [['C']])
+  const s = S.instance
+
   const instanceS = [
     {B: 'one',   C: 1},
     {B: 'three', C: 0}
   ]
   S->InsertMany(instanceS)
-
-  const r = R.instance
-  const s = S.instance
 
   const expected1 = [
     {A: 0, B: 'zero'}
@@ -649,11 +658,11 @@ def g:Test_CT_AntiJoin()
     {B: 'three', C: 0}
   ]
 
-  assert_equal(expected1, Query(Scan(r)->AntiJoin(s, (rt, st) => rt.B == st.B)))
-  assert_equal(expected2, Query(Scan(s)->AntiJoin(r, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, SortBy(Scan(r)->AntiJoin(s, (rt, st) => rt.A <= st.C), ['A']))
-  assert_equal(expected4, SortBy(Scan(s)->AntiJoin(r, (st, rt) => rt.A <= st.C), ['B']))
-  assert_equal(expected5, Query(Scan(s)->AntiJoin(s, (s1, s2) => s1.C > s2.C)))
+  assert_equal(expected1, Query(Scan(R)->AntiJoin(S, (rt, st) => rt.B == st.B)))
+  assert_equal(expected2, Query(Scan(S)->AntiJoin(R, (st, rt) => rt.B == st.B)))
+  assert_equal(expected3, SortBy(Scan(R)->AntiJoin(S, (rt, st) => rt.A <= st.C), ['A']))
+  assert_equal(expected4, SortBy(Scan(S)->AntiJoin(R, (st, rt) => rt.A <= st.C), ['B']))
+  assert_equal(expected5, Query(Scan(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -662,10 +671,10 @@ def g:Test_CT_Max()
   var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
-  assert_equal(v:none, Scan(r)->Max('A'))
-  assert_equal(v:none, Scan(r)->Max('B'))
-  assert_equal(v:none, Scan(r)->Max('C'))
-  assert_equal(v:none, Scan(r)->Max('D'))
+  assert_equal(v:none, Scan(R)->Max('A'))
+  assert_equal(v:none, Scan(R)->Max('B'))
+  assert_equal(v:none, Scan(R)->Max('C'))
+  assert_equal(v:none, Scan(R)->Max('D'))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D: true},
@@ -676,10 +685,10 @@ def g:Test_CT_Max()
   ]
   R->InsertMany(instance)
 
-  assert_equal(4, Scan(r)->Max('A'))
-  assert_equal('Z', Scan(r)->Max('B'))
-  assert_equal(10.0, Scan(r)->Max('C'))
-  assert_equal(true, Scan(r)->Max('D'))
+  assert_equal(4,    Scan(R)->Max('A'))
+  assert_equal('Z',  Scan(R)->Max('B'))
+  assert_equal(10.0, Scan(R)->Max('C'))
+  assert_equal(true, Scan(R)->Max('D'))
   assert_equal(instance, r)
 enddef
 
@@ -687,10 +696,10 @@ def g:Test_CT_Min()
   var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
-  assert_equal(v:none, Scan(r)->Min('A'))
-  assert_equal(v:none, Scan(r)->Min('B'))
-  assert_equal(v:none, Scan(r)->Min('C'))
-  assert_equal(v:none, Scan(r)->Min('D'))
+  assert_equal(v:none, Scan(R)->Min('A'))
+  assert_equal(v:none, Scan(R)->Min('B'))
+  assert_equal(v:none, Scan(R)->Min('C'))
+  assert_equal(v:none, Scan(R)->Min('D'))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D: true},
@@ -701,10 +710,10 @@ def g:Test_CT_Min()
   ]
   R->InsertMany(instance)
 
-  assert_equal(0, Scan(r)->Min('A'))
-  assert_equal('X', Scan(r)->Min('B'))
-  assert_equal(-3.0, Scan(r)->Min('C'))
-  assert_equal(false, Scan(r)->Min('D'))
+  assert_equal(0,     Scan(R)->Min('A'))
+  assert_equal('X',   Scan(R)->Min('B'))
+  assert_equal(-3.0,  Scan(R)->Min('C'))
+  assert_equal(false, Scan(R)->Min('D'))
   assert_equal(instance, r)
 enddef
 
@@ -712,8 +721,8 @@ def g:Test_CT_Sum()
   var R = Relation('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
-  assert_equal(v:none, Scan(r)->Sum('A'))
-  assert_equal(v:none, Scan(r)->Sum('B'))
+  assert_equal(v:none, Scan(R)->Sum('A'))
+  assert_equal(v:none, Scan(R)->Sum('B'))
 
   const instance = [
     {A: 0, B: 10.0},
@@ -724,8 +733,8 @@ def g:Test_CT_Sum()
   ]
   R->InsertMany(instance)
 
-  assert_equal(10, Scan(r)->Sum('A'))
-  assert_equal(13.5, Scan(r)->Sum('B'))
+  assert_equal(10,   Scan(R)->Sum('A'))
+  assert_equal(13.5, Scan(R)->Sum('B'))
   assert_equal(instance, r)
 enddef
 
@@ -733,7 +742,7 @@ def g:Test_CT_Count()
   var R = Relation('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
-  assert_equal(0, Scan(r)->Count())
+  assert_equal(0, Scan(R)->Count())
 
   const instance = [
     {A: 0, B: 10.0},
@@ -744,13 +753,14 @@ def g:Test_CT_Count()
   ]
   R->InsertMany(instance)
 
-  assert_equal(5, Scan(r)->Count())
+  assert_equal(5, Scan(R)->Count())
   assert_equal(instance, r)
 enddef
 
 def g:Test_CT_GroupBy()
   var R = Relation('R', {id: Int, name: Str, balance: Float}, [['id']])
   const r = R.instance
+
   const instance = [
     {id: 0, name: "A", balance: 10.0},
     {id: 1, name: "A", balance:  2.5},
@@ -758,14 +768,17 @@ def g:Test_CT_GroupBy()
     {id: 3, name: "A", balance:  1.5},
     {id: 4, name: "B", balance:  2.5}
   ]
-  const numInserted = R->InsertMany(instance)
+  R->InsertMany(instance)
+
+  const result = Scan(r)
+               ->GroupBy(['name'], (Cont) => Sum(Cont, 'balance'), 'total')
+               ->SortBy(['name'])
+
   const expected = [
     {name: 'A', total: 14.0},
     {name: 'B', total: -0.5}
   ]
-  const result = Scan(r)->GroupBy(['name'], (Cont) => Sum(Cont, 'balance'), 'total')->SortBy(['name'])
 
-  assert_equal(5, numInserted)
   assert_equal(2, len(result))
   assert_equal(expected, result)
   assert_equal(instance, r)
@@ -803,7 +816,7 @@ def g:Test_CT_Divide()
     {'student': '123'},
     {'student': '283'},
   ]
-  const result = Scan(subscription)->Divide(session)->SortBy(['student'])
+  const result = Scan(Subscription)->Divide(Session)->SortBy(['student'])
 
   assert_equal(expected, result)
   assert_equal(subscription_instance, subscription)
@@ -877,5 +890,4 @@ def g:Test_CT_DeeDum()
   assert_equal([{}],         Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
 enddef
-
 

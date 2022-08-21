@@ -120,7 +120,9 @@ enddef
 # type Continuation func(Consumer): void
 
 # Root operators (requiring a relation as input) {{{
-export def Scan(rel: list<dict<any>>): func(func(dict<any>))
+export def Scan(R: any): func(func(dict<any>))
+  const rel = type(R) == v:t_list ? R : R.instance
+
   return (Emit: func(dict<any>)) => {
     for t in rel
       Emit(t)
@@ -128,8 +130,8 @@ export def Scan(rel: list<dict<any>>): func(func(dict<any>))
   }
 enddef
 
-export def Foreach(rel: list<dict<any>>): func(func(dict<any>))
-  return Scan(rel)
+export def Foreach(R: any): func(func(dict<any>))
+  return Scan(R)
 enddef
 # }}}
 

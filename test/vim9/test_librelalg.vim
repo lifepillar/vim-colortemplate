@@ -240,9 +240,12 @@ def g:Test_CT_Scan()
   var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
   R->InsertMany(expected)
 
-  const result = Query(Scan(R.instance))
+  const result1 = Query(Scan(R))
+  const result2 = Query(Scan(R.instance))
 
-  assert_true(RelEq(expected, result), ErrMsg("Scan", expected, result))
+  assert_true(RelEq(expected, result1), ErrMsg("Scan", expected, result1))
+  assert_true(RelEq(expected, result2), ErrMsg("Scan", expected, result2))
+
 enddef
 
 def g:Test_CT_Sort()

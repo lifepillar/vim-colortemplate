@@ -18,9 +18,10 @@ def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): stri
   return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
 enddef
 
-def ErrReferentialIntegrity(rname: string, src: list<string>, sname: string, key: list<string>, t: dict<any>): string
+def ErrReferentialIntegrity(rname: string, src: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
   const tStr = join(mapnew(src, (_, v) => string(t[v])), ', ')
-  return printf('Foreign key error: %s%s = (%s) is not present in %s%s', rname, src, tStr, sname, key)
+  return printf("%s %s %s: %s%s = (%s) is not present in %s%s",
+                sname, verbphrase, rname, rname, src, tStr, sname, key)
 enddef
 
 def ErrForeignKeySize(rname: string, src: list<string>, sname: string, key: list<string>): string
@@ -556,7 +557,7 @@ enddef
 #
 # key [TKey]: a list of attributes that form a key for a certain relation
 # R   [TRelSchema]: a relational schema
-export def KeyConstraint(key: list<string>, index: dict<any>): func(dict<any>, string): void
+export def Key(key: list<string>, index: dict<any>): func(dict<any>, string): void
   const keyStr = string(key)
 
   return (t: dict<any>, op: string): void => {
@@ -569,11 +570,12 @@ export def KeyConstraint(key: list<string>, index: dict<any>): func(dict<any>, s
 enddef
 
 # Define a foreign key from R[src] to S[key].
-export def ForeignKeyConstraint(
+export def ForeignKey(
   R: dict<any>,
   src: list<string>,
   S: dict<any>,
-  key: list<string>
+  key: list<string>,
+  verbphrase = 'has'
 ): func(dict<any>, string): void
   if len(src) != len(key)
     throw ErrForeignKeySize(R.name, src, S.name, key)
@@ -598,7 +600,7 @@ export def ForeignKeyConstraint(
     endif
 
     if S.indexes[keyStr]->SearchKey(t, src) is KEY_NOT_FOUND
-      throw ErrReferentialIntegrity(R.name, src, S.name, key, t)
+      throw ErrReferentialIntegrity(R.name, src, S.name, key, t, verbphrase)
     endif
   }
 enddef
@@ -624,7 +626,7 @@ export def Relation(
   for key in keys
     const skey = string(key)
     indexes[skey] = MakeIndex(key)
-    integrity_constraints->add(KeyConstraint(key, indexes[skey]))
+    integrity_constraints->add(Key(key, indexes[skey]))
   endfor
 
   for OtherConstraint in constraints

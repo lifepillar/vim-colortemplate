@@ -11,7 +11,7 @@ const Delete               = ra.Delete
 const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
 const Float                = ra.Float
-const ForeignKeyConstraint = ra.ForeignKeyConstraint
+const ForeignKey           = ra.ForeignKey
 const GroupBy              = ra.GroupBy
 const Insert               = ra.Insert
 const InsertMany           = ra.InsertMany
@@ -231,14 +231,14 @@ def g:Test_CT_ForeignKey()
   RR = Relation('RR', {A: Str}, [['A']])
   SS = Relation('SS', {B: Int, C: Str}, [['B']])
 
-  assert_fails("SS.constraints->add(ForeignKeyConstraint(SS, ['B', 'C'], RR, ['A']))",
+  assert_fails("SS.constraints->add(ForeignKey(SS, ['B', 'C'], RR, ['A']))",
                "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
-               assert_fails("SS.constraints->add(ForeignKeyConstraint(SS, ['C'], RR, ['C'])",
+               assert_fails("SS.constraints->add(ForeignKey(SS, ['C'], RR, ['C'])",
                "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
-  assert_fails("SS.constraints->add(ForeignKeyConstraint(SS, ['A'], RR, ['A']))",
+  assert_fails("SS.constraints->add(ForeignKey(SS, ['A'], RR, ['A']))",
                "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
 
-  var SS_Ref_RR = ForeignKeyConstraint(SS, ['C'], RR, ['A'])
+  var SS_Ref_RR = ForeignKey(SS, ['C'], RR, ['A'], 'constrains')
   SS.constraints->add(SS_Ref_RR)
 
   RR->InsertMany([
@@ -250,12 +250,12 @@ def g:Test_CT_ForeignKey()
   SS->Insert({B: 30, C: 'ab'})
 
   assert_fails("SS->Insert({B: 40, C: 'xy'})",
-               "Foreign key error: SS['C'] = ('xy') is not present in RR['A']")
+               "RR constrains SS: SS['C'] = ('xy') is not present in RR['A']")
 
   SS->Update({B: 20, C: 'ab'})
 
   assert_fails("SS->Update({B: 30, C: 'wz'})",
-               "Foreign key error: SS['C'] = ('wz') is not present in RR['A']")
+               "RR constrains SS: SS['C'] = ('wz') is not present in RR['A']")
 
   const expected = [
     {B: 10, C: 'tm'},

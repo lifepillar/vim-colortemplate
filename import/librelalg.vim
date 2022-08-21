@@ -661,6 +661,7 @@ export def Update(R: dict<any>, t: dict<any>, upsert = false): void
   endif
 
   # Update
+  # FIXME: constraints
   for attr in KeyAttributes(R)
     if t[attr] != oldt[attr]
       throw ErrUpdateKeyAttribute(R.name, attr, t, oldt)

@@ -1,12 +1,16 @@
 vim9script
 
 # Error messages {{{
-def ErrNotAKey(key: list<string>, R: dict<any>): string
-  return printf("%s is not a key of %s", key, R.name)
+def ErrNotAKey(relname: string, key: list<string>): string
+  return printf("%s is not a key of %s", key, relname)
 enddef
 
 def ErrNoKey(relname: string): string
   return printf("No key specified for relation %s", relname)
+enddef
+
+def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
+  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
 enddef
 
 def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
@@ -488,7 +492,7 @@ enddef
 
 export def Lookup(R: dict<any>, key: list<string>, value: list<any>): dict<any>
   if index(R.keys, key) == -1
-    throw ErrNotAKey(key, R)
+    throw ErrNotAKey(R.name, key)
   endif
   const index = R.indexes[string(key)]
   return SearchKey(index, Zip(key, value))
@@ -624,7 +628,7 @@ export def InsertMany(R: dict<any>, tuples: list<dict<any>>): number
   return len(tuples)
 enddef
 
-export def Upsert(R: dict<any>, t: dict<any>): void
+export def Update(R: dict<any>, t: dict<any>, upsert = false): void
   const key = R.keys[0]
   var keyValue = []
   for a in key
@@ -633,7 +637,11 @@ export def Upsert(R: dict<any>, t: dict<any>): void
   const oldt = Lookup(R, key, keyValue)
 
   if oldt is KEY_NOT_FOUND
-    Insert(R, t)
+    if upsert
+      Insert(R, t)
+    else
+      throw ErrKeyNotFound(R.name, key, keyValue)
+    endif
     return
   endif
 

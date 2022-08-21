@@ -36,7 +36,7 @@ const Sort           = ra.Sort
 const SortBy         = ra.SortBy
 const Str            = ra.Str
 const Sum            = ra.Sum
-const Upsert         = ra.Upsert
+const Update         = ra.Update
 
 # This is defined at the script level to allow for the use of assert_fails().
 # See also: https://github.com/vim/vim/issues/6868
@@ -104,6 +104,29 @@ def g:Test_CT_Insert()
   )
 enddef
 
+def g:Test_CT_Update()
+  RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
+  const rr = RR.instance
+  RR->InsertMany([
+    {A: 0, B: 'x', C: true, D: 'd1'},
+    {A: 1, B: 'x', C: false, D: 'd2'},
+  ])
+
+  RR->Update({A: 0, B: 'x', C: true, D: 'new-d1'})
+  RR->Update({A: 1, B: 'x', C: false, D: 'new-d2'})
+
+  const expected = [
+    {A: 0, B: 'x', C: true, D: 'new-d1'},
+    {A: 1, B: 'x', C: false, D: 'new-d2'}
+  ]
+
+  assert_true(RelEq(expected, rr))
+  assert_fails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
+    "Key attribute C in RR cannot be changed")
+  assert_fails("RR->Update({A: 2, B: 'y', C: true, D: 'd3'})",
+    "Tuple with ['A'] = [2] not found in RR")
+enddef
+
 def g:Test_CT_Upsert()
   RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
   const rr = RR.instance
@@ -112,8 +135,8 @@ def g:Test_CT_Upsert()
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  RR->Upsert({A: 2, B: 'y', C: true, D: 'd3'})
-  RR->Upsert({A: 0, B: 'x', C: true, D: 'new-d1'})
+  RR->Update({A: 2, B: 'y', C: true, D: 'd3'}, true)
+  RR->Update({A: 0, B: 'x', C: true, D: 'new-d1'}, true)
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -122,7 +145,7 @@ def g:Test_CT_Upsert()
   ]
 
   assert_true(RelEq(expected, rr))
-  assert_fails("RR->Upsert({A: 0, B: 'x', C: false, D: ''})",
+  assert_fails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
     "Key attribute C in RR cannot be changed")
 enddef
 

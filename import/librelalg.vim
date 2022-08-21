@@ -603,7 +603,6 @@ export def ForeignKeyConstraint(
   }
 enddef
 
-
 export def Relation(
   name: string,
   schema: dict<number>,

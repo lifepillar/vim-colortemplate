@@ -149,6 +149,44 @@ def g:Test_CT_Upsert()
     "Key attribute C in RR cannot be changed")
 enddef
 
+def g:Test_CT_Delete()
+  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const empty_indexes = deepcopy(R.indexes)
+  var r = R.instance
+
+  R->InsertMany([
+    {A: 0, B: 'X'},
+    {A: 1, B: 'Y'},
+    {A: 2, B: 'Z'},
+    {A: 3, B: 'Y'},
+    {A: 4, B: 'Z'}
+  ])
+
+  const expected1 = [
+    {A: 1, B: 'Y'},
+    {A: 2, B: 'Z'},
+    {A: 3, B: 'Y'},
+    {A: 4, B: 'Z'}
+  ]
+  const expected2 = [
+    {A: 1, B: 'Y'},
+    {A: 4, B: 'Z'}
+  ]
+
+  R->Delete((t) => t.B == 'X')
+
+  assert_equal(expected1, r)
+
+  R->Delete((t) => t.A == 2 || t.A == 3)
+
+  assert_equal(expected2, r)
+
+  R->Delete((t) => true)
+
+  assert_equal([], r)
+  assert_equal(empty_indexes, R.indexes)
+enddef
+
 def g:Test_CT_Index()
   const key = ['A', 'B']
   const keyStr = string(key)
@@ -188,44 +226,9 @@ def g:Test_CT_Index()
                 }
       },
       index)
-enddef
-
-def g:Test_CT_Delete()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
-  const empty_indexes = deepcopy(R.indexes)
-  var r = R.instance
-
-  R->InsertMany([
-    {A: 0, B: 'X'},
-    {A: 1, B: 'Y'},
-    {A: 2, B: 'Z'},
-    {A: 3, B: 'Y'},
-    {A: 4, B: 'Z'}
-  ])
-
-  const expected1 = [
-    {A: 1, B: 'Y'},
-    {A: 2, B: 'Z'},
-    {A: 3, B: 'Y'},
-    {A: 4, B: 'Z'}
-  ]
-  const expected2 = [
-    {A: 1, B: 'Y'},
-    {A: 4, B: 'Z'}
-  ]
-
-  R->Delete((t) => t.B == 'X')
-
-  assert_equal(expected1, r)
-
-  R->Delete((t) => t.A == 2 || t.A == 3)
-
-  assert_equal(expected2, r)
-
-  R->Delete((t) => true)
-
-  assert_equal([], r)
-  assert_equal(empty_indexes, R.indexes)
+  assert_true(index.data[3].data['vici'].row is t1)
+  assert_true(index.data[9].data['veni'].row is t0)
+  assert_true(index.data[9].data['vidi'].row is t2)
 enddef
 
 def g:Test_CT_Scan()

@@ -18,17 +18,23 @@ def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): stri
   return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
 enddef
 
-def ErrForeignKey(relname: string, key: list<string>, t: dict<any>, attrList: list<string>): string
-  const tStr = join(mapnew(attrList, (_, v) => string(t[v])), ', ')
-  return printf('Foreign key error: %s = (%s) is not present in %s', key, tStr, relname)
+def ErrReferentialIntegrity(rname: string, src: list<string>, sname: string, key: list<string>, t: dict<any>): string
+  const tStr = join(mapnew(src, (_, v) => string(t[v])), ', ')
+  return printf('Foreign key error: %s%s = (%s) is not present in %s%s', rname, src, tStr, sname, key)
 enddef
 
-def ErrForeignKeySource(relname: string, key: list<string>, attrList: list<string>): string
-  return printf("Wrong foreign key: %s -> %s(%s)", attrList, relname, key)
+def ErrForeignKeySize(rname: string, src: list<string>, sname: string, key: list<string>): string
+  return printf("Wrong foreign key size: %s%s -> %s%s", rname, src, sname, key)
 enddef
 
-def ErrForeignKeyTarget(relname: string, key: list<string>): string
-  return printf("Wrong foreign key: %s is not a key of relation %s", key, relname)
+def ErrForeignKeySource(rname: string, src: list<string>, sname: string, key: list<string>, attr: string): string
+  return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
+                rname, src, sname, key, attr, rname)
+enddef
+
+def ErrForeignKeyTarget(rname: string, src: list<string>, sname: string, key: list<string>): string
+  return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
+                rname, src, sname, key, key, sname)
 enddef
 
 def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
@@ -528,8 +534,12 @@ enddef
 # schema [TTupleSchema]: a tuple schema
 #
 # Return type: TConstraint
-def TypeConstraint(schema: dict<number>): func(dict<any>): void
-  return (t: dict<any>): void => {
+def TypeConstraint(schema: dict<number>): func(dict<any>, string): void
+  return (t: dict<any>, op: string): void => {
+    if op == 'D' # Skip on delete
+      return
+    endif
+
     if sort(keys(schema)) != sort(keys(t))
       throw ErrIncompatibleTuple(t, schema)
     endif
@@ -546,42 +556,67 @@ enddef
 #
 # key [TKey]: a list of attributes that form a key for a certain relation
 # R   [TRelSchema]: a relational schema
-export def KeyConstraint(key: list<string>, index: dict<any>): func(dict<any>): void
+export def KeyConstraint(key: list<string>, index: dict<any>): func(dict<any>, string): void
   const keyStr = string(key)
 
-  return (t: dict<any>): void => {
-    if !(index->SearchKey(t) is KEY_NOT_FOUND)
-      throw ErrDuplicateKey(key, t)
+  return (t: dict<any>, op: string): void => {
+    if op == 'I'
+      if !(index->SearchKey(t) is KEY_NOT_FOUND)
+        throw ErrDuplicateKey(key, t)
+      endif
     endif
   }
 enddef
 
-export def ForeignKeyConstraint(R: dict<any>, key: list<string>, attrList = key): func
-  if len(key) != len(attrList)
-    throw ErrForeignKeySource(R.name, key, attrList)
+# Define a foreign key from R[src] to S[key].
+export def ForeignKeyConstraint(
+  R: dict<any>,
+  src: list<string>,
+  S: dict<any>,
+  key: list<string>
+): func(dict<any>, string): void
+  if len(src) != len(key)
+    throw ErrForeignKeySize(R.name, src, S.name, key)
   endif
 
-  if index(R.keys, key) == -1
-    throw ErrForeignKeyTarget(R.name, key)
+  const attrR = Attributes(R)
+  for attr in src
+    if index(attrR, attr) == -1
+      throw ErrForeignKeySource(R.name, src, S.name, key, attr)
+    endif
+  endfor
+
+  if index(S.keys, key) == -1
+    throw ErrForeignKeyTarget(R.name, src, S.name, key)
   endif
 
   const keyStr = string(key)
 
-  return (t: dict<any>): void => {
-    if R.indexes[keyStr]->SearchKey(t, attrList) is KEY_NOT_FOUND
-      throw ErrForeignKey(R.name, key, t, attrList)
+  return (t: dict<any>, op: string): void => {
+    if op == 'D' # Skip on delete
+      return
+    endif
+
+    if S.indexes[keyStr]->SearchKey(t, src) is KEY_NOT_FOUND
+      throw ErrReferentialIntegrity(R.name, src, S.name, key, t)
     endif
   }
 enddef
 
 
-export def Relation(name: string, schema: dict<number>, keys: list<list<string>>, constraints: list<func> = [], checkType = true): dict<any>
+export def Relation(
+  name: string,
+  schema: dict<number>,
+  keys: list<list<string>>,
+  constraints: list<func(dict<any>, string): void> = [],
+  checkType = true
+): dict<any>
   if empty(keys)
     throw ErrNoKey(name)
   endif
 
   final indexes: any = {}
-  final integrity_constraints: list<func> = []
+  final integrity_constraints: list<func(dict<any>, string): void> = []
 
   if checkType
     integrity_constraints->add(TypeConstraint(schema))
@@ -623,7 +658,7 @@ enddef
 export def Insert(R: dict<any>, t: dict<any>): void
   # Check constraints
   for CheckConstraint in R.constraints
-    CheckConstraint(t)
+    CheckConstraint(t, 'I')
   endfor
 
   # Insert
@@ -661,12 +696,18 @@ export def Update(R: dict<any>, t: dict<any>, upsert = false): void
   endif
 
   # Update
-  # FIXME: constraints
   for attr in KeyAttributes(R)
     if t[attr] != oldt[attr]
       throw ErrUpdateKeyAttribute(R.name, attr, t, oldt)
     endif
   endfor
+
+  # This may be tricky for some kinds of constraints, as the old tuple is
+  # still in the relation at this point. But for simple checks it should work.
+  for CheckConstraint in R.constraints
+    CheckConstraint(t, 'U')
+  endfor
+
   for attr in Descriptors(R)
     oldt[attr] = t[attr]
   endfor
@@ -675,6 +716,9 @@ enddef
 export def Delete(R: dict<any>, Pred: func(dict<any>): bool): void
   const DeletePred = (i: number, t: dict<any>): bool => {
     if Pred(t)
+      for CheckConstraint in R.constraints
+        CheckConstraint(t, 'D')
+      endfor
       for key in R.keys
         const index = R.indexes[string(key)]
         index->RemoveKey(t)

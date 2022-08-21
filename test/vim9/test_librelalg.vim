@@ -2,44 +2,46 @@ vim9script
 
 import '../../import/librelalg.vim' as ra
 
-const AntiJoin       = ra.AntiJoin
-const Attributes     = ra.Attributes
-const Bool           = ra.Bool
-const Build          = ra.Build
-const Count          = ra.Count
-const Delete         = ra.Delete
-const Descriptors    = ra.Descriptors
-const Divide         = ra.Divide
-const Float          = ra.Float
-const GroupBy        = ra.GroupBy
-const Insert         = ra.Insert
-const InsertMany     = ra.InsertMany
-const Int            = ra.Int
-const Intersect      = ra.Intersect
-const Join           = ra.Join
-const KeyAttributes  = ra.KeyAttributes
-const Max            = ra.Max
-const Min            = ra.Min
-const Minus          = ra.Minus
-const NatJoin        = ra.NatJoin
-const Noop           = ra.Noop
-const Product        = ra.Product
-const Project        = ra.Project
-const Query          = ra.Query
-const Relation       = ra.Relation
-const Rename         = ra.Rename
-const Scan           = ra.Scan
-const Select         = ra.Select
-const SemiJoin       = ra.SemiJoin
-const Sort           = ra.Sort
-const SortBy         = ra.SortBy
-const Str            = ra.Str
-const Sum            = ra.Sum
-const Update         = ra.Update
+const AntiJoin             = ra.AntiJoin
+const Attributes           = ra.Attributes
+const Bool                 = ra.Bool
+const Build                = ra.Build
+const Count                = ra.Count
+const Delete               = ra.Delete
+const Descriptors          = ra.Descriptors
+const Divide               = ra.Divide
+const Float                = ra.Float
+const ForeignKeyConstraint = ra.ForeignKeyConstraint
+const GroupBy              = ra.GroupBy
+const Insert               = ra.Insert
+const InsertMany           = ra.InsertMany
+const Int                  = ra.Int
+const Intersect            = ra.Intersect
+const Join                 = ra.Join
+const KeyAttributes        = ra.KeyAttributes
+const Max                  = ra.Max
+const Min                  = ra.Min
+const Minus                = ra.Minus
+const NatJoin              = ra.NatJoin
+const Noop                 = ra.Noop
+const Product              = ra.Product
+const Project              = ra.Project
+const Query                = ra.Query
+const Relation             = ra.Relation
+const Rename               = ra.Rename
+const Scan                 = ra.Scan
+const Select               = ra.Select
+const SemiJoin             = ra.SemiJoin
+const Sort                 = ra.Sort
+const SortBy               = ra.SortBy
+const Str                  = ra.Str
+const Sum                  = ra.Sum
+const Update               = ra.Update
 
-# This is defined at the script level to allow for the use of assert_fails().
+# These are defined at the script level to allow for the use of assert_fails().
 # See also: https://github.com/vim/vim/issues/6868
-var RR: dict<any> # TRelSchema
+var RR: dict<any>
+var SS: dict<any>
 
 def g:Test_CT_CreateEmptyRelation()
   # Every relation must have at least one key
@@ -223,6 +225,44 @@ def g:Test_CT_Index()
   assert_true(index.data[3].data['vici'].row is t1)
   assert_true(index.data[9].data['veni'].row is t0)
   assert_true(index.data[9].data['vidi'].row is t2)
+enddef
+
+def g:Test_CT_ForeignKey()
+  RR = Relation('RR', {A: Str}, [['A']])
+  SS = Relation('SS', {B: Int, C: Str}, [['B']])
+
+  assert_fails("SS.constraints->add(ForeignKeyConstraint(SS, ['B', 'C'], RR, ['A']))",
+               "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
+               assert_fails("SS.constraints->add(ForeignKeyConstraint(SS, ['C'], RR, ['C'])",
+               "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
+  assert_fails("SS.constraints->add(ForeignKeyConstraint(SS, ['A'], RR, ['A']))",
+               "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
+
+  var SS_Ref_RR = ForeignKeyConstraint(SS, ['C'], RR, ['A'])
+  SS.constraints->add(SS_Ref_RR)
+
+  RR->InsertMany([
+    {A: 'ab'},
+    {A: 'tm'}
+  ])
+  SS->Insert({B: 10, C: 'tm'})
+  SS->Insert({B: 20, C: 'tm'})
+  SS->Insert({B: 30, C: 'ab'})
+
+  assert_fails("SS->Insert({B: 40, C: 'xy'})",
+               "Foreign key error: SS['C'] = ('xy') is not present in RR['A']")
+
+  SS->Update({B: 20, C: 'ab'})
+
+  assert_fails("SS->Update({B: 30, C: 'wz'})",
+               "Foreign key error: SS['C'] = ('wz') is not present in RR['A']")
+
+  const expected = [
+    {B: 10, C: 'tm'},
+    {B: 20, C: 'ab'},
+    {B: 30, C: 'ab'}
+  ]
+  assert_equal(expected, SS.instance)
 enddef
 
 def g:Test_CT_Scan()

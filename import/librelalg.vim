@@ -210,7 +210,7 @@ export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(fu
   }
 enddef
 
-export def Join(Cont: func(func(dict<any>)), rel: list<dict<any>>, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
+export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
   var MergeTuples: func(dict<any>, dict<any>): dict<any>
   if empty(prefix)
     MergeTuples = (t: dict<any>, u: dict<any>): dict<any> => t->extendnew(u, 'error')
@@ -223,6 +223,8 @@ export def Join(Cont: func(func(dict<any>)), rel: list<dict<any>>, Pred: func(di
       return unew->extend(t, 'error')
     }
   endif
+
+  const rel = type(R) == v:t_list ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -246,7 +248,9 @@ def NatJoinCheck(t: dict<any>, u: dict<any>): bool
   return true
 enddef
 
-export def NatJoin(Cont: func(func(dict<any>)), rel: list<dict<any>>): func(func(dict<any>))
+export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
+  const rel = type(R) == v:t_list ? R : R.instance
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       for u in rel
@@ -258,11 +262,13 @@ export def NatJoin(Cont: func(func(dict<any>)), rel: list<dict<any>>): func(func
   }
 enddef
 
-export def Product(Cont: func(func(dict<any>)), rel: list<dict<any>>, prefix = ''): func(func(dict<any>))
-  return Join(Cont, rel, (t, u) => true, prefix)
+export def Product(Cont: func(func(dict<any>)), R: any, prefix = ''): func(func(dict<any>))
+  return Join(Cont, R, (t, u) => true, prefix)
 enddef
 
-export def Intersect(Cont: func(func(dict<any>)), rel: list<dict<any>>): func(func(dict<any>))
+export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
+  const rel = type(R) == v:t_list ? R : R.instance
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       for u in rel
@@ -275,7 +281,9 @@ export def Intersect(Cont: func(func(dict<any>)), rel: list<dict<any>>): func(fu
   }
 enddef
 
-export def Minus(Cont: func(func(dict<any>)), rel: list<dict<any>>): func(func(dict<any>))
+export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
+  const rel = type(R) == v:t_list ? R : R.instance
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       for u in rel
@@ -288,7 +296,9 @@ export def Minus(Cont: func(func(dict<any>)), rel: list<dict<any>>): func(func(d
   }
 enddef
 
-export def SemiJoin(Cont: func(func(dict<any>)), rel: list<dict<any>>, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+  const rel = type(R) == v:t_list ? R : R.instance
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       for u in rel
@@ -301,7 +311,9 @@ export def SemiJoin(Cont: func(func(dict<any>)), rel: list<dict<any>>, Pred: fun
   }
 enddef
 
-export def AntiJoin(Cont: func(func(dict<any>)), rel: list<dict<any>>, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+  const rel = type(R) == v:t_list ? R : R.instance
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       for u in rel
@@ -348,7 +360,9 @@ enddef
 #
 # where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
 # appearing in r but not in s.
-export def Divide(Cont: func(func(dict<any>)), s: list<dict<any>>): func(func(dict<any>))
+export def Divide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
+  const s = type(S) == v:t_list ? S : S.instance
+
   if empty(s)
     return Cont
   endif

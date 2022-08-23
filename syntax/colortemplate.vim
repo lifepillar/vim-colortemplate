@@ -17,7 +17,7 @@ syn match   colortemplateHiGroup      "\<Conceal\>"
 syn match   colortemplateHiGroup      "\<Include\>"
 syn match   colortemplateHiGroup      "\<Terminal\>"
 syn keyword colortemplateHiGroup      Boolean Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
-syn keyword colortemplateHiGroup      CursorLine CursorLineNr Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
+syn keyword colortemplateHiGroup      CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
 syn keyword colortemplateHiGroup      EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
 syn keyword colortemplateHiGroup      IncSearch Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen ModeMsg MoreMsg NonText
 syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuSbar PmenuSel PmenuThumb PopupSelected PreCondit PreProc Question
@@ -66,7 +66,7 @@ syn keyword colortemplateconstant     contained darkgoldenrod3 darkgoldenrod4 da
 syn keyword colortemplateconstant     contained darkolivegreen1 darkolivegreen2 darkolivegreen3 darkolivegreen4 darkorange darkorange1 darkorange2 darkorange3
 syn keyword colortemplateconstant     contained darkorange4 darkorchid darkorchid1 darkorchid2 darkorchid3 darkorchid4 darkred darksalmon
 syn keyword colortemplateconstant     contained darkseagreen darkseagreen1 darkseagreen2 darkseagreen3 darkseagreen4 darkslateblue darkslategray darkslategray1
-syn keyword colortemplateconstant     contained darkslategray2 darkslategray3 darkslategray4 darkslategrey darkturquoise darkviolet deep deeppink
+syn keyword colortemplateconstant     contained darkslategray2 darkslategray3 darkslategray4 darkslategrey darkturquoise darkviolet darkyellow deep deeppink
 syn keyword colortemplateconstant     contained deeppink1 deeppink2 deeppink3 deeppink4 deepskyblue deepskyblue1 deepskyblue2 deepskyblue3
 syn keyword colortemplateconstant     contained deepskyblue4 dim dimgray dimgrey dodger dodgerblue dodgerblue1 dodgerblue2
 syn keyword colortemplateconstant     contained dodgerblue3 dodgerblue4 drab firebrick firebrick1 firebrick2 firebrick3 firebrick4

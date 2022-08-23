@@ -65,7 +65,7 @@ syn keyword colortemplateConstant     contained DarkGoldenrod3 DarkGoldenrod4 Da
 syn keyword colortemplateConstant     contained DarkOliveGreen1 DarkOliveGreen2 DarkOliveGreen3 DarkOliveGreen4 DarkOrange DarkOrange1 DarkOrange2 DarkOrange3
 syn keyword colortemplateConstant     contained DarkOrange4 DarkOrchid DarkOrchid1 DarkOrchid2 DarkOrchid3 DarkOrchid4 DarkRed DarkSalmon
 syn keyword colortemplateConstant     contained DarkSeaGreen DarkSeaGreen1 DarkSeaGreen2 DarkSeaGreen3 DarkSeaGreen4 DarkSlateBlue DarkSlateGray DarkSlateGray1
-syn keyword colortemplateConstant     contained DarkSlateGray2 DarkSlateGray3 DarkSlateGray4 DarkSlateGrey DarkTurquoise DarkViolet deep DeepPink
+syn keyword colortemplateConstant     contained DarkSlateGray2 DarkSlateGray3 DarkSlateGray4 DarkSlateGrey DarkTurquoise DarkViolet DarkYellow deep DeepPink
 syn keyword colortemplateConstant     contained DeepPink1 DeepPink2 DeepPink3 DeepPink4 DeepSkyBlue DeepSkyBlue1 DeepSkyBlue2 DeepSkyBlue3
 syn keyword colortemplateConstant     contained DeepSkyBlue4 dim DimGray DimGrey dodger DodgerBlue DodgerBlue1 DodgerBlue2
 syn keyword colortemplateConstant     contained DodgerBlue3 DodgerBlue4 drab firebrick firebrick1 firebrick2 firebrick3 firebrick4

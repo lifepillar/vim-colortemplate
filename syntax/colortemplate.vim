@@ -16,7 +16,7 @@ syn match   colortemplateHiGroup      "\<Conceal\>"
 syn match   colortemplateHiGroup      "\<Include\>"
 syn match   colortemplateHiGroup      "\<Terminal\>"
 syn keyword colortemplateHiGroup      Boolean Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
-syn keyword colortemplateHiGroup      CursorLine CursorLineNr Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
+syn keyword colortemplateHiGroup      CursorLine CursorLineFold CursorLineSign CursorLineNr Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
 syn keyword colortemplateHiGroup      EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
 syn keyword colortemplateHiGroup      IncSearch Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen ModeMsg MoreMsg NonText
 syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuSbar PmenuSel PmenuThumb PopupSelected PreCondit PreProc Question

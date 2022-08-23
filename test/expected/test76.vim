@@ -8,7 +8,7 @@ set background=dark
 hi clear
 let g:colors_name = 'test76'
 
-let s:t_Co = exists('&t_Co') ? (&t_Co ?? -1) : -1
+let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1
 
 hi! link PopupSelected PmenuSel
 hi! link QuickFixLine Search

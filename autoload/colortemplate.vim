@@ -2365,7 +2365,7 @@ fun! s:print_header(bufnr)
     endfor
   endif
   call s:put(a:bufnr,   ''                                                                      )
-  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1")
+  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') ? (&t_Co ?? -1) : -1")
   if s:uses_italics()
     let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
     if s:supports_neovim()

@@ -12,7 +12,7 @@ endif
 
 let g:colors_name = 'test81'
 
-let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1
+let s:t_Co = exists('&t_Co') ? (&t_Co ?? -1) : -1
 
 if s:t_Co >= 256
   hi Normal ctermfg=16 ctermbg=16 cterm=NONE

@@ -6,7 +6,7 @@
 hi clear
 let g:colors_name = 'test28'
 
-let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1
+let s:t_Co = exists('&t_Co') ? (&t_Co ?? -1) : -1
 
 if &background ==# 'dark'
   hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE

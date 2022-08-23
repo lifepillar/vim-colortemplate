@@ -46,6 +46,9 @@ syn match   colortemplateArrow        "->"
 syn match   colortemplateHexColor     "#[A-Fa-f0-9]\{6\}" contained
 syn keyword colortemplateFunction     contained rgb
 syn keyword colortemplateTodo         contained TODO FIXME XXX DEBUG NOTE
+
+syn case ignore
+
 " Basic color names
 syn keyword colortemplateConstant     contained Black Blue Brown Cyan DarkRed DarkGreen DarkYellow DarkBlue DarkMagenta DarkCyan Green LightGray LightGrey
 syn keyword colortemplateConstant     contained DarkGray DarkGrey Gray Grey LightRed LightGreen LightYellow LightBlue LightMagenta LightCyan Magenta Red Yellow White
@@ -141,6 +144,8 @@ syn keyword colortemplateConstant     contained VioletRed2 VioletRed3 VioletRed4
 syn keyword colortemplateConstant     contained WebPurple wheat wheat1 wheat2 wheat3 wheat4 whip white
 syn keyword colortemplateConstant     contained WhiteSmoke x11 X11Gray X11Green X11Grey X11Maroon X11Purple yellow
 syn keyword colortemplateConstant     contained yellow1 yellow2 yellow3 yellow4 YellowGreen
+
+syn case match
 
 " These are defined for syntax completion. Since they are `contained`, but not
 " really contained into anything, this rule is never triggered.

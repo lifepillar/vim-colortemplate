@@ -75,7 +75,8 @@ Term Colors: darkgrey red green yellow blue magenta cyan white
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
-CurSearch         -> Search
+CursorLineFold    -> FoldColumn
+Search            -> Search
 Debug             -> Special
 Define            -> PreProc
 Delimiter         -> Special
@@ -87,6 +88,7 @@ Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement
 Macro             -> PreProc
+MessageWindow     -> WarningMsg
 Number            -> Constant
 Operator          -> Statement
 PopupSelected     -> PmenuSel

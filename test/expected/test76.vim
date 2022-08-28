@@ -20,7 +20,9 @@ hi! link QuickFixLine Search
 " @suppress Cursor
 " @suppress CursorColumn
 " @suppress CursorLine
+" @suppress CursorLineFold
 " @suppress CursorLineNr
+" @suppress CursorLineSign
 " @suppress DiffAdd
 " @suppress DiffChange
 " @suppress DiffDelete
@@ -38,6 +40,7 @@ hi! link QuickFixLine Search
 " @suppress LineNrAbove
 " @suppress LineNrBelow
 " @suppress MatchParen
+" @suppress MessageWindow
 " @suppress ModeMsg
 " @suppress MoreMsg
 " @suppress NonText

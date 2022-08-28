@@ -431,6 +431,7 @@ let s:default_hi_groups = [
       \ 'PmenuSbar',
       \ 'PmenuSel',
       \ 'PmenuThumb',
+      \ 'PopupNotification',
       \ 'PopupSelected',
       \ 'PreProc',
       \ 'Question',

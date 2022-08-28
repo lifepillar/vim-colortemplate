@@ -48,6 +48,7 @@ hi! link QuickFixLine Search
 " @suppress PmenuSbar
 " @suppress PmenuSel
 " @suppress PmenuThumb
+" @suppress PopupNotification
 " @suppress PreProc
 " @suppress Question
 " @suppress Search

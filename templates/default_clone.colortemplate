@@ -91,6 +91,7 @@ Macro             -> PreProc
 MessageWindow     -> WarningMsg
 Number            -> Constant
 Operator          -> Statement
+PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
 QuickFixLine      -> Search

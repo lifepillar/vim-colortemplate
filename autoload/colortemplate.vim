@@ -2090,7 +2090,7 @@ fun! s:parse_attributes(hg)
 endf
 
 fun! s:valid_attribute(name)
-  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\|omit\)$')
+  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\|double\|dotted\|dashed\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\|omit\)$')
 endf
 
 fun! s:parse_attr_list()

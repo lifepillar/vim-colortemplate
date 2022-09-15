@@ -8,19 +8,20 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-let s:undo_ftplugin = "setlocal balloonexpr< commentstring< omnifunc< | unlet! b:colortemplate_outdir"
-let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . s:undo_ftplugin
+let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_outdir"
+let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin .. '|' : '') .. s:undo_ftplugin
 
 let b:colortemplate_outdir = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
 if b:colortemplate_outdir =~? '\m\%(color\)\=templates\=$'
   let b:colortemplate_outdir = fnamemodify(b:colortemplate_outdir, ':h')
 endif
 if get(g:, 'colortemplate_rtp', 1)
-  execute 'set runtimepath^='.b:colortemplate_outdir
+  execute 'set runtimepath^=' .. b:colortemplate_outdir
 endif
 
-if has('balloon_eval') || has('balloon_eval_term')
+if (has('balloon_eval') || has('balloon_eval_term')) && !has('nvim')
   setlocal balloonexpr=colortemplate#syn#balloonexpr()
+  let s:undo_ftplugin ..= "| setlocal balloonexpr<"
 endif
 setlocal commentstring=;%s
 setlocal omnifunc=syntaxcomplete#Complete

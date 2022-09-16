@@ -23,6 +23,8 @@ Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
 CurSearch         -> IncSearch
+CursorLineFold    -> FoldColumn
+CursorLineSign    -> SignColumn
 Debug             -> Special
 Define            -> PreProc
 Delimiter         -> Special
@@ -33,8 +35,10 @@ Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement
 Macro             -> PreProc
+MessageWindow     -> WarningMsg
 Number            -> Constant
 Operator          -> Statement
+PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
 QuickFixLine      -> Search

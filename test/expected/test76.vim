@@ -8,7 +8,7 @@ set background=dark
 hi clear
 let g:colors_name = 'test76'
 
-let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1
+let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1
 
 hi! link PopupSelected PmenuSel
 hi! link QuickFixLine Search
@@ -20,7 +20,9 @@ hi! link QuickFixLine Search
 " @suppress Cursor
 " @suppress CursorColumn
 " @suppress CursorLine
+" @suppress CursorLineFold
 " @suppress CursorLineNr
+" @suppress CursorLineSign
 " @suppress DiffAdd
 " @suppress DiffChange
 " @suppress DiffDelete
@@ -38,6 +40,7 @@ hi! link QuickFixLine Search
 " @suppress LineNrAbove
 " @suppress LineNrBelow
 " @suppress MatchParen
+" @suppress MessageWindow
 " @suppress ModeMsg
 " @suppress MoreMsg
 " @suppress NonText
@@ -45,6 +48,7 @@ hi! link QuickFixLine Search
 " @suppress PmenuSbar
 " @suppress PmenuSel
 " @suppress PmenuThumb
+" @suppress PopupNotification
 " @suppress PreProc
 " @suppress Question
 " @suppress Search

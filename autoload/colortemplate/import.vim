@@ -194,16 +194,19 @@ endf
 
 fun! s:synIDattrs(synid, mode)
   return {
-        \ 'fg':         synIDattr(a:synid, 'fg',        a:mode),
-        \ 'bg':         synIDattr(a:synid, 'bg',        a:mode),
-        \ 'sp':         synIDattr(a:synid, 'sp',        a:mode),
-        \ 'bold':      (synIDattr(a:synid, 'bold',      a:mode) ==# '1' ? 1 : 0),
-        \ 'italic':    (synIDattr(a:synid, 'italic',    a:mode) ==# '1' ? 1 : 0),
-        \ 'reverse':   (synIDattr(a:synid, 'reverse',   a:mode) ==# '1' ? 1 : 0),
-        \ 'standout':  (synIDattr(a:synid, 'standout',  a:mode) ==# '1' ? 1 : 0),
-        \ 'underline': (synIDattr(a:synid, 'underline', a:mode) ==# '1' ? 1 : 0),
-        \ 'undercurl': (synIDattr(a:synid, 'undercurl', a:mode) ==# '1' ? 1 : 0),
-        \ 'strike':    (synIDattr(a:synid, 'strike',    a:mode) ==# '1' ? 1 : 0),
+        \ 'fg':           synIDattr(a:synid, 'fg',          a:mode),
+        \ 'bg':           synIDattr(a:synid, 'bg',          a:mode),
+        \ 'sp':           synIDattr(a:synid, 'sp',          a:mode),
+        \ 'bold':        (synIDattr(a:synid, 'bold',        a:mode) ==# '1' ? 1 : 0),
+        \ 'italic':      (synIDattr(a:synid, 'italic',      a:mode) ==# '1' ? 1 : 0),
+        \ 'reverse':     (synIDattr(a:synid, 'reverse',     a:mode) ==# '1' ? 1 : 0),
+        \ 'standout':    (synIDattr(a:synid, 'standout',    a:mode) ==# '1' ? 1 : 0),
+        \ 'underline':   (synIDattr(a:synid, 'underline',   a:mode) ==# '1' ? 1 : 0),
+        \ 'undercurl':   (synIDattr(a:synid, 'undercurl',   a:mode) ==# '1' ? 1 : 0),
+        \ 'underdouble': (synIDattr(a:synid, 'underdouble', a:mode) ==# '1' ? 1 : 0),
+        \ 'underdotted': (synIDattr(a:synid, 'underdotted', a:mode) ==# '1' ? 1 : 0),
+        \ 'underdashed': (synIDattr(a:synid, 'underdashed', a:mode) ==# '1' ? 1 : 0),
+        \ 'strike':      (synIDattr(a:synid, 'strike',      a:mode) ==# '1' ? 1 : 0),
         \ }
 endf
 
@@ -263,7 +266,7 @@ fun! s:attr_text(higroup)
   let l:common_attr = []
   let l:term_attr = []
   let l:gui_attr = []
-  for l:attr in ['bold', 'italic', 'reverse', 'standout', 'underline', 'undercurl', 'strike']
+  for l:attr in ['bold', 'italic', 'reverse', 'standout', 'underline', 'undercurl', 'underdouble', 'underdotted', 'underdashed', 'strike']
     if a:higroup['gui'][l:attr] == 1 && a:higroup['cterm'][l:attr] == 1
       call add(l:common_attr, l:attr)
     elseif a:higroup['gui'][l:attr] == 1 && a:higroup['cterm'][l:attr] == 0

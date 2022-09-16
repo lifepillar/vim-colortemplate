@@ -8,7 +8,7 @@ set background=dark
 hi clear
 let g:colors_name = 'test33'
 
-let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1
+let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1
 
 hi Normal guifg=#000000 guibg=#ffffff gui=NONE cterm=NONE
 

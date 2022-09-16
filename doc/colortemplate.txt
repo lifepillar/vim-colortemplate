@@ -736,31 +736,31 @@ If you do not want Colortemplate to define any mapping, set
 |g:colortemplate_no_mappings|. Colortemplate also honours |g:no_plugin_maps|.
 
 Buffer-local mappings ~
-							*ga*
+							*colortemplate-ga*
 ga			If the cursor is on a `Color` line, display some
 			information about the given color, including [count]
 			best xterm approximations for the color.
 
-							*gl*
+							*colortemplate-gl*
 gl			Toggle the display of highlight group information
 			under the mouse pointer and/or under the cursor.
 			To choose what display to use, set
 			|g:colortemplate_higroup_command_line| or
 			|g:colortemplate_higroup_balloon|.
 
-							*gs*
+							*colortemplate-gs*
 gs			Open the style picker.
 
-							*gx*
+							*colortemplate-gx*
 gx			If the cursor is on a `Color` line, replace `~` with
 			the [count]th best xterm approximation of the color.
 
-							*gy*
+							*colortemplate-gy*
 gy			If the cursor is on a `Color` line, show the xterm
 			approximations of the color at distance at most
 			[count] from the GUI value in the command line.
 
-							*CTRL-L*
+							*colortemplate-ctrl-l*
 CTRL-L			Show/redraw the window toolbar and redraw the screen.
 
 Other suggested mappings ~

@@ -402,7 +402,9 @@ let s:default_hi_groups = [
       \ 'Cursor',
       \ 'CursorColumn',
       \ 'CursorLine',
+      \ 'CursorLineFold',
       \ 'CursorLineNr',
+      \ 'CursorLineSign',
       \ 'DiffAdd',
       \ 'DiffChange',
       \ 'DiffDelete',
@@ -420,6 +422,7 @@ let s:default_hi_groups = [
       \ 'LineNrAbove',
       \ 'LineNrBelow',
       \ 'MatchParen',
+      \ 'MessageWindow',
       \ 'ModeMsg',
       \ 'MoreMsg',
       \ 'NonText',
@@ -428,6 +431,7 @@ let s:default_hi_groups = [
       \ 'PmenuSbar',
       \ 'PmenuSel',
       \ 'PmenuThumb',
+      \ 'PopupNotification',
       \ 'PopupSelected',
       \ 'PreProc',
       \ 'Question',
@@ -2087,7 +2091,7 @@ fun! s:parse_attributes(hg)
 endf
 
 fun! s:valid_attribute(name)
-  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\|omit\)$')
+  return (a:name =~# '\m^\%(bold\|italic\|under\%(line\|curl\|double\|dotted\|dashed\)\|\%(rev\|inv\)erse\|standout\|strikethrough\|nocombine\|omit\)$')
 endf
 
 fun! s:parse_attr_list()
@@ -2364,8 +2368,12 @@ fun! s:print_header(bufnr)
       call s:put(a:bufnr, s:interpolate('global', 'preamble', l:item.line, l:item.linenr, l:item.file))
     endfor
   endif
-  call s:put(a:bufnr,   ''                                                                      )
-  call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') ? (&t_Co ?? 0) : -1")
+  call s:put(a:bufnr,   ''                                                                         )
+  if s:supports_neovim()
+    call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !has('gui_running') ? +&t_Co : -1"      )
+  else
+    call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1")
+  endif
   if s:uses_italics()
     let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
     if s:supports_neovim()

@@ -13,7 +13,7 @@ endf
 " Info about attributes {{{
 fun! colortemplate#syn#attributes(synid, mode)
   let l:attrs = []
-  for l:a in ['bold', 'italic', 'inverse', 'standout', 'underline', 'undercurl']
+  for l:a in ['bold', 'italic', 'inverse', 'standout', 'underline', 'undercurl', 'underdouble', 'underdotted', 'underdashed']
     if '1' ==# synIDattr(a:synid, l:a, a:mode)
       call add(l:attrs, l:a)
     endif

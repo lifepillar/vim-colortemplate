@@ -19,8 +19,8 @@ syn match   colortemplateHiGroup      "\<Terminal\>"
 syn keyword colortemplateHiGroup      Boolean Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
 syn keyword colortemplateHiGroup      CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
 syn keyword colortemplateHiGroup      EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
-syn keyword colortemplateHiGroup      IncSearch Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen ModeMsg MoreMsg NonText
-syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuSbar PmenuSel PmenuThumb PopupSelected PreCondit PreProc Question
+syn keyword colortemplateHiGroup      IncSearch Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
+syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuSbar PmenuSel PmenuThumb PopupNotification PopupSelected PreCondit PreProc Question
 syn keyword colortemplateHiGroup      QuickFixLine Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup      SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
 syn keyword colortemplateHiGroup      Structure TabLine TabLineFill TabLineSel Tag Title Todo Type Typedef Underlined VertSplit
@@ -36,7 +36,7 @@ syn keyword colortemplateHiGroup      vimMenuPriority vimMenuRhs vimNormCmds vim
 syn keyword colortemplateHiGroup      vimSetEqual vimStdPlugin vimSubstPat vimSubstRange vimSubstRep vimSubstRep4 vimSynKeyRegion vimSynLine
 syn keyword colortemplateHiGroup      vimSynMatchRegion vimSynMtchCchar vimSynMtchGroup vimSynPatMod vimSynRegion vimSyncLinebreak vimSyncLinecont vimSyncLines
 syn keyword colortemplateHiGroup      vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
-syn keyword colortemplateAttr         bold underline undercurl strikethrough reverse inverse italic standout nocombine NONE
+syn keyword colortemplateAttr         bold underline undercurl underdouble underdotted underdashed strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial      fg bg none omit
 syn match   colortemplateComment      ";.*$" contains=colortemplateTodo,@Spell
 syn match   colortemplateKey          "^\s*\(\w[^:]*\):"

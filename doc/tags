@@ -5,7 +5,6 @@
 :ColortemplateStyle	colortemplate.txt	/*:ColortemplateStyle*
 :Colortemplate[!]	colortemplate.txt	/*:Colortemplate[!]*
 @shortname-options	colortemplate.txt	/*@shortname-options*
-CTRL-L	colortemplate.txt	/*CTRL-L*
 b:colortemplate_outdir	colortemplate.txt	/*b:colortemplate_outdir*
 colortemplate#format_palette()	colortemplate.txt	/*colortemplate#format_palette()*
 colortemplate#import#run()	colortemplate.txt	/*colortemplate#import#run()*
@@ -19,9 +18,15 @@ colortemplate-background	colortemplate.txt	/*colortemplate-background*
 colortemplate-best-practices	colortemplate.txt	/*colortemplate-best-practices*
 colortemplate-colors	colortemplate.txt	/*colortemplate-colors*
 colortemplate-commands	colortemplate.txt	/*colortemplate-commands*
+colortemplate-ctrl-l	colortemplate.txt	/*colortemplate-ctrl-l*
 colortemplate-doc-blocks	colortemplate.txt	/*colortemplate-doc-blocks*
 colortemplate-feedback	colortemplate.txt	/*colortemplate-feedback*
 colortemplate-functions	colortemplate.txt	/*colortemplate-functions*
+colortemplate-ga	colortemplate.txt	/*colortemplate-ga*
+colortemplate-gl	colortemplate.txt	/*colortemplate-gl*
+colortemplate-gs	colortemplate.txt	/*colortemplate-gs*
+colortemplate-gx	colortemplate.txt	/*colortemplate-gx*
+colortemplate-gy	colortemplate.txt	/*colortemplate-gy*
 colortemplate-hi-groups	colortemplate.txt	/*colortemplate-hi-groups*
 colortemplate-include	colortemplate.txt	/*colortemplate-include*
 colortemplate-intro	colortemplate.txt	/*colortemplate-intro*
@@ -38,6 +43,7 @@ colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
 dark.txt	dark.txt	/*dark.txt*
+dark_and_light.txt	dark_and_light.txt	/*dark_and_light.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:@shortname_transp_bg	colortemplate.txt	/*g:@shortname_transp_bg*
 g:colortemplate_backward_compatible	colortemplate.txt	/*g:colortemplate_backward_compatible*
@@ -70,9 +76,7 @@ g:colortemplate_toolbar_actions	colortemplate.txt	/*g:colortemplate_toolbar_acti
 g:colortemplate_toolbar_items	colortemplate.txt	/*g:colortemplate_toolbar_items*
 g:colortemplate_use_tabs	colortemplate.txt	/*g:colortemplate_use_tabs*
 g:colortemplate_warnings	colortemplate.txt	/*g:colortemplate_warnings*
+g:dark_and_light_transp_bg	dark_and_light.txt	/*g:dark_and_light_transp_bg*
 g:dark_transp_bg	dark.txt	/*g:dark_transp_bg*
-ga	colortemplate.txt	/*ga*
-gl	colortemplate.txt	/*gl*
-gs	colortemplate.txt	/*gs*
-gx	colortemplate.txt	/*gx*
-gy	colortemplate.txt	/*gy*
+g:light_transp_bg	light.txt	/*g:light_transp_bg*
+light.txt	light.txt	/*light.txt*

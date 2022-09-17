@@ -390,7 +390,7 @@ def g:Test_CT_Project()
     {B: true}
   ]
   const expected3 = [
-    {B: false, C: 20}
+    {B: false, C: 20},
     {B: false, C: 80},
     {B: true,  C: 40},
     {B: true,  C: 80},
@@ -501,8 +501,8 @@ def g:Test_CT_NatJoin()
   const expected2 = [
     {B: 'one',   C: 1, D: 8},
     {B: 'one',   C: 1, D: 9},
-    {B: 'three', C: 0, D: 8}
-    {B: 'three', C: 0, D: 9}
+    {B: 'three', C: 0, D: 8},
+    {B: 'three', C: 0, D: 9},
   ]
 
   assert_equal(expected1, Query(Scan(R)->NatJoin(S)))
@@ -542,8 +542,8 @@ def g:Test_CT_Product()
     {A: 0, B: 'zero', C: 90},
     {A: 1, B: 'one',  C: 10},
     {A: 1, B: 'one',  C: 90},
-    {A: 2, B: 'two',  C: 10}
-    {A: 2, B: 'two',  C: 90}
+    {A: 2, B: 'two',  C: 10},
+    {A: 2, B: 'two',  C: 90},
   ]
 
   assert_equal(expected, Scan(R)->Product(S)->SortBy(['A', 'C']))

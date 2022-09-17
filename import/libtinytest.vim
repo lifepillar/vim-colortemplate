@@ -104,6 +104,19 @@ def FinishTesting(time_spent: float): bool
 enddef
 # }}}
 # Public interface {{{
+# This is simpler and quieter than assert_fails(), which does not log the
+# exception in messages.
+export def AssertFails(F: func(), expectedError: string): void
+  assert_match(expectedError, (): string => {
+    try
+      F()
+      return ''
+    catch
+      return v:exception
+    endtry
+  }())
+enddef
+
 # Returns true on success, false on failure
 export def RunBabyRun(what: string): bool
   Init()

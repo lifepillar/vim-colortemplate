@@ -1,6 +1,7 @@
 vim9script
 
 import '../../import/librelalg.vim' as ra
+import '../../import/libtinytest.vim' as tt
 
 const AntiJoin             = ra.AntiJoin
 const Attributes           = ra.Attributes
@@ -141,7 +142,7 @@ def g:Test_CT_Upsert()
   ]
 
   assert_equal(expected, rr)
-  assert_fails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
+  tt.AssertFails(() => RR->Update({A: 0, B: 'x', C: false, D: ''}),
     "Key attribute C in RR cannot be changed")
 enddef
 

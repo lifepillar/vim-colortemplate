@@ -113,7 +113,7 @@ def g:Test_CT_Update()
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
-    {A: 1, B: 'x', C: false, D: 'new-d2'}
+    {A: 1, B: 'x', C: false, D: 'new-d2'},
   ]
 
   assert_equal(expected, rr)
@@ -137,7 +137,7 @@ def g:Test_CT_Upsert()
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
-    {A: 2, B: 'y', C: true, D: 'd3'}
+    {A: 2, B: 'y', C: true, D: 'd3'},
   ]
 
   assert_equal(expected, rr)
@@ -155,18 +155,18 @@ def g:Test_CT_Delete()
     {A: 1, B: 'Y'},
     {A: 2, B: 'Z'},
     {A: 3, B: 'Y'},
-    {A: 4, B: 'Z'}
+    {A: 4, B: 'Z'},
   ])
 
   const expected1 = [
     {A: 1, B: 'Y'},
     {A: 2, B: 'Z'},
     {A: 3, B: 'Y'},
-    {A: 4, B: 'Z'}
+    {A: 4, B: 'Z'},
   ]
   const expected2 = [
     {A: 1, B: 'Y'},
-    {A: 4, B: 'Z'}
+    {A: 4, B: 'Z'},
   ]
 
   R->Delete((t) => t.B == 'X')
@@ -260,7 +260,7 @@ def g:Test_CT_ForeignKey()
   const expected = [
     {B: 10, C: 'tm'},
     {B: 20, C: 'ab'},
-    {B: 30, C: 'ab'}
+    {B: 30, C: 'ab'},
   ]
   assert_equal(expected, SS.instance)
 enddef
@@ -325,13 +325,13 @@ def g:Test_CT_Rename()
 
   const instance = [
     {A: 'a1', B: 4.0, C: 40},
-    {A: 'a2', B: 2.0, C: 80}
+    {A: 'a2', B: 2.0, C: 80},
   ]
   R->InsertMany(instance)
 
   const expected = [
     {X: 'a1', B: 4.0, W: 40},
-    {X: 'a2', B: 2.0, W: 80}
+    {X: 'a2', B: 2.0, W: 80},
   ]
 
   assert_equal(instance, Scan(R)->Rename([], [])->Build())
@@ -353,10 +353,10 @@ def g:Test_CT_Select()
   R->InsertMany(instance)
 
   const expected1 = [
-    {A: 'a1', B: 4.0, C: 40}
+    {A: 'a1', B: 4.0, C: 40},
   ]
   const expected2 = [
-    {A: 'a5', B: 4.0, C: 20}
+    {A: 'a5', B: 4.0, C: 20},
   ]
 
   assert_equal(expected1, Query(Scan(r)->Select((t) => t.C == 40)))
@@ -383,7 +383,7 @@ def g:Test_CT_Project()
     {A: 'a2'},
     {A: 'a3'},
     {A: 'a4'},
-    {A: 'a5'}
+    {A: 'a5'},
   ]
   const expected2 = [
     {B: false},
@@ -409,7 +409,7 @@ def g:Test_CT_Join()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
     ]
   R->InsertMany(instanceR)
 
@@ -418,18 +418,18 @@ def g:Test_CT_Join()
 
   const instanceS = [
     {B: 'one', C: 1},
-    {B: 'three', C: 0}
+    {B: 'three', C: 0},
   ]
   S->InsertMany(instanceS)
 
 
   const expected1 = [
     {A: 1, B: 'one', s_B: 'one', s_C: 1},
-    {A: 2, B: 'one', s_B: 'one', s_C: 1}
+    {A: 2, B: 'one', s_B: 'one', s_C: 1},
   ]
   const expected2 = [
     {r_A: 1, r_B: 'one', B: 'one', C: 1},
-    {r_A: 2, r_B: 'one', B: 'one', C: 1}
+    {r_A: 2, r_B: 'one', B: 'one', C: 1},
   ]
   const expected3 = [
     {A: 0, B: 'zero',  s_B: 'one',   s_C: 1},
@@ -462,7 +462,7 @@ def g:Test_CT_NatJoin()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
     ]
   R->InsertMany(instanceR)
 
@@ -471,7 +471,7 @@ def g:Test_CT_NatJoin()
 
   const instanceS = [
     {B: 'one', C: 1},
-    {B: 'three', C: 0}
+    {B: 'three', C: 0},
   ]
   S->InsertMany(instanceS)
 
@@ -480,7 +480,7 @@ def g:Test_CT_NatJoin()
 
   const instanceT = [
     {D: 8},
-    {D: 9}
+    {D: 9},
   ]
   T->InsertMany(instanceT)
 
@@ -490,13 +490,13 @@ def g:Test_CT_NatJoin()
   const instanceU = [
     {A: 0, B: 'many'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'two'}
+    {A: 2, B: 'two'},
   ]
   U->InsertMany(instanceU)
 
   const expected1 = [
     {A: 1, B: 'one', C: 1},
-    {A: 2, B: 'one', C: 1}
+    {A: 2, B: 'one', C: 1},
   ]
   const expected2 = [
     {B: 'one',   C: 1, D: 8},
@@ -524,7 +524,7 @@ def g:Test_CT_Product()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'two'}
+    {A: 2, B: 'two'},
     ]
   R->InsertMany(instanceR)
 
@@ -533,7 +533,7 @@ def g:Test_CT_Product()
 
   const instanceS = [
     {C: 10},
-    {C: 90}
+    {C: 90},
   ]
   S->InsertMany(instanceS)
 
@@ -559,7 +559,7 @@ def g:Test_CT_Intersect()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   R->InsertMany(instanceR)
 
@@ -569,7 +569,7 @@ def g:Test_CT_Intersect()
   const instanceS = [
     {A: 0, B: 'many'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'two'}
+    {A: 2, B: 'two'},
   ]
   S->InsertMany(instanceS)
 
@@ -586,7 +586,7 @@ def g:Test_CT_Minus()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   R->InsertMany(instanceR)
 
@@ -596,17 +596,17 @@ def g:Test_CT_Minus()
   const instanceS = [
     {A: 0, B: 'many'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'two'}
+    {A: 2, B: 'two'},
   ]
   S->InsertMany(instanceS)
 
   const expected1 = [
     {A: 0, B: 'zero'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   const expected2 = [
     {A: 0, B: 'many'},
-    {A: 2, B: 'two'}
+    {A: 2, B: 'two'},
   ]
 
   assert_equal(expected1, Scan(R)->Minus(S)->SortBy(['A']))
@@ -622,7 +622,7 @@ def g:Test_CT_SemiJoin()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   R->InsertMany(instanceR)
 
@@ -637,14 +637,14 @@ def g:Test_CT_SemiJoin()
 
   const expected1 = [
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   const expected2 = [
-    {B: 'one', C: 1}
+    {B: 'one', C: 1},
   ]
   const expected3 = [
     {A: 0, B: 'zero'},
-    {A: 1, B: 'one'}
+    {A: 1, B: 'one'},
   ]
   const expected4 = [
     {B: 'one',   C: 1},
@@ -652,7 +652,7 @@ def g:Test_CT_SemiJoin()
   ]
   const expected5 = [
     {B: 'one',   C: 1},
-    {B: 'three', C: 0}
+    {B: 'three', C: 0},
   ]
 
   assert_equal(expected1, Scan(R)->SemiJoin(S, (rt, st) => rt.B == st.B)->SortBy(['A']))
@@ -671,7 +671,7 @@ def g:Test_CT_AntiJoin()
   const instanceR = [
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   R->InsertMany(instanceR)
 
@@ -680,22 +680,22 @@ def g:Test_CT_AntiJoin()
 
   const instanceS = [
     {B: 'one',   C: 1},
-    {B: 'three', C: 0}
+    {B: 'three', C: 0},
   ]
   S->InsertMany(instanceS)
 
   const expected1 = [
-    {A: 0, B: 'zero'}
+    {A: 0, B: 'zero'},
   ]
   const expected2 = [
-    {B: 'three', C: 0}
+    {B: 'three', C: 0},
   ]
   const expected3 = [
-    {A: 2, B: 'one'}
+    {A: 2, B: 'one'},
   ]
   const expected4 = []
   const expected5 = [
-    {B: 'three', C: 0}
+    {B: 'three', C: 0},
   ]
 
   assert_equal(expected1, Query(Scan(R)->AntiJoin(S, (rt, st) => rt.B == st.B)))
@@ -717,11 +717,11 @@ def g:Test_CT_Max()
   assert_equal(v:none, Scan(R)->Max('D'))
 
   const instance = [
-    {A: 0, B: "X", C: 10.0, D: true},
-    {A: 1, B: "Z", C:  2.5, D: true},
+    {A: 0, B: "X", C: 10.0, D:  true},
+    {A: 1, B: "Z", C:  2.5, D:  true},
     {A: 2, B: "Y", C: -3.0, D: false},
-    {A: 3, B: "X", C:  1.5, D: true},
-    {A: 4, B: "Z", C:  2.5, D: true}
+    {A: 3, B: "X", C:  1.5, D:  true},
+    {A: 4, B: "Z", C:  2.5, D:  true},
   ]
   R->InsertMany(instance)
 
@@ -742,11 +742,11 @@ def g:Test_CT_Min()
   assert_equal(v:none, Scan(R)->Min('D'))
 
   const instance = [
-    {A: 0, B: "X", C: 10.0, D: true},
-    {A: 1, B: "Z", C:  2.5, D: true},
+    {A: 0, B: "X", C: 10.0, D:  true},
+    {A: 1, B: "Z", C:  2.5, D:  true},
     {A: 2, B: "Y", C: -3.0, D: false},
-    {A: 3, B: "X", C:  1.5, D: true},
-    {A: 4, B: "Z", C:  2.5, D: true}
+    {A: 3, B: "X", C:  1.5, D:  true},
+    {A: 4, B: "Z", C:  2.5, D:  true},
   ]
   R->InsertMany(instance)
 
@@ -769,7 +769,7 @@ def g:Test_CT_Sum()
     {A: 1, B:  2.5},
     {A: 2, B: -3.0},
     {A: 3, B:  1.5},
-    {A: 4, B:  2.5}
+    {A: 4, B:  2.5},
   ]
   R->InsertMany(instance)
 
@@ -789,7 +789,7 @@ def g:Test_CT_Count()
     {A: 1, B:  2.5},
     {A: 2, B: -3.0},
     {A: 3, B:  1.5},
-    {A: 4, B:  2.5}
+    {A: 4, B:  2.5},
   ]
   R->InsertMany(instance)
 
@@ -806,7 +806,7 @@ def g:Test_CT_GroupBy()
     {id: 1, name: "A", balance:  2.5},
     {id: 2, name: "B", balance: -3.0},
     {id: 3, name: "A", balance:  1.5},
-    {id: 4, name: "B", balance:  2.5}
+    {id: 4, name: "B", balance:  2.5},
   ]
   R->InsertMany(instance)
 
@@ -816,7 +816,7 @@ def g:Test_CT_GroupBy()
 
   const expected = [
     {name: 'A', total: 14.0},
-    {name: 'B', total: -0.5}
+    {name: 'B', total: -0.5},
   ]
 
   assert_equal(2, len(result))
@@ -831,12 +831,12 @@ def g:Test_CT_Divide()
   )
   const subscription = Subscription.instance
   const subscription_instance = [
-    {student: '123', date: '2019-12-05', course: 'Databases'},
-    {student: '283', date: '2019-12-05', course: 'Databases'},
+    {student: '123', date: '2019-12-05', course:        'Databases'},
+    {student: '283', date: '2019-12-05', course:        'Databases'},
     {student: '123', date: '2020-12-05', course: 'Computer Science'},
-    {student: '123', date: '2021-12-05', course: 'Algebra'},
-    {student: '283', date: '2021-12-05', course: 'Algebra'},
-    {student: '375', date: '2015-01-06', course: 'Databases'},
+    {student: '123', date: '2021-12-05', course:          'Algebra'},
+    {student: '283', date: '2021-12-05', course:          'Algebra'},
+    {student: '375', date: '2015-01-06', course:        'Databases'},
     {student: '283', date: '2020-12-05', course: 'Computer Science'},
     {student: '303', date: '2020-12-05', course: 'Computer Science'},
   ]
@@ -845,9 +845,9 @@ def g:Test_CT_Divide()
   var Session = Relation('Session', {date: Str, course: Str}, [['date', 'course']])
   const session = Session.instance
   const session_instance = [
-    {date: '2019-12-05', course: 'Databases'},
+    {date: '2019-12-05', course:        'Databases'},
     {date: '2020-12-05', course: 'Computer Science'},
-    {date: '2021-12-05', course: 'Algebra'},
+    {date: '2021-12-05', course:          'Algebra'},
   ]
   Session->InsertMany(session_instance)
 

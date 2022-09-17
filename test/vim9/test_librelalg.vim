@@ -1,7 +1,6 @@
 vim9script
 
 import '../../import/librelalg.vim' as ra
-import '../../import/libtinytest.vim' as tt
 
 const AntiJoin             = ra.AntiJoin
 const Attributes           = ra.Attributes
@@ -39,14 +38,24 @@ const Str                  = ra.Str
 const Sum                  = ra.Sum
 const Update               = ra.Update
 
-# These are defined at the script level to allow for the use of assert_fails().
+# assert_fails() logs exceptions in messages. This function is quiet.
+def AssertFails(what: string, expectedError: string): void
+  try
+    execute what
+    assert_false(1, 'Command should have failed, but succeeded')
+  catch
+    assert_exception(expectedError)
+  endtry
+enddef
+
+# These are defined at the script level for using with AssertFails().
 # See also: https://github.com/vim/vim/issues/6868
 var RR: dict<any>
 var SS: dict<any>
 
 def g:Test_CT_CreateEmptyRelation()
   # Every relation must have at least one key
-  assert_fails("Relation('R', {A: Int, B: Str}, [])", "No key")
+  AssertFails("Relation('R', {A: Int, B: Str}, [])", "No key")
 
   var R = Relation('R', {A: Int, B: Str}, [['A']])
 
@@ -84,16 +93,16 @@ def g:Test_CT_Insert()
     RR.instance
   )
 
-  assert_fails("RR->Insert({A: 0, B: 'b2', C: true, D: 3.5})", 'Duplicate key')
-  assert_fails("RR->Insert({A: 9})", 'Expected a tuple on schema')
-  assert_fails("RR->Insert({A: false, B: 'b3', C: false, D: 7.0})",
-               "Attribute A is of type integer, but value 'false' of type boolean")
-  assert_fails("RR->Insert({A: 9, B: 9, C: false, D: 'tsk'})",
-               "Attribute B is of type string, but value '9' of type integer")
-  assert_fails("RR->Insert({A: 9, B: 'b3', C: 3.2, D: 'tsk'})",
-               "Attribute C is of type boolean, but value '3.2' of type float")
-  assert_fails("RR->Insert({A: 9, B: 'b3', C: false, D: 'tsk'})",
-               "Attribute D is of type float, but value 'tsk' of type string")
+  AssertFails("RR->Insert({A: 0, B: 'b2', C: true, D: 3.5})", 'Duplicate key')
+  AssertFails("RR->Insert({A: 9})", 'Expected a tuple on schema')
+  AssertFails("RR->Insert({A: false, B: 'b3', C: false, D: 7.0})",
+              "Attribute A is of type integer, but value 'false' of type boolean")
+  AssertFails("RR->Insert({A: 9, B: 9, C: false, D: 'tsk'})",
+              "Attribute B is of type string, but value '9' of type integer")
+  AssertFails("RR->Insert({A: 9, B: 'b3', C: 3.2, D: 'tsk'})",
+              "Attribute C is of type boolean, but value '3.2' of type float")
+  AssertFails("RR->Insert({A: 9, B: 'b3', C: false, D: 'tsk'})",
+              "Attribute D is of type float, but value 'tsk' of type string")
 
   assert_equal(
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
@@ -118,10 +127,10 @@ def g:Test_CT_Update()
   ]
 
   assert_equal(expected, rr)
-  assert_fails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
-    "Key attribute C in RR cannot be changed")
-  assert_fails("RR->Update({A: 2, B: 'y', C: true, D: 'd3'})",
-    "Tuple with ['A'] = [2] not found in RR")
+  AssertFails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
+              "Key attribute C in RR cannot be changed")
+  AssertFails("RR->Update({A: 2, B: 'y', C: true, D: 'd3'})",
+              "Tuple with ['A'] = [2] not found in RR")
 enddef
 
 def g:Test_CT_Upsert()
@@ -142,8 +151,9 @@ def g:Test_CT_Upsert()
   ]
 
   assert_equal(expected, rr)
-  tt.AssertFails(() => RR->Update({A: 0, B: 'x', C: false, D: ''}),
-    "Key attribute C in RR cannot be changed")
+
+  AssertFails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
+              "Key attribute C in RR cannot be changed")
 enddef
 
 def g:Test_CT_Delete()
@@ -232,12 +242,12 @@ def g:Test_CT_ForeignKey()
   RR = Relation('RR', {A: Str}, [['A']])
   SS = Relation('SS', {B: Int, C: Str}, [['B']])
 
-  assert_fails("SS.constraints->add(ForeignKey(SS, ['B', 'C'], RR, ['A']))",
-               "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
-               assert_fails("SS.constraints->add(ForeignKey(SS, ['C'], RR, ['C'])",
-               "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
-  assert_fails("SS.constraints->add(ForeignKey(SS, ['A'], RR, ['A']))",
-               "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
+  AssertFails("SS.constraints->add(ForeignKey(SS, ['B', 'C'], RR, ['A']))",
+              "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
+  AssertFails("SS.constraints->add(ForeignKey(SS, ['C'], RR, ['C'])",
+              "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
+  AssertFails("SS.constraints->add(ForeignKey(SS, ['A'], RR, ['A']))",
+              "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
 
   var SS_Ref_RR = ForeignKey(SS, ['C'], RR, ['A'], 'constrains')
   SS.constraints->add(SS_Ref_RR)
@@ -250,13 +260,13 @@ def g:Test_CT_ForeignKey()
   SS->Insert({B: 20, C: 'tm'})
   SS->Insert({B: 30, C: 'ab'})
 
-  assert_fails("SS->Insert({B: 40, C: 'xy'})",
-               "RR constrains SS: SS['C'] = ('xy') is not present in RR['A']")
+  AssertFails("SS->Insert({B: 40, C: 'xy'})",
+              "RR constrains SS: SS['C'] = ('xy') is not present in RR['A']")
 
   SS->Update({B: 20, C: 'ab'})
 
-  assert_fails("SS->Update({B: 30, C: 'wz'})",
-               "RR constrains SS: SS['C'] = ('wz') is not present in RR['A']")
+  AssertFails("SS->Update({B: 30, C: 'wz'})",
+              "RR constrains SS: SS['C'] = ('wz') is not present in RR['A']")
 
   const expected = [
     {B: 10, C: 'tm'},
@@ -867,12 +877,12 @@ enddef
 def g:Test_CT_DeeDum()
   RR = Relation('Dee', {}, [[]])
   assert_equal(0, len(RR.instance))
-  assert_fails("RR->Insert({A: 0})", "Expected a tuple on schema {}")
+  AssertFails("RR->Insert({A: 0})", "Expected a tuple on schema {}")
 
   RR->Insert({})
 
   assert_equal(1, len(RR.instance))
-  assert_fails("RR->Insert({})", "Duplicate key")
+  AssertFails("RR->Insert({})", "Duplicate key")
 
   var Dum = Relation('Dum', {}, [[]])
   var Dee = RR

@@ -482,6 +482,7 @@ fun! s:new_hi_group(name)
         \ 'bg': '',
         \ 'sp': 'omit',
         \ 'term': [],
+        \ 'cterm': [],
         \ 'gui': [],
         \ 'start': '',
         \ 'stop': '',
@@ -553,12 +554,21 @@ fun! s:term_attr(hg)
   return empty(a:hg['term']) ? 'NONE' : join(a:hg['term'], ',')
 endf
 
+fun! s:cterm_attr(hg)
+  return empty(a:hg['cterm']) ? 'NONE' : join(a:hg['cterm'], ',')
+endf
+
 fun! s:gui_attr(hg)
   return empty(a:hg['gui']) ? 'NONE' : join(a:hg['gui'], ',')
 endf
 
 fun! s:term_attr_no_italics(hg)
   let l:attr = filter(copy(a:hg['term']), { _,v -> v !=# 'italic' })
+  return empty(l:attr) ? 'NONE' : join(l:attr, ',')
+endf
+
+fun! s:cterm_attr_no_italics(hg)
+  let l:attr = filter(copy(a:hg['cterm']), { _,v -> v !=# 'italic' })
   return empty(l:attr) ? 'NONE' : join(l:attr, ',')
 endf
 
@@ -597,6 +607,10 @@ fun! s:has_term_italics(hg)
   return index(a:hg['term'], 'italic') > -1
 endf
 
+fun! s:has_cterm_italics(hg)
+  return index(a:hg['cterm'], 'italic') > -1
+endf
+
 fun! s:has_gui_attr(hg)
   return !empty(a:hg['gui'])
 endf
@@ -612,6 +626,11 @@ endf
 fun! s:add_term_attr(hg, attrlist)
   call extend(a:hg['term'], a:attrlist)
   call uniq(sort(a:hg['term']))
+endf
+
+fun! s:add_cterm_attr(hg, attrlist)
+  call extend(a:hg['cterm'], a:attrlist)
+  call uniq(sort(a:hg['cterm']))
 endf
 
 fun! s:add_gui_attr(hg, attrlist)
@@ -945,6 +964,9 @@ fun! s:add_higroup_item(variant, section, hg)
       call s:set_uses_italics()
       call add(s:italics[a:variant][a:section], s:make_item(a:hg, 'it'))
     endif
+  elseif s:has_cterm_italics(a:hg)
+    call s:set_uses_italics()
+    call add(s:italics[a:variant][a:section], s:make_item(a:hg, 'it'))
   elseif s:has_term_italics(a:hg)
     call s:set_uses_italics()
     call add(s:italics[a:variant][a:section], s:make_item(a:hg, 'it'))
@@ -2066,6 +2088,12 @@ fun! s:parse_attributes(hg)
       endif
       call s:token.next()
       call s:add_term_attr(a:hg, s:parse_attr_list())
+	elseif s:token.value ==? 'c' || s:token.value ==? 'cterm'
+      if s:token.next().kind !=# '='
+        throw "Expected = symbol after 'cterm'"
+      endif
+      call s:token.next()
+      call s:add_cterm_attr(a:hg, s:parse_attr_list())
     elseif s:token.value ==? 'g' || s:token.value ==? 'gui'
       if s:token.next().kind !=# '='
         throw "Expected = symbol after 'gui'"
@@ -2083,6 +2111,7 @@ fun! s:parse_attributes(hg)
     else
       let l:attrlist = s:parse_attr_list()
       call s:add_term_attr(a:hg, l:attrlist)
+      call s:add_cterm_attr(a:hg, l:attrlist)
       call s:add_gui_attr(a:hg, l:attrlist)
     endif
   endwhile
@@ -2260,7 +2289,7 @@ fun! s:eval(item, col, section)
       let l:bg = s:guibg(l:v, a:section)
       let l:sp = s:guisp(l:v, a:section)
       let l:guiattr = s:gui_attr(l:v)
-      let l:termattr = s:term_attr(l:v)
+      let l:ctermattr = s:cterm_attr(l:v)
       " When guifg=NONE and guibg=NONE, Vim uses the values of ctermfg/ctermbg
       " See https://github.com/lifepillar/vim-colortemplate/issues/15.
       " See also https://github.com/vim/vim/issues/1740
@@ -2271,12 +2300,12 @@ fun! s:eval(item, col, section)
             \   ? ''
             \   : (' gui='.l:guiattr
             \   . (l:fg ==# 'NONE' && l:bg ==# 'NONE' ? ' ctermfg=NONE ctermbg=NONE' : '')
-            \   . ' cterm='.l:termattr)
+            \   . ' cterm='.l:ctermattr)
             \   )
     elseif a:col > 16
       let l:fg = s:fg256(l:v, a:section)
       let l:bg = s:bg256(l:v, a:section)
-      let l:attr = s:term_attr(l:v)
+      let l:attr = s:cterm_attr(l:v)
       let l:def = s:hi_item('ctermfg', l:fg)
             \ . s:hi_item('ctermbg', l:bg)
             \ . s:hi_item('cterm', l:attr)
@@ -2285,7 +2314,7 @@ fun! s:eval(item, col, section)
     elseif a:col > 1
       let l:fg = s:fg16(l:v, a:section)
       let l:bg = s:bg16(l:v, a:section)
-      let l:attr = s:term_attr(l:v)
+      let l:attr = s:cterm_attr(l:v)
       let l:def = s:hi_item('ctermfg', l:fg)
             \ . s:hi_item('ctermbg', l:bg)
             \ . s:hi_item('cterm', l:attr)
@@ -2311,12 +2340,15 @@ fun! s:eval(item, col, section)
   elseif s:is_italic_type(a:item)
     if a:col > 256
       let l:guiattr = s:gui_attr_no_italics(l:v)
-      let l:termattr = s:term_attr_no_italics(l:v)
+      let l:termattr = s:cterm_attr_no_italics(l:v)
       " cterm is for terminals with termguicolors (see https://github.com/vim/vim/issues/1740)
       return 'hi ' . s:hi_name(l:v) . ' gui='.l:guiattr . ' cterm='.l:termattr
+    elseif a:col > 1
+      let l:attr = s:cterm_attr_no_italics(l:v)
+      return 'hi ' . s:hi_name(l:v) . ' cterm='.l:attr
     else
       let l:attr = s:term_attr_no_italics(l:v)
-      return 'hi ' . s:hi_name(l:v) . (a:col > 2 ? ' c' : ' ') . 'term='.l:attr
+      return 'hi ' . s:hi_name(l:v) . ' term='.l:attr
     endif
   else
     throw 'FATAL: unknown item type' " This should never happen!

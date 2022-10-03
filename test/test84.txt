@@ -7,5 +7,5 @@ Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Variant:gui 256
 Normal white black
-StatusLine black white g=bold,italic t=italic
+StatusLine black white g=bold,italic c=italic
 ; vim: ft=colortemplate

@@ -265,15 +265,22 @@ endf
 fun! s:attr_text(higroup)
   let l:common_attr = []
   let l:term_attr = []
+  let l:cterm_attr = []
   let l:gui_attr = []
   for l:attr in ['bold', 'italic', 'reverse', 'standout', 'underline', 'undercurl', 'underdouble', 'underdotted', 'underdashed', 'strike']
-    if a:higroup['gui'][l:attr] == 1 && a:higroup['cterm'][l:attr] == 1
-      call add(l:common_attr, l:attr)
-    elseif a:higroup['gui'][l:attr] == 1 && a:higroup['cterm'][l:attr] == 0
-      call add(l:gui_attr, l:attr)
-    elseif a:higroup['gui'][l:attr] == 0 && a:higroup['cterm'][l:attr] == 1
-      call add(l:term_attr, l:attr)
-    endif
+	  if a:higroup['gui'][l:attr] == 1 && a:higroup['cterm'][l:attr] == 1 && a:higroup['term'][l:attr] == 1
+		  call add(l:common_attr, l:attr)
+	  else
+		  if a:higroup['gui'][l:attr] == 1
+			  call add(l:gui_attr, l:attr)
+		  endif
+		  if a:higroup['cterm'][l:attr] == 1
+			  call add(l:cterm_attr, l:attr)
+		  endif
+		  if a:higroup['term'][l:attr] == 1
+			  call add(l:term_attr, l:attr)
+		  endif
+	  endif
   endfor
   let l:s = ''
   if a:higroup['spname'] != 'none' && a:higroup['synid'] != hlID('Normal') && a:higroup['spname'] != a:higroup['fgname']
@@ -284,6 +291,9 @@ fun! s:attr_text(higroup)
   endif
   if !empty(l:gui_attr)
     let l:s .= ' gui=' . join(l:gui_attr, ',')
+  endif
+  if !empty(l:cterm_attr)
+    let l:s .= ' cterm=' . join(l:cterm_attr, ',')
   endif
   if !empty(l:term_attr)
     let l:s .= ' term=' . join(l:term_attr, ',')

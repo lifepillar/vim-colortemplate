@@ -7,6 +7,6 @@ Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Normal white black
-ColorColumn fg none standout underline,nocombine t=bold,italic term=inverse gui=bold,italic g=undercurl guisp=bg s=white
+ColorColumn fg none standout underline,nocombine c=bold,italic cterm=inverse gui=bold,italic g=undercurl guisp=bg s=white
 
 ; vim: ft=colortemplate

@@ -1114,7 +1114,7 @@ call delete(s:docdir, "rf")
 
 if get(g:, 'autotest', 0)
   if s:exit > 0
-    execute "write" s:testdir.'/test.log'
+    execute "write >>" s:testdir.'/test.log'
     cquit
   else
     call delete(s:testdir.'/test.log')

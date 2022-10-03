@@ -599,20 +599,12 @@ fun! s:set_terminal_code(hg, type, value)
   let a:hg[a:type] = a:value
 endf
 
-fun! s:has_term_attr(hg)
-  return !empty(a:hg['term'])
-endf
-
 fun! s:has_term_italics(hg)
   return index(a:hg['term'], 'italic') > -1
 endf
 
 fun! s:has_cterm_italics(hg)
   return index(a:hg['cterm'], 'italic') > -1
-endf
-
-fun! s:has_gui_attr(hg)
-  return !empty(a:hg['gui'])
 endf
 
 fun! s:has_gui_italics(hg)

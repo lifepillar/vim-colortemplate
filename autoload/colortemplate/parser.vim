@@ -4,6 +4,7 @@ import 'libparser.vim' as parser
 
 const Apply      = parser.Apply
 const Eof        = parser.Eof
+const Fail       = parser.Fail
 const Label      = parser.Label
 const Lexeme     = parser.Lexeme
 const Many       = parser.Many
@@ -53,7 +54,7 @@ const Text       = parser.Text
 var currentState = {
   background: v:none,
   variants: []
-  }
+}
 
 def SetFullName(v: list<string>): void
   const name = v[3]
@@ -221,7 +222,7 @@ const Comment           = Skip(Sequence(SEMICOLON, Optional(TEXT)))
 
 const Directive          = OneOf(ColorDef, Background, Variant, Fullname, Shortname, Author, Description, Website)
 const Declaration        = Label(OneOf(Directive, HighlightGroup, Comment), "a directive or a highlight group definition")
-const Template           = Sequence(Many(Declaration), Label(Eof, 'unexpected token'))
+const Template           = Sequence(Many(Declaration), OneOf(Eof, Label(Fail, 'unexpected token')))
 # }}}
 
 export def Parse(Parser: func(dict<any>): dict<any>, text: string): any

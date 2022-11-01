@@ -41,16 +41,16 @@ const Update               = ra.Update
 # Colortemplate's Relational schema {{{
 # Metadata {{{
 var Colorscheme = Relation('Colorscheme', {
+    pathname:    Str,
     shortname:   Str,
     fullname:    Str,
-    pathname:    Str,
     description: Str,
     author:      Str,
     maintainer:  Str,
     license:     Str,
     web:         Str,
   },
-  [['shortname'], ['fullname'], ['pathname']]
+  [['pathname']]
 )
 
 var Environment = Relation('Environment', {

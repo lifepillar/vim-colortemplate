@@ -47,11 +47,10 @@ fun! FinishTesting()
   endif
 
   botright new +setlocal\ buftype=nofile\ bufhidden=wipe\ nobuflisted\ noswapfile\ wrap
+  call append(0, '--- ' .. strftime("%c"))
   call append(line('$'), s:messages)
   call append(line('$'), '')
   call append(line('$'), s:errors)
-  call append(line('$'), '')
-  call append(line('$'), '---')
   call matchadd('Identifier', '✔︎')
   call matchadd('WarningMsg', '\<FAILED\>')
   call matchadd('WarningMsg', '^\d\+ tests\? failed')

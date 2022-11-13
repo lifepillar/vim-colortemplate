@@ -1,13 +1,13 @@
 *libtinytest.txt*	For Vim version 9.0	Last change: 2022 Nov 13
 
 Tiny Test is a minimalist unit testing library for Vim 9 script developers.
-A unit test is just a global function without arguments and return value whose
-name starts with `g:Test`. Typically, tests contain Vim assertions (see
+A unit test is just a function without arguments and return value whose
+name starts with `Test`. Typically, tests contain Vim assertions (see
 |assert-functions-details|). For instance:
 >
 	vim9script
 
-	def! g:Test_OnePlusOneIsTwo()
+	def Test_OnePlusOneIsTwo()
 	  assert_equal(2, 1 + 1)
 	enddef
 <
@@ -17,16 +17,12 @@ tests:
 	vim9script
 
 	import 'libtinytest.vim' as tt
-	source <sfile>:h/my_tests.vim
+	source <sfile>:h/my_tests.vim  # Do NOT import the tests!
 
 	const success = tt.Run()
 	echo success
 <
 The outcome appears in a new scratch buffer.
-
-Note: since tests are global functions, it is not possible to delete them. If
-you rename or delete a test from your test suite, you will probably want to
-restart Vim to run tests from a clean state.
 
 					*libtinytest.Run()*
 

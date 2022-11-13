@@ -4,6 +4,11 @@ vim9script
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # License:     Vim license (see `:help license`)
 
+if !&magic
+  echomsg "Tiny Test requires 'magic' on"
+  finish
+endif
+
 # Local state {{{
 var mesg = []
 var erro = []
@@ -18,39 +23,41 @@ def Init()
 enddef
 # }}}
 # Private functions {{{
-def FindTests(pattern: string): list<string>
+def FindTests(pattern: string): list<dict<string>>
   const saved_reg = getreg('t')
   const saved_regtype = getregtype('t')
 
   redir @t
-  execute 'silent def /^Test' .. pattern
+  execute 'silent def /Test_*' .. pattern
   redir END
 
   const defnames = split(@t, "\n")
-  var testnames: list<string> = []
+  var tests: list<dict<string>> = []
+
   for t in defnames
-    if t =~ '^def Test\k\+()$'
-      const name = substitute(t, '^def \(Test\k\+\)()$', '\1', '')
-      testnames->add(name)
+    if t =~ '^def <SNR>\d\+\k\+()$'
+      const test = substitute(t, '^def ', '\1', '')  # E.g., '<SNR>9_Test_Foo()'
+      const name = substitute(test, '^<SNR>\d\+_Test_*\(.\+\)()$', '\1', '')  # E.g., 'Foo'
+      tests->add({'test': test, 'name': name})
     endif
   endfor
 
   setreg('t', saved_reg, saved_regtype)
 
-  return testnames
+  return tests
 enddef
 
 # test: test name (without 'g:' prefix and without parentheses)
-def RunTest(test: string)
+def RunTest(test: string, name: string)
   done += 1
 
-  var message = test
+  var message = name
   const start_time = reltime()
 
   try
-    execute 'g:' .. test .. '()'
+    execute test
   catch
-    add(v:errors, printf('Caught exception in %s: %s @ %s', test, v:exception, v:throwpoint))
+    add(v:errors, printf('Caught exception in %s: %s @ %s', name, v:exception, v:throwpoint))
   endtry
 
   message ..=  printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
@@ -63,7 +70,7 @@ def RunTest(test: string)
   fail += 1
   message ..= ' FAILED'
   add(erro, '')
-  add(erro, test)
+  add(erro, name)
 
   for err in v:errors
     if err =~# '^Caught exception'
@@ -106,21 +113,15 @@ enddef
 # }}}
 # Public interface {{{
 # Returns true on success, false on failure
-export def Run(what: string = ''): bool
+export def Run(pattern: string = ''): bool
   Init()
 
-  var tests: list<string>
-
-  if what =~ '^Test' # Assume single test
-    tests = [what]
-  else               # Assume pattern
-    tests = FindTests(what)
-  endif
+  var tests: list<dict<string>> = FindTests(pattern)
 
   const start_time = reltime()
 
   for test in tests
-    RunTest(test)
+    RunTest(test.test, test.name)
   endfor
 
   const time_passed = reltimefloat(reltime(start_time))

@@ -106,7 +106,7 @@ enddef
 # }}}
 # Public interface {{{
 # Returns true on success, false on failure
-export def RunBabyRun(what: string): bool
+export def Run(what: string = ''): bool
   Init()
 
   var tests: list<string>

@@ -24,6 +24,10 @@ tests:
 <
 The outcome appears in a new scratch buffer.
 
+Note: since tests are global functions, it is not possible to delete them. If
+you rename or delete a test from your test suite, you will probably want to
+restart Vim to run tests from a clean state.
+
 					*libtinytest.Run()*
 
 Runs a test suite. The function has an optional argument, which is a pattern

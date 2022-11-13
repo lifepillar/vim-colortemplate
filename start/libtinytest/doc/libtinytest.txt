@@ -1,0 +1,37 @@
+*libtinytest.txt*	For Vim version 9.0	Last change: 2022 Nov 13
+
+Tiny Test is a minimalist unit testing library for Vim 9 script developers.
+A unit test is just a global function without arguments and return value whose
+name starts with `g:Test`. Typically, tests contain Vim assertions (see
+|assert-functions-details|). For instance:
+>
+	vim9script
+
+	def! g:Test_OnePlusOneIsTwo()
+	  assert_equal(2, 1 + 1)
+	enddef
+<
+To run the tests, source a script that imports Tiny Test and sources your
+tests:
+>
+	vim9script
+
+	import 'libtinytest.vim' as tt
+	source <sfile>:h/my_tests.vim
+
+	const success = tt.Run()
+	echo success
+<
+The outcome appears in a new scratch buffer.
+
+					*libtinytest.Run()*
+
+Runs a test suite. The function has an optional argument, which is a pattern
+to filter the test names. For instance, to run only the tests containing
+`ABC`, you may write:
+>
+	const success = tt.Run('ABC')
+<
+This will run `Test_ABC_Foo()` and `TestABCBar()`, but not `Test_XYZ()`.
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

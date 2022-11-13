@@ -6,7 +6,7 @@ modern Vim plugins and libraries.
 ## Installation
 
 ```sh
-git clone --recuse-submodules https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
+git clone --recurse-submodules https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 ```
 
 Enable the plugins you need with `packadd`. For instance:

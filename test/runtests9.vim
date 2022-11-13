@@ -1,7 +1,7 @@
 vim9script
 # Source me to run the tests!
 
-import '../import/libtinytest.vim' as tt
+import 'libtinytest.vim' as tt
 
 # Constants and helper functions {{{
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')

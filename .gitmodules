@@ -1,0 +1,3 @@
+[submodule "vim9asm"]
+	path = opt/vim9asm
+	url = https://github.com/lacygoill/vim9asm

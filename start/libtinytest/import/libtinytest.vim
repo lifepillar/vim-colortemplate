@@ -65,7 +65,7 @@ def RunTest(test: string, name: string)
     add(v:errors, printf('Caught exception in %s: %s @ %s', name, v:exception, v:throwpoint))
   endtry
 
-  message ..=  printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
+  message ..= printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
 
   if len(v:errors) == 0
     add(mesg, printf('%s %s', OK, message))

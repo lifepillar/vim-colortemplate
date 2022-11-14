@@ -1,4 +1,4 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2022 Nov 13
+*libtinytest.txt*	For Vim version 9.0	Last change: 2022 Nov 14
 
 Tiny Test is a minimalist unit testing library for Vim 9 script developers.
 A unit test is just a function without arguments and return value whose
@@ -7,26 +7,29 @@ name starts with `Test`. Typically, tests contain Vim assertions (see
 >
 	vim9script
 
+	import 'libtinytest.vim' as tt
+
 	def Test_OnePlusOneIsTwo()
 	  assert_equal(2, 1 + 1)
 	enddef
+
+	const success = tt.Run()
 <
-To run the tests, source a script that imports Tiny Test and sources your
-tests:
+The tests may also be sourced (not imported!) from a separate file:
 >
 	vim9script
 
 	import 'libtinytest.vim' as tt
-	source <sfile>:h/my_tests.vim  # Do NOT import the tests!
+	source <sfile>:h/my_tests.vim
 
 	const success = tt.Run()
-	echo success
 <
-The outcome appears in a new scratch buffer.
+In either case, the ouput appears in a new scratch buffer.
 
+Functions ~
 					*libtinytest.Run()*
 
-Runs a test suite. The function has an optional argument, which is a pattern
+Runs all the tests. The function has an optional argument, which is a pattern
 to filter the test names. For instance, to run only the tests containing
 `ABC`, you may write:
 >
@@ -34,4 +37,12 @@ to filter the test names. For instance, to run only the tests containing
 <
 This will run `Test_ABC_Foo()` and `TestABCBar()`, but not `Test_XYZ()`.
 
+Options ~
+
+					*g:tinytest_highlight*
+
+Flag to enable or disable syntax highlighting in the output.
+>
+	g:tinytest_highlight = true
+<
  vim:tw=78:ts=8:noet:ft=help:norl:

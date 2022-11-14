@@ -22,6 +22,7 @@ def Init()
   fail = 0
 enddef
 # }}}
+
 # Private functions {{{
 def FindTests(pattern: string): list<dict<string>>
   const saved_reg = getreg('t')
@@ -47,7 +48,8 @@ def FindTests(pattern: string): list<dict<string>>
   return tests
 enddef
 
-# test: test name (without 'g:' prefix and without parentheses)
+# test: the full function invocation (e.g., '<SNR>1_Test_Foobar()')
+# name: the test name (e.g., 'Foobar')
 def RunTest(test: string, name: string)
   done += 1
 
@@ -98,19 +100,24 @@ def FinishTesting(time_spent: float): bool
   append(line('$'), mesg)
   append(line('$'), '')
   append(line('$'), erro)
-  matchadd('Identifier', '✔︎')
-  matchadd('WarningMsg', '✘')
-  matchadd('WarningMsg', '\<FAILED\>')
-  matchadd('WarningMsg', '^\d\+ tests\? failed')
-  matchadd('Keyword',    '^\<line \d\+')
-  matchadd('Constant',   '\<Expected\>')
-  matchadd('Constant',   '\<but got\>')
-  matchadd('ErrorMsg',   'Caught exception')
-  norm G
+
+  if get(g:, 'tinytest_highlight', true)
+    matchadd('Identifier', '✔︎')
+    matchadd('WarningMsg', '✘')
+    matchadd('WarningMsg', '\<FAILED\>')
+    matchadd('WarningMsg', '^\d\+ tests\? failed')
+    matchadd('Keyword',    '^\<line \d\+')
+    matchadd('Constant',   '\<Expected\>')
+    matchadd('Constant',   '\<but got\>')
+    matchadd('ErrorMsg',   'Caught exception')
+  endif
+
+  normal G
   nunmenu WinBar
   return (fail == 0)
 enddef
 # }}}
+
 # Public interface {{{
 # Returns true on success, false on failure
 export def Run(pattern: string = ''): bool

@@ -9,6 +9,9 @@ if !&magic
   finish
 endif
 
+const  OK = '✔︎'
+const TSK = '✘'
+
 # Local state {{{
 var mesg = []
 var erro = []
@@ -65,7 +68,7 @@ def RunTest(test: string, name: string)
   message ..=  printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
 
   if len(v:errors) == 0
-    add(mesg, '✔︎ ' .. message)
+    add(mesg, printf('%s %s', OK, message))
     return
   endif
 
@@ -82,7 +85,7 @@ def RunTest(test: string, name: string)
     endif
   endfor
 
-  add(mesg, '✘ ' .. message)
+  add(mesg, printf('%s %s', TSK, message))
   v:errors = []
 enddef
 
@@ -90,7 +93,7 @@ def FinishTesting(time_spent: float): bool
   add(mesg, '')
   add(mesg, printf('%d test%s run in %.03fs', done, (done == 1 ? '' : 's'), time_spent))
   if fail == 0
-    add(mesg, '✔︎ ALL TESTS PASSED!')
+    add(mesg, OK .. ' ALL TESTS PASSED!')
   else
     add(mesg, printf('%d test%s failed', fail, (fail == 1 ? '' : 's')))
   endif
@@ -102,8 +105,8 @@ def FinishTesting(time_spent: float): bool
   append(line('$'), erro)
 
   if get(g:, 'tinytest_highlight', true)
-    matchadd('Identifier', '✔︎')
-    matchadd('WarningMsg', '✘')
+    matchadd('Identifier', OK)
+    matchadd('WarningMsg', TSK)
     matchadd('WarningMsg', '\<FAILED\>')
     matchadd('WarningMsg', '^\d\+ tests\? failed')
     matchadd('Keyword',    '^\<line \d\+')

@@ -59,6 +59,8 @@ def RunTest(test: string, name: string)
   var message = name
   const start_time = reltime()
 
+  v:errors = []
+
   try
     execute test
   catch
@@ -67,7 +69,7 @@ def RunTest(test: string, name: string)
 
   message ..= printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
 
-  if len(v:errors) == 0
+  if empty(v:errors)
     add(mesg, printf('%s %s', OK, message))
     return
   endif
@@ -86,6 +88,7 @@ def RunTest(test: string, name: string)
   endfor
 
   add(mesg, printf('%s %s', TSK, message))
+
   v:errors = []
 enddef
 

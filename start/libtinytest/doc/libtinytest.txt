@@ -24,7 +24,7 @@ The tests may also be sourced (not imported!) from a separate file:
 
 	const success = tt.Run()
 <
-In either case, the ouput appears in a new scratch buffer.
+In either case, the output appears in a new scratch buffer.
 
 Functions ~
 					*libtinytest.Run()*

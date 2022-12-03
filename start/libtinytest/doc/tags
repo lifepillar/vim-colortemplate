@@ -1,0 +1,3 @@
+g:tinytest_highlight	libtinytest.txt	/*g:tinytest_highlight*
+libtinytest.Run()	libtinytest.txt	/*libtinytest.Run()*
+libtinytest.txt	libtinytest.txt	/*libtinytest.txt*

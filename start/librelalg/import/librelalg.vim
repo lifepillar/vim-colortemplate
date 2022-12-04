@@ -691,17 +691,13 @@ export def Descriptors(R: dict<any>): list<string>
 enddef
 
 export def Insert(R: dict<any>, t: dict<any>): void
-  # Check constraints
   for CheckConstraint in R.constraints
     CheckConstraint(t, 'I')
   endfor
 
-  # Insert
   R.instance->add(t)
 
-  # Update indexes
-  for key in R.keys
-    const index = R.indexes[string(key)]
+  for index in values(R.indexes)
     index->AddKey(t)
   endfor
 enddef

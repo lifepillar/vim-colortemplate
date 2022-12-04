@@ -34,11 +34,10 @@ enddef
 # }}}
 
 # Test files
-source <sfile>:h/vim9/test_librelalg.vim
 source <sfile>:h/vim9/test_libparser.vim
 
 # Runner!
-const success = tt.RunBabyRun(get(g:, 'test', '_CT'))
+const success = tt.Run(get(g:, 'test', 'CT'))
 
 # Cleanup {{{
 delete(COLDIR, "d") # Delete if empty

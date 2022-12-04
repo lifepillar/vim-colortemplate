@@ -1,0 +1,354 @@
+*librelalg.txt*	For Vim version 9.0	Last change: 2022 Dec 3 
+
+This library is an implementation of Relational Algebra in Vim 9 script.
+
+1. Tutorial				|librelalg-tutorial|
+2. Defining a database			|librelalg-ddl|
+3. Manipulating a database		|librelalg-dml|
+4. Relational Algebra			|librelalg-ra|
+
+==============================================================================
+1. Tutorial					*librelalg-tutorial*
+
+Suppose that you want to write a script that keeps track of “tags” associated
+to each buffer. Since data is king, a good place to start is a *data* *model*
+for the information you likely need to keep track of. A hypothetical,
+simplified, Relational data model (using IDEF1X notation) might look like
+this:
+>
+	 Buffer
+	┌───────────────┐
+	│ BufId     Int │
+	├───────────────┤
+	│ BufName   Str │ AK
+	└───────┬───────┘
+	        │
+	  is marked by / 
+	    appears in
+	        │
+	 Tag    ●
+	╭───────────────╮
+	│ BufId     Str │ FK
+	│ TagName   Str │
+	│ Line      Int │
+	├───────────────┤
+	│ Column    Int │
+	╰───────────────╯
+<
+Note: IDEF1X is the ISO standard for Relational modelling (ISO/IEC/IEEE
+31320-2). The ISO document is not available for free, but the relevant topics
+are derived (essentially verbatim) from the older FIPS 184
+(https://archive.org/details/federalinformati184nati/). Despite its age, the
+latter document, and its Annex A in particular, is a good description of the
+methodology.
+
+If you are not familiar with IDEF1X or similar diagramming tools, each
+rectangle represents an *entity* (your script will deal with “buffers” and
+“tags”). Each entity has a name, written above the box, and attributes, which
+are written inside the box. The attributes will be the actual pieces of data
+stored and manipulated by your script. Each box also contains a separator
+line: the attributes above the separator form the *primary* *key* of the
+entity—that is, the main identifier of each entity instance; the attributes
+below the separator are further descriptors of the entity.
+
+Entities are connected by *relationships* represented by lines joining two
+entities. The above diagram contains a one-to-many relationship, the dot
+representing the “many” side: in general, each buffer is associated to many
+tags, but each tags is associated to one and only one buffer. The entity on
+the “one” side of the relationship (Buffer, in this example) is called the
+*parent* entity; the entity on the “many” side of the relationship (Tag, in
+this example) is called a *child* entity. Each relationship is described by
+two verb phrases separated by a slash: the first verb phrase is read from
+parent to child (“A buffer is marked by zero or more tags”); the second is
+read from child to parent (“a tag appears in one buffer”).
+
+AK stands for Alternate Key, and FK stands for Foreign Key. An alternate key
+is an alternative identifier for the entity: in this example, it is assumed
+that no two buffers share the same `BufName`, so `BufName` could be used to
+identify a buffer instead of `BufId`. A foreign key is the primary key of
+a parent entity, which is “migrated” into the child entity by virtue of its
+relationship with the parent. When a foreign key is entirely part of the
+primary key of the child, the child entity is *dependent* on its parent: in
+this example, that means that it is not possible to designate a tag without
+referencing the buffer in which the tag appears (dependent entities are drawn
+as rectangles with rounded corners, although the rounded corners may not be
+particularly prominent in the extended ASCII rendition above). In this
+example, Buffer is an *independent* entity: the existence of a buffer does not
+depend on anything else in this model. The distinction between independent and
+dependent entities has a number of implications: among the rest, it determines
+the order in which the data is added (you cannot insert tags before inserting
+the corresponding buffers).
+
+So, the diagram above captures the following facts:
+
+- Buffer is independent;
+- a buffer is is identified by BufId;
+- a buffer is alternatively identified by BufName;
+- a buffer is marked by zero or more tags;
+- Tag is dependent on Buffer;
+- a tag is identified by {BufId, TagName, Line};
+- a tag is described by {Column};
+- a tag appears in one (an only one) buffer.
+
+Data Definition ~
+
+Once a data model is available, librelalg can be used to turn it into code. If
+your model is good, that is a relatively straightforward task:
+
+1. Import the library and optionally define aliases for the imported items you
+   are going to use:
+>
+	vim9script
+
+	import 'librelalg.vim' as ra
+
+	const Bool     = ra.Bool
+	const Int      = ra.Int
+	const Str      = ra.Str
+	const Relation = ra.Relation
+	const Insert   = ra.Insert
+        # etc.
+<
+   Note: in the following, for clarity and conciseness, we will write
+   librelalg's names without prefix, as if aliases such as those above had
+   been defined for all the imported items.
+
+2. Define one *base* relation for each entity:
+>
+	var Buffer = Relation('Buffer', {
+	    'BufId':   Int,
+	    'BufName':  Str,
+	  },
+	  [['BufId'], ['BufName']]
+	)
+
+	var Tag = Relation('Tag', {
+	    'BufId':   Int,
+	    'TagName': Str,
+	    'Line':    Int,
+	    'Column':  Int,
+	  },
+	  [['BufId', 'TagName', 'Line']]
+	)
+<
+   The three mandatory arguments of `Relation()` are the relation name, the
+   relation schema, which is a dictionary mapping attribute names to the
+   corresponding data types, and the keys.
+
+   Note: librelalg does not explicitly distinguish between a primary key and
+   the alternate keys. The first listed key can be considered the primary key:
+   in general, the first listed key should be the smallest and/or the most
+   frequently used, because in some cases librelalg internally uses the first
+   key for lookups.
+
+   Note: an index is built for each key. The indexes help speed up some
+   operations and are used to enforce key constraints. The order of the
+   attributes in a compound key matters for performance. In the example above,
+   if tags are often looked up by name, it may be more efficient to define the
+   primary key as `['TagName', 'BufId', 'Line']` rather than `['BufId',`
+   `'TagName', 'Line']` as was done above. In general, the attributes that are
+   accessed more frequently should appear earlier in the key.
+
+   Note: the value returned by `Relation()`, which in this document is
+   referred to as a “relation object” or simply as a “relation”, is a complex
+   object consisting of the relation instance itself (that is, the set of
+   tuples) plus its schema, keys, constraints, and indexes. If you want to
+   retrieve just the relation instance, you may access the `instance`
+   attribute of the relation object (e.g., `Tag.instance`).
+
+3. Add the relevant inter-relational constraints:
+>
+        const Fk = ForeignKey(Tag, ['BufId'], Buffer, ['BufId'], 'is marked by')
+	Tag.constraints->add(Fk)
+<
+  The first line defines a foreign key constraint from `BufId` in `Tag` to
+  `BufId` in `Buffer`. The verb associated to the constraint (as read from the
+  parent to the child entity—`is marked by` in this example) can optionally be
+  specified: that is used in error messages when the referential integrity is
+  violated. The second line attaches the foreign key constraint to the `Tag`
+  relation. A foreign key constraint (the value returned by `ForeignKey()`) is
+  just a function. All constraints in librelalg are defined by functions. See
+  the next point for an example.
+
+4. Add optional custom constraints. For instance, if you want to constrain
+   a tag's column to be a value between 1 and 80, you may declare the
+   constraint as a function that throws an error when its check fails, and
+   attach it to the relevant relation:
+>
+	def ColumnIsValid(t: dict<any>, op: string): void
+	  if t.Column < 1 || t.Column > 80
+	    throw printf('Invalid column: %d', t.Column)
+	  endif
+	enddef
+
+	Tag.constraints->add(ColumnIsValid)
+<
+   Note: constraint functions have a fixed signature: the first argument is
+   a tuple, that is, a dictionary (see below). The second argument (unused in
+   this example) determines the operation (insert, update or delete) that
+   triggered the check.
+
+   Note: constraints are checked in the order in which they are added to
+   a relation.
+
+Data Manipulation ~
+
+Once the database is defined, one may start populating each base relation with
+tuples. Each tuple is just a dictionary conforming to the corresponding
+relation schema:
+>
+	Buffer->Insert({'BufId': 1, 'BufName': 'foobar'})
+
+	Tag->InsertMany([
+	  {'BufId': 1, 'TagName': 'abc', 'Line': 3, 'Column': 9},
+	  {'BufId': 1, 'TagName': 'xyz', 'Line': 4, 'Column': 4},
+	])
+<
+Of course, any attempt to violate a constraint is rejected with an error:
+>
+	Buffer->Insert({'BufId': 2, 'BufName': 'foobar'})
+<
+This results in:
+>
+	Duplicate key value: ['BufName'] = ('foobar') already exist
+<
+because `BufName` is a key. Referential integrity is also guaranteed. For
+instance:
+>
+	Tag->Insert({'BufId': 5, 'TagName': 'x', 'Line': 3, 'Column': 9})
+<
+will raise:
+>
+	Buffer is marked by Tag: Tag['BufId'] = (5) is not present in Buffer['BufId']	
+<
+And, of course, you are not allowed to insert an invalid column number either:
+>
+	Tag->Insert({'BufId': 1, 'TagName': 'x', 'Line': 3, 'Column': 99})
+<
+This insertion is rejected with:
+>
+	Invalid column: 99
+<
+Updates and deletions are possible, too. Only attributes that are not part of
+any key (i.e., pure descriptors) can be updated: if you want to update a key
+attribute, you must delete the corresponding tuple and insert a new one. This
+may seem an unnecessary restriction, but, besides keeping the implementation
+somewhat simpler, it is conceptually a sound approach: a key represents the
+identity of an entity, and identity is immutable. So, if you want to change
+a key, in fact you want to refer to another entity. Hence, you have to delete
+the old entity and add a new one.
+
+Queries ~
+
+The power of Relational Algebra lies in its powerful query language as well as
+in the simplicity of its data structures: librelalg provides all the
+fundamental operations (set operations, selection, projection, joins,
+renaming) as well as some extra operations (division, semi-joins, anti-joins,
+group-by). All operators are implemented using a "push-based" strategy:
+without entering into technical details, that means that queries are typically
+expanded into tight loops and executed as efficiently as hand-written code.
+
+There are three types of operators:
+
+- "root" operators: these take as input a relation instance and emit tuples;
+- "leaf" operators: these collect tuples and build a relation instance;
+- "pipeline" operators: these process tuples and emit (transformed) tuples.
+
+The most important rule is that each query should start with a root operator
+and should end with a leaf operator. A query may chain zero or more
+intermediate pipeline operators.
+
+The only root operator is `Scan()` (with `Foreach()` as a synonym). The most
+common leaf operator is `Build()` (you may use `Materialize()` or `Query()` as
+synonyms). Other leaf operators are `Sort()` and `SortBy()`.
+
+The simplest query consists in retrieving a copy of a relation instance. This
+can be expressed as follows:
+>
+	const result = Scan(Tag)->Build()
+<
+The `Scan()` function iterates over each tuple of the `Tag` relation and
+passes it to the next operator (we usually say that `Scan()` "emits" the
+tuples of its input relation). The next operator in this example is `Build()`,
+which simply gathers each tuple as it receives it and builds a new relation
+instance, which it eventually returns (we usually say that `Build()`
+"consumes" the received tuples and "materializes" a relation instance).
+Therefore, the output is a copy of the content of `Tag`.
+
+Note: strictly speaking, Relational Algebra operators act on relation
+instances. So, the above query should be written:
+>
+	const result = Scan(Tag.instance)->Build()
+<
+As a convenience, however, librelalg's operators accept relation objects, too:
+they access the relation instance internally. The result of a query, however,
+is always a relation instance (see below).
+
+Note: the results of queries are *derived* relations. Derived relations do not
+have the same structure as base relations. In particular, they do not have
+associated keys, constraints or indexes. So, in the previous example, `result`
+is not a copy of `Tag`: it is a copy of `Tag.instance`.
+
+
+Note: Other ways to write the query above, using the synonyms, are the
+following:
+>
+	Query(Scan(Tag))
+	Foreach(Tag)->Materialize()
+	Materialize(Scan(Tag))
+<
+When writing queries, chaining operators with `->` is typically more
+intuitive, but you may use the style and the synonyms you prefer. Although
+`Query()`, `Build()`, and `Materialize()` have the same meaning, `Query()` is
+typically used in prefix form, and `Build()` is used when chaining operators;
+`Materialize()` can be used in both cases, but it is more verbose.
+
+In practice, one would never write the simple query above, as
+`copy(Tag.instance)` would achieve the same result more efficiently. Typical
+queries will use some pipeline operator, which consumes tuples and emits some
+other tuples, without (typically) ever building any intermediate relation.
+Suppose, for example, that we want to obtain all the tags in buffer 1. This
+can be done as follows:
+>
+	echo Scan(Tag)->Select((t) => t.BufId == 1)->Build()
+<
+The `Select()` operator applies the given function (a lambda in this example)
+to each received tuple, and emits only the tuples for which the function
+returns true. If you just wanted to access the tag names and corresponding
+lines, you might just pipe a projection operator, too:
+>
+	const filteredTags = Scan(Tag)
+	    ->Select((t) => t.BufId == 1)
+	    ->Project(['TagName', 'Line'])
+	    ->Build()
+<
+You may pretty-print a relation instance with `Table()`:
+>
+	echo Table(filteredTags, 'Filtered Tags')
+<
+Pipelining is straightforward for unary operators. But, what if you want to
+perform a join or perform some other binary operation? Pipelining can still be
+used, but one of the arguments must be a relation (object or instance). For
+example, the natural join of `Buffer` and `Tag` can be written as follows:
+>
+	const btags = Scan(Buffer)->NatJoin(Tag)->SortBy(['TagName'])
+        echo Table(btags, 'Buffer tags')
+<
+In this query, `SortBy()` has been used as a leaf operator, which builds the
+output as `Build()` does, but sorted according to the specified attribute(s).
+Of course, since the natural join is commutative, the same query can be
+equivalently written as follows:
+>
+	const btags = Scan(Tag)->NatJoin(Buffer)->SortBy(['TagName'])
+<
+
+==============================================================================
+2. Defining a database				*librelalg-ddl*
+
+==============================================================================
+3. Manipulating a database			*librelalg-dml*
+
+==============================================================================
+4. Relatinal Algebra				*librelalg-ra*
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

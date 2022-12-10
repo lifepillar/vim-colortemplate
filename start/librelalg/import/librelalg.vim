@@ -565,14 +565,14 @@ enddef
 # Integrity constraints {{{
 # A type constraint checks whether a tuple is compatible with a schema.
 #
-# schema [TTupleSchema]: a tuple schema
-#
-# Return type: TConstraint
-def TypeConstraint(schema: dict<number>): func(dict<any>, string): void
-  return (t: dict<any>, op: string): void => {
+# R  [TRelSchema]: a relational schema
+def TypeConstraint(R: dict<any>): void
+  const Check = (t: dict<any>, op: string): void => {
     if op == 'D' # Skip on delete
       return
     endif
+
+    const schema = R.schema
 
     if sort(keys(schema)) != sort(keys(t))
       throw ErrIncompatibleTuple(t, schema)
@@ -584,6 +584,8 @@ def TypeConstraint(schema: dict<number>): func(dict<any>, string): void
       endif
     endfor
   }
+
+  R.constraints->add(Check)
 enddef
 
 # A key constraint prevents duplicate keys
@@ -603,6 +605,7 @@ export def Key(R: dict<any>, key: list<string>): void
       throw ErrDuplicateKey(key, t)
     endif
   }
+
   R.constraints->add(K)
 enddef
 
@@ -638,6 +641,7 @@ export def ForeignKey(
       endif
     endif
   }
+
   R.constraints->add(FkCheck)
 
   const DelCheck = (t: dict<any>, op: string): void => {
@@ -648,6 +652,7 @@ export def ForeignKey(
       endif
     endif
   }
+
   S.constraints->add(DelCheck)
 enddef
 # }}}
@@ -673,7 +678,7 @@ export def Relation(
   }
 
   if checkType
-    R.constraints->add(TypeConstraint(schema))
+    TypeConstraint(R)
   endif
 
   for key in keys

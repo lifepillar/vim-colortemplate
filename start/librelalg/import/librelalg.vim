@@ -701,8 +701,9 @@ export def KeyAttributes(R: dict<any>): list<string>
 enddef
 
 export def Descriptors(R: dict<any>): list<string>
+  var allAttributes = Attributes(R)
   const keyAttributes = KeyAttributes(R)
-  return filter(Attributes(R), (_, a) => index(keyAttributes, a) == -1)
+  return filter(allAttributes, (_, a) => index(keyAttributes, a) == -1)
 enddef
 
 export def Insert(R: dict<any>, t: dict<any>): void

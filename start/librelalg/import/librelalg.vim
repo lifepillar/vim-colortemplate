@@ -379,6 +379,10 @@ def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
                 attr, rightType, value, wrongType)
 enddef
 
+def ErrKeyAlreadyDefined(name: string, key: list<string>): string
+  return printf('Key %s already defined in %s', key, name)
+enddef
+
 def ErrDuplicateKey(key: list<string>, t: dict<any>): string
   const tStr = join(mapnew(key, (_, v) => string(t[v])), ', ')
   return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
@@ -593,6 +597,12 @@ enddef
 # R   [TRelSchema]: a relational schema
 # key [TKey]: a list of attributes that form a key for a certain relation
 export def Key(R: dict<any>, key: list<string>): void
+  if index(R.keys, key) != -1
+    throw ErrKeyAlreadyDefined(R.name, key)
+  endif
+
+  R.keys->add(key)
+
   var index = MakeIndex(key)
 
   R.indexes[string(key)] = index
@@ -672,7 +682,7 @@ export def Relation(
     name:        name,
     schema:      schema,
     instance:    [],
-    keys:        keys,
+    keys:        [],
     indexes:     {},
     constraints: [],
   }

@@ -16,6 +16,7 @@ const EquiJoin             = ra.EquiJoin
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const GroupBy              = ra.GroupBy
+const Key                  = ra.Key
 const Insert               = ra.Insert
 const InsertMany           = ra.InsertMany
 const Int                  = ra.Int
@@ -79,6 +80,14 @@ def Test_RA_CreateEmptyRelation()
   assert_equal(['A', 'B'], sort(Attributes(R)))
   assert_equal(['A'], KeyAttributes(R))
   assert_equal(['B'], Descriptors(R))
+enddef
+
+def Test_RA_KeyCannotBeRedefined()
+  RR = Relation('RR', {A: Int, B: Str}, [['A']])
+  AssertFails('Key(RR, ["A"])', "Key ['A'] already defined in RR")
+  Key(RR, ["B"])
+  Key(RR, ["A", "B"])  # Superkeys are also allowed
+  assert_equal([["A"], ["B"], ["A", "B"]], RR.keys)
 enddef
 
 def Test_RA_Insert()

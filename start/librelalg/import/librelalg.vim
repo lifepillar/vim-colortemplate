@@ -340,7 +340,7 @@ enddef
 # }}}
 # }}}
 
-# Data manipulation {{{
+# Data definition and manipulation {{{
 # type TType        number
 # type TTupleSchema dict<TType>
 # type TRelSchema   dict<any>
@@ -348,7 +348,7 @@ enddef
 # type TConstraint  func(Tuple, string): void
 # type TIndex       dict<any>
 
-# Data types supported in relations
+# Data types  {{{
 export const Int     = v:t_number
 export const Str     = v:t_string
 export const Bool    = v:t_bool
@@ -368,6 +368,7 @@ const TypeString = {
   [v:t_channel]: 'channel',
   [v:t_blob]:    'blob'
 }
+# }}}
 
 # Error messages {{{
 def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
@@ -393,7 +394,7 @@ def ErrReferentialIntegrity(rname: string, fkey: list<string>, sname: string, ke
                 sname, verbphrase, rname, rname, fkey, tStr, sname, key)
 enddef
 
-def ErrDeletionReferentialIntegrity(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
+def ErrReferentialIntegrityDeletion(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
   const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
   return printf("%s %s %s: %s%s = (%s) is referenced by %s%s",
                 sname, verbphrase, rname, sname, key, tStr, rname, fkey)
@@ -440,6 +441,15 @@ enddef
 # We may not want that.
 def String(value: any): string
   return type(value) == v:t_string ? value : string(value)
+enddef
+
+def TypeName(atype: number): string
+  return get(TypeString, atype, 'unknown')
+enddef
+
+def SchemaAsString(schema: dict<number>): string
+  const schemaStr = mapnew(schema, (attr, atype): string => printf("%s: %s", attr, TypeName(atype)))
+  return '{' .. join(values(schemaStr), ', ') .. '}'
 enddef
 
 # v1 and v2 must have the same type
@@ -552,15 +562,7 @@ export def Lookup(R: dict<any>, key: list<string>, value: list<any>): dict<any>
 enddef
 # }}}
 
-def TypeName(atype: number): string
-  return get(TypeString, atype, 'unknown')
-enddef
-
-def SchemaAsString(schema: dict<number>): string
-  const schemaStr = mapnew(schema, (attr, atype): string => printf("%s: %s", attr, TypeName(atype)))
-  return '{' .. join(values(schemaStr), ', ') .. '}'
-enddef
-
+# Integrity constraints {{{
 # A type constraint checks whether a tuple is compatible with a schema.
 #
 # schema [TTupleSchema]: a tuple schema
@@ -588,12 +590,12 @@ enddef
 #
 # R   [TRelSchema]: a relational schema
 # key [TKey]: a list of attributes that form a key for a certain relation
-export def Key(R: dict<any>, key: list<string>): func(dict<any>, string): void
+export def Key(R: dict<any>, key: list<string>): void
   var index = MakeIndex(key)
 
   R.indexes[string(key)] = index
 
-  return (t: dict<any>, op: string): void => {
+  const K = (t: dict<any>, op: string): void => {
     if op == 'I'
       if index->SearchKey(t) is KEY_NOT_FOUND
         return
@@ -601,6 +603,7 @@ export def Key(R: dict<any>, key: list<string>): func(dict<any>, string): void
       throw ErrDuplicateKey(key, t)
     endif
   }
+  R.constraints->add(K)
 enddef
 
 # Define a foreign key from R[fkey] to S[key].
@@ -610,7 +613,7 @@ export def ForeignKey(
   S: dict<any>,
   key: list<string>,
   verbphrase = 'has'
-): func(dict<any>, string): void
+): void
   if len(fkey) != len(key)
     throw ErrForeignKeySize(R.name, fkey, S.name, key)
   endif
@@ -626,20 +629,28 @@ export def ForeignKey(
     throw ErrForeignKeyTarget(R.name, fkey, S.name, key)
   endif
 
-  S.referenced->add({source: R, fkey: fkey, key: key, verb: verbphrase})
-
   const keyStr = string(key)
 
-  return (t: dict<any>, op: string): void => {
-    if op == 'D' # Skip on delete
-      return
-    endif
-
-    if S.indexes[keyStr]->SearchKey(t, fkey) is KEY_NOT_FOUND
-      throw ErrReferentialIntegrity(R.name, fkey, S.name, key, t, verbphrase)
+  const FkCheck = (t: dict<any>, op: string): void => {
+    if op != 'D'
+      if S.indexes[keyStr]->SearchKey(t, fkey) is KEY_NOT_FOUND
+        throw ErrReferentialIntegrity(R.name, fkey, S.name, key, t, verbphrase)
+      endif
     endif
   }
+  R.constraints->add(FkCheck)
+
+  const DelCheck = (t: dict<any>, op: string): void => {
+    if op == 'D'
+      const reftuples = Scan([t])->EquiJoin(R, fkey, key, '_')->Build()
+      if !Empty(reftuples)
+        throw ErrReferentialIntegrityDeletion(S.name, fkey, R.name, key, reftuples[0], verbphrase)
+      endif
+    endif
+  }
+  S.constraints->add(DelCheck)
 enddef
+# }}}
 
 export def Relation(
   name: string,
@@ -659,7 +670,6 @@ export def Relation(
     keys:        keys,
     indexes:     {},
     constraints: [],
-    referenced:  [], # foreign keys referencing this relation
   }
 
   if checkType
@@ -667,7 +677,7 @@ export def Relation(
   endif
 
   for key in keys
-    R.constraints->add(Key(R, key))
+    Key(R, key)
   endfor
 
   for OtherConstraint in constraints
@@ -745,16 +755,6 @@ export def Update(R: dict<any>, t: dict<any>, upsert = false): void
 enddef
 
 export def Delete(R: dict<any>, Pred: func(dict<any>): bool): void
-  # Check that referential integrity would not be violated by deleting the tuples
-  const to_be_deleted = Scan(R)->Select((t) => Pred(t))->Build()
-
-  for ref in R.referenced
-    const referencing = Scan(to_be_deleted)->EquiJoin(ref.source, ref.fkey, ref.key, '_')->Build()
-    if !Empty(referencing)
-      throw ErrDeletionReferentialIntegrity(ref.source.name, ref.fkey, R.name, ref.key, referencing[0], ref.verb)
-    endif
-  endfor
-
   const DeletePred = (i: number, t: dict<any>): bool => {
     if Pred(t)
       for CheckConstraint in R.constraints

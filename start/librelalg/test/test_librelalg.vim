@@ -245,15 +245,14 @@ def Test_RA_ForeignKey()
   RR = Relation('RR', {A: Str}, [['A']])
   SS = Relation('SS', {B: Int, C: Str}, [['B']])
 
-  AssertFails("SS.constraints->add(ForeignKey(SS, ['B', 'C'], RR, ['A']))",
+  AssertFails("ForeignKey(SS, ['B', 'C'], RR, ['A'])",
               "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
-  AssertFails("SS.constraints->add(ForeignKey(SS, ['C'], RR, ['C'])",
+  AssertFails("ForeignKey(SS, ['C'], RR, ['C'])",
               "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
-  AssertFails("SS.constraints->add(ForeignKey(SS, ['A'], RR, ['A']))",
+  AssertFails("ForeignKey(SS, ['A'], RR, ['A'])",
               "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
 
-  var SS_Ref_RR = ForeignKey(SS, ['C'], RR, ['A'], 'constrains')
-  SS.constraints->add(SS_Ref_RR)
+  ForeignKey(SS, ['C'], RR, ['A'], 'constrains')
 
   RR->InsertMany([
     {A: 'ab'},

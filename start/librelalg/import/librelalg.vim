@@ -1,122 +1,5 @@
 vim9script
 
-# Error messages {{{
-def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
-  const value = t[attr]
-  const wrongType = TypeName(type(value))
-  const rightType = TypeName(schema[attr])
-  return printf("Attribute %s is of type %s, but value '%s' of type %s was provided",
-                attr, rightType, value, wrongType)
-enddef
-
-def ErrDuplicateKey(key: list<string>, t: dict<any>): string
-  const tStr = join(mapnew(key, (_, v) => string(t[v])), ', ')
-  return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
-enddef
-
-def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
-  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
-enddef
-
-def ErrReferentialIntegrity(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
-  const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
-  return printf("%s %s %s: %s%s = (%s) is not present in %s%s",
-                sname, verbphrase, rname, rname, fkey, tStr, sname, key)
-enddef
-
-def ErrDeletionReferentialIntegrity(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
-  const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
-  return printf("%s %s %s: %s%s = (%s) is referenced by %s%s",
-                sname, verbphrase, rname, sname, key, tStr, rname, fkey)
-enddef
-
-def ErrForeignKeySize(rname: string, fkey: list<string>, sname: string, key: list<string>): string
-  return printf("Wrong foreign key size: %s%s -> %s%s", rname, fkey, sname, key)
-enddef
-
-def ErrForeignKeySource(rname: string, fkey: list<string>, sname: string, key: list<string>, attr: string): string
-  return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
-                rname, fkey, sname, key, attr, rname)
-enddef
-
-def ErrForeignKeyTarget(rname: string, fkey: list<string>, sname: string, key: list<string>): string
-  return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
-                rname, fkey, sname, key, key, sname)
-enddef
-
-def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
-  const schemaStr = SchemaAsString(schema)
-  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
-enddef
-
-def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
-  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
-enddef
-
-def ErrNoKey(relname: string): string
-  return printf("No key specified for relation %s", relname)
-enddef
-
-def ErrNotAKey(relname: string, key: list<string>): string
-  return printf("%s is not a key of %s", key, relname)
-enddef
-
-def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
-  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
-enddef
-# }}}
-
-# Helper functions {{{
-# string() turns 'A' into a string of length 3, with quotes.
-# We may not want that.
-def String(value: any): string
-  return type(value) == v:t_string ? value : string(value)
-enddef
-
-# v1 and v2 must have the same type
-def CompareValues(v1: any, v2: any): number
-  if v1 == v2
-    return 0
-  endif
-  if type(v1) == v:t_bool # Only true/false (none is not allowed)
-    return v1 && !v2 ? 1 : -1
-  else
-    return v1 > v2 ? 1 : -1
-  endif
-enddef
-
-def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
-  for a in attrList
-    const cmp = CompareValues(t[a], u[a])
-    if cmp == 0
-      continue
-    endif
-    return cmp
-  endfor
-  return 0
-enddef
-
-def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
-  var u = {}
-  for attr in attrList
-    u[attr] = t[attr]
-  endfor
-  return u
-enddef
-
-# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
-def Zip(l1: list<any>, l2: list<any>): dict<any>
-  const n = len(l1)
-  var zipdict: dict<any> = {}
-  var i = 0
-  while i < n
-    zipdict[String(l1[i])] = l2[i]
-    ++i
-  endwhile
-  return zipdict
-enddef
-# }}}
-
 # Relational Algebra {{{
 # A push-based query engine. Loosely inspired by
 # https://arxiv.org/abs/1610.09166:
@@ -485,6 +368,123 @@ const TypeString = {
   [v:t_channel]: 'channel',
   [v:t_blob]:    'blob'
 }
+
+# Error messages {{{
+def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
+  const value = t[attr]
+  const wrongType = TypeName(type(value))
+  const rightType = TypeName(schema[attr])
+  return printf("Attribute %s is of type %s, but value '%s' of type %s was provided",
+                attr, rightType, value, wrongType)
+enddef
+
+def ErrDuplicateKey(key: list<string>, t: dict<any>): string
+  const tStr = join(mapnew(key, (_, v) => string(t[v])), ', ')
+  return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
+enddef
+
+def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
+  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
+enddef
+
+def ErrReferentialIntegrity(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
+  const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
+  return printf("%s %s %s: %s%s = (%s) is not present in %s%s",
+                sname, verbphrase, rname, rname, fkey, tStr, sname, key)
+enddef
+
+def ErrDeletionReferentialIntegrity(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
+  const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
+  return printf("%s %s %s: %s%s = (%s) is referenced by %s%s",
+                sname, verbphrase, rname, sname, key, tStr, rname, fkey)
+enddef
+
+def ErrForeignKeySize(rname: string, fkey: list<string>, sname: string, key: list<string>): string
+  return printf("Wrong foreign key size: %s%s -> %s%s", rname, fkey, sname, key)
+enddef
+
+def ErrForeignKeySource(rname: string, fkey: list<string>, sname: string, key: list<string>, attr: string): string
+  return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
+                rname, fkey, sname, key, attr, rname)
+enddef
+
+def ErrForeignKeyTarget(rname: string, fkey: list<string>, sname: string, key: list<string>): string
+  return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
+                rname, fkey, sname, key, key, sname)
+enddef
+
+def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
+  const schemaStr = SchemaAsString(schema)
+  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
+enddef
+
+def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
+  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
+enddef
+
+def ErrNoKey(relname: string): string
+  return printf("No key specified for relation %s", relname)
+enddef
+
+def ErrNotAKey(relname: string, key: list<string>): string
+  return printf("%s is not a key of %s", key, relname)
+enddef
+
+def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
+  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
+enddef
+# }}}
+
+# Helper functions {{{
+# string() turns 'A' into a string of length 3, with quotes.
+# We may not want that.
+def String(value: any): string
+  return type(value) == v:t_string ? value : string(value)
+enddef
+
+# v1 and v2 must have the same type
+def CompareValues(v1: any, v2: any): number
+  if v1 == v2
+    return 0
+  endif
+  if type(v1) == v:t_bool # Only true/false (none is not allowed)
+    return v1 && !v2 ? 1 : -1
+  else
+    return v1 > v2 ? 1 : -1
+  endif
+enddef
+
+def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
+  for a in attrList
+    const cmp = CompareValues(t[a], u[a])
+    if cmp == 0
+      continue
+    endif
+    return cmp
+  endfor
+  return 0
+enddef
+
+def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
+  var u = {}
+  for attr in attrList
+    u[attr] = t[attr]
+  endfor
+  return u
+enddef
+
+# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
+def Zip(l1: list<any>, l2: list<any>): dict<any>
+  const n = len(l1)
+  var zipdict: dict<any> = {}
+  var i = 0
+  while i < n
+    zipdict[String(l1[i])] = l2[i]
+    ++i
+  endwhile
+  return zipdict
+enddef
+# }}}
 
 # Indexes {{{
 def MakeIndex(key: list<string>): dict<any>

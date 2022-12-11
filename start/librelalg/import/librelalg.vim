@@ -1,5 +1,69 @@
 vim9script
 
+# Helper functions {{{
+# string() turns 'A' into a string of length 3, with quotes.
+# We may not want that.
+def String(value: any): string
+  return type(value) == v:t_string ? value : string(value)
+enddef
+
+def TypeName(atype: number): string
+  return get(TypeString, atype, 'unknown')
+enddef
+
+def SchemaAsString(schema: dict<number>): string
+  const schemaStr = mapnew(schema, (attr, atype): string => printf("%s: %s", attr, TypeName(atype)))
+  return '{' .. join(values(schemaStr), ', ') .. '}'
+enddef
+
+def IsRelationInstance(R: any): bool
+  return type(R) == v:t_list
+enddef
+
+# v1 and v2 must have the same type
+def CompareValues(v1: any, v2: any): number
+  if v1 == v2
+    return 0
+  endif
+  if type(v1) == v:t_bool # Only true/false (none is not allowed)
+    return v1 && !v2 ? 1 : -1
+  else
+    return v1 > v2 ? 1 : -1
+  endif
+enddef
+
+def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
+  for a in attrList
+    const cmp = CompareValues(t[a], u[a])
+    if cmp == 0
+      continue
+    endif
+    return cmp
+  endfor
+  return 0
+enddef
+
+def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
+  var u = {}
+  for attr in attrList
+    u[attr] = t[attr]
+  endfor
+  return u
+enddef
+
+# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
+def Zip(l1: list<any>, l2: list<any>): dict<any>
+  const n = len(l1)
+  var zipdict: dict<any> = {}
+  var i = 0
+  while i < n
+    zipdict[String(l1[i])] = l2[i]
+    ++i
+  endwhile
+  return zipdict
+enddef
+# }}}
+
 # Relational Algebra {{{
 # A push-based query engine. Loosely inspired by
 # https://arxiv.org/abs/1610.09166:
@@ -17,7 +81,7 @@ vim9script
 
 # Root operators (requiring a relation as input) {{{
 export def Scan(R: any): func(func(dict<any>))
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     for t in rel
@@ -120,7 +184,7 @@ export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<
     }
   endif
 
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -166,7 +230,7 @@ def NatJoinCheck(t: dict<any>, u: dict<any>): bool
 enddef
 
 export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -187,7 +251,7 @@ export def Product(Cont: func(func(dict<any>)), R: any, prefix = ''): func(func(
 enddef
 
 export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -202,7 +266,7 @@ export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
 enddef
 
 export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -217,7 +281,7 @@ export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
 enddef
 
 export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -232,7 +296,7 @@ export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, d
 enddef
 
 export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -281,7 +345,7 @@ enddef
 # where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
 # appearing in r but not in s.
 export def Divide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
-  const s = type(S) == v:t_list ? S : S.instance
+  const s = IsRelationInstance(S) ? S : S.instance
 
   if empty(s)
     return Cont
@@ -437,66 +501,6 @@ enddef
 
 def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
   return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
-enddef
-# }}}
-
-# Helper functions {{{
-# string() turns 'A' into a string of length 3, with quotes.
-# We may not want that.
-def String(value: any): string
-  return type(value) == v:t_string ? value : string(value)
-enddef
-
-def TypeName(atype: number): string
-  return get(TypeString, atype, 'unknown')
-enddef
-
-def SchemaAsString(schema: dict<number>): string
-  const schemaStr = mapnew(schema, (attr, atype): string => printf("%s: %s", attr, TypeName(atype)))
-  return '{' .. join(values(schemaStr), ', ') .. '}'
-enddef
-
-# v1 and v2 must have the same type
-def CompareValues(v1: any, v2: any): number
-  if v1 == v2
-    return 0
-  endif
-  if type(v1) == v:t_bool # Only true/false (none is not allowed)
-    return v1 && !v2 ? 1 : -1
-  else
-    return v1 > v2 ? 1 : -1
-  endif
-enddef
-
-def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
-  for a in attrList
-    const cmp = CompareValues(t[a], u[a])
-    if cmp == 0
-      continue
-    endif
-    return cmp
-  endfor
-  return 0
-enddef
-
-def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
-  var u = {}
-  for attr in attrList
-    u[attr] = t[attr]
-  endfor
-  return u
-enddef
-
-# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
-def Zip(l1: list<any>, l2: list<any>): dict<any>
-  const n = len(l1)
-  var zipdict: dict<any> = {}
-  var i = 0
-  while i < n
-    zipdict[String(l1[i])] = l2[i]
-    ++i
-  endwhile
-  return zipdict
 enddef
 # }}}
 
@@ -810,14 +814,25 @@ export def RelEq(r: list<dict<any>>, s: list<dict<any>>): bool
 enddef
 
 export def Empty(R: any): bool
-  const rel = type(R) == v:t_list ? R : R.instance
+  const rel = IsRelationInstance(R) ? R : R.instance
   return empty(rel)
 enddef
 
-# Returns a textual representation of a relation instance
-export def Table(rel: list<dict<any>>, name = 'Relation'): string
+# Returns a textual representation of a relation
+export def Table(R: any, name = null_string): string
+  var rel: list<dict<any>>
+  var relname: string
+
+  if IsRelationInstance(R)
+    rel = R
+    relname = empty(name) ? 'Relation' : name
+  else
+    rel = R.instance
+    relname = empty(name) ? R.name : name
+  endif
+
   if empty(rel)
-    return printf("%s\n%s\n", name, repeat('-', len(name)))
+    return printf("%s\n%s\n", relname, repeat('-', len(relname)))
   endif
 
   const attributes = keys(rel[0])
@@ -839,7 +854,7 @@ export def Table(rel: list<dict<any>>, name = 'Relation'): string
   endfor
 
   # Pretty print
-  var table = printf("%s\n%s\n", name, repeat('-', totalWidth))
+  var table = printf("%s\n%s\n", relname, repeat('-', totalWidth))
   table ..= join(mapnew(attributes, (i, a) => printf('%' .. width[i] .. 's', a)))
   table ..= "\n"
 

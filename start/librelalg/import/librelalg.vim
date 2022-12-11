@@ -506,6 +506,10 @@ enddef
 def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
   return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
 enddef
+
+def ErrInvalidConstraintClause(op: string): string
+  return printf("Expected one of 'I' (insert), 'U' (update), 'D' (deletion), but got %s", op)
+enddef
 # }}}
 
 # Indexes {{{
@@ -588,12 +592,8 @@ enddef
 # A type constraint checks whether a tuple is compatible with a schema.
 #
 # R  [TRelSchema]: a relational schema
-def TypeConstraint(R: dict<any>): void
-  const Check = (t: dict<any>, op: string): void => {
-    if op == 'D' # Skip on delete
-      return
-    endif
-
+def TypeCheck(R: dict<any>): void
+  const Constraint = (t: dict<any>): void => {
     const schema = R.schema
 
     if sort(keys(schema)) != sort(keys(t))
@@ -607,7 +607,8 @@ def TypeConstraint(R: dict<any>): void
     endfor
   }
 
-  R.constraints->add(Check)
+  R.constraints.I->add(Constraint)
+  R.constraints.U->add(Constraint)
 enddef
 
 # A key constraint prevents duplicate keys
@@ -633,16 +634,14 @@ export def Key(R: dict<any>, key: list<string>): void
 
   R.indexes[string(key)] = index
 
-  const K = (t: dict<any>, op: string): void => {
-    if op == 'I'
-      if index->SearchKey(key, t) is KEY_NOT_FOUND
-        return
-      endif
-      throw ErrDuplicateKey(key, t)
+  const K = (t: dict<any>): void => {
+    if index->SearchKey(key, t) is KEY_NOT_FOUND
+      return
     endif
+    throw ErrDuplicateKey(key, t)
   }
 
-  R.constraints->add(K)
+  R.constraints.I->add(K)
 enddef
 
 # Define a foreign key from R[fkey] to S[key].
@@ -670,26 +669,34 @@ export def ForeignKey(
 
   const keyStr = string(key)
 
-  const FkCheck = (t: dict<any>, op: string): void => {
-    if op != 'D'
-      if S.indexes[keyStr]->SearchKey(fkey, t) is KEY_NOT_FOUND
-        throw ErrReferentialIntegrity(R.name, fkey, S.name, key, t, verbphrase)
-      endif
+  const FkCheck = (t: dict<any>): void => {
+    if S.indexes[keyStr]->SearchKey(fkey, t) is KEY_NOT_FOUND
+      throw ErrReferentialIntegrity(R.name, fkey, S.name, key, t, verbphrase)
     endif
   }
 
-  R.constraints->add(FkCheck)
+  R.constraints.I->add(FkCheck)
+  R.constraints.U->add(FkCheck)
 
-  const DelCheck = (t: dict<any>, op: string): void => {
-    if op == 'D'
-      const reftuples = Scan([t])->EquiJoin(R, fkey, key, '_')->Build()
-      if !Empty(reftuples)
-        throw ErrReferentialIntegrityDeletion(S.name, fkey, R.name, key, reftuples[0], verbphrase)
-      endif
+  const DelCheck = (t: dict<any>): void => {
+    const reftuples = Scan([t])->EquiJoin(R, fkey, key, '_')->Build()
+    if !Empty(reftuples)
+      throw ErrReferentialIntegrityDeletion(S.name, fkey, R.name, key, reftuples[0], verbphrase)
     endif
   }
 
-  S.constraints->add(DelCheck)
+  S.constraints.D->add(DelCheck)
+enddef
+
+# Generic constraint
+export def Check(R: dict<any>, Constraint: func(dict<any>): void, opList: list<string> = ['I', 'U']): void
+  for op in opList
+    if index(['I', 'U', 'D'], op) == -1
+      throw ErrInvalidConstraintClause(op)
+    endif
+
+    R.constraints[op]->add(Constraint)
+  endfor
 enddef
 # }}}
 
@@ -697,7 +704,6 @@ export def Relation(
   name: string,
   schema: dict<number>,
   keys: list<list<string>>,
-  constraints: list<func(dict<any>, string): void> = [],
   checkType = true
 ): dict<any>
   if empty(keys)
@@ -710,19 +716,15 @@ export def Relation(
     instance:    [],
     keys:        [],
     indexes:     {},
-    constraints: [],
+    constraints: {'I': [], 'U': [], 'D': []},
   }
 
   if checkType
-    TypeConstraint(R)
+    TypeCheck(R)
   endif
 
   for key in keys
     Key(R, key)
-  endfor
-
-  for OtherConstraint in constraints
-    R.constraints->add(OtherConstraint)
   endfor
 
   return R
@@ -743,8 +745,8 @@ export def Descriptors(R: dict<any>): list<string>
 enddef
 
 export def Insert(R: dict<any>, t: dict<any>): void
-  for CheckConstraint in R.constraints
-    CheckConstraint(t, 'I')
+  for CheckConstraint in R.constraints.I
+    CheckConstraint(t)
   endfor
 
   R.instance->add(t)
@@ -791,8 +793,8 @@ export def Update(R: dict<any>, t: dict<any>, upsert = false): void
 
   # This may be tricky for some kinds of constraints, as the old tuple is
   # still in the relation at this point. But for simple checks it should work.
-  for CheckConstraint in R.constraints
-    CheckConstraint(t, 'U')
+  for CheckConstraint in R.constraints.U
+    CheckConstraint(t)
   endfor
 
   for attr in Descriptors(R)
@@ -803,8 +805,8 @@ enddef
 export def Delete(R: dict<any>, Pred: func(dict<any>): bool = (t) => true): void
   const DeletePred = (i: number, t: dict<any>): bool => {
     if Pred(t)
-      for CheckConstraint in R.constraints
-        CheckConstraint(t, 'D')
+      for CheckConstraint in R.constraints.D
+        CheckConstraint(t)
       endfor
       for key in R.keys
         const index = R.indexes[string(key)]

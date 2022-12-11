@@ -7,6 +7,7 @@ const AntiJoin             = ra.AntiJoin
 const Attributes           = ra.Attributes
 const Bool                 = ra.Bool
 const Build                = ra.Build
+const Check                = ra.Check
 const Count                = ra.Count
 const Delete               = ra.Delete
 const Descriptors          = ra.Descriptors
@@ -77,7 +78,9 @@ def Test_RA_CreateEmptyRelation()
   assert_equal([['A']], R.keys)
   assert_equal(1, len(keys(R.indexes)))
   assert_equal("['A']", keys(R.indexes)[0])
-  assert_true(!empty(R.constraints), "R does not have any associated constraint")
+  assert_true(!empty(R.constraints.I), "R does not have any insertion constraint")
+  assert_true(!empty(R.constraints.U), "R does not have any update constraint")
+  assert_true(empty(R.constraints.D),  "R should not have any delete constraint")
   assert_equal(['A', 'B'], sort(Attributes(R)))
   assert_equal(['A'], KeyAttributes(R))
   assert_equal(['B'], Descriptors(R))
@@ -285,6 +288,32 @@ def Test_RA_ForeignKey()
     {B: 30, C: 'ab'},
   ]
   assert_equal(expected, SS.instance)
+enddef
+
+def Test_RA_GenericConstraint()
+  RR = Relation('RR', {A: Int, B: Int}, [['A']])
+
+  def Positive(t: dict<any>): void
+    if t.B < 0
+      throw "Negative"
+    endif
+  enddef
+
+  Check(RR, Positive)
+
+  RR->Insert({A: 1, B: 2})
+
+  AssertFails("RR->Insert({A: 2, B: -1})", "Negative")
+
+  RR->Update({A: 1, B: 3})
+
+  AssertFails("RR->Update({A: 1, B: -2})", "Negative")
+
+  assert_equal([{A: 1, B: 3}], RR.instance)
+
+  RR->Delete()
+
+  assert_true(Empty(RR))
 enddef
 
 def Test_RA_Scan()

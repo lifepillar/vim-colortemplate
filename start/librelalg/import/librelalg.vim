@@ -495,6 +495,10 @@ def ErrNoKey(relname: string): string
   return printf("No key specified for relation %s", relname)
 enddef
 
+def ErrInvalidAttribute(relname: string, attr: string): string
+  return printf("%s is not an attribute of %s", attr, relname)
+enddef
+
 def ErrNotAKey(relname: string, key: list<string>): string
   return printf("%s is not a key of %s", key, relname)
 enddef
@@ -614,6 +618,14 @@ export def Key(R: dict<any>, key: list<string>): void
   if index(R.keys, key) != -1
     throw ErrKeyAlreadyDefined(R.name, key)
   endif
+
+  const attributes = Attributes(R)
+
+  for keyAttr in key
+    if index(attributes, keyAttr) == -1
+      throw ErrInvalidAttribute(R.name, keyAttr)
+    endif
+  endfor
 
   R.keys->add(key)
 

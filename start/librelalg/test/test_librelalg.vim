@@ -90,6 +90,10 @@ def Test_RA_KeyCannotBeRedefined()
   assert_equal([["A"], ["B"], ["A", "B"]], RR.keys)
 enddef
 
+def Test_RA_WrongKey()
+  AssertFails("Relation('RR', {A: Int}, [['B']])", "B is not an attribute of RR")
+enddef
+
 def Test_RA_Insert()
   RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
 

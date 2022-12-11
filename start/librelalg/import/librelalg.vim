@@ -105,7 +105,7 @@ export def Build(Cont: func(func(dict<any>))): list<dict<any>>
 enddef
 
 export def Query(Cont: func(func(dict<any>))): list<dict<any>>
-  return Materialize(Cont)
+  return Build(Cont)
 enddef
 
 export def Materialize(Cont: func(func(dict<any>))): list<dict<any>>
@@ -114,6 +114,7 @@ enddef
 
 export def Sort(Cont: func(func(dict<any>)), ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
   var rel = Materialize(Cont)
+  # TODO: add sorting options for sort()
   return sort(rel, ComparisonFn)
 enddef
 

@@ -502,6 +502,10 @@ enddef
 
 # Indexes {{{
 def AddKey(index: dict<any>, key: list<string>, t: dict<any>): void
+  if empty(key)
+    index[''] = t
+    return
+  endif
   AddKey_(index, key, 0, t)
 enddef
 
@@ -524,6 +528,9 @@ export const KEY_NOT_FOUND: dict<bool> = {}
 
 # Search for a tuple in R with the same key as t using an index
 def SearchKey(index: dict<any>, key: list<string>, t: dict<any>): dict<any>
+  if empty(key)
+    return empty(index) ? KEY_NOT_FOUND : index['']
+  endif
   return SearchKey_(index, key, 0, t)
 enddef
 
@@ -538,6 +545,10 @@ def SearchKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): di
 enddef
 
 def RemoveKey(index: dict<any>, key: list<string>, t: dict<any>): void
+  if empty(key)
+    index->remove('')
+    return
+  endif
   RemoveKey_(index, key, 0, t)
 enddef
 

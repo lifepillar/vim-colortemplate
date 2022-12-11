@@ -884,6 +884,24 @@ def Test_RA_Divide()
   assert_equal(session_instance, session)
 enddef
 
+def Test_RA_EmptyKey()
+  RR = Relation('RR', {'A': Int, 'B': Str}, [[]])
+
+  AssertFails("Key(RR, [])", "Key [] already defined in RR")
+  AssertFails("RR->Insert({})",
+    "Expected a tuple on schema {A: integer, B: string}: got {} instead")
+
+  RR->Insert({A: 1, B: 'x'})
+
+  assert_equal([{A: 1, B: 'x'}], RR.instance)
+  AssertFails("RR->Insert({A: 2, B: 'y'})", "Duplicate key")
+
+  RR->Delete((t) => true)
+  RR->Insert({A: 2, B: 'y'})
+
+  assert_equal([{A: 2, B: 'y'}], RR.instance)
+enddef
+
 def Test_RA_DeeDum()
   RR = Relation('Dee', {}, [[]])
   assert_equal(0, len(RR.instance))
@@ -952,4 +970,4 @@ def Test_RA_DeeDum()
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
 enddef
 
-const success = tt.Run('_RA_Index')
+const success = tt.Run('_RA_')

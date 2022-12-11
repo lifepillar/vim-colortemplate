@@ -875,7 +875,7 @@ export def Table(R: any, name = null_string, sep = '─'): string
   endif
 
   def Fmt(n: number): string
-    return '%' .. string(n) .. 's'
+    return '%' .. string(n) .. 'S'
   enddef
 
   def FmtHeader(): string

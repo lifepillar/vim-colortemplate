@@ -11,10 +11,10 @@ This library is an implementation of Relational Algebra in Vim 9 script.
 1. Tutorial					*librelalg-tutorial*
 
 Suppose that you want to write a script that keeps track of “tags” associated
-to each buffer. Since data is king, a good place to start is a *data* *model*
-for the information you likely need to keep track of. A hypothetical,
-simplified, Relational data model (using IDEF1X notation) might look like
-this:
+to each buffer. Since data is king, a good place to start is by defining
+a (Relational) *data* *model* for your script. Suppose that, after carefully
+evaluating the requirements for your script, your model looks like this (using
+standard IDEF1X notation):
 >
 	 Buffer
 	┌───────────────┐
@@ -23,77 +23,83 @@ this:
 	│ BufName   Str │ AK
 	└───────┬───────┘
 	        │
-	  is marked by / 
+	  is tagged by / 
 	    appears in
 	        │
 	 Tag    ●
 	╭───────────────╮
 	│ BufId     Str │ FK
 	│ TagName   Str │
-	│ Line      Int │
 	├───────────────┤
-	│ Column    Int │
+	│ Line      Int │ (1)
+	│ Column    Int │ (1)
 	╰───────────────╯
+	(1) Lines and columns must be greater than zero.
 <
 Note: IDEF1X is the ISO standard for Relational modelling (ISO/IEC/IEEE
-31320-2). The ISO document is not available for free, but the relevant topics
-are derived (essentially verbatim) from the older FIPS 184
-(https://archive.org/details/federalinformati184nati/). Despite its age, the
-latter document, and its Annex A in particular, is a good description of the
-methodology.
+31320-2). The ISO document is not available for free, but the sections
+relevant for Relational modelling are derived (essentially verbatim) from the
+older FIPS 184 (https://archive.org/details/federalinformati184nati/). Despite
+its age, the latter document, and its Annex A in particular, is a good
+description of the methodology.
 
-If you are not familiar with IDEF1X or similar diagramming tools, each
-rectangle represents an *entity* (your script will deal with “buffers” and
-“tags”). Each entity has a name, written above the box, and attributes, which
-are written inside the box. The attributes will be the actual pieces of data
-stored and manipulated by your script. Each box also contains a separator
-line: the attributes above the separator form the *primary* *key* of the
-entity—that is, the main identifier of each entity instance; the attributes
-below the separator are further descriptors of the entity.
+If you are not familiar with IDEF1X or similar diagramming tools, each box
+represents an *entity* (your script will deal with “buffers” and “tags”). Each
+entity has a name, written above the box, and attributes, which are written
+inside the box. The attributes will be the actual pieces of data stored and
+manipulated by your script. Each box also contains a separator line: the
+attributes above the separator form the *primary* *key* of the entity—that is,
+the main identifier of each entity instance; the attributes below the
+separator are further descriptors of the entity.
 
 Entities are connected by *relationships* represented by lines joining two
 entities. The above diagram contains a one-to-many relationship, the dot
-representing the “many” side: in general, each buffer is associated to many
-tags, but each tags is associated to one and only one buffer. The entity on
-the “one” side of the relationship (Buffer, in this example) is called the
-*parent* entity; the entity on the “many” side of the relationship (Tag, in
-this example) is called a *child* entity. Each relationship is described by
-two verb phrases separated by a slash: the first verb phrase is read from
-parent to child (“A buffer is marked by zero or more tags”); the second is
-read from child to parent (“a tag appears in one buffer”).
+representing the “many” side: such relationship establishes that each buffer
+is possibly associated to many tags, but each tag is always associated to one
+and only one buffer. The entity on the “one” side of the relationship (Buffer,
+in this example) is called the *parent* entity; the entity on the “many” side
+of the relationship (Tag, in this example) is called a *child* entity. Each
+relationship is described by two verb phrases separated by a slash: the first
+verb phrase is read from parent to child (in this example: “A buffer is tagged
+by zero or more tags”); the second is read from child to parent (“a tag
+appears in one buffer”).
 
 AK stands for Alternate Key, and FK stands for Foreign Key. An alternate key
 is an alternative identifier for the entity: in this example, it is assumed
 that no two buffers share the same `BufName`, so `BufName` could be used to
-identify a buffer instead of `BufId`. A foreign key is the primary key of
+identify a buffer, as well as `BufId`. A foreign key is the primary key of
 a parent entity, which is “migrated” into the child entity by virtue of its
 relationship with the parent. When a foreign key is entirely part of the
-primary key of the child, the child entity is *dependent* on its parent: in
-this example, that means that it is not possible to designate a tag without
-referencing the buffer in which the tag appears (dependent entities are drawn
-as rectangles with rounded corners, although the rounded corners may not be
-particularly prominent in the extended ASCII rendition above). In this
-example, Buffer is an *independent* entity: the existence of a buffer does not
-depend on anything else in this model. The distinction between independent and
-dependent entities has a number of implications: among the rest, it determines
-the order in which the data is added (you cannot insert tags before inserting
-the corresponding buffers).
+primary key of the child (as in this example), the child entity is *dependent*
+on its parent: in this example, that means that it is not possible to
+designate a tag without referencing the buffer to which the tag belongs
+(dependent entities are drawn as rectangles with rounded corners, although the
+rounded corners may not be particularly prominent in the extended ASCII
+rendition above). In this example, Buffer is an *independent* entity: the
+existence of a buffer does not depend on anything else in this model. The
+distinction between independent and dependent entities has a number of
+implications: among the rest, it determines the order in which the database is
+populated (you cannot insert tags before inserting the corresponding buffers).
 
-So, the diagram above captures the following facts:
+To summarize, the diagram above captures the following facts:
 
 - Buffer is independent;
-- a buffer is is identified by BufId;
+- a buffer is identified by BufId;
 - a buffer is alternatively identified by BufName;
-- a buffer is marked by zero or more tags;
+- a buffer is tagged by zero or more tags;
 - Tag is dependent on Buffer;
 - a tag is identified by {BufId, TagName, Line};
 - a tag is described by {Column};
 - a tag appears in one (an only one) buffer.
+- a tag's line must be an integer greater than zero.
+- a tag's column must be an integer greater than zero.
+
+The last two constraints derive from footnote (1) in the data model.
 
 Data Definition ~
 
-Once a data model is available, librelalg can be used to turn it into code. If
-your model is good, that is a relatively straightforward task:
+Once your data model is defined, translating it into code is a relatively
+straightforward task:
 
 1. Import the library and optionally define aliases for the imported items you
    are going to use:
@@ -116,19 +122,19 @@ your model is good, that is a relatively straightforward task:
 2. Define one *base* relation for each entity:
 >
 	var Buffer = Relation('Buffer', {
-	    'BufId':   Int,
-	    'BufName':  Str,
+	    BufId:   Int,
+	    BufName: Str,
 	  },
 	  [['BufId'], ['BufName']]
 	)
 
 	var Tag = Relation('Tag', {
-	    'BufId':   Int,
-	    'TagName': Str,
-	    'Line':    Int,
-	    'Column':  Int,
+	    BufId:   Int,
+	    TagName: Str,
+	    Line:    Int,
+	    Column:  Int,
 	  },
-	  [['BufId', 'TagName', 'Line']]
+	  [['BufId', 'TagName']]
 	)
 <
    The three mandatory arguments of `Relation()` are the relation name, the
@@ -139,7 +145,7 @@ your model is good, that is a relatively straightforward task:
    the alternate keys. The first listed key can be considered the primary key:
    in general, the first listed key should be the smallest and/or the most
    frequently used, because in some cases librelalg internally uses the first
-   key for lookups.
+   key for fast lookups.
 
    Note: an index is built for each key. The indexes help speed up some
    operations and are used to enforce key constraints. The order of the
@@ -150,93 +156,100 @@ your model is good, that is a relatively straightforward task:
    accessed more frequently should appear earlier in the key.
 
    Note: the value returned by `Relation()`, which in this document is
-   referred to as a “relation object” or simply as a “relation”, is a complex
+   referred to as a *relation* *object* or simply as a “relation”, is a complex
    object consisting of the relation instance itself (that is, the set of
    tuples) plus its schema, keys, constraints, and indexes. If you want to
    retrieve just the relation instance, you may access the `instance`
    attribute of the relation object (e.g., `Tag.instance`).
 
-3. Add the relevant inter-relational constraints:
+3. Add the relevant constraints:
 >
-        const Fk = ForeignKey(Tag, ['BufId'], Buffer, ['BufId'], 'is marked by')
-	Tag.constraints->add(Fk)
-<
-  The first line defines a foreign key constraint from `BufId` in `Tag` to
-  `BufId` in `Buffer`. The verb associated to the constraint (as read from the
-  parent to the child entity—`is marked by` in this example) can optionally be
-  specified: that is used in error messages when the referential integrity is
-  violated. The second line attaches the foreign key constraint to the `Tag`
-  relation. A foreign key constraint (the value returned by `ForeignKey()`) is
-  just a function. All constraints in librelalg are defined by functions. See
-  the next point for an example.
-
-4. Add optional custom constraints. For instance, if you want to constrain
-   a tag's column to be a value between 1 and 80, you may declare the
-   constraint as a function that throws an error when its check fails, and
-   attach it to the relevant relation:
->
-	def ColumnIsValid(t: dict<any>, op: string): void
-	  if t.Column < 1 || t.Column > 80
-	    throw printf('Invalid column: %d', t.Column)
+	def PositiveLineColumn(t: dict<any>): void
+	  if t.Line < 1 || t.Column < 1
+	    throw 'Invalid line or column number'
 	  endif
 	enddef
 
-	Tag.constraints->add(ColumnIsValid)
+	Check(Tag, PositiveLineColumn)
+
+	ForeignKey(Tag, ['BufId'], Buffer, ['BufId'], 'is tagged by')
 <
-   Note: constraint functions have a fixed signature: the first argument is
-   a tuple, that is, a dictionary (see below). The second argument (unused in
-   this example) determines the operation (insert, update or delete) that
-   triggered the check.
+   A `Check` clause defines a generic constraint, which is simply a function
+   that takes as input a tuple and throws an error if the tuple does not
+   satisfy a certain condition. `ForeignKey()` defines a foreign key
+   constraint from `BufId` in `Tag` to `BufId` in `Buffer`. The verb
+   associated to the constraint (as read from the parent to the child entity
+   in the data model) can be optionally specified: the verb phrase is used in
+   error messages when the referential integrity is violated. 
 
    Note: constraints are checked in the order in which they are added to
    a relation.
 
 Data Manipulation ~
 
-Once the database is defined, one may start populating each base relation with
+When the database is defined, you may start populating each base relation with
 tuples. Each tuple is just a dictionary conforming to the corresponding
-relation schema:
+relation schema. Try inserting a buffer and a couple of tags:
 >
-	Buffer->Insert({'BufId': 1, 'BufName': 'foobar'})
+	Buffer->Insert({BufId: 1, BufName: 'foobar'})
 
 	Tag->InsertMany([
-	  {'BufId': 1, 'TagName': 'abc', 'Line': 3, 'Column': 9},
-	  {'BufId': 1, 'TagName': 'xyz', 'Line': 4, 'Column': 4},
+	  {BufId: 1, TagName: 'abc', Line: 3, Column: 9},
+	  {BufId: 1, TagName: 'xyz', Line: 4, Column: 4},
 	])
 <
-Of course, any attempt to violate a constraint is rejected with an error:
+If you want to inspect the content of a relation, you may print the
+corresponding table:
 >
-	Buffer->Insert({'BufId': 2, 'BufName': 'foobar'})
+	echo Table(Buffer)
+	echo Table(Tag)
 <
-This results in:
+Of course, any attempt to violate a constraint is rejected with an error.
+Trying to insert another buffer called `foobar` will fail with a duplicate key
+error:
 >
-	Duplicate key value: ['BufName'] = ('foobar') already exist
+	Buffer->Insert({BufId: 2, BufName: 'foobar'})
+
+	# Duplicate key value: ['BufName'] = ('foobar') already exist
 <
 because `BufName` is a key. Referential integrity is also guaranteed. For
 instance:
 >
-	Tag->Insert({'BufId': 5, 'TagName': 'x', 'Line': 3, 'Column': 9})
+	Tag->Insert({BufId: 5, TagName: 'x', Line: 3, Column: 9})
 <
 will raise:
 >
-	Buffer is marked by Tag: Tag['BufId'] = (5) is not present in Buffer['BufId']	
+	Buffer is tagged by Tag: Tag['BufId'] = (5) is not present in Buffer['BufId']	
 <
-And, of course, you are not allowed to insert an invalid column number either:
+And, of course, you are not allowed to insert an invalid line number either:
 >
-	Tag->Insert({'BufId': 1, 'TagName': 'x', 'Line': 3, 'Column': 99})
+	Tag->Insert({BufId: 1, TagName: 'x', Line: 0, Column: 40})
 <
 This insertion is rejected with:
 >
-	Invalid column: 99
+	Invalid line or column number
 <
-Updates and deletions are possible, too. Only attributes that are not part of
-any key (i.e., pure descriptors) can be updated: if you want to update a key
-attribute, you must delete the corresponding tuple and insert a new one. This
-may seem an unnecessary restriction, but, besides keeping the implementation
-somewhat simpler, it is conceptually a sound approach: a key represents the
-identity of an entity, and identity is immutable. So, if you want to change
-a key, in fact you want to refer to another entity. Hence, you have to delete
-the old entity and add a new one.
+Updates and deletions are possible, too:
+>
+	Tag->Update({BufId: 1, TagName: 'abc', Line: 7, Column: 12})
+	echo Table(tag)
+	Tag->Delete((t) => t.Line < 5)
+	echo Table(tag)
+<
+For updates, you just pass the updated tuple: a tuple with the same key must
+exist in the relation, otherwise you will get an error. That implies that only
+attributes that are not part of any key (that is, pure descriptors) can be
+updated: if you want to update a key attribute, you must delete the
+corresponding tuple and insert a new one.
+
+Note: this may seem an unnecessary restriction, but, besides keeping the
+implementation somewhat simple, it is conceptually a sound approach: a key
+represents the identity of an entity, and identity is immutable. So, if you
+want to change a key, in fact you want to refer to another entity. Hence, you
+have to delete the old entity and add a new one.
+
+For deletions, you provide a predicate (typically, in the form of a lambda)
+that the tuples to be deleted must satisfy.
 
 Queries ~
 
@@ -262,40 +275,43 @@ The only root operator is `Scan()` (with `Foreach()` as a synonym). The most
 common leaf operator is `Build()` (you may use `Materialize()` or `Query()` as
 synonyms). Other leaf operators are `Sort()` and `SortBy()`.
 
-The simplest query consists in retrieving a copy of a relation instance. This
-can be expressed as follows:
+For instance, the query “Retrieve the tags in buffer 1 before line 6” can be
+formulated as follows:
 >
-	const result = Scan(Tag)->Build()
+	const result = Scan(Tag)
+	             ->Select((t) => t.BufId == 1 && t.Line <= 6)
+		     ->Build()
+	echo Table(result)
 <
 The `Scan()` function iterates over each tuple of the `Tag` relation and
 passes it to the next operator (we usually say that `Scan()` "emits" the
-tuples of its input relation). The next operator in this example is `Build()`,
-which simply gathers each tuple as it receives it and builds a new relation
-instance, which it eventually returns (we usually say that `Build()`
-"consumes" the received tuples and "materializes" a relation instance).
-Therefore, the output is a copy of the content of `Tag`.
+tuples of its input relation). The next operator in this example is
+`Select()`, which applies the given function (a lambda in this example) to
+each received tuple, and emits only the tuples for which the function returns
+true. Finally, `Build()` gathers each tuple as it receives it and builds
+a *derived* relation instance, which is the query result (we usually say that
+`Build()` "consumes" the received tuples and "materializes" a relation
+instance).
 
 Note: strictly speaking, Relational Algebra operators act on relation
 instances. So, the above query should be written:
 >
-	const result = Scan(Tag.instance)->Build()
+	const result = Scan(Tag.instance)->etc...
 <
 As a convenience, however, librelalg's operators accept relation objects, too:
 they access the relation instance internally. The result of a query, however,
 is always a relation instance (see below).
 
-Note: the results of queries are *derived* relations. Derived relations do not
-have the same structure as base relations. In particular, they do not have
-associated keys, constraints or indexes. So, in the previous example, `result`
-is not a copy of `Tag`: it is a copy of `Tag.instance`.
-
+Note: the result of a query is just a set of tuples (implemented as a list of
+dictionaries). Contrary to base relations, such derived relations do not have
+any associated keys, constraints or indexes. 
 
 Note: Other ways to write the query above, using the synonyms, are the
 following:
 >
-	Query(Scan(Tag))
-	Foreach(Tag)->Materialize()
-	Materialize(Scan(Tag))
+	Query(Scan(Tag)->Select((t) => t.BufId == 3 && t.Line <= 6))
+	Foreach(Tag)->Select((t) => t.BufId == 3 && t.Line <= 6)->Materialize()
+	Materialize(Scan(Tag)Select((t) => t.BufId == 3 && t.Line <= 6))
 <
 When writing queries, chaining operators with `->` is typically more
 intuitive, but you may use the style and the synonyms you prefer. Although
@@ -303,28 +319,13 @@ intuitive, but you may use the style and the synonyms you prefer. Although
 typically used in prefix form, and `Build()` is used when chaining operators;
 `Materialize()` can be used in both cases, but it is more verbose.
 
-In practice, one would never write the simple query above, as
-`copy(Tag.instance)` would achieve the same result more efficiently. Typical
-queries will use some pipeline operator, which consumes tuples and emits some
-other tuples, without (typically) ever building any intermediate relation.
-Suppose, for example, that we want to obtain all the tags in buffer 1. This
-can be done as follows:
->
-	echo Scan(Tag)->Select((t) => t.BufId == 1)->Build()
-<
-The `Select()` operator applies the given function (a lambda in this example)
-to each received tuple, and emits only the tuples for which the function
-returns true. If you just wanted to access the tag names and corresponding
-lines, you might just pipe a projection operator, too:
+If you just wanted to access only the tag names and corresponding lines, you
+might just pipe a projection operator, too:
 >
 	const filteredTags = Scan(Tag)
-	    ->Select((t) => t.BufId == 1)
-	    ->Project(['TagName', 'Line'])
-	    ->Build()
-<
-You may pretty-print a relation instance with `Table()`:
->
-	echo Table(filteredTags, 'Filtered Tags')
+	                   ->Select((t) => t.BufId == 1 && t.Line <= 6)
+	                   ->Project(['TagName', 'Line'])
+	                   ->Build()
 <
 Pipelining is straightforward for unary operators. But, what if you want to
 perform a join or perform some other binary operation? Pipelining can still be
@@ -349,6 +350,6 @@ equivalently written as follows:
 3. Manipulating a database			*librelalg-dml*
 
 ==============================================================================
-4. Relatinal Algebra				*librelalg-ra*
+4. Relational Algebra				*librelalg-ra*
 
  vim:tw=78:ts=8:noet:ft=help:norl:

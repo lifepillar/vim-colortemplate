@@ -784,7 +784,7 @@ export def Update(R: dict<any>, t: dict<any>, upsert = false): void
   endfor
 enddef
 
-export def Delete(R: dict<any>, Pred: func(dict<any>): bool): void
+export def Delete(R: dict<any>, Pred: func(dict<any>): bool = (t) => true): void
   const DeletePred = (i: number, t: dict<any>): bool => {
     if Pred(t)
       for CheckConstraint in R.constraints

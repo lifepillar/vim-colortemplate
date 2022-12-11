@@ -200,7 +200,7 @@ def Test_RA_Delete()
 
   assert_equal(expected2, r)
 
-  R->Delete((t) => true)
+  R->Delete()
 
   assert_equal([], r)
   assert_equal(empty_indexes, R.indexes)
@@ -240,7 +240,7 @@ def Test_RA_Index()
 
   assert_equal({'9': { 'vidi': t2 }}, index)
 
-  R->Delete((t) => v:true)
+  R->Delete()
 
   assert_equal({}, index)
 enddef
@@ -896,7 +896,7 @@ def Test_RA_EmptyKey()
   assert_equal([{A: 1, B: 'x'}], RR.instance)
   AssertFails("RR->Insert({A: 2, B: 'y'})", "Duplicate key")
 
-  RR->Delete((t) => true)
+  RR->Delete()
   RR->Insert({A: 2, B: 'y'})
 
   assert_equal([{A: 2, B: 'y'}], RR.instance)

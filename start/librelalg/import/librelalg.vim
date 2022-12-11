@@ -831,48 +831,70 @@ export def Empty(R: any): bool
 enddef
 
 # Returns a textual representation of a relation
-export def Table(R: any, name = null_string): string
+export def Table(R: any, name = null_string, sep = '─'): string
   var rel: list<dict<any>>
   var relname: string
 
   if IsRelationInstance(R)
     rel = R
-    relname = empty(name) ? 'Relation' : name
+    relname = name
   else
     rel = R.instance
     relname = empty(name) ? R.name : name
   endif
 
   if empty(rel)
-    return printf("%s\n%s\n", relname, repeat('-', len(relname)))
+    return printf("%s\n%s\n", relname, repeat(sep, len(relname)))
   endif
 
-  const attributes = keys(rel[0])
-  var width: list<number> = []
-  var totalWidth = 0
+  const attributes: list<string> = keys(rel[0])
+  var width: dict<number> = {}
 
-  # Determine the maximum width for each column
   for attr in attributes
-    width->add(len(attr))
-    for t in rel
-      const value = t[attr]
-      if type(value) != v:t_none
-        if width[-1] < len(String(value))
-          width[-1] = len(String(value))
-        endif
-      endif
-    endfor
-    totalWidth += width[-1]
+    width[attr] = len(attr)
   endfor
 
+  # Determine the maximum width for each column
+  for t in rel
+    for attr in attributes
+      const ll = len(String(t[attr]))
+      if ll > width[attr]
+        width[attr] = ll
+      endif
+    endfor
+  endfor
+
+  var totalWidth = len(attributes) - 1 # Number of separator columns
+
+  for attr in attributes
+    totalWidth += width[attr]
+  endfor
+
+  if totalWidth < len(relname)
+    totalWidth = len(relname)
+  endif
+
+  def Fmt(n: number): string
+    return '%' .. string(n) .. 's'
+  enddef
+
+  def FmtHeader(): string
+    return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), a)))
+  enddef
+
+  def FmtTuple(t: dict<any>): string
+    return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), String(t[a]))))
+  enddef
+
   # Pretty print
-  var table = printf("%s\n%s\n", relname, repeat('-', totalWidth))
-  table ..= join(mapnew(attributes, (i, a) => printf('%' .. width[i] .. 's', a)))
-  table ..= "\n"
+  const separator = repeat(sep, totalWidth)
+  var table = empty(relname) ? '' : relname .. "\n"
+  table ..= separator .. "\n"
+  table ..= printf(Fmt(totalWidth), FmtHeader())
+  table ..= printf("\n%s\n", separator)
 
   for t in rel
-    table ..= join(mapnew(values(t), (i, v) => printf('%' .. width[i] .. 's', String(v))))
-    table ..= "\n"
+    table ..= printf(Fmt(totalWidth), FmtTuple(t)) .. "\n"
   endfor
 
   return table

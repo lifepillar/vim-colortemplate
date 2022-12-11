@@ -40,6 +40,7 @@ const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
 const Str                  = ra.Str
 const Sum                  = ra.Sum
+const Table                = ra.Table
 const Update               = ra.Update
 
 # assert_fails() logs exceptions in messages. This function is quiet.
@@ -974,4 +975,44 @@ def Test_RA_DeeDum()
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
 enddef
 
+def Test_RA_PrettyPrint()
+  var R = Relation("R", {AAAAAAAAA: Int, B: Str}, [["AAAAAAAAA"]])
+
+  var expectedTable =<< trim END
+  Empty Instance
+  ==============
+  END
+
+  assert_equal(expectedTable, split(Table(R, 'Empty Instance', '='), "\n"))
+
+  R->InsertMany([
+    {AAAAAAAAA: 1, B: 'XYWZ'},
+    {AAAAAAAAA: 2, B: 'ABC'},
+  ])
+
+  expectedTable =<< trim END
+  R
+  ──────────────
+     B AAAAAAAAA
+  ──────────────
+  XYWZ         1
+   ABC         2
+  END
+
+  assert_equal(expectedTable, split(Table(R), "\n"))
+
+  expectedTable =<< trim END
+  Very Long Table Name
+  ────────────────────
+           B AAAAAAAAA
+  ────────────────────
+        XYWZ         1
+         ABC         2
+  END
+
+  assert_equal(expectedTable, split(Table(R, 'Very Long Table Name'), "\n"))
+enddef
+
+
 const success = tt.Run('_RA_')
+

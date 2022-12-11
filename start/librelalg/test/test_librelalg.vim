@@ -215,10 +215,7 @@ def Test_RA_Index()
 
   const index = R.indexes[keyStr]
 
-  assert_true(index->has_key('key'), "Index does not have 'key' field")
-  assert_true(index->has_key('data'), "Index does not have 'data' field")
-  assert_equal(key, index.key)
-  assert_equal({}, index.data)
+  assert_equal({}, index)
 
   const t0 = {A: 9, B: 'veni'}
   const t1 = {A: 3, B: 'vici'}
@@ -227,39 +224,25 @@ def Test_RA_Index()
   R->Insert(t1)
   R->Insert(t2)
 
-  assert_equal(
-      { 'key':  ['A', 'B'],
-        'data': { '3': { 'vici': t1 },
-                  '9': { 'veni': t0, 'vidi': t2 }
-                }
-      },
-      index)
+  assert_equal({'3': { 'vici': t1 },
+                '9': { 'veni': t0, 'vidi': t2 }}, index)
 
-  assert_true(index.data[3]['vici'] is t1)
-  assert_true(index.data[9]['veni'] is t0)
-  assert_true(index.data[9]['vidi'] is t2)
+  assert_true(index[3]['vici'] is t1)
+  assert_true(index[9]['veni'] is t0)
+  assert_true(index[9]['vidi'] is t2)
 
   R->Delete((t) => t.A == 9 && t.B == 'veni')
 
-  assert_equal(
-      { 'key':  ['A', 'B'],
-        'data': { '3': { 'vici': t1 },
-                  '9': { 'vidi': t2 }
-                }
-      },
-      index)
+  assert_equal({'3': { 'vici': t1 },
+                '9': { 'vidi': t2 }}, index)
 
   R->Delete((t) => t.B == 'vici')
 
-  assert_equal(
-      { 'key':  ['A', 'B'],
-        'data': { '9': { 'vidi': t2 } }
-      },
-      index)
+  assert_equal({'9': { 'vidi': t2 }}, index)
 
   R->Delete((t) => v:true)
 
-  assert_equal({ 'key': ['A', 'B'], 'data': {}}, index)
+  assert_equal({}, index)
 enddef
 
 def Test_RA_ForeignKey()

@@ -501,13 +501,8 @@ enddef
 # }}}
 
 # Indexes {{{
-def MakeIndex(key: list<string>): dict<any>
-  return {key: key, data: {}}
-enddef
-
-def AddKey(index: dict<any>, t: dict<any>): void
-  const key = index.key
-  AddKey_(index.data, index.key, 0, t)
+def AddKey(index: dict<any>, key: list<string>, t: dict<any>): void
+  AddKey_(index, key, 0, t)
 enddef
 
 def AddKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): void
@@ -528,8 +523,8 @@ enddef
 export const KEY_NOT_FOUND: dict<bool> = {}
 
 # Search for a tuple in R with the same key as t using an index
-def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): dict<any>
-  return SearchKey_(index.data, alias, 0, t)
+def SearchKey(index: dict<any>, key: list<string>, t: dict<any>): dict<any>
+  return SearchKey_(index, key, 0, t)
 enddef
 
 def SearchKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): dict<any>
@@ -542,8 +537,8 @@ def SearchKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): di
   return KEY_NOT_FOUND
 enddef
 
-def RemoveKey(index: dict<any>, t: dict<any>): void
-  RemoveKey_(index.data, index.key, 0, t)
+def RemoveKey(index: dict<any>, key: list<string>, t: dict<any>): void
+  RemoveKey_(index, key, 0, t)
 enddef
 
 def RemoveKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): void
@@ -565,8 +560,8 @@ export def Lookup(R: dict<any>, key: list<string>, value: list<any>): dict<any>
   if index(R.keys, key) == -1
     throw ErrNotAKey(R.name, key)
   endif
-  const index = R.indexes[string(key)]
-  return SearchKey(index, Zip(key, value))
+  const index = R.indexes[String(key)]
+  return SearchKey(index, key, Zip(key, value))
 enddef
 # }}}
 
@@ -607,13 +602,13 @@ export def Key(R: dict<any>, key: list<string>): void
 
   R.keys->add(key)
 
-  var index = MakeIndex(key)
+  var index = {}
 
   R.indexes[string(key)] = index
 
   const K = (t: dict<any>, op: string): void => {
     if op == 'I'
-      if index->SearchKey(t) is KEY_NOT_FOUND
+      if index->SearchKey(key, t) is KEY_NOT_FOUND
         return
       endif
       throw ErrDuplicateKey(key, t)
@@ -650,7 +645,7 @@ export def ForeignKey(
 
   const FkCheck = (t: dict<any>, op: string): void => {
     if op != 'D'
-      if S.indexes[keyStr]->SearchKey(t, fkey) is KEY_NOT_FOUND
+      if S.indexes[keyStr]->SearchKey(fkey, t) is KEY_NOT_FOUND
         throw ErrReferentialIntegrity(R.name, fkey, S.name, key, t, verbphrase)
       endif
     endif
@@ -727,9 +722,13 @@ export def Insert(R: dict<any>, t: dict<any>): void
 
   R.instance->add(t)
 
-  for index in values(R.indexes)
-    index->AddKey(t)
-  endfor
+  var i = 0
+  const n = len(R.keys)
+  while i < n
+    const key = R.keys[i]
+    R.indexes[String(key)]->AddKey(key, t)
+    i += 1
+  endwhile
 enddef
 
 export def InsertMany(R: dict<any>, tuples: list<dict<any>>): number
@@ -782,7 +781,7 @@ export def Delete(R: dict<any>, Pred: func(dict<any>): bool): void
       endfor
       for key in R.keys
         const index = R.indexes[string(key)]
-        index->RemoveKey(t)
+        index->RemoveKey(key, t)
       endfor
       return false
     endif

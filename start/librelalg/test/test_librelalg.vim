@@ -229,25 +229,37 @@ def Test_RA_Index()
 
   assert_equal(
       { 'key':  ['A', 'B'],
-        'data': { '3': {
-                    'key': ['B'],
-                    'data': {
-                      'vici': { 'key': [], 'data': {}, 'row': t1 }
-                    },
-                  },
-                  '9': {
-                    'key': ['B'],
-                    'data': {
-                      'veni': { 'key': [], 'data': {}, 'row': t0 },
-                      'vidi': { 'key': [], 'data': {}, 'row': t2 }
-                    }
-                  }
+        'data': { '3': { 'vici': t1 },
+                  '9': { 'veni': t0, 'vidi': t2 }
                 }
       },
       index)
-  assert_true(index.data[3].data['vici'].row is t1)
-  assert_true(index.data[9].data['veni'].row is t0)
-  assert_true(index.data[9].data['vidi'].row is t2)
+
+  assert_true(index.data[3]['vici'] is t1)
+  assert_true(index.data[9]['veni'] is t0)
+  assert_true(index.data[9]['vidi'] is t2)
+
+  R->Delete((t) => t.A == 9 && t.B == 'veni')
+
+  assert_equal(
+      { 'key':  ['A', 'B'],
+        'data': { '3': { 'vici': t1 },
+                  '9': { 'vidi': t2 }
+                }
+      },
+      index)
+
+  R->Delete((t) => t.B == 'vici')
+
+  assert_equal(
+      { 'key':  ['A', 'B'],
+        'data': { '9': { 'vidi': t2 } }
+      },
+      index)
+
+  R->Delete((t) => v:true)
+
+  assert_equal({ 'key': ['A', 'B'], 'data': {}}, index)
 enddef
 
 def Test_RA_ForeignKey()
@@ -957,4 +969,4 @@ def Test_RA_DeeDum()
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
 enddef
 
-const success = tt.Run('_RA_')
+const success = tt.Run('_RA_Index')

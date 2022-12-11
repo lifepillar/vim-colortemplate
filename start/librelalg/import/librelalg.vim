@@ -507,53 +507,57 @@ enddef
 
 def AddKey(index: dict<any>, t: dict<any>): void
   const key = index.key
+  AddKey_(index.data, index.key, 0, t)
+enddef
 
-  if len(key) == 0
-    index.row = t
+def AddKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): void
+  const value = t[key[i]]
+
+  if i + 1 == len(key)
+    index[value] = t
     return
   endif
 
-  const value = t[key[0]]
-
-  if !index.data->has_key(String(value))
-    index.data[value] = MakeIndex(key[1 : ])
+  if !index->has_key(String(value))
+    index[value] = {}
   endif
 
-  index.data[value]->AddKey(t)
+  index[value]->AddKey_(key, i + 1, t)
 enddef
 
 export const KEY_NOT_FOUND: dict<bool> = {}
 
 # Search for a tuple in R with the same key as t using an index
 def SearchKey(index: dict<any>, t: dict<any>, alias = index.key): dict<any>
-  const key = index.key
+  return SearchKey_(index.data, alias, 0, t)
+enddef
 
-  if empty(key)
-    return index->has_key('row') ? index.row : KEY_NOT_FOUND
+def SearchKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): dict<any>
+  const value = t[key[i]]
+
+  if index->has_key(String(value))
+    return i + 1 == len(key) ? index[value] : index[value]->SearchKey_(key, i + 1, t)
   endif
 
-  const value = t[alias[0]]
-
-  if !index.data->has_key(String(value))
-    return KEY_NOT_FOUND
-  endif
-
-  return index.data[value]->SearchKey(t, alias[1 : ])
+  return KEY_NOT_FOUND
 enddef
 
 def RemoveKey(index: dict<any>, t: dict<any>): void
-  const key = index.key
+  RemoveKey_(index.data, index.key, 0, t)
+enddef
 
-  if empty(key)
-    index->remove('row')
+def RemoveKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): void
+  const value = t[key[i]]
+
+  if i + 1 == len(key)
+    index->remove(value)
     return
   endif
 
-  const value = t[key[0]]
-  index.data[value]->RemoveKey(t)
+  index[value]->RemoveKey_(key, i + 1, t)
 
-  if empty(index.data[value].data)
-    index.data->remove(value)
+  if empty(index[value])
+    index->remove(value)
   endif
 enddef
 

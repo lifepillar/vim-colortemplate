@@ -1007,10 +1007,10 @@ enddef
 def Test_RA_PrettyPrint()
   var R = Relation("R", {AAAAAAAAA: Int, B: Str}, [["AAAAAAAAA"]])
 
-  var expectedTable =<< trim END
-  Empty Instance
-  ==============
-  END
+  var expectedTable =<< END
+ Empty Instance
+================
+END
 
   assert_equal(expectedTable, split(Table(R, 'Empty Instance', '='), "\n"))
 
@@ -1019,25 +1019,25 @@ def Test_RA_PrettyPrint()
     {AAAAAAAAA: 2, B: 'ABC'},
   ])
 
-  expectedTable =<< trim END
-  R
-  ──────────────
-     B AAAAAAAAA
-  ──────────────
-  XYWZ         1
-   ABC         2
-  END
+  expectedTable =<< END
+ R
+────────────────
+    B AAAAAAAAA
+────────────────
+ XYWZ         1
+  ABC         2
+END
 
   assert_equal(expectedTable, split(Table(R), "\n"))
 
-  expectedTable =<< trim END
-  Very Long Table Name
-  ────────────────────
-           B AAAAAAAAA
-  ────────────────────
-        XYWZ         1
-         ABC         2
-  END
+  expectedTable =<< END
+ Very Long Table Name
+──────────────────────
+          B AAAAAAAAA
+──────────────────────
+       XYWZ         1
+        ABC         2
+END
 
   assert_equal(expectedTable, split(Table(R, 'Very Long Table Name'), "\n"))
 enddef
@@ -1051,14 +1051,14 @@ def Test_RA_PrettyPrintUnicode()
     {'🙂☀︎': 99, '✔︎✖︎': '►◀︎└┴┴┴┘'},
   ])
 
-  const expectedTable =<< trim END
-  R
-  ───────────────────────────────────
-                        ✔︎✖︎        🙂☀︎
-  ───────────────────────────────────
-                         ⌘          9
-                   ►◀︎└┴┴┴┘         99
-  END
+  const expectedTable =<< END
+ R
+─────────────
+      ✔︎✖︎ 🙂☀︎
+─────────────
+       ⌘   9
+ ►◀︎└┴┴┴┘  99
+END
 
   assert_equal(expectedTable, split(Table(R), "\n"))
 enddef

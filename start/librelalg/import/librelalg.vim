@@ -847,34 +847,34 @@ export def Table(R: any, name = null_string, sep = '─'): string
   endif
 
   if empty(rel)
-    return printf("%s\n%s\n", relname, repeat(sep, len(relname)))
+    return printf(" %s\n%s\n", relname, repeat(sep, 2 + strwidth(relname)))
   endif
 
   const attributes: list<string> = keys(rel[0])
   var width: dict<number> = {}
 
   for attr in attributes
-    width[attr] = len(attr)
+    width[attr] = 1 + strwidth(attr)
   endfor
 
   # Determine the maximum width for each column
   for t in rel
     for attr in attributes
-      const ll = len(String(t[attr]))
+      const ll = 1 + strwidth(String(t[attr]))
       if ll > width[attr]
         width[attr] = ll
       endif
     endfor
   endfor
 
-  var totalWidth = len(attributes) - 1 # Number of separator columns
+  var totalWidth = 0
 
   for attr in attributes
     totalWidth += width[attr]
   endfor
 
-  if totalWidth < len(relname)
-    totalWidth = len(relname)
+  if totalWidth < 1 + strwidth(relname)
+    totalWidth = 1 + strwidth(relname)
   endif
 
   def Fmt(n: number): string
@@ -882,16 +882,16 @@ export def Table(R: any, name = null_string, sep = '─'): string
   enddef
 
   def FmtHeader(): string
-    return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), a)))
+    return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), a)), '')
   enddef
 
   def FmtTuple(t: dict<any>): string
-    return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), String(t[a]))))
+    return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), String(t[a]))), '')
   enddef
 
   # Pretty print
-  const separator = repeat(sep, totalWidth)
-  var table = empty(relname) ? '' : relname .. "\n"
+  const separator = repeat(sep, totalWidth + 1)
+  var table = empty(relname) ? '' : ' ' .. relname .. "\n"
   table ..= separator .. "\n"
   table ..= printf(Fmt(totalWidth), FmtHeader())
   table ..= printf("\n%s\n", separator)

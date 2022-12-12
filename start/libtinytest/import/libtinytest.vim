@@ -64,13 +64,13 @@ def RunTest(test: string, name: string)
   try
     execute test
   catch
-    add(v:errors, printf('Caught exception in %s: %s @ %s', name, v:exception, v:throwpoint))
+    add(v:errors, printf('Caught exception in %S: %S @ %S', name, v:exception, v:throwpoint))
   endtry
 
   message ..= printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
 
   if empty(v:errors)
-    add(mesg, printf('%s %s', OK, message))
+    add(mesg, printf('%S %S', OK, message))
     return
   endif
 
@@ -87,7 +87,7 @@ def RunTest(test: string, name: string)
     endif
   endfor
 
-  add(mesg, printf('%s %s', TSK, message))
+  add(mesg, printf('%S %S', TSK, message))
 
   v:errors = []
 enddef

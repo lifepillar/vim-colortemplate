@@ -801,11 +801,11 @@ export def Insert(R: dict<any>, t: dict<any>): void
   endwhile
 enddef
 
-export def InsertMany(R: dict<any>, tuples: list<dict<any>>): number
+export def InsertMany(R: dict<any>, tuples: list<dict<any>>): dict<any>
   for t in tuples
     Insert(R, t)
   endfor
-  return len(tuples)
+  return R
 enddef
 
 export def Update(R: dict<any>, t: dict<any>, upsert = false): void

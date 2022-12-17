@@ -1098,9 +1098,7 @@ def Test_RA_DeeDum()
 enddef
 
 def Test_RA_Filter()
-  var R = Relation('R', {A: Int, B: Int}, [['A']])
-
-  R->InsertMany([
+  var R = Relation('R', {A: Int, B: Int}, [['A']])->InsertMany([
     {A: 0, B: 10},
     {A: 2, B: 30},
     {A: 1, B: 20},

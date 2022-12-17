@@ -20,6 +20,7 @@ const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const GroupBy              = ra.GroupBy
 const Key                  = ra.Key
+const In                   = ra.In
 const Insert               = ra.Insert
 const InsertMany           = ra.InsertMany
 const Int                  = ra.Int
@@ -31,6 +32,7 @@ const Min                  = ra.Min
 const Minus                = ra.Minus
 const NatJoin              = ra.NatJoin
 const Noop                 = ra.Noop
+const NotIn                = ra.NotIn
 const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
@@ -316,6 +318,22 @@ def Test_RA_GenericConstraint()
   RR->Delete()
 
   assert_true(Empty(RR))
+enddef
+
+def Test_RA_In()
+  const R = Relation('R', {A: Str, B: Int}, [['A']])
+  R->InsertMany([
+    {A: 'a', B: 1},
+    {A: 'b', B: 1},
+    {A: 'c', B: 2},
+  ])
+
+  const t1 = {A: 'a', B: 1}
+  const t2 = {A: 'a', B: 2}
+  assert_true(t1->In(R), "t1 is not in R")
+  assert_true(!t2->In(R), "t2 is in R")
+  assert_true(!t1->NotIn(R), "not (not t1 is not in R)")
+  assert_true(t2->NotIn(R), "not (t2 is not in R)")
 enddef
 
 def Test_RA_Scan()

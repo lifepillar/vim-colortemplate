@@ -20,6 +20,15 @@ def IsRelationInstance(R: any): bool
   return type(R) == v:t_list
 enddef
 
+export def In(t: dict<any>, R: any): bool
+  const rel = IsRelationInstance(R) ? R : R.instance
+  return index(rel, t) != -1
+enddef
+
+export def NotIn(t: dict<any>, R: any): bool
+  return !(t->In(R))
+enddef
+
 # v1 and v2 must have the same type
 def CompareValues(v1: any, v2: any, invert: bool = false): number
   if v1 == v2

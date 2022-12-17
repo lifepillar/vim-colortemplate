@@ -132,7 +132,6 @@ export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any
     endfor
   }
 enddef
-
 # }}}
 
 # Leaf operators (returning a relation) {{{
@@ -430,6 +429,10 @@ def Aggregate(Cont: func(func(dict<any>)), Init: func(): any, Fn: func(dict<any>
     Res = Fn(t, Res)
   })
   return Res
+enddef
+
+export def Bind(AggrFn: func(func(func(dict<any>)): void, string): any, attr: string): func(func(func(dict<any>))): any
+  return (Cont: func(func(dict<any>)): void) => AggrFn(Cont, attr)
 enddef
 
 export def Max(Cont: func(func(dict<any>)), attr: string): any

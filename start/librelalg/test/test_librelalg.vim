@@ -5,6 +5,7 @@ import 'libtinytest.vim' as tt
 
 const AntiJoin             = ra.AntiJoin
 const Attributes           = ra.Attributes
+const Bind                 = ra.Bind
 const Bool                 = ra.Bool
 const Build                = ra.Build
 const Check                = ra.Check
@@ -995,7 +996,7 @@ def Test_RA_GroupBy()
   R->InsertMany(instance)
 
   const result = Scan(r)
-               ->GroupBy(['name'], (Cont) => Sum(Cont, 'balance'), 'total')
+               ->GroupBy(['name'], Bind(Sum, 'balance'), 'total')
                ->SortBy(['name'])
 
   const expected = [

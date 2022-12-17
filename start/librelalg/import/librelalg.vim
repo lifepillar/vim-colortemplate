@@ -21,25 +21,43 @@ def IsRelationInstance(R: any): bool
 enddef
 
 # v1 and v2 must have the same type
-def CompareValues(v1: any, v2: any): number
+def CompareValues(v1: any, v2: any, invert: bool = false): number
   if v1 == v2
     return 0
   endif
+
+  const cmp = (invert ? -1 : 1)
+
   if type(v1) == v:t_bool # Only true/false (none is not allowed)
-    return v1 && !v2 ? 1 : -1
+    return v1 && !v2 ? cmp : -cmp
   else
-    return v1 > v2 ? 1 : -1
+    return v1 > v2 ? cmp : -cmp
   endif
 enddef
 
-def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>): number
-  for a in attrList
-    const cmp = CompareValues(t[a], u[a])
+def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>, invert: list<bool> = []): number
+  if empty(invert)
+    for a in attrList
+      const cmp = CompareValues(t[a], u[a])
+      if cmp == 0
+        continue
+      endif
+      return cmp
+    endfor
+    return 0
+  endif
+
+  const n = len(attrList)
+  var i = 0
+  while i < n
+    const a = attrList[i]
+    const cmp = CompareValues(t[a], u[a], invert[i])
     if cmp == 0
+      i += 1
       continue
     endif
     return cmp
-  endfor
+  endwhile
   return 0
 enddef
 
@@ -127,12 +145,12 @@ enddef
 
 export def Sort(Cont: func(func(dict<any>)), ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
   var rel = Materialize(Cont)
-  # TODO: add sorting options for sort()
   return sort(rel, ComparisonFn)
 enddef
 
-export def SortBy(Cont: func(func(dict<any>)), attrList: list<string>): list<dict<any>>
-  const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList)
+export def SortBy(Cont: func(func(dict<any>)), attrList: list<string>, opts: list<string> = []): list<dict<any>>
+  const invert: list<bool> = mapnew(opts, (_, v) => v == 'd')
+  const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList, invert)
   return Sort(Cont, SortAttrPred)
 enddef
 # }}}

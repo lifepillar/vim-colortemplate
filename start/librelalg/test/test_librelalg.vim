@@ -380,6 +380,63 @@ def Test_RA_Sort()
   assert_equal(instance, R.instance)
 enddef
 
+def Test_RA_SortByAscDesc()
+  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  const r = R.instance
+
+  const instance = [
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+  ]
+  R->InsertMany(instance)
+
+  const expected1 = [
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+  ]
+
+  const expected2 = [
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+  ]
+
+  const expected3 = [
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+  ]
+
+  const expected4 = [
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+  ]
+
+  const expected5 = [
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+  ]
+
+  const expected6 = [
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+  ]
+
+  assert_equal(expected1, Scan(r)->SortBy(['B'], ['i']))
+  assert_equal(expected2, Scan(r)->SortBy(['B'], ['d']))
+  assert_equal(expected3, Scan(r)->SortBy(['C', 'B'], ['i', 'd']))
+  assert_equal(expected4, Scan(r)->SortBy(['C', 'B'], ['i', 'i']))
+  assert_equal(expected5, Scan(r)->SortBy(['C', 'B'], ['d', 'i']))
+  assert_equal(expected6, Scan(r)->SortBy(['C', 'B'], ['d', 'd']))
+  assert_equal(R.instance, r)
+  assert_equal(instance, R.instance)
+enddef
+
 def Test_RA_Noop()
   var R = Relation('R', {A: Int}, [['A']])
 

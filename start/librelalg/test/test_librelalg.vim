@@ -47,6 +47,7 @@ const Str                  = ra.Str
 const Sum                  = ra.Sum
 const Table                = ra.Table
 const Update               = ra.Update
+const Union                = ra.Union
 
 # assert_fails() logs exceptions in messages. This function is quiet.
 def AssertFails(what: string, expectedError: string): void
@@ -759,6 +760,41 @@ def Test_RA_Minus()
 
   assert_equal(expected1, Scan(R)->Minus(S)->SortBy(['A']))
   assert_equal(expected2, Scan(S)->Minus(R)->SortBy(['A']))
+  assert_equal(instanceR, r)
+  assert_equal(instanceS, s)
+enddef
+
+def Test_RA_Union()
+  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
+  const instanceR = [
+    {A: 0, B: 'zero'},
+    {A: 1, B: 'one'},
+    {A: 2, B: 'one'},
+  ]
+  R->InsertMany(instanceR)
+
+  var S = Relation('S', {A: Int, B: Str}, [['A', 'B']])
+  const s = S.instance
+
+  const instanceS = [
+    {A: 0, B: 'many'},
+    {A: 1, B: 'one'},
+    {A: 3, B: 'one'},
+  ]
+  S->InsertMany(instanceS)
+
+  const expected = [
+    {A: 0, B: 'many'},
+    {A: 0, B: 'zero'},
+    {A: 1, B: 'one'},
+    {A: 2, B: 'one'},
+    {A: 3, B: 'one'},
+  ]
+
+  assert_equal(expected, Scan(R)->Union(S)->SortBy(['A', 'B']))
+  assert_equal(expected, Scan(S)->Union(R)->SortBy(['A', 'B']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef

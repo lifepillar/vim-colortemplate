@@ -306,6 +306,23 @@ export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   }
 enddef
 
+# TODO: check if materializing + sort() + uniq() is more performant
+export def Union(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
+  const rel = IsRelationInstance(R) ? R : R.instance
+
+  return (Emit: func(dict<any>)) => {
+    for t in rel
+      Emit(t)
+    endfor
+
+    Cont((t: dict<any>) => {
+      if t->NotIn(rel)
+        Emit(t)
+      endif
+    })
+  }
+enddef
+
 export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   const rel = IsRelationInstance(R) ? R : R.instance
 

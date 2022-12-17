@@ -93,6 +93,19 @@ enddef
 export def Foreach(R: any): func(func(dict<any>))
   return Scan(R)
 enddef
+
+export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any>))
+  var rel = copy(IsRelationInstance(R) ? R : R.instance)
+
+  filter(rel, (_, t) => Pred(t))
+
+  return (Emit: func(dict<any>)) => {
+    for t in rel
+      Emit(t)
+    endfor
+  }
+enddef
+
 # }}}
 
 # Leaf operators (returning a relation) {{{

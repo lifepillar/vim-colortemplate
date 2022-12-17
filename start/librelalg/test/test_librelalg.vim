@@ -15,6 +15,7 @@ const Divide               = ra.Divide
 const Empty                = ra.Empty
 const EquiJoin             = ra.EquiJoin
 const Filter               = ra.Filter
+const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const GroupBy              = ra.GroupBy
@@ -319,7 +320,6 @@ enddef
 
 def Test_RA_Scan()
   var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
-  const r = R.instance
 
   const instance = [
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
@@ -329,13 +329,30 @@ def Test_RA_Scan()
   R->InsertMany(instance)
 
   const result1 = Query(Scan(R))
-  const result2 = Query(Scan(r))
+  const result2 = Query(Scan(R.instance))
 
   const expected = instance
 
   assert_equal(expected, result1)
   assert_equal(expected, result2)
-  assert_equal(instance, r)
+  assert_equal(instance, R.instance)
+enddef
+
+def Test_RA_FilteredScan()
+  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+
+  const instance = [
+    {A: 1, B:  2.5, C: true,  D: 'tuple1'},
+    {A: 2, B:  0.0, C: false, D: 'tuple2'},
+    {A: 3, B: -1.0, C: false, D: 'tuple3'},
+  ]
+  R->InsertMany(instance)
+
+  const expected = [{A: 2, B: 0.0, C: false, D: 'tuple2'}]
+  const result = Query(FilteredScan(R, (t) => !t.C && t.B >= 0))
+
+  assert_equal(expected, result)
+  assert_equal(instance, R.instance)
 enddef
 
 def Test_RA_Sort()

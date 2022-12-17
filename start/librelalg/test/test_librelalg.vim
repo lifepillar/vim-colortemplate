@@ -14,6 +14,7 @@ const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
 const Empty                = ra.Empty
 const EquiJoin             = ra.EquiJoin
+const Filter               = ra.Filter
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const GroupBy              = ra.GroupBy
@@ -1002,6 +1003,23 @@ def Test_RA_DeeDum()
   assert_equal([],           Scan(dum)->Divide(dee)->Build(),                "dum ÷ dee")
   assert_equal([{}],         Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
+enddef
+
+def Test_RA_Filter()
+  var R = Relation('R', {A: Int, B: Int}, [['A']])
+
+  R->InsertMany([
+    {A: 0, B: 10},
+    {A: 2, B: 30},
+    {A: 1, B: 20},
+    {A: 3, B: 40},
+  ])
+
+  const expected = [{A: 2, B: 30}, {A: 3, B: 40}]
+  assert_equal(expected, R->Filter((t) => t.B > 20))
+
+  const expected2 = [{A: 2, B: 30}]
+  assert_equal(expected2, Filter(expected, (t) => t.A == 2))
 enddef
 
 def Test_RA_PrettyPrint()

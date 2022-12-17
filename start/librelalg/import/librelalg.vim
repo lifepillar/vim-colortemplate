@@ -823,6 +823,11 @@ enddef
 # }}}
 
 # Convenience functions {{{
+export def Filter(R: any, Pred: func(dict<any>): bool): list<dict<any>>
+  var rel = copy(IsRelationInstance(R) ? R : R.instance)
+  return filter(rel, (_, t) => Pred(t))
+enddef
+
 # Compare two relation instances
 export def RelEq(r: list<dict<any>>, s: list<dict<any>>): bool
   return sort(copy(r)) == sort(copy(s))

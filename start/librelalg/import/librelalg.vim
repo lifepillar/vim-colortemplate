@@ -756,9 +756,9 @@ export def ForeignKey(
   fkey->Conforms(Child, ErrForeignKeySource(Child.name, fkey, Parent.name, key))
   Parent->HasKey(key,   ErrForeignKeyTarget(Child.name, fkey, Parent.name, key))
 
-  const keyStr = string(key)
+  const index = Parent.indexes[string(key)]
   const FkCheck = (t: dict<any>): void => {
-    if Parent.indexes[keyStr]->SearchKey(fkey, t) is KEY_NOT_FOUND
+    if index->SearchKey(fkey, t) is KEY_NOT_FOUND
       throw ErrReferentialIntegrity(Child.name, fkey, Parent.name, key, t, verbphrase)
     endif
   }

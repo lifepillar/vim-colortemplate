@@ -28,6 +28,7 @@ const Int                  = ra.Int
 const Intersect            = ra.Intersect
 const Join                 = ra.Join
 const KeyAttributes        = ra.KeyAttributes
+const LimitScan            = ra.LimitScan
 const Max                  = ra.Max
 const Min                  = ra.Min
 const Minus                = ra.Minus
@@ -373,6 +374,17 @@ def Test_RA_FilteredScan()
 
   assert_equal(expected, result)
   assert_equal(instance, R.instance)
+enddef
+
+def Test_RA_LimitScan()
+  var R = Relation('R', {A: Int}, [['A']])
+          ->InsertMany([{A: 1}, {A: 2}, {A: 3}, {A: 4}])
+
+  assert_equal([{A: 1}], Query(LimitScan(R, 1)))
+  assert_equal([{A: 1}, {A: 2}], Query(LimitScan(R, 2)))
+  assert_equal([{A: 1}, {A: 2}, {A: 3}], Query(LimitScan(R, 3)))
+  assert_equal(R.instance, Query(LimitScan(R, 4)))
+  assert_equal(R.instance, Query(LimitScan(R, 5)))
 enddef
 
 def Test_RA_Sort()

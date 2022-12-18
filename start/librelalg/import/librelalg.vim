@@ -132,6 +132,22 @@ export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any
     endfor
   }
 enddef
+
+export def LimitScan(R: any, n: number): func(func(dict<any>))
+  var rel = copy(IsRelationInstance(R) ? R : R.instance)
+  var i = 0
+
+  return (Emit: func(dict<any>)) => {
+    for t in rel
+      if i < n
+        Emit(t)
+        i += 1
+      else
+        break
+      endif
+    endfor
+  }
+enddef
 # }}}
 
 # Leaf operators (returning a relation) {{{

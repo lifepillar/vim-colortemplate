@@ -744,7 +744,7 @@ def HasKey(R: dict<any>, key: list<string>, errMsg: string): void
   endif
 enddef
 
-# Define a foreign key from R[fkey] to S[key].
+# Define a foreign key from Child[fkey] to Parent[key].
 export def ForeignKey(
   Child: dict<any>,
   fkey: list<string>,

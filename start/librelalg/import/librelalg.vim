@@ -843,7 +843,7 @@ export def Descriptors(R: dict<any>): list<string>
   return filter(allAttributes, (_, a) => index(keyAttributes, a) == -1)
 enddef
 
-export def Insert(R: dict<any>, t: dict<any>): void
+export def Insert(R: dict<any>, t: dict<any>): dict<any>
   for CheckConstraint in R.constraints.I
     CheckConstraint(t)
   endfor
@@ -857,6 +857,8 @@ export def Insert(R: dict<any>, t: dict<any>): void
     R.indexes[String(key)]->AddKey(key, t)
     i += 1
   endwhile
+
+  return R
 enddef
 
 export def InsertMany(R: dict<any>, tuples: list<dict<any>>): dict<any>

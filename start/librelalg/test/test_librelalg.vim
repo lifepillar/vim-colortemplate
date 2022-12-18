@@ -110,8 +110,7 @@ enddef
 
 def Test_RA_Insert()
   RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
-
-  RR->Insert({A: 0, B: 'b0', C: true, D: 1.2})
+       ->Insert({A: 0, B: 'b0', C: true, D: 1.2})
 
   assert_equal(1, len(RR.instance))
 

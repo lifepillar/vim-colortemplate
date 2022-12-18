@@ -15,6 +15,7 @@ const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
 const Empty                = ra.Empty
 const EquiJoin             = ra.EquiJoin
+const EquiJoinPred         = ra.EquiJoinPred
 const Filter               = ra.Filter
 const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
@@ -558,6 +559,18 @@ def Test_RA_Project()
   assert_equal(expected2, Scan(r)->Project(['B'])->SortBy(['B']))
   assert_equal(expected3, Scan(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
   assert_equal(instance, r)
+enddef
+
+def Test_RA_EquiJoinPred()
+  var Pred = EquiJoinPred(['X'], ['Y'])
+
+  assert_true(Pred({X: 1, W: 2}, {Y: 1, Z: 3}), "Equi-join predicate 1 failed")
+  assert_false(Pred({X: 2, W: 2}, {Y: 1, Z: 3}), "Equi-join predicate 2 succeeded")
+
+  Pred = EquiJoinPred(['X', 'Y'], ['W', 'Z'])
+
+  assert_true(Pred({X: 1, Y: 2}, {W: 1, Z: 2}), "Equi-join predicate 3 failed")
+  assert_false(Pred({X: 3, Y: 4}, {W: 3, Z: 5}), "Equi-join predicate 4 succeeded")
 enddef
 
 def Test_RA_Join()

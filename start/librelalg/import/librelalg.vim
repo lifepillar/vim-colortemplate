@@ -253,25 +253,27 @@ export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<
   }
 enddef
 
-export def EquiJoin(Cont: func(func(dict<any>)), R: any, srcAttrList: list<string>, tgtAttrList: list<string>, prefix = ''): func(func(dict<any>))
-  const n = len(srcAttrList)
+export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string>): func(dict<any>, dict<any>): bool
+  const n = len(lftAttrList)
 
-  if n != len(tgtAttrList)
-    throw ErrEquiJoinAttributes(srcAttrList, tgtAttrList)
+  if n != len(rgtAttrList)
+    throw ErrEquiJoinAttributes(lftAttrList, rgtAttrList)
   endif
 
-  const JoinPred = (t: dict<any>, u: dict<any>): bool => {
+  return (t: dict<any>, u: dict<any>): bool => {
     var i = 0
     while i < n
-      if t[srcAttrList[i]] != u[tgtAttrList[i]]
+      if t[lftAttrList[i]] != u[rgtAttrList[i]]
         return false
       endif
       i += 1
     endwhile
     return true
   }
+enddef
 
-  return Join(Cont, R, JoinPred, prefix)
+export def EquiJoin(Cont: func(func(dict<any>)), R: any, lftAttrList: list<string>, rgtAttrList: list<string>, prefix = ''): func(func(dict<any>))
+  return Join(Cont, R, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
 enddef
 
 def NatJoinCheck(t: dict<any>, u: dict<any>): bool

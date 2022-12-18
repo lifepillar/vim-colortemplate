@@ -757,11 +757,14 @@ export def ForeignKey(
   R.constraints.I->add(FkCheck)
   R.constraints.U->add(FkCheck)
 
-  const DelCheck = (t: dict<any>): void => {
-    const reftuples = Scan([t])->EquiJoin(R, fkey, key, '_')->Build()
-    if !Empty(reftuples)
-      throw ErrReferentialIntegrityDeletion(S.name, fkey, R.name, key, reftuples[0], verbphrase)
-    endif
+  const FkPred = EquiJoinPred(fkey, key)
+
+  const DelCheck = (t_s: dict<any>): void => {
+    for t_r in R.instance
+      if FkPred(t_r, t_s)
+        throw ErrReferentialIntegrityDeletion(S.name, fkey, R.name, key, t_s, verbphrase)
+      endif
+    endfor
   }
 
   S.constraints.D->add(DelCheck)

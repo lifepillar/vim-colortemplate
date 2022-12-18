@@ -6,30 +6,89 @@ Note: Vim 9.0.1065 or later is required.
 
 0. Quick start				|librelalg-quickstart|
 1. Tutorial				|librelalg-tutorial|
-2. Defining a database			|librelalg-ddl|
-3. Manipulating a database		|librelalg-dml|
+2. Data definition language		|librelalg-ddl|
+3. Data manipulation language		|librelalg-dml|
 4. Relational Algebra			|librelalg-ra|
 5. Aggregate functions			|librelalg-aggr|
-6. Other functions			|librelalg-other-func|
+6. Other functions			|librelalg-other|
 7. Tips and tricks			|librelalg-tips|
 
 ==============================================================================
 0. Quick start					*librelalg-quickstart*
 
-Create a database ~
+Define a Relational schema:
+>
+	vim9script
 
-Populate a database ~
+	import "librelalg.vim" as ra
 
-Query a database ~
+	const Int   = ra.Int
+	const Str   = ra.Str
+	const Float = ra.Float
 
+	#                    Name  Schema               Keys
+	var R = ra.Relation('R',   {A: Int, B: Float},  [['A']])
+	var S = ra.Relation('S',   {X: Str, Y: Int},    [['X']])
+	
+	ra.ForeignKey(S, ['Y'], R, ['A'])  # FK: S[Y] -> R[A]
+<
+Populate the database:
+>
+	R->ra.InsertMany([
+	  {A: 10, B: 3.2},
+	  {A: 20, B: 0.6},
+	])
+
+	S->ra.InsertMany([
+	  {X: 'xyz', Y: 10},
+	  {X: 'abc', Y: 20},
+	  {X: 'klm', Y: 10},
+	])
+<
+Query the database:
+>
+	# Find all X that are related to a tuple in R with B > 1.5,
+	# sorted lexicographically:
+
+	var rel = ra.Scan(S)
+	          ->ra.EquiJoin(R, ['Y'], ['A'])
+	          ->ra.Select((t) => t.B > 1.5)
+	          ->ra.Project(['X'])
+	          ->ra.SortBy(['X'])
+	echo ra.Table(rel)
+<
+Output:
+>
+	─────
+	   X                                                                                                                                                                   
+	─────
+	 klm
+	 xyz
+<
+Update the database:
+>
+	R->ra.Insert({A: 30, B: 4.3})
+	S->ra.Update({X: 'klm', Y: 30})
+	S->ra.Delete((t) => t.Y == 10)
+	rel = ra.Query(ra.Scan(R)->ra.EquiJoin(S, ['A'], ['Y']))
+	echo ra.Table(rel)
+<
+Output:
+>
+	───────────────
+	  A   B   X  Y
+	───────────────
+	 20 0.6 abc 20
+	 30 4.3 klm 30
+<
 ==============================================================================
 1. Tutorial					*librelalg-tutorial*
 
-Suppose that you want to write a script that keeps track of “tags” associated
-to each buffer. Since data is king, a good place to start is by defining
-a (Relational) *data* *model* for your script. Suppose that, after carefully
-evaluating the requirements for your script, your model looks like this (using
-standard IDEF1X notation):
+Suppose that you want to write a script that keeps track of some “tags”
+associated to each buffer. Since data is king, a good place to start is by
+defining a (Relational) *data* *model* for your script. Suppose that, after
+carefully evaluating the requirements for your script, your model looks like
+this (using standard IDEF1X notation):
 >
 	 Buffer
 	┌───────────────┐
@@ -51,21 +110,16 @@ standard IDEF1X notation):
 	╰───────────────╯
 	(1) Lines and columns must be greater than zero.
 <
-Note: IDEF1X is the ISO standard for Relational modelling (ISO/IEC/IEEE
-31320-2). The ISO document is not available for free, but the sections
-relevant for Relational modelling are derived (essentially verbatim) from the
-older FIPS 184 (https://archive.org/details/federalinformati184nati/). Despite
-its age, the latter document, and its Annex A in particular, is a good
-description of the methodology.
-
 If you are not familiar with IDEF1X or similar diagramming tools, each box
-represents an *entity* (your script will deal with “buffers” and “tags”). Each
-entity has a name, written above the box, and attributes, which are written
-inside the box. The attributes will be the actual pieces of data stored and
-manipulated by your script. Each box also contains a separator line: the
-attributes above the separator form the *primary* *key* of the entity—that is,
-the main identifier of each entity instance; the attributes below the
-separator are further descriptors of the entity.
+represents an *entity* (your script will deal with “buffers” and “tags”, so
+there are two entities in this model). Each entity has a name, written above
+its box, and attributes, which are written inside the box. The attributes will
+be the actual pieces of data stored and manipulated by your script. Each box
+also contains a separator line: the attributes above the separator form the
+*primary* *key* of the entity—that is, the main identifier of each entity
+instance; the attributes below the separator are further descriptors of the
+entity. For instance, each tag is identified by the pair {TagName, BufId}, and
+it is described by the attributes Line and Column.
 
 Entities are connected by *relationships* represented by lines joining two
 entities. The above diagram contains a one-to-many relationship, the dot
@@ -81,9 +135,9 @@ appears in one buffer”).
 
 AK stands for Alternate Key, and FK stands for Foreign Key. An alternate key
 is an alternative identifier for the entity: in this example, it is assumed
-that no two buffers share the same `BufName`, so `BufName` could be used to
-identify a buffer, as well as `BufId`. A foreign key is the primary key of
-a parent entity, which is “migrated” into the child entity by virtue of its
+that no two buffers share the same name, so `BufName` can be used as an
+identifier instead of `BufId`. A foreign key is the primary key of a parent
+entity, which is “migrated” into the child entity by virtue of its
 relationship with the parent. When a foreign key is entirely part of the
 primary key of the child (as in this example), the child entity is *dependent*
 on its parent: in this example, that means that it is not possible to
@@ -103,17 +157,25 @@ To summarize, the diagram above captures the following facts:
 - a buffer is alternatively identified by BufName;
 - a buffer is tagged by zero or more tags;
 - Tag is dependent on Buffer;
-- a tag is identified by {BufId, TagName, Line};
-- a tag is described by {Column};
+- a tag is identified by {BufId, TagName};
+- a tag is described by {Line, Column};
 - a tag appears in one (an only one) buffer.
 - a tag's line must be an integer greater than zero.
 - a tag's column must be an integer greater than zero.
 
 The last two constraints derive from footnote (1) in the data model.
 
+Note: IDEF1X is the ISO standard for Relational modelling (ISO/IEC/IEEE
+31320-2). The ISO document is not available for free, but the sections
+relevant for Relational modelling are derived (essentially verbatim) from the
+older FIPS 184, which is available, for instance, from the Internet Archive:
+https://archive.org/details/federalinformati184nati/. Despite its age, the
+latter document, and its Annex A in particular, is a good introduction to data
+modelling.
+
 Data Definition ~
 
-Once your data model is defined, translating it into code is a relatively
+Now that you have a data model, translating it into code is a relatively
 straightforward task:
 
 1. Import the library and optionally define aliases for the imported items you
@@ -152,37 +214,22 @@ straightforward task:
 	  [['BufId', 'TagName']]
 	)
 <
-   The three mandatory arguments of `Relation()` are the relation name, the
-   relation schema, which is a dictionary mapping attribute names to the
-   corresponding data types, and the list of keys. Each relation must have at
-   least one key.
+   The three mandatory arguments of `Relation()` are
+
+   a. a descriptive relation name;
+   b. the relation schema: this is a dictionary mapping attribute names to the
+      corresponding data types;
+   c. the list of keys. Each relation must have at least one key. Each key is
+      a list of attributes.
 
    Note: librelalg does not explicitly distinguish between a primary key and
-   the alternate keys. The first listed key can be considered the primary key:
-   in general, the first listed key should be the smallest and/or the most
-   frequently used, because in some cases librelalg internally uses the first
-   key for fast lookups.
-
-   Note: an index is built for each key. The indexes help speed up some
-   operations and are used to enforce key constraints. The order of the
-   attributes in a compound key matters for performance. In the example above,
-   if tags are often looked up by name, it may be more efficient to define the
-   primary key as `['TagName', 'BufId', 'Line']` rather than `['BufId',`
-   `'TagName', 'Line']` as was done above. In general, the attributes that are
-   accessed more frequently should appear earlier in the key.
-
-   Note: the value returned by `Relation()`, which in this document is
-   referred to as a *relation* *object* or simply as a “relation”, is a complex
-   object consisting of the relation instance itself (that is, the set of
-   tuples) plus its schema, keys, constraints, and indexes. If you want to
-   retrieve just the relation instance, you may access the `instance`
-   attribute of the relation object (e.g., `Tag.instance`).
+   the alternate keys.
 
 3. Add the relevant constraints:
 >
 	Check(Tag, (t) => {
 	  if t.Line < 1 || t.Column < 1
-	    throw 'Invalid line or column number
+	    throw 'Invalid line or column number'
 	  endif
 	})
 
@@ -202,17 +249,22 @@ Data Manipulation ~
 
 When the database is defined, you may start populating each base relation with
 tuples. Each tuple is just a dictionary conforming to the corresponding
-relation schema. Try inserting a buffer and a couple of tags:
+relation schema. Let us insert some data:
 >
-	Buffer->Insert({BufId: 1, BufName: 'foobar'})
+	Buffer->InsertMany([
+	  {BufId: 1, BufName: 'foo'},
+	  {BufId: 2, BufName: 'bar'},
+	  {BufId: 3, BufName: 'xyz'},
+	])
 
 	Tag->InsertMany([
-	  {BufId: 1, TagName: 'abc', Line: 3, Column: 9},
-	  {BufId: 1, TagName: 'xyz', Line: 4, Column: 4},
+	  {BufId: 1, TagName: 'abc', Line: 3,  Column: 9},
+	  {BufId: 1, TagName: 'xyz', Line: 4,  Column: 1},
+	  {BufId: 1, TagName: 'lll', Line: 4,  Column: 8},
+	  {BufId: 2, TagName: 'abc', Line: 14, Column: 15},
 	])
 <
-If you want to inspect the content of a relation, you may print the
-corresponding table:
+If you want to inspect the content of a relation, you may print it as a table:
 >
 	echo Table(Buffer)
 	echo Table(Tag)
@@ -250,21 +302,9 @@ Updates and deletions are possible, too:
 	Tag->Delete((t) => t.Line < 5)
 	echo Table(tag)
 <
-For updates, you just pass the updated tuple: a tuple with the same key must
-exist in the relation, otherwise you will get an error. That implies that only
-attributes that are not part of any key (that is, pure descriptors) can be
-updated: if you want to update a key attribute, you must delete the
-corresponding tuple and insert a new one.
-
-Note: this may seem an unnecessary restriction, but, besides keeping the
-implementation somewhat simple, it is conceptually a sound approach: a key
-represents the identity of an entity, and identity is immutable. So, if you
-want to change a key, in fact you want to refer to another entity. For
-instance, updating a tag's name is tantamount to defining a new tag. Hence,
-you have to delete the old entity and add a new one.
-
-For deletions, you provide a predicate (typically, in the form of a lambda)
-that the tuples to be deleted must satisfy.
+For updates, you just pass the updated tuple. For deletions, you provide
+a predicate (typically, in the form of a lambda) that the tuples to be deleted
+must satisfy.
 
 Queries ~
 
@@ -272,25 +312,26 @@ The power of Relational Algebra lies in its powerful query language as well as
 in the simplicity of its data structures: librelalg provides all the
 fundamental operations (set operations, selection, projection, joins,
 renaming) as well as some extra operations (division, semi-joins, anti-joins,
-group-by). All operators are implemented using a "push-based" strategy:
+group-by, etc.). All operators are implemented using a "push-based" strategy:
 without entering into technical details, that means that queries are typically
 expanded into tight loops and executed as efficiently as hand-written code.
 
 There are three types of operators:
 
-- "root" operators: these take as input a relation instance and emit tuples;
-- "leaf" operators: these collect tuples and build a relation instance;
+- "root" operators: these take as input a (base or derived) relation and emit
+  tuples;
+- "leaf" operators: these collect tuples and build a derived relation;
 - "pipeline" operators: these process tuples and emit (transformed) tuples.
 
 The most important rule is that each query should start with a root operator
 and should end with a leaf operator. A query may chain zero or more
 intermediate pipeline operators.
 
-The only root operator is `Scan()` (with `Foreach()` as a synonym). The most
+The main root operator is `Scan()` (with `Foreach()` as a synonym). The most
 common leaf operator is `Build()` (you may use `Materialize()` or `Query()` as
 synonyms). Other leaf operators are `Sort()` and `SortBy()`. Aggregate
 functions can also be considered leaf operators, although they return a scalar
-and not a relation. See |librelalg-aggr|.
+value and not a relation: see |librelalg-aggr|.
 
 For instance, the query “Retrieve the tags in buffer 1 before line 6” can be
 formulated as follows:
@@ -361,14 +402,10 @@ equivalently written as follows:
 <
 
 ==============================================================================
-2. Defining a database				*librelalg-ddl*
+2. Data definition language			*librelalg-ddl*
 
-						*librelalg.Attributes()*
-Attributes({relobj})
-		Return the list of attributes of relation object {relobj}.
 
-						*librelalg.Check()*
-Check({relobj}, {func} [, {list}])
+Check({relobj}, {func} [, {list}])		*librelalg.Check()*
 		Define a generic constraint. The constraint is associated to
 		relation object {relobj} and is defined by {func}, which is
 		a function or |Funcref| taking as input a tuple and raising an
@@ -379,7 +416,7 @@ Check({relobj}, {func} [, {list}])
 		should trigger the constraint check, use {list}, which is one
 		or more of `'I'`, `'U'`, and `'D'`, for insertion, update, and
 		deletion, respectively. By default (when {list} is not given),
-		a constraint is check before insertions and updates, but not
+		a constraint is checked before insertions and updates, but not
 		upon deletion.
 
 						*librelalg.ForeignKey()*
@@ -392,27 +429,26 @@ ForeignKey({relobj1}, {list1}, {relobj2}, {list2} [, {string}])
 		should be read from parent to child, that is, from {relobj2}
 		to {relobj1}.
 
-						*librelalg.Key()*
-Key({relobj}, {list})
+Key({relobj}, {list})				*librelalg.Key()*
 		Add a key to relation object {relobj}. The key is a {list} of
-		attributes.
-
-						*librelalg.KeyAttributes()*
-KeyAttributes({relobj})
-		Return the list of key attributes of relation object {relobj}.
-		A key attribute is an attribute that is part of a key.
-
-						*librelalg.Descriptors()*
-Descriptors({relobj})
-		Return the list of descriptors of relation object {relobj}.
-		A descriptor is an attribute that is not part of any key.
-
+		attributes. Since multiple keys can be specified when
+		a relation object is defined (see |librelalg.Relation()|, it
+		not necessary to use this function. For example:
+>
+		var R = Relation('R', {A: Int, B: Str}, [['A'], ['B']])
+<
+		is equivalent to:
+>
+		var R = Relation('R', {A: Int, B: Str}, [['A']])
+		Key(R, ['B'])
+<
 						*librelalg.Relation()*
 Relation({string}, {dict}, {list} [, {bool}])
-		Define a relation object. A relation object has a descriptive
-		name {string} (which is used in error messages) and is defined
-		over a schema {dict}, which maps attribute names to their
-		corresponding data types. The supported data types are:
+		Define a base relation (aka a “relation object”). A relation
+		object has a descriptive name {string} (which is used in error
+		messages) and is defined over a schema {dict}, which maps
+		attribute names to their corresponding data types. The
+		supported data types are:
 
 		- Int: integers
 		- Str: strings
@@ -424,7 +460,7 @@ Relation({string}, {dict}, {list} [, {bool}])
 		is a great gain in simplicity and semantic clarity.
 
 		Every relation object must have at least one key. Keys are
-		specfiied by {list}. Each key may consist of zero or more
+		specified by {list}. Each key may consist of zero or more
 		attributes.
 
 		By default, only tuples conforming to the specified schema may
@@ -434,37 +470,65 @@ Relation({string}, {dict}, {list} [, {bool}])
 
 		Example: A relation object with schema:
 >
-		R(A: integer, B: string, C: float)
+		R(A: integer, B: string, C: integer)
 <
-		where [A,B] is the primary key can be defined as follows:
+		with a composite primary key {A,B} and an alternate key {C}
+		can be defined as follows:
 >
 		var R = Relation('R', {
 		    A: Int,
 		    B: Str,
-		    C: Float
-		  }, [['A', 'B']])
+		    C: Int,
+		  }, [['A', 'B'], ['C']])
 <
+		Note: the value returned by `Relation()`, which in this
+		document is referred to as a “base relation” or as a “relation
+		object” is a complex object consisting of the relation
+		instance itself (that is, the set of tuples of the relation)
+		together with its schema, keys, constraints, and indexes. If
+		you want to retrieve just the relation instance, you may
+		access the `instance` attribute of the relation object (e.g.,
+		`Tag.instance`). A relation instance is just a |list| of
+		tuples, and each tuple is just a |dict| mapping attributes to
+		values.
+
 ==============================================================================
-3. Manipulating a database			*librelalg-dml*
+3. Data manipulation language			*librelalg-dml*
 
-						*librelalg.Insert()*
-Insert({relobj}, {tuple})
-		Insert a tuple into {relobj}.
-
-						*librelalg.InsertMany()*
-InsertMany({relobj}, {list})
-		Insert a {list} of tuples into {relobj}.
-
-						*librelalg.Update()*
-Update({relobj}, {tuple} [, {bool}])
-		Replace a tuple with {tuple}.
-
-						*librelalg.Delete()*
-Delete({relobj} [, {func}])
+Delete({relobj} [, {func}])			*librelalg.Delete()*
 		Delete all the tuples of {relobj} satisfying predicate {func},
 		which is a function that takes as input a tuple t and returns
 		|true| if and only if t must be deleted. When {func} is not
 		provided, all the tuples are deleted unconditionally.
+
+		Note: for derived relations only, deletion may be performed
+		with |filter()|, too. You should never use |filter()| with
+		base relations, though, otherwise some integrity constraints
+		may be violated.
+
+Insert({relobj}, {dict})			*librelalg.Insert()*
+		Insert tuple {dict} into {relobj}.
+
+InsertMany({relobj}, {list})			*librelalg.InsertMany()*
+		Insert a {list} of tuples into {relobj}.
+
+Update({relobj}, {dict} [, {upsert}])		*librelalg.Update()*
+		Replace a tuple with a new tuple {dict}. The tuple that is
+		replaced is the one with the same key(s) as {dict}. An error
+		is raised if such a tuple does not exist in the relation,
+		unless {upsert} is |true|, in which case {dict} is inserted into
+		the relation and no error is raised.
+>
+		var R = Relation('R', {A: Int, B: Str}, [['A']])
+		        ->Insert({A: 1, B: 'v'})
+		R->Update({A: 1, B: 'w'})  # OK
+		R->Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 1
+		R->Update({A: 2, B: 'z'}, true)  # OK (Upsert)
+<
+		Note that the above semantics implies that only attributes
+		that are not part of any key (the "descriptors") can be
+		updated. To update a key attribute, remove the corresponding
+		tuple and insert a new one.
 
 ==============================================================================
 4. Relational Algebra				*librelalg-ra*
@@ -613,6 +677,29 @@ EquiJoin({cont}, {rel}, {list1}, {list2}, [, {string}])
 <
 		See |librelalg.Join()| for an equivalent formulation of the
 		previous example.
+
+		This is a pipeline operator.
+
+Extend({cont}, {dict})			*librelalg.Extend()*
+		Extend each tuple of a relation with tuple {dict}. For
+		example:
+>
+		var R = Relation('R', {A: Int}, [['A']])
+			->InsertMany([{A: 1}, {A: 3}, {A: 5}])
+		const result = Query(Scan(R)->Extend({B: 42}))
+		echo Table(result)
+<
+		The output is:
+>
+		──────
+		 A  B
+		──────
+		 1 42
+		 3 42
+		 5 42
+<
+		The appended tuple must not have any attribute in common with
+		the original relation.
 
 		This is a pipeline operator.
 
@@ -939,8 +1026,28 @@ Sum({cont}, {string})				*librelalg.Sum()*
 		const colSum = Scan(Tag)->Sum('Column')
 <
 ==============================================================================
-6. Other functions				*librelalg-other-func*
+6. Other functions				*librelalg-other*
 
+Attributes({relobj})				*librelalg.Attributes()*
+		Return the list of attributes of relation object {relobj}.
+
+Descriptors({relobj})				*librelalg.Descriptors()*
+		Return the list of descriptors of relation object {relobj}.
+		A descriptor is an attribute that is not part of any key.
+
+EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
+		Return a predicate comparing the attributes in {list1} and the
+		attributes in {list2} for equality. The returned function can
+		be used as an argument to the various join operators. For
+		example:
+>
+		const Pred = EquiJoinPred(['BufName'], ['TagName'])
+		const result = Query(Scan(Buffer)->SemiJoin(Tag, Pred))
+<
+		This will join on the condition:
+>
+		Buffer.BufName == Tag.TagName
+<
 Empty({rel})					*librelalg.Empty()*
 		TODO
 
@@ -949,6 +1056,10 @@ Filter({rel}, {func})				*librelalg.Filter()*
 
 In({tuple}, {rel})				*librelalg.In()*
 		TODO
+
+KeyAttributes({relobj})				*librelalg.KeyAttributes()*
+		Return the list of key attributes of relation object {relobj}.
+		A key attribute is an attribute that is part of a key.
 
 NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		TODO
@@ -959,6 +1070,17 @@ RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 Table({rel} [, {string1}, {string2}])		*librelalg.Table()*
 		TODO
 
+Zip({list1}, {list2})				*librelalg.Zip()*
+		Build a tuple by "zipping" the attributes in {list1} with the
+		values in {list2}. For example:
+>
+		const t = Zip(['A', 'B'], [7, 'v'])
+		echo t
+<
+		outputs:
+>
+		{A: 7, B: 'v'}
+<
 ==============================================================================
 7. Tips and tricks				*librelalg-tips*
 
@@ -978,4 +1100,14 @@ processed in any way. For instance:
 	Filter(s, (t) => t.A > 0)     # OK
 	filter(s, (_, t) => t.A > 0)  # Also OK: s is a derived instance
 <
+Keys ~
+
+An index is built for each key. The indexes help speed up some operations and
+are used to enforce key constraints. The order of the attributes in a compound
+key matters for performance. In the example above, if tags are often looked up
+by name, it may be more efficient to define the primary key as `['TagName',
+'BufId', 'Line']` rather than `['BufId',` `'TagName', 'Line']` as was done
+above. In general, the attributes that are accessed more frequently should
+appear earlier in the key.
+
  vim:tw=78:ts=8:noet:ft=help:norl:

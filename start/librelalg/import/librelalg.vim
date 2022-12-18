@@ -541,24 +541,24 @@ def ErrReferentialIntegrity(rname: string, fkey: list<string>, sname: string, ke
                 sname, verbphrase, rname, rname, fkey, tStr, sname, key)
 enddef
 
-def ErrReferentialIntegrityDeletion(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
-  const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
-  return printf("%s %s %s: %s%s = (%s) is referenced by %s%s",
-                sname, verbphrase, rname, sname, key, tStr, rname, fkey)
+def ErrReferentialIntegrityDeletion(child: string, fkey: list<string>, parent: string, key: list<string>, t_c: dict<any>, t_p: dict<any>, verbphrase: string): string
+  const keyVal  = join(mapnew(key,  (_, v) => string(t_p[v])), ', ')
+  return printf("%s %s %s: %s%s = (%s) is referenced by %s in %s%s",
+                parent, verbphrase, child, parent, key, keyVal, t_c, child, fkey)
 enddef
 
-def ErrForeignKeySize(rname: string, fkey: list<string>, sname: string, key: list<string>): string
-  return printf("Wrong foreign key size: %s%s -> %s%s", rname, fkey, sname, key)
+def ErrForeignKeySize(child: string, fkey: list<string>, parent: string, key: list<string>): string
+  return printf("Wrong foreign key size: %s%s -> %s%s", child, fkey, parent, key)
 enddef
 
-def ErrForeignKeySource(rname: string, fkey: list<string>, sname: string, key: list<string>, attr: string): string
+def ErrForeignKeySource(child: string, fkey: list<string>, parent: string, key: list<string>): string
   return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
-                rname, fkey, sname, key, attr, rname)
+                child, fkey, parent, key, '%s', child)
 enddef
 
-def ErrForeignKeyTarget(rname: string, fkey: list<string>, sname: string, key: list<string>): string
+def ErrForeignKeyTarget(child: string, fkey: list<string>, parent: string, key: list<string>): string
   return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
-                rname, fkey, sname, key, key, sname)
+                child, fkey, parent, key, key, parent)
 enddef
 
 def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
@@ -668,6 +668,12 @@ enddef
 # }}}
 
 # Integrity constraints {{{
+def SameSize(l1: any, l2: any, errMsg: string): void
+  if len(l1) != len(l2)
+    throw errMsg
+  endif
+enddef
+
 # A type constraint checks whether a tuple is compatible with a schema.
 #
 # R  [TRelSchema]: a relational schema
@@ -723,51 +729,54 @@ export def Key(R: dict<any>, key: list<string>): void
   R.constraints.I->add(K)
 enddef
 
+def Conforms(attrList: list<string>, R: dict<any>, errMsg: string): void
+  const schema = Attributes(R)
+  for attr in attrList
+    if index(schema, attr) == -1
+      throw printf(errMsg, attr)
+    endif
+  endfor
+enddef
+
+def HasKey(R: dict<any>, key: list<string>, errMsg: string): void
+  if index(R.keys, key) == -1
+    throw errMsg
+  endif
+enddef
+
 # Define a foreign key from R[fkey] to S[key].
 export def ForeignKey(
-  R: dict<any>,
+  Child: dict<any>,
   fkey: list<string>,
-  S: dict<any>,
+  Parent: dict<any>,
   key: list<string>,
   verbphrase = 'has'
 ): void
-  if len(fkey) != len(key)
-    throw ErrForeignKeySize(R.name, fkey, S.name, key)
-  endif
-
-  const attrR = Attributes(R)
-  for attr in fkey
-    if index(attrR, attr) == -1
-      throw ErrForeignKeySource(R.name, fkey, S.name, key, attr)
-    endif
-  endfor
-
-  if index(S.keys, key) == -1
-    throw ErrForeignKeyTarget(R.name, fkey, S.name, key)
-  endif
+  fkey->SameSize(key,     ErrForeignKeySize(Child.name, fkey, Parent.name, key))
+  fkey->Conforms(Child, ErrForeignKeySource(Child.name, fkey, Parent.name, key))
+  Parent->HasKey(key,   ErrForeignKeyTarget(Child.name, fkey, Parent.name, key))
 
   const keyStr = string(key)
-
   const FkCheck = (t: dict<any>): void => {
-    if S.indexes[keyStr]->SearchKey(fkey, t) is KEY_NOT_FOUND
-      throw ErrReferentialIntegrity(R.name, fkey, S.name, key, t, verbphrase)
+    if Parent.indexes[keyStr]->SearchKey(fkey, t) is KEY_NOT_FOUND
+      throw ErrReferentialIntegrity(Child.name, fkey, Parent.name, key, t, verbphrase)
     endif
   }
 
-  R.constraints.I->add(FkCheck)
-  R.constraints.U->add(FkCheck)
+  Child.constraints.I->add(FkCheck)
+  Child.constraints.U->add(FkCheck)
 
   const FkPred = EquiJoinPred(fkey, key)
 
-  const DelCheck = (t_s: dict<any>): void => {
-    for t_r in R.instance
-      if FkPred(t_r, t_s)
-        throw ErrReferentialIntegrityDeletion(S.name, fkey, R.name, key, t_s, verbphrase)
+  const DelCheck = (t_p: dict<any>): void => {
+    for t_c in Child.instance
+      if FkPred(t_c, t_p)
+        throw ErrReferentialIntegrityDeletion(Child.name, fkey, Parent.name, key, t_c, t_p, verbphrase)
       endif
     endfor
   }
 
-  S.constraints.D->add(DelCheck)
+  Parent.constraints.D->add(DelCheck)
 enddef
 
 # Generic constraint

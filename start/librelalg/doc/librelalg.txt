@@ -522,7 +522,7 @@ Update({relobj}, {dict} [, {upsert}])		*librelalg.Update()*
 		var R = Relation('R', {A: Int, B: Str}, [['A']])
 		        ->Insert({A: 1, B: 'v'})
 		R->Update({A: 1, B: 'w'})  # OK
-		R->Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 1
+		R->Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 2
 		R->Update({A: 2, B: 'z'}, true)  # OK (Upsert)
 <
 		Note that the above semantics implies that only attributes

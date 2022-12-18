@@ -51,6 +51,7 @@ const Sum                  = ra.Sum
 const Table                = ra.Table
 const Update               = ra.Update
 const Union                = ra.Union
+const Zip                  = ra.Zip
 
 # assert_fails() logs exceptions in messages. This function is quiet.
 def AssertFails(what: string, expectedError: string): void
@@ -1157,6 +1158,12 @@ def Test_RA_DeeDum()
   assert_equal([],           Scan(dum)->Divide(dee)->Build(),                "dum ÷ dee")
   assert_equal([{}],         Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
+enddef
+
+def Test_RA_Zip()
+  assert_equal({A: 7, B: 'v'}, Zip(['A', 'B'], [7, 'v']))
+  # If the second list is longer than the first items in excess are ignored:
+  assert_equal({X: 9}, Zip(['X'], [9, 8, 7]))
 enddef
 
 def Test_RA_Filter()

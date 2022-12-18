@@ -79,7 +79,7 @@ def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
 enddef
 
 # NOTE: l2 may be longer than l1 (extra elements are simply ignored)
-def Zip(l1: list<any>, l2: list<any>): dict<any>
+export def Zip(l1: list<any>, l2: list<any>): dict<any>
   const n = len(l1)
   var zipdict: dict<any> = {}
   var i = 0

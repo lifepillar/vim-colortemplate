@@ -276,7 +276,7 @@ export def EquiJoin(Cont: func(func(dict<any>)), R: any, lftAttrList: list<strin
   return Join(Cont, R, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
 enddef
 
-def NatJoinCheck(t: dict<any>, u: dict<any>): bool
+def NatJoinPred(t: dict<any>, u: dict<any>): bool
   for a in keys(t)
     if u->has_key(a)
       if t[a] != u[a]
@@ -293,7 +293,7 @@ export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       for u in rel
-        if NatJoinCheck(t, u)
+        if NatJoinPred(t, u)
           Emit(t->extendnew(u))
         endif
       endfor

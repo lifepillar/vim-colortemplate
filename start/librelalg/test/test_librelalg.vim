@@ -223,6 +223,22 @@ def Test_RA_Delete()
   assert_equal(empty_indexes, R.indexes)
 enddef
 
+def Test_RA_DeleteForeignKey()
+  RR = Relation('R', {A: Int}, [['A']])
+  SS = Relation('S', {X: Str, Y: Int}, [['X']])
+  ForeignKey(SS, ['Y'], RR, ['A'])
+  RR->Insert({A: 2})
+  SS->Insert({X: 'a', Y: 2})
+
+  AssertFails("RR->Delete()",
+    "R has S: R['A'] = (2) is referenced by {'X': 'a', 'Y': 2} in S['Y']")
+
+  SS->Delete()
+  RR->Delete()
+
+  assert_true(RR->Empty())
+enddef
+
 def Test_RA_Index()
   const key = ['A', 'B']
   const keyStr = string(key)

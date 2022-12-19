@@ -530,8 +530,8 @@ def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
                 attr, rightType, value, wrongType)
 enddef
 
-def ErrConstraintNotSatisfied(t: dict<any>, msg: string): string
-  return printf("%s violates constraint: %s", t, msg)
+def ErrConstraintNotSatisfied(relname: string, t: dict<any>, msg: string): string
+  return printf("%s violates a constraint of %s: %s", t, relname, msg)
 enddef
 
 def ErrKeyAlreadyDefined(name: string, key: list<string>): string
@@ -806,7 +806,7 @@ export def Check(
     R.constraints[op]->add(
       (t: dict<any>): void => {
         if !Constraint(t)
-          throw ErrConstraintNotSatisfied(t, msg)
+          throw ErrConstraintNotSatisfied(R.name, t, msg)
         endif
       }
     )

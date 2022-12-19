@@ -316,7 +316,7 @@ def Test_RA_ForeignKey()
 enddef
 
 def Test_RA_GenericConstraint()
-  RR = Relation('RR', {A: Int, B: Int}, [['A']])
+  RR = Relation('R', {A: Int, B: Int}, [['A']])
 
   def Positive(t: dict<any>): bool
     return t.B > 0
@@ -327,12 +327,12 @@ def Test_RA_GenericConstraint()
   RR->Insert({A: 1, B: 2})
 
   AssertFails("RR->Insert({A: 2, B: -1})",
-    "{'A': 2, 'B': -1} violates constraint: B must be positive")
+    "{'A': 2, 'B': -1} violates a constraint of R: B must be positive")
 
   RR->Update({A: 1, B: 3})
 
   AssertFails("RR->Update({A: 1, B: -2})",
-    "{'A': 1, 'B': -2} violates constraint: B must be positive")
+    "{'A': 1, 'B': -2} violates a constraint of R: B must be positive")
 
   assert_equal([{A: 1, B: 3}], RR.instance)
 

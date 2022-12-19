@@ -318,21 +318,21 @@ enddef
 def Test_RA_GenericConstraint()
   RR = Relation('RR', {A: Int, B: Int}, [['A']])
 
-  def Positive(t: dict<any>): void
-    if t.B < 0
-      throw "Negative"
-    endif
+  def Positive(t: dict<any>): bool
+    return t.B > 0
   enddef
 
-  Check(RR, Positive)
+  Check(RR, Positive, 'B must be positive')
 
   RR->Insert({A: 1, B: 2})
 
-  AssertFails("RR->Insert({A: 2, B: -1})", "Negative")
+  AssertFails("RR->Insert({A: 2, B: -1})",
+    "{'A': 2, 'B': -1} violates constraint: B must be positive")
 
   RR->Update({A: 1, B: 3})
 
-  AssertFails("RR->Update({A: 1, B: -2})", "Negative")
+  AssertFails("RR->Update({A: 1, B: -2})",
+    "{'A': 1, 'B': -2} violates constraint: B must be positive")
 
   assert_equal([{A: 1, B: 3}], RR.instance)
 

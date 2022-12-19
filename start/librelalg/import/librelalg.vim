@@ -530,6 +530,10 @@ def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
                 attr, rightType, value, wrongType)
 enddef
 
+def ErrConstraintNotSatisfied(t: dict<any>, msg: string): string
+  return printf("%s violates constraint: %s", t, msg)
+enddef
+
 def ErrKeyAlreadyDefined(name: string, key: list<string>): string
   return printf('Key %s already defined in %s', key, name)
 enddef
@@ -788,13 +792,24 @@ export def ForeignKey(
 enddef
 
 # Generic constraint
-export def Check(R: dict<any>, Constraint: func(dict<any>): void, opList: list<string> = ['I', 'U']): void
+export def Check(
+    R: dict<any>,
+    Constraint: func(dict<any>): bool,
+    msg: string,
+    opList: list<string> = ['I', 'U']
+): void
   for op in opList
     if index(['I', 'U', 'D'], op) == -1
       throw ErrInvalidConstraintClause(op)
     endif
 
-    R.constraints[op]->add(Constraint)
+    R.constraints[op]->add(
+      (t: dict<any>): void => {
+        if !Constraint(t)
+          throw ErrConstraintNotSatisfied(t, msg)
+        endif
+      }
+    )
   endfor
 enddef
 # }}}

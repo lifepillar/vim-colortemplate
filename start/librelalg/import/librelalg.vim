@@ -2,13 +2,9 @@ vim9script
 
 # Helper functions {{{
 # string() turns 'A' into a string of length 3, with quotes.
-# We may not want that.
+# We do not want that.
 def String(value: any): string
   return type(value) == v:t_string ? value : string(value)
-enddef
-
-def TypeName(atype: number): string
-  return get(TypeString, atype, 'unknown')
 enddef
 
 def SchemaAsString(schema: dict<number>): string
@@ -519,6 +515,10 @@ const TypeString = {
   [v:t_channel]: 'channel',
   [v:t_blob]:    'blob'
 }
+
+def TypeName(atype: number): string
+  return get(TypeString, atype, 'unknown')
+enddef
 # }}}
 
 # Error messages {{{

@@ -21,6 +21,7 @@ const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const Frame                = ra.Frame
+const FrameByPred          = ra.FrameByPred
 const GroupBy              = ra.GroupBy
 const Key                  = ra.Key
 const In                   = ra.In
@@ -1025,26 +1026,38 @@ def Test_RA_Count()
 enddef
 
 def Test_RA_Frame()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Relation('R', {A: Int, B: Str, C: Str}, [['A']])
     ->InsertMany([
-      {A: 10, B: 'a'},
-      {A: 20, B: 'b'},
-      {A: 30, B: 'c'},
-      {A: 40, B: 'a'},
-      {A: 50, B: 'c'},
-      {A: 60, B: 'd'},
-      {A: 70, B: 'a'},
+      {A: 10, B: 'a', C: 'x'},
+      {A: 20, B: 'b', C: 'y'},
+      {A: 30, B: 'a', C: 'x'},
+      {A: 40, B: 'a', C: 'x'},
+      {A: 50, B: 'b', C: 'x'},
+      {A: 60, B: 'b', C: 'y'},
+      {A: 70, B: 'a', C: 'y'},
     ])
 
-  const result = Query(Scan(R)->Frame(['B']))
-  const expected = [
-    {A: 10, B: 'a', fid: 0},
-    {A: 20, B: 'b', fid: 1},
-    {A: 30, B: 'c', fid: 2},
-    {A: 40, B: 'a', fid: 0},
-    {A: 50, B: 'c', fid: 2},
-    {A: 60, B: 'd', fid: 3},
-    {A: 70, B: 'a', fid: 0},
+  var result = Query(Scan(R)->FrameByPred((t: dict<any>): number => t.A / 30))
+  var expected = [
+    {A: 10, B: 'a', C: 'x', fid: 0},
+    {A: 20, B: 'b', C: 'y', fid: 0},
+    {A: 30, B: 'a', C: 'x', fid: 1},
+    {A: 40, B: 'a', C: 'x', fid: 1},
+    {A: 50, B: 'b', C: 'x', fid: 1},
+    {A: 60, B: 'b', C: 'y', fid: 2},
+    {A: 70, B: 'a', C: 'y', fid: 2},
+  ]
+  assert_equal(expected, result)
+
+  result = Query(Scan(R)->Frame(['B', 'C'], 'group'))
+  expected = [
+    {A: 10, B: 'a', C: 'x', group: 0},
+    {A: 20, B: 'b', C: 'y', group: 1},
+    {A: 30, B: 'a', C: 'x', group: 0},
+    {A: 40, B: 'a', C: 'x', group: 0},
+    {A: 50, B: 'b', C: 'x', group: 2},
+    {A: 60, B: 'b', C: 'y', group: 1},
+    {A: 70, B: 'a', C: 'y', group: 3},
   ]
   assert_equal(expected, result)
 enddef

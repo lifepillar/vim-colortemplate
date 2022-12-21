@@ -20,6 +20,7 @@ const Filter               = ra.Filter
 const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
+const Frame                = ra.Frame
 const GroupBy              = ra.GroupBy
 const Key                  = ra.Key
 const In                   = ra.In
@@ -1021,6 +1022,31 @@ def Test_RA_Count()
 
   assert_equal(5, Scan(R)->Count())
   assert_equal(instance, r)
+enddef
+
+def Test_RA_Frame()
+  var R = Relation('R', {A: Int, B: Str}, [['A']])
+    ->InsertMany([
+      {A: 10, B: 'a'},
+      {A: 20, B: 'b'},
+      {A: 30, B: 'c'},
+      {A: 40, B: 'a'},
+      {A: 50, B: 'c'},
+      {A: 60, B: 'd'},
+      {A: 70, B: 'a'},
+    ])
+
+  const result = Query(Scan(R)->Frame(['B']))
+  const expected = [
+    {A: 10, B: 'a', fid: 0},
+    {A: 20, B: 'b', fid: 1},
+    {A: 30, B: 'c', fid: 2},
+    {A: 40, B: 'a', fid: 0},
+    {A: 50, B: 'c', fid: 2},
+    {A: 60, B: 'd', fid: 3},
+    {A: 70, B: 'a', fid: 0},
+  ]
+  assert_equal(expected, result)
 enddef
 
 def Test_RA_GroupBy()

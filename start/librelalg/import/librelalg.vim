@@ -383,6 +383,25 @@ export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, d
   }
 enddef
 
+# See EF Codd, The Relational Model for Database Management: Version 2, 1990
+export def Frame(Cont: func(func(dict<any>)), attrList: list<string>, name: string = 'fid'): func(func(dict<any>))
+  var fid = 0  # Frame identifier
+  var seen: dict<number> = {}
+
+  return (Emit: func(dict<any>)) => {
+    def FrameTuple(t: dict<any>)
+      const groupby = String(ProjectTuple(t, attrList))
+      if !seen->has_key(groupby)
+        seen[groupby] = fid
+        ++fid
+      endif
+      Emit(extend(t, {[name]: seen[groupby]}, "error"))
+    enddef
+
+    Cont((t) => FrameTuple(t))
+  }
+enddef
+
 export def GroupBy(Cont: func(func(dict<any>)), attrList: list<string>, AggregateFn: func(func(func(dict<any>))): any, aggrName = 'AggregateValue'): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
 

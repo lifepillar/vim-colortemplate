@@ -209,8 +209,9 @@ export def Select(Cont: func(func(dict<any>)), Pred: func(dict<any>): bool): fun
 enddef
 
 export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(func(dict<any>))
+  var seen: dict<bool> = {}
+
   return (Emit: func(dict<any>)) => {
-    var seen: dict<bool> = {}
     def Proj(t: dict<any>)
       var u = ProjectTuple(t, attrList)
       if !seen->has_key(String(u))
@@ -218,6 +219,7 @@ export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(fu
         Emit(u)
       endif
     enddef
+
     Cont((t) => Proj(t))
   }
 enddef

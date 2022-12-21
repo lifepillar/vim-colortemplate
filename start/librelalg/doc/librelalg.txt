@@ -718,29 +718,6 @@ EquiJoin({cont}, {rel}, {list1}, {list2}, [, {prefix}])
 
 		This is a pipeline operator.
 
-Extend({cont}, {dict})			*librelalg.Extend()*
-		Extend each tuple of a relation with tuple {dict}. The input
-		relation is pipelined from continuation {cont}. For example:
->
-		var R = Relation('R', {A: Int}, [['A']])
-			->InsertMany([{A: 1}, {A: 3}, {A: 5}])
-		const result = Query(Scan(R)->Extend({B: 42}))
-		echo Table(result)
-<
-		The output is:
->
-		──────
-		 A  B
-		──────
-		 1 42
-		 3 42
-		 5 42
-<
-		Note: the appended tuple must not have any attribute in common
-		with the original relation.
-
-		This is a pipeline operator.
-
 FilteredScan({rel}, {func})			*librelalg.FilteredScan()*
 		Emit only the tuples of relation {rel} that satisfies a
 		given predicate. The predicate is defined by {func}, which is

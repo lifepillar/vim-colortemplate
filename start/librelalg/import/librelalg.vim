@@ -198,14 +198,6 @@ export def Rename(Cont: func(func(dict<any>)), old: list<string>, new: list<stri
   }
 enddef
 
-export def Extend(Cont: func(func(dict<any>)), u: dict<any>): func(func(dict<any>))
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
-      Emit(t->extendnew(u, "error"))
-    })
-  }
-enddef
-
 export def Select(Cont: func(func(dict<any>)), Pred: func(dict<any>): bool): func(func(dict<any>))
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {

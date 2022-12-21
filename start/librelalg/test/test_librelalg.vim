@@ -16,7 +16,6 @@ const Divide               = ra.Divide
 const Empty                = ra.Empty
 const EquiJoin             = ra.EquiJoin
 const EquiJoinPred         = ra.EquiJoinPred
-const Extend               = ra.Extend
 const Filter               = ra.Filter
 const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
@@ -932,19 +931,6 @@ def Test_RA_AntiJoin()
   assert_equal(expected5, Query(Scan(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
-enddef
-
-def Test_RA_Extend()
-  var R = Relation('R', {A: Int}, [['A']])
-          ->InsertMany([{A: 1}, {A: 3}, {A: 5}])
-  const expected = [
-    {A: 1, B: 42, C: 'ok'},
-    {A: 3, B: 42, C: 'ok'},
-    {A: 5, B: 42, C: 'ok'},
-  ]
-  const result = Query(Scan(R)->Extend({B: 42, C: 'ok'}))
-
-  assert_equal(expected, result)
 enddef
 
 def Test_RA_Max()

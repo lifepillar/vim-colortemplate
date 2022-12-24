@@ -31,6 +31,7 @@ const Int                  = ra.Int
 const Intersect            = ra.Intersect
 const Join                 = ra.Join
 const KeyAttributes        = ra.KeyAttributes
+const LeftNatJoin          = ra.LeftNatJoin
 const LimitScan            = ra.LimitScan
 const Max                  = ra.Max
 const Min                  = ra.Min
@@ -42,6 +43,7 @@ const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
 const Relation             = ra.Relation
+const RelEq                = ra.RelEq
 const Rename               = ra.Rename
 const Scan                 = ra.Scan
 const Select               = ra.Select
@@ -933,6 +935,47 @@ def Test_RA_AntiJoin()
   assert_equal(expected5, Query(Scan(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
+enddef
+
+def Test_RA_LeftNatJoin()
+  var Buffer = Relation('Buffer', {
+      BufId:   Int,
+      BufName:  Str,
+    },
+    [['BufId'], ['BufName']]
+  )
+
+  var Tag = Relation('Tag', {
+      BufId:   Int,
+      TagName: Str,
+      Line:    Int,
+      Column:  Int,
+    },
+    [['BufId', 'TagName']]
+  )
+
+  Buffer->InsertMany([
+    {BufId: 1, BufName: 'foo'},
+    {BufId: 2, BufName: 'bar'},
+    {BufId: 3, BufName: 'xyz'},
+  ])
+
+  Tag->InsertMany([
+    {BufId: 1, TagName: 'abc', Line: 3,  Column: 9},
+    {BufId: 1, TagName: 'xyz', Line: 4,  Column: 1},
+    {BufId: 1, TagName: 'lll', Line: 4,  Column: 8},
+    {BufId: 2, TagName: 'abc', Line: 14, Column: 15},
+  ])
+
+  const summary = Query(Scan(Tag)->GroupBy(['BufId'], Count, 'BufId', 'num_tags'))
+  const result = Query(Scan(Buffer)->LeftNatJoin(summary, [{'num_tags': 0}]))
+  const expected = [
+    {BufId: 1, BufName: 'foo', num_tags: 3},
+    {BufId: 2, BufName: 'bar', num_tags: 1},
+    {BufId: 3, BufName: 'xyz', num_tags: 0},
+  ]
+
+  assert_true(RelEq(result, expected))
 enddef
 
 def Test_RA_Max()

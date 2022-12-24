@@ -383,6 +383,18 @@ export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, d
   }
 enddef
 
+export def LeftNatJoin(
+    Cont: func(func(dict<any>)),
+    R: any,
+    Filler: any
+): func(func(dict<any>))
+  const rel    = IsRelationInstance(R)      ? R      : R.instance
+  const filler = IsRelationInstance(Filler) ? Filler : Filler.instance
+
+  const X = AntiJoin(Cont, R, NatJoinPred)->Product(filler)->Build()
+  return NatJoin(Cont, R)->Union(X)
+enddef
+
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
 export def FrameByPred(Cont: func(func(dict<any>)), Fn: func(dict<any>): number, name: string = 'fid'): func(func(dict<any>))

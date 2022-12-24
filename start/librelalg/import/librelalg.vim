@@ -391,8 +391,24 @@ export def LeftNatJoin(
   const rel    = IsRelationInstance(R)      ? R      : R.instance
   const filler = IsRelationInstance(Filler) ? Filler : Filler.instance
 
-  const X = AntiJoin(Cont, R, NatJoinPred)->Product(filler)->Build()
-  return NatJoin(Cont, R)->Union(X)
+  return (Emit: func(dict<any>)) => {
+    Cont((t: dict<any>) => {
+      var joined: bool = false
+
+      for u in rel
+        if NatJoinPred(t, u)
+          Emit(t->extendnew(u))
+          joined = true
+        endif
+      endfor
+
+      if !joined
+        for v in filler
+          Emit(t->extendnew(v))
+        endfor
+      endif
+    })
+  }
 enddef
 
 # Inspired by the framing operator described in
@@ -424,7 +440,28 @@ export def Frame(Cont: func(func(dict<any>)), attrList: list<string>, name: stri
   }
 enddef
 
-export def GroupBy(Cont: func(func(dict<any>)), attrList: list<string>, AggregateFn: func(func(func(dict<any>))): any, aggrName = 'AggregateValue'): func(func(dict<any>))
+export def SumBy(Cont: func(func(dict<any>)), attr: string, other: list<string>, name: string = 'sum', fid: string = 'fid'): list<dict<any>>
+  var aggr: dict<dict<any>> = {}  # Map fid => tuple
+
+  Cont((t: dict<any>) => {
+    const group = string(t[fid])
+    if !aggr->has_key(group)
+      aggr[group] = {[fid]: t[fid], [name]: 0}
+      extend(aggr[group], ProjectTuple(t, other))
+    endif
+    aggr[group][name] += t[attr]
+  })
+
+  return values(aggr)
+enddef
+
+export def GroupBy(
+    Cont: func(func(dict<any>)),
+    attrList: list<string>,
+    AggregateFn: func(func(func(dict<any>)), string): any,
+    aggrAttr: string,
+    aggrName = 'AggregateValue'
+): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
 
   Cont((t) => {
@@ -445,7 +482,8 @@ export def GroupBy(Cont: func(func(dict<any>)), attrList: list<string>, Aggregat
       for attr in attrList
         t0[attr] = subrel[0][attr]
       endfor
-      t0[aggrName] = Scan(subrel)->AggregateFn()
+      const Fn = Bind(AggregateFn, aggrAttr)
+      t0[aggrName] = Scan(subrel)->Fn()
       Emit(t0)
     endfor
   }
@@ -506,7 +544,7 @@ export def Min(Cont: func(func(dict<any>)), attr: string): any
   return Aggregate(Cont, () => v:none, Fn)
 enddef
 
-export def Count(Cont: func(func(dict<any>))): any
+export def Count(Cont: func(func(dict<any>)), attr: string): any
   def Fn(t: dict<any>, v: any): any
     return v + 1
   enddef

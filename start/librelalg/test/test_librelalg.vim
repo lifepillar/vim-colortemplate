@@ -1080,7 +1080,7 @@ def Test_RA_Frame()
       {A: 70, B: 'a', C: 'y'},
     ])
 
-  var result = Query(Scan(R)->FrameByPred((t: dict<any>): number => t.A / 30))
+  var result = Query(Scan(R)->FrameByPred((t): number => t.A / 30))
   var expected = [
     {A: 10, B: 'a', C: 'x', fid: 0},
     {A: 20, B: 'b', C: 'y', fid: 0},

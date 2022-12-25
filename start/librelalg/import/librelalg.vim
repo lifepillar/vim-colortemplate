@@ -230,11 +230,11 @@ export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<
     MergeTuples = (t: dict<any>, u: dict<any>): dict<any> => t->extendnew(u, 'error')
   else
     MergeTuples = (t: dict<any>, u: dict<any>): dict<any> => {
-      var unew: dict<any> = {}
-      for attr in keys(u)
-        unew[prefix .. attr] = u[attr]
+      var tnew: dict<any> = {}
+      for attr in keys(t)
+        tnew[prefix .. attr] = t[attr]
       endfor
-      return unew->extend(t, 'error')
+      return tnew->extend(u, 'error')
     }
   endif
 

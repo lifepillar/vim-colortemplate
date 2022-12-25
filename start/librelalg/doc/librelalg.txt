@@ -809,29 +809,29 @@ Join({cont}, {rel}, {func} [, {prefix}])	*librelalg.Join()*
 		t1 and t2 should be joined.
 
 		{prefix} is a string that is added to each attribute name of
-		{rel} in the output relation. The prefix is mandatory if the
-		relations to be joined have some attributes in common, because
-		the attributes in a relation must be all distinct. The prefix
-		must not be used inside {func}.
+		the pipelined relation in the output relation. The prefix is
+		mandatory if the relations to be joined have some attributes
+		in common, because the attributes in a relation must be all
+		distinct. The prefix must not be used inside {func}.
 
 		For example, to join `Buffer` with `Tag` on the common `BufId`
 		attribute:
 >
 		const result = Query(
 		    Scan(Buffer)
-		    ->Join(Tag, (t, u) => t.BufId == u.BufId, 'u_')
+		    ->Join(Tag, (t, u) => t.BufId == u.BufId, 't_')
 		  )
 		echo Table(result)
 <
 		Output:
 >
-		─────────────────────────────────────────────────
-		 u_Line u_BufId BufName BufId u_TagName u_Column
-		─────────────────────────────────────────────────
-		      3       1     foo     1       abc        9
-		      4       1     foo     1       xyz        1
-		      4       1     foo     1       lll        8
-		     14       2     bar     2       abc       15
+		─────────────────────────────────────────────
+		 TagName Column Line t_BufId BufId t_BufName
+		─────────────────────────────────────────────
+		     abc      9    3       1     1       foo
+		     xyz      1    4       1     1       foo
+		     lll      8    4       1     1       foo
+		     abc     15   14       2     2       bar
 <
 		Failing to add a prefix in the query above will result in an
 		error:

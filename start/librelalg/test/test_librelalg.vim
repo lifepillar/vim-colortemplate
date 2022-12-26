@@ -5,6 +5,7 @@ import 'libtinytest.vim' as tt
 
 const AntiJoin             = ra.AntiJoin
 const Attributes           = ra.Attributes
+const Avg                  = ra.Avg
 const Bind                 = ra.Bind
 const Bool                 = ra.Bool
 const Build                = ra.Build
@@ -1000,10 +1001,10 @@ def Test_RA_Max()
   var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
-  assert_equal(v:none, Scan(R)->Max('A'))
-  assert_equal(v:none, Scan(R)->Max('B'))
-  assert_equal(v:none, Scan(R)->Max('C'))
-  assert_equal(v:none, Scan(R)->Max('D'))
+  assert_equal(null, Scan(R)->Max('A'))
+  assert_equal(null, Scan(R)->Max('B'))
+  assert_equal(null, Scan(R)->Max('C'))
+  assert_equal(null, Scan(R)->Max('D'))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D:  true},
@@ -1025,10 +1026,10 @@ def Test_RA_Min()
   var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
-  assert_equal(v:none, Scan(R)->Min('A'))
-  assert_equal(v:none, Scan(R)->Min('B'))
-  assert_equal(v:none, Scan(R)->Min('C'))
-  assert_equal(v:none, Scan(R)->Min('D'))
+  assert_equal(null, Scan(R)->Min('A'))
+  assert_equal(null, Scan(R)->Min('B'))
+  assert_equal(null, Scan(R)->Min('C'))
+  assert_equal(null, Scan(R)->Min('D'))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D:  true},
@@ -1050,8 +1051,8 @@ def Test_RA_Sum()
   var R = Relation('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
-  assert_equal(v:none, Scan(R)->Sum('A'))
-  assert_equal(v:none, Scan(R)->Sum('B'))
+  assert_equal(0, Scan(R)->Sum('A'))
+  assert_equal(0, Scan(R)->Sum('B'))
 
   const instance = [
     {A: 0, B: 10.0},
@@ -1062,8 +1063,33 @@ def Test_RA_Sum()
   ]
   R->InsertMany(instance)
 
-  assert_equal(10,   Scan(R)->Sum('A'))
+  assert_equal(10, Scan(R)->Sum('A'))
+  assert_equal(v:t_number, type(Scan(R)->Sum('A')))
   assert_equal(13.5, Scan(R)->Sum('B'))
+  assert_equal(v:t_float, type(Scan(R)->Sum('B')))
+  assert_equal(instance, r)
+enddef
+
+def Test_RA_Avg()
+  var R = Relation('R', {A: Int, B: Float}, [['A']])
+  const r = R.instance
+
+  assert_equal(null, Scan(R)->Avg('A'))
+  assert_equal(null, Scan(R)->Avg('B'))
+
+  const instance = [
+    {A: 0, B: 10.0},
+    {A: 1, B:  2.5},
+    {A: 2, B: -3.0},
+    {A: 3, B:  1.5},
+    {A: 4, B:  2.5},
+  ]
+  R->InsertMany(instance)
+
+  assert_equal(2.0, Scan(R)->Avg('A'))
+  assert_equal(v:t_float, type(Scan(R)->Avg('A')))
+  assert_equal(2.7, Scan(R)->Avg('B'))
+  assert_equal(v:t_float, type(Scan(R)->Avg('B')))
   assert_equal(instance, r)
 enddef
 

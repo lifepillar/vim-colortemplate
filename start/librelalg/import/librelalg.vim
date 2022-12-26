@@ -531,32 +531,56 @@ export def Bind(AggrFn: func(func(func(dict<any>)): void, string): any, attr: st
   return (Cont: func(func(dict<any>)): void) => AggrFn(Cont, attr)
 enddef
 
+export def Count(Cont: func(func(dict<any>))): number
+  var count = 0
+  Cont((t) => {
+    ++count
+  })
+  return count
+enddef
+
 export def Max(Cont: func(func(dict<any>)), attr: string): any
-  def Fn(t: dict<any>, v: any): any
-    return type(v) == v:t_none ? t[attr] : CompareValues(t[attr], v) == 1 ? t[attr] : v
-  enddef
-  return Aggregate(Cont, () => v:none, Fn)
+  var first = true
+  var max: any = null
+  Cont((t) => {
+    const v = t[attr]
+    if first
+      max = v
+      first = false
+    elseif CompareValues(v, max) == 1
+      max = v
+    endif
+  })
+  return max
 enddef
 
 export def Min(Cont: func(func(dict<any>)), attr: string): any
-  def Fn(t: dict<any>, v: any): any
-    return type(v) == v:t_none ? t[attr] : CompareValues(t[attr], v) == -1 ? t[attr] : v
-  enddef
-  return Aggregate(Cont, () => v:none, Fn)
-enddef
-
-export def Count(Cont: func(func(dict<any>))): any
-  def Fn(t: dict<any>, v: any): any
-    return v + 1
-  enddef
-  return Aggregate(Cont, () => 0, Fn)
+  var first = true
+  var min: any = null
+  Cont((t) => {
+    const v = t[attr]
+    if first
+      min = v
+      first = false
+    elseif CompareValues(v, min) == -1
+      min = v
+    endif
+  })
+  return min
 enddef
 
 export def Sum(Cont: func(func(dict<any>)), attr: string): any
-  def Fn(t: dict<any>, v: any): any
-    return type(v) == v:t_none ? t[attr] : t[attr] + v
-  enddef
-  return Aggregate(Cont, () => v:none, Fn)
+  return Aggregate(Cont, 0, (t, sum) => sum + t[attr])
+enddef
+
+export def Avg(Cont: func(func(dict<any>)), attr: string): any
+  var sum: float = 0.0
+  var count = 0
+  Cont((t: dict<float>) => {
+    sum += t[attr]
+    ++count
+  })
+  return count == 0 ? null : sum / count
 enddef
 # }}}
 # }}}

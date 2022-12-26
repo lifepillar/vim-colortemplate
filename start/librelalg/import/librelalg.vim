@@ -297,9 +297,6 @@ export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   }
 enddef
 
-# TODO: ExistJoin(): returns either an empty relation or a one-tuple relation
-# (the join stops as soon as a joined tuple is found)
-#
 export def Product(Cont: func(func(dict<any>)), R: any, prefix = ''): func(func(dict<any>))
   return Join(Cont, R, (t, u) => true, prefix)
 enddef

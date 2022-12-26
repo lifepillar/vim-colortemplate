@@ -378,10 +378,12 @@ export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, d
   }
 enddef
 
+# See: C. Date & H. Darwen, Outer Join with No Nulls and Fewer Tears, Ch. 20,
+# Relational Database Writings 1989–1991
 export def LeftNatJoin(
     Cont: func(func(dict<any>)),
     R: any,
-    Filler: any
+    Filler: any  # TODO: extend with a fn depending of t instead?
 ): func(func(dict<any>))
   const rel    = IsRelationInstance(R)      ? R      : R.instance
   const filler = IsRelationInstance(Filler) ? Filler : Filler.instance
@@ -501,6 +503,7 @@ export def Divide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
   const s = IsRelationInstance(S) ? S : S.instance
 
   if empty(s)
+    # FIXME: this is not defined on the right schema!
     return Cont
   endif
 
@@ -512,6 +515,7 @@ export def Divide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
 
   const attrS = keys(s[0])
   const K = filter(keys(r[0]), (i, v) => index(attrS, v) == -1)
+  # TODO: optimize (r1 does not need to be materialized)
   const r1 = Scan(r)->Project(K)->Materialize()
   const s1 = Scan(s)->Product(r1)->Minus(r)->Project(K)->Materialize()
   return Scan(r1)->Minus(s1)

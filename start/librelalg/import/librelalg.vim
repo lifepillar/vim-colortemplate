@@ -224,20 +224,18 @@ export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(fu
   }
 enddef
 
-export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
-  var MergeTuples: func(dict<any>, dict<any>): dict<any>
-  if empty(prefix)
-    MergeTuples = (t: dict<any>, u: dict<any>): dict<any> => t->extendnew(u, 'error')
-  else
-    MergeTuples = (t: dict<any>, u: dict<any>): dict<any> => {
-      var tnew: dict<any> = {}
-      for attr in keys(t)
-        tnew[prefix .. attr] = t[attr]
-      endfor
-      return tnew->extend(u, 'error')
-    }
-  endif
+def MakeTupleMerger(prefix: string): func(dict<any>, dict<any>): dict<any>
+  return (t: dict<any>, u: dict<any>): dict<any> => {
+    var tnew: dict<any> = {}
+    for attr in keys(t)
+      tnew[prefix .. attr] = t[attr]
+    endfor
+    return tnew->extend(u, 'error')
+  }
+enddef
 
+export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
+  const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
   const rel = IsRelationInstance(R) ? R : R.instance
 
   return (Emit: func(dict<any>)) => {

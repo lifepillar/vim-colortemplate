@@ -466,9 +466,8 @@ enddef
 export def GroupBy(
     Cont: func(func(dict<any>)),
     attrList: list<string>,
-    AggregateFn: func(func(func(dict<any>)), string): any,
-    aggrAttr: string,
-    aggrName = 'AggregateValue'
+    AggregateFn: func(func(func(dict<any>))): any,
+    aggrName = 'aggrValue'
 ): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
 
@@ -490,8 +489,7 @@ export def GroupBy(
       for attr in attrList
         t0[attr] = subrel[0][attr]
       endfor
-      const Fn = Bind(AggregateFn, aggrAttr)
-      t0[aggrName] = Scan(subrel)->Fn()
+      t0[aggrName] = Scan(subrel)->AggregateFn()
       Emit(t0)
     endfor
   }
@@ -552,7 +550,7 @@ export def Min(Cont: func(func(dict<any>)), attr: string): any
   return Aggregate(Cont, () => v:none, Fn)
 enddef
 
-export def Count(Cont: func(func(dict<any>)), attr: string): any
+export def Count(Cont: func(func(dict<any>))): any
   def Fn(t: dict<any>, v: any): any
     return v + 1
   enddef

@@ -968,7 +968,7 @@ def Test_RA_LeftNatJoin()
     {BufId: 2, TagName: 'abc', Line: 14, Column: 15},
   ])
 
-  const summary = Query(Scan(Tag)->GroupBy(['BufId'], Count, 'BufId', 'num_tags'))
+  const summary = Query(Scan(Tag)->GroupBy(['BufId'], Count, 'num_tags'))
   const result = Query(Scan(Buffer)->LeftNatJoin(summary, [{'num_tags': 0}]))
   const expected = [
     {BufId: 1, BufName: 'foo', num_tags: 3},

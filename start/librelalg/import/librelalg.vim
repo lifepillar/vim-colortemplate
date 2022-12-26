@@ -523,8 +523,8 @@ enddef
 # }}}
 
 # Aggregate functions {{{
-def Aggregate(Cont: func(func(dict<any>)), Init: func(): any, Fn: func(dict<any>, any): any): any
-  var Res: any = Init()
+def Aggregate(Cont: func(func(dict<any>)), initValue: any, Fn: func(dict<any>, any): any): any
+  var Res: any = initValue
   Cont((t) => {
     Res = Fn(t, Res)
   })

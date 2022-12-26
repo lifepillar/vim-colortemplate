@@ -411,6 +411,14 @@ export def LeftNatJoin(
   }
 enddef
 
+export def Extend(Cont: func(func(dict<any>)), Fn: func(dict<any>): dict<any>): func(func(dict<any>))
+  return (Emit: func(dict<any>)) => {
+    Cont((t: dict<any>) => {
+      Emit(Fn(t)->extend(t, 'error'))
+    })
+  }
+enddef
+
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
 export def FrameByPred(Cont: func(func(dict<any>)), Fn: func(dict<any>): number, name: string = 'fid'): func(func(dict<any>))

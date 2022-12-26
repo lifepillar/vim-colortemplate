@@ -14,6 +14,7 @@ const Delete               = ra.Delete
 const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
 const Empty                = ra.Empty
+const Extend               = ra.Extend
 const EquiJoin             = ra.EquiJoin
 const EquiJoinPred         = ra.EquiJoinPred
 const Filter               = ra.Filter
@@ -976,6 +977,23 @@ def Test_RA_LeftNatJoin()
   ]
 
   assert_true(RelEq(result, expected))
+enddef
+
+def Test_RA_Extend()
+  var R = Relation('R', {A: Int}, [['A']])
+          ->InsertMany([{A: 1}, {A: 3}, {A: 5}])
+  const expected = [
+    {A: 1, B: 2,  C: 'ok'},
+    {A: 3, B: 6,  C: 'ok'},
+    {A: 5, B: 10, C: 'ok'},
+  ]
+  const result = Query(
+    Scan(R)->Extend((t) => {
+      return {B: t.A * 2, C: 'ok'}
+    })
+  )
+
+  assert_equal(expected, result)
 enddef
 
 def Test_RA_Max()

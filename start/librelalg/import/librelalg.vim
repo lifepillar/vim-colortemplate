@@ -520,6 +520,36 @@ export def Divide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
   const s1 = Scan(s)->Product(r1)->Minus(r)->Project(K)->Materialize()
   return Scan(r1)->Minus(s1)
 enddef
+
+# See: C. Date & H. Darwen, Ch 11, Into the Great Divide,
+# Relational Database Writings 1989–1991.
+export def ToddDivide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
+  const s = IsRelationInstance(S) ? S : S.instance
+
+  if empty(s)
+    # TODO: Return Scan(s) or throw ErrDivideByZero()?
+    throw 'Error: Todd division by empty relation'
+  endif
+
+  var r = Materialize(Cont)
+
+  if empty(r)
+    return Scan(r)
+  endif
+
+  const attrS = keys(s[0])
+  const attrR = keys(r[0])
+  const X = filter(keys(r[0]), (_, v) => index(attrS, v) == -1)
+  const Z = filter(keys(s[0]), (_, v) => index(attrR, v) == -1)
+  const t1 = Scan(r)->Project(X)->Materialize()
+  const t2 = Scan(s)->Project(Z)->Materialize()
+  const t3 = Scan(t1)->Product(t2)->Materialize()
+  const t4 = Scan(t1)->Product(s)->Materialize()
+  const t5 = Scan(r)->NatJoin(s)->Materialize()
+  const t6 = Scan(t4)->Minus(t5)->Materialize()
+  const t7 = Scan(t6)->Project(flattennew([X, Z]))->Materialize()
+  return Scan(t3)->Minus(t7)
+enddef
 # }}}
 
 # Aggregate functions {{{

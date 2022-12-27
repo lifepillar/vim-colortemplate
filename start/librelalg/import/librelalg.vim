@@ -453,7 +453,7 @@ enddef
 
 export def GroupBy(
     Cont: func(func(dict<any>)),
-    attrList: list<string>,
+    groupBy: list<string>,
     AggregateFn: func(func(func(dict<any>))): any,
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
@@ -461,7 +461,7 @@ export def GroupBy(
 
   Cont((t) => {
     # Materialize into subrelations
-    const groupValue = mapnew(attrList, (_, attr) => t[attr])
+    const groupValue = mapnew(groupBy, (_, attr) => t[attr])
     const groupKey = String(groupValue)
     if !fid->has_key(groupKey)
       fid[groupKey] = []
@@ -474,7 +474,7 @@ export def GroupBy(
     for groupKey in keys(fid)
       const subrel = fid[groupKey]
       var t0: dict<any> = {}
-      for attr in attrList
+      for attr in groupBy
         t0[attr] = subrel[0][attr]
       endfor
       t0[aggrName] = Scan(subrel)->AggregateFn()

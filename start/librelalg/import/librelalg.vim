@@ -173,6 +173,124 @@ export def SortBy(Cont: func(func(dict<any>)), attrList: list<string>, opts: lis
   const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList, invert)
   return Sort(Cont, SortAttrPred)
 enddef
+
+export def SumBy(
+    Cont: func(func(dict<any>)),
+    groupBy: list<string>,
+    attr: string,
+    aggrName = 'sum'
+): list<dict<any>>
+  var aggr: dict<dict<any>> = {}  # Map group => tuple
+
+  Cont((t: dict<any>) => {
+    var tp = ProjectTuple(t, groupBy)
+    const group = String(values(tp))
+    if !aggr->has_key(group)
+      aggr[group] = tp->extend({[aggrName]: 0})
+    endif
+    aggr[group][aggrName] += t[attr]
+  })
+
+  return values(aggr)
+enddef
+
+export def CountBy(
+    Cont: func(func(dict<any>)),
+    groupBy: list<string>,
+    attr: string = null_string,
+    aggrName = 'count'
+): list<dict<any>>
+  var aggrCount: dict<dict<any>> = {}
+  var aggrDistinct: dict<dict<bool>> = {}
+
+  Cont((t: dict<any>) => {
+    var tp = ProjectTuple(t, groupBy)
+    const group = String(values(tp))
+    if !aggrCount->has_key(group)
+      aggrCount[group] = tp->extend({[aggrName]: 0})
+      aggrDistinct[group] = {}
+    endif
+    if attr is null_string
+      ++aggrCount[group][aggrName]
+    elseif !aggrDistinct[group]->has_key(string(t[attr]))
+      aggrDistinct[group][string(t[attr])] = true
+      ++aggrCount[group][aggrName]
+    endif
+  })
+
+  return values(aggrCount)
+enddef
+
+export def MaxBy(
+    Cont: func(func(dict<any>)),
+    groupBy: list<string>,
+    attr: string,
+    aggrName = 'max'
+): list<dict<any>>
+  var aggr: dict<dict<any>> = {}  # Map group => tuple
+
+  Cont((t: dict<any>) => {
+    var tp = ProjectTuple(t, groupBy)
+    const group = String(values(tp))
+    if !aggr->has_key(group)
+      aggr[group] = tp->extend({[aggrName]: t[attr]})
+    endif
+    if aggr[group][aggrName] < t[attr]
+      aggr[group][aggrName] = t[attr]
+    endif
+  })
+
+  return values(aggr)
+enddef
+
+export def MinBy(
+    Cont: func(func(dict<any>)),
+    groupBy: list<string>,
+    attr: string,
+    aggrName = 'min'
+): list<dict<any>>
+  var aggr: dict<dict<any>> = {}  # Map group => tuple
+
+  Cont((t: dict<any>) => {
+    var tp = ProjectTuple(t, groupBy)
+    const group = String(values(tp))
+    if !aggr->has_key(group)
+      aggr[group] = tp->extend({[aggrName]: t[attr]})
+    endif
+    if aggr[group][aggrName] > t[attr]
+      aggr[group][aggrName] = t[attr]
+    endif
+  })
+
+  return values(aggr)
+enddef
+
+export def AvgBy(
+    Cont: func(func(dict<any>)),
+    groupBy: list<string>,
+    attr: string,
+    aggrName = 'avg'
+): list<dict<any>>
+  var aggrAvg: dict<dict<any>> = {}
+  var aggrCnt: dict<number> = {}
+
+  Cont((t: dict<any>) => {
+    var tp = ProjectTuple(t, groupBy)
+    const group = String(values(tp))
+    if !aggrAvg->has_key(group)
+      aggrAvg[group] = tp->extend({[aggrName]: 0.0})
+      aggrCnt[group] = 0
+    endif
+    aggrAvg[group][aggrName] += t[attr]
+    ++aggrCnt[group]
+  })
+
+  for group in keys(aggrAvg)
+    aggrAvg[group][aggrName] /= aggrCnt[group]
+  endfor
+
+  return values(aggrAvg)
+enddef
 # }}}
 
 # Pipeline operators {{{
@@ -434,21 +552,6 @@ export def Frame(Cont: func(func(dict<any>)), attrList: list<string>, name: stri
 
     Cont((t) => FrameTuple(t))
   }
-enddef
-
-export def SumBy(Cont: func(func(dict<any>)), attr: string, other: list<string>, name: string = 'sum', fid: string = 'fid'): list<dict<any>>
-  var aggr: dict<dict<any>> = {}  # Map fid => tuple
-
-  Cont((t: dict<any>) => {
-    const group = string(t[fid])
-    if !aggr->has_key(group)
-      aggr[group] = {[fid]: t[fid], [name]: 0}
-      extend(aggr[group], ProjectTuple(t, other))
-    endif
-    aggr[group][name] += t[attr]
-  })
-
-  return values(aggr)
 enddef
 
 export def GroupBy(

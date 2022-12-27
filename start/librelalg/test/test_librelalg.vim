@@ -6,11 +6,13 @@ import 'libtinytest.vim' as tt
 const AntiJoin             = ra.AntiJoin
 const Attributes           = ra.Attributes
 const Avg                  = ra.Avg
+const AvgBy                = ra.AvgBy
 const Bind                 = ra.Bind
 const Bool                 = ra.Bool
 const Build                = ra.Build
 const Check                = ra.Check
 const Count                = ra.Count
+const CountBy              = ra.CountBy
 const Delete               = ra.Delete
 const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
@@ -35,7 +37,9 @@ const KeyAttributes        = ra.KeyAttributes
 const LeftNatJoin          = ra.LeftNatJoin
 const LimitScan            = ra.LimitScan
 const Max                  = ra.Max
+const MaxBy                = ra.MaxBy
 const Min                  = ra.Min
+const MinBy                = ra.MinBy
 const Minus                = ra.Minus
 const NatJoin              = ra.NatJoin
 const Noop                 = ra.Noop
@@ -53,6 +57,7 @@ const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
 const Str                  = ra.Str
 const Sum                  = ra.Sum
+const SumBy                = ra.SumBy
 const Table                = ra.Table
 const Update               = ra.Update
 const Union                = ra.Union
@@ -1109,6 +1114,128 @@ def Test_RA_Count()
 
   assert_equal(5, Scan(R)->Count())
   assert_equal(instance, r)
+enddef
+
+def Test_RA_SumBy()
+  assert_equal([], Scan([])->SumBy([], 'A'))
+  assert_equal([], Scan([])->SumBy([], 'B'))
+  assert_equal([], Scan([])->SumBy(['A'], 'A'))
+  assert_equal([], Scan([])->SumBy(['B'], 'A'))
+
+  const r = [
+    {A: 0, B: 10.0},
+    {A: 1, B:  2.5},
+    {A: 1, B: -3.0},
+    {A: 3, B:  1.5},
+    {A: 3, B:  2.5},
+  ]
+
+  assert_equal([{sum: 8}],   Scan(r)->SumBy([], 'A'))
+  assert_equal([{sum: 13.5}], Scan(r)->SumBy([], 'B'))
+  assert_equal([
+    {A: 0, sum: 10.0},
+    {A: 1, sum: -0.5},
+    {A: 3, sum:  4.0},
+  ], Scan(r)->SumBy(['A'], 'B'))
+enddef
+
+def Test_RA_CountBy()
+  assert_equal([], Scan([])->CountBy([]))
+  assert_equal([], Scan([])->CountBy([], 'A'))
+  assert_equal([], Scan([])->CountBy([], 'B'))
+  assert_equal([], Scan([])->CountBy(['A'], 'A'))
+  assert_equal([], Scan([])->CountBy(['B'], 'A'))
+
+  const r = [
+    {A: 0, B: 10.0},
+    {A: 1, B:  2.5},
+    {A: 1, B: -3.0},
+    {A: 3, B:  1.5},
+    {A: 3, B:  2.5},
+  ]
+
+  assert_equal([{count: 5}], Scan(r)->CountBy([]))
+  assert_equal([{count: 3}], Scan(r)->CountBy([], 'A'))
+  assert_equal([{count: 4}], Scan(r)->CountBy([], 'B'))
+  assert_equal([
+    {A: 0, cnt: 1},
+    {A: 1, cnt: 2},
+    {A: 3, cnt: 2},
+  ], Scan(r)->CountBy(['A'], null_string, 'cnt'))
+  assert_equal([
+    {A: 0, cnt: 1},
+    {A: 1, cnt: 2},
+    {A: 3, cnt: 2},
+  ], Scan(r)->CountBy(['A'], 'B', 'cnt'))
+enddef
+
+def Test_RA_MaxBy()
+  assert_equal([], Scan([])->MaxBy([], 'A'))
+  assert_equal([], Scan([])->MaxBy([], 'B'))
+  assert_equal([], Scan([])->MaxBy(['A'], 'A'))
+  assert_equal([], Scan([])->MaxBy(['B'], 'A'))
+
+  const r = [
+    {A: 0, B: 10.0},
+    {A: 1, B:  2.5},
+    {A: 1, B: -3.0},
+    {A: 3, B:  1.5},
+    {A: 3, B:  2.5},
+  ]
+
+  assert_equal([{max: 3}],    Scan(r)->MaxBy([], 'A'))
+  assert_equal([{max: 10.0}], Scan(r)->MaxBy([], 'B'))
+  assert_equal([
+    {A: 0, maximum: 10.0},
+    {A: 1, maximum:  2.5},
+    {A: 3, maximum:  2.5},
+  ], Scan(r)->MaxBy(['A'], 'B', 'maximum'))
+enddef
+
+def Test_RA_MinBy()
+  assert_equal([], Scan([])->MinBy([], 'A'))
+  assert_equal([], Scan([])->MinBy([], 'B'))
+  assert_equal([], Scan([])->MinBy(['A'], 'A'))
+  assert_equal([], Scan([])->MinBy(['B'], 'A'))
+
+  const r = [
+    {A: 0, B: 10.0},
+    {A: 1, B:  2.5},
+    {A: 1, B: -3.0},
+    {A: 3, B:  1.5},
+    {A: 3, B:  2.5},
+  ]
+
+  assert_equal([{min: 0}],    Scan(r)->MinBy([], 'A'))
+  assert_equal([{min: -3.0}], Scan(r)->MinBy([], 'B'))
+  assert_equal([
+    {A: 0, minimum: 10.0},
+    {A: 1, minimum: -3.0},
+    {A: 3, minimum:  1.5},
+  ], Scan(r)->MinBy(['A'], 'B', 'minimum'))
+enddef
+
+def Test_RA_AvgBy()
+  assert_equal([], Scan([])->AvgBy([], 'A'))
+  assert_equal([], Scan([])->AvgBy([], 'B'))
+  assert_equal([], Scan([])->AvgBy(['A'], 'A'))
+  assert_equal([], Scan([])->AvgBy(['B'], 'A'))
+
+  const r = [
+    {A: 0, B: 10.0},
+    {A: 1, B:  2.5},
+    {A: 1, B: -3.0},
+    {A: 3, B:  1.5},
+    {A: 3, B:  2.5},
+  ]
+
+  assert_equal([{avg: 1.6}], Scan(r)->AvgBy([], 'A'))
+  assert_equal([{avg: 2.7}], Scan(r)->AvgBy([], 'B'))
+  assert_equal([
+    {A: 0, average: 10.0},
+    {A: 1, average: -0.25},
+    {A: 3, average:  2.0},
+  ], Scan(r)->AvgBy(['A'], 'B', 'average'))
 enddef
 
 def Test_RA_Frame()

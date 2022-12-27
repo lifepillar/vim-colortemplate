@@ -192,7 +192,7 @@ export def SumBy(
     aggr[group][aggrName] += t[attr]
   })
 
-  return values(aggr)
+  return empty(groupBy) && empty(aggr) ? [{[aggrName]: 0}] : values(aggr)
 enddef
 
 export def CountBy(
@@ -219,7 +219,7 @@ export def CountBy(
     endif
   })
 
-  return values(aggrCount)
+  return empty(groupBy) && empty(aggrCount) ? [{[aggrName]: 0}] : values(aggrCount)
 enddef
 
 export def MaxBy(

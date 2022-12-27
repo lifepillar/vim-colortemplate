@@ -1117,10 +1117,10 @@ def Test_RA_Count()
 enddef
 
 def Test_RA_SumBy()
-  assert_equal([], Scan([])->SumBy([], 'A'))
-  assert_equal([], Scan([])->SumBy([], 'B'))
-  assert_equal([], Scan([])->SumBy(['A'], 'A'))
-  assert_equal([], Scan([])->SumBy(['B'], 'A'))
+  assert_equal([{sum: 0}],   Scan([])->SumBy([], 'A'))
+  assert_equal([{summa: 0}], Scan([])->SumBy([], 'B', 'summa'))
+  assert_equal([],           Scan([])->SumBy(['A'], 'A'))
+  assert_equal([],           Scan([])->SumBy(['B'], 'A', 'summa'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1140,11 +1140,11 @@ def Test_RA_SumBy()
 enddef
 
 def Test_RA_CountBy()
-  assert_equal([], Scan([])->CountBy([]))
-  assert_equal([], Scan([])->CountBy([], 'A'))
-  assert_equal([], Scan([])->CountBy([], 'B'))
-  assert_equal([], Scan([])->CountBy(['A'], 'A'))
-  assert_equal([], Scan([])->CountBy(['B'], 'A'))
+  assert_equal([{count: 0}], Scan([])->CountBy([]))
+  assert_equal([{count: 0}], Scan([])->CountBy([], 'A'))
+  assert_equal([{cnt: 0}],   Scan([])->CountBy([], 'B', 'cnt'))
+  assert_equal([],           Scan([])->CountBy(['A'], 'A'))
+  assert_equal([],           Scan([])->CountBy(['B'], 'A', 'cnt'))
 
   const r = [
     {A: 0, B: 10.0},

@@ -60,6 +60,7 @@ const Str                  = ra.Str
 const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
+const ToddDivide           = ra.ToddDivide
 const Update               = ra.Update
 const Union                = ra.Union
 const Zip                  = ra.Zip
@@ -1354,6 +1355,48 @@ def Test_RA_Divide()
   assert_equal(expected, result)
   assert_equal(subscription_instance, subscription)
   assert_equal(session_instance, session)
+enddef
+
+def Test_RA_GeneralizedDivide()
+  const SP = [  # Supplier S# supplies part P#
+    {'S#': 1, 'P#': 10},
+    {'S#': 1, 'P#': 20},
+    {'S#': 1, 'P#': 30},
+    {'S#': 2, 'P#': 10},
+    {'S#': 2, 'P#': 20},
+    {'S#': 3, 'P#': 20},
+    {'S#': 3, 'P#': 40},
+  ]
+  const PJ = [  # Part P# is used in project J#
+    {'P#': 10, 'J#': 100},
+    {'P#': 20, 'J#': 100},
+    {'P#': 20, 'J#': 200},
+    {'P#': 30, 'J#': 200},
+    {'P#': 20, 'J#': 300},
+    {'P#': 40, 'J#': 300},
+  ]
+  # Find the pairs {S,J} such that
+  # supplier S supplies all the parts used in project J:
+  const result = Query(Scan(SP)->ToddDivide(PJ))
+  const expected = [
+    {'S#': 1, 'J#': 100},
+    {'S#': 1, 'J#': 200},
+    {'S#': 2, 'J#': 100},
+    {'S#': 3, 'J#': 300},
+  ]
+  assert_true(RelEq(expected, result),
+    printf("Expected %s, but got %s", expected, result))
+
+  # Find the pairs {J,S} such that
+  # project J uses all the parts supplied by supplier S
+  const result2 = Query(Scan(PJ)->ToddDivide(SP))
+  const expected2 = [
+    {'J#': 100, 'S#': 2},
+    {'J#': 300, 'S#': 3},
+  ]
+
+  assert_true(RelEq(expected2, result2),
+    printf("Expected %s, but got %s", expected2, result2))
 enddef
 
 def Test_RA_EmptyKey()

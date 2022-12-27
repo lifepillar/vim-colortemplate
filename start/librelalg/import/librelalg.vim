@@ -662,9 +662,26 @@ enddef
 
 export def Count(Cont: func(func(dict<any>))): number
   var count = 0
+
   Cont((t) => {
     ++count
   })
+
+  return count
+enddef
+
+export def CountDistinct(Cont: func(func(dict<any>)), attr: string): number
+  var count = 0
+  var seen: dict<bool> = {}
+
+  Cont((t) => {
+    const v = String(t[attr])
+    if !seen->has_key(v)
+      ++count
+      seen[v] = true
+    endif
+  })
+
   return count
 enddef
 

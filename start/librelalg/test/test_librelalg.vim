@@ -13,6 +13,7 @@ const Build                = ra.Build
 const Check                = ra.Check
 const Count                = ra.Count
 const CountBy              = ra.CountBy
+const CountDistinct        = ra.CountDistinct
 const Delete               = ra.Delete
 const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
@@ -1098,22 +1099,32 @@ def Test_RA_Avg()
 enddef
 
 def Test_RA_Count()
-  var R = Relation('R', {A: Int, B: Float}, [['A']])
-  const r = R.instance
-
-  assert_equal(0, Scan(R)->Count())
-
-  const instance = [
+  const r = [
     {A: 0, B: 10.0},
-    {A: 1, B:  2.5},
+    {A: 2, B:  2.5},
     {A: 2, B: -3.0},
-    {A: 3, B:  1.5},
+    {A: 2, B:  1.5},
+    {A: 4, B:  2.5},
     {A: 4, B:  2.5},
   ]
-  R->InsertMany(instance)
 
-  assert_equal(5, Scan(R)->Count())
-  assert_equal(instance, r)
+  assert_equal(0, Scan([])->Count())
+  assert_equal(6, Scan(r)->Count())
+enddef
+
+def Test_RA_CountDistinct()
+  const r = [
+    {A: 0, B: 10.0},
+    {A: 2, B:  2.5},
+    {A: 2, B: -3.0},
+    {A: 2, B:  1.5},
+    {A: 4, B:  2.5},
+    {A: 4, B:  2.5},
+  ]
+
+  assert_equal(0, Scan([])->CountDistinct('A'))
+  assert_equal(3, Scan(r)->CountDistinct('A'))
+  assert_equal(4, Scan(r)->CountDistinct('B'))
 enddef
 
 def Test_RA_SumBy()

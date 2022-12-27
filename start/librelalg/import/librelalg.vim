@@ -67,6 +67,7 @@ def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>, invert: li
 enddef
 
 def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
+  # TODO: compare performance with copy(t) + remove(dict, key)
   var u = {}
   for attr in attrList
     u[attr] = t[attr]

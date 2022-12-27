@@ -418,15 +418,6 @@ enddef
 
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
-export def FrameByPred(Cont: func(func(dict<any>)), Fn: func(dict<any>): number, name: string = 'fid'): func(func(dict<any>))
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
-      Emit(extendnew(t, {[name]: Fn(t)}, 'error'))
-    })
-  }
-enddef
-
-# See EF Codd, The Relational Model for Database Management: Version 2, 1990
 export def Frame(Cont: func(func(dict<any>)), attrList: list<string>, name: string = 'fid'): func(func(dict<any>))
   var fid = 0  # Frame identifier
   var seen: dict<number> = {}

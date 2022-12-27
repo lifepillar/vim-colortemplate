@@ -23,7 +23,6 @@ const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const Frame                = ra.Frame
-const FrameByPred          = ra.FrameByPred
 const GroupBy              = ra.GroupBy
 const Key                  = ra.Key
 const In                   = ra.In
@@ -1124,7 +1123,11 @@ def Test_RA_Frame()
       {A: 70, B: 'a', C: 'y'},
     ])
 
-  var result = Query(Scan(R)->FrameByPred((t): number => t.A / 30))
+  var result = Query(
+    Scan(R)->Extend((t) => {
+      return {'fid': t.A / 30}
+    })
+  )
   var expected = [
     {A: 10, B: 'a', C: 'x', fid: 0},
     {A: 20, B: 'b', C: 'y', fid: 0},
@@ -1136,15 +1139,15 @@ def Test_RA_Frame()
   ]
   assert_equal(expected, result)
 
-  result = Query(Scan(R)->Frame(['B', 'C'], 'group'))
+  result = Query(Scan(R)->Frame(['B', 'C']))
   expected = [
-    {A: 10, B: 'a', C: 'x', group: 0},
-    {A: 20, B: 'b', C: 'y', group: 1},
-    {A: 30, B: 'a', C: 'x', group: 0},
-    {A: 40, B: 'a', C: 'x', group: 0},
-    {A: 50, B: 'b', C: 'x', group: 2},
-    {A: 60, B: 'b', C: 'y', group: 1},
-    {A: 70, B: 'a', C: 'y', group: 3},
+    {A: 10, B: 'a', C: 'x', fid: 0},
+    {A: 20, B: 'b', C: 'y', fid: 1},
+    {A: 30, B: 'a', C: 'x', fid: 0},
+    {A: 40, B: 'a', C: 'x', fid: 0},
+    {A: 50, B: 'b', C: 'x', fid: 2},
+    {A: 60, B: 'b', C: 'y', fid: 1},
+    {A: 70, B: 'a', C: 'y', fid: 3},
   ]
   assert_equal(expected, result)
 enddef

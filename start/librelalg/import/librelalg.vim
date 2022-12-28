@@ -594,56 +594,74 @@ enddef
 #
 # where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
 # appearing in r but not in s.
-export def Divide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
-  const s = IsRelationInstance(S) ? S : S.instance
-
-  if empty(s)
-    # FIXME: this is not defined on the right schema!
-    return Cont
-  endif
-
+export def CoddDivide(Cont: func(func(dict<any>)), S: any, divisorAttrList: list<string> = []): func(func(dict<any>))
   var r = Materialize(Cont)
 
   if empty(r)
     return Scan(r)
   endif
 
+  const s = IsRelationInstance(S) ? S : S.instance
+
+  if empty(s)
+    const K = IsRelationInstance(S)
+      ? filter(keys(r[0]), (i, v) => index(divisorAttrList, v) == -1)
+      : filter(keys(r[0]), (i, v) => index(Attributes(S), v) == -1)
+    return Scan(r)->Project(K)
+  endif
+
   const attrS = keys(s[0])
   const K = filter(keys(r[0]), (i, v) => index(attrS, v) == -1)
-  # TODO: optimize (r1 does not need to be materialized)
   const r1 = Scan(r)->Project(K)->Materialize()
   const s1 = Scan(s)->Product(r1)->Minus(r)->Project(K)->Materialize()
   return Scan(r1)->Minus(s1)
 enddef
 
-# See: C. Date & H. Darwen, Ch 11, Into the Great Divide,
+# This is a generalized form of division proposed by Stephen Todd, which does
+# not impose any restrictions on the schemas of the operands. It is defined as
+# follows: R(X,Y) ÷ S(Y,Z) = Q(X,Z) where:
+#
+# Q = {t | there are t1 in R and t2 in S such that t[X]=t1[X] and t[Z]=t2[Z],
+#          and π_Y(S_Z) ⊆ π_Y(R_X) },
+#
+# where S_Z ⊆ S is the set of tuples that agree with t on Z, and R_X ⊆ R is
+# the set of tuples that agree with t on X.
+#
+# Algebraically, Q can be derived as follows:
+#
+# Q = (π_X(R) ⨯ π_Z(S)) - π_XZ( (π_X(R) ⨯ S) - (R ⨝ S) )
+#
+# Except for the special case of an empty divisor, Todd's division reduces to
+# Codd's division when Z is empty. Differently from Codd's division, when the
+# divisor S is empty the result is always empty (note that the definition
+# requires the existence of a tuple in S, even when Z is empty).
+#
+# See also:
+# C Date & H Darwen, Into the Great Divide, Ch 11,
 # Relational Database Writings 1989–1991.
-export def ToddDivide(Cont: func(func(dict<any>)), S: any): func(func(dict<any>))
-  const s = IsRelationInstance(S) ? S : S.instance
-
-  if empty(s)
-    # TODO: Return Scan(s) or throw ErrDivideByZero()?
-    throw 'Error: Todd division by empty relation'
-  endif
-
+# C Date, An Introduction to Database Systems
+# M Levene and G Loizou, A Guided Tour of Relational Databases and Beyond, Ex. 3.4
+export def Divide(Cont: func(func(dict<any>)), S: any, codd: bool = true): func(func(dict<any>))
   var r = Materialize(Cont)
 
   if empty(r)
     return Scan(r)
   endif
 
-  const attrS = keys(s[0])
+  const s = IsRelationInstance(S) ? S : S.instance
+
+  if empty(s)
+    return Scan(s)
+  endif
+
   const attrR = keys(r[0])
+  const attrS = keys(s[0])
   const X = filter(keys(r[0]), (_, v) => index(attrS, v) == -1)
   const Z = filter(keys(s[0]), (_, v) => index(attrR, v) == -1)
-  const t1 = Scan(r)->Project(X)->Materialize()
-  const t2 = Scan(s)->Project(Z)->Materialize()
-  const t3 = Scan(t1)->Product(t2)->Materialize()
-  const t4 = Scan(t1)->Product(s)->Materialize()
-  const t5 = Scan(r)->NatJoin(s)->Materialize()
-  const t6 = Scan(t4)->Minus(t5)->Materialize()
-  const t7 = Scan(t6)->Project(flattennew([X, Z]))->Materialize()
-  return Scan(t3)->Minus(t7)
+  const r_X = Scan(r)->Project(X)->Materialize()
+  const r_join_s = Scan(r)->NatJoin(s)->Materialize()
+  const rhs = Scan(r_X)->Product(s)->Minus(r_join_s)->Project(flattennew([X, Z]))->Materialize()
+  return Scan(s)->Project(Z)->Product(r_X)->Minus(rhs)
 enddef
 # }}}
 

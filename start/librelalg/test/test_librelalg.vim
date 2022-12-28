@@ -11,6 +11,7 @@ const Bind                 = ra.Bind
 const Bool                 = ra.Bool
 const Build                = ra.Build
 const Check                = ra.Check
+const CoddDivide           = ra.CoddDivide
 const Count                = ra.Count
 const CountBy              = ra.CountBy
 const CountDistinct        = ra.CountDistinct
@@ -60,7 +61,6 @@ const Str                  = ra.Str
 const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
-const ToddDivide           = ra.ToddDivide
 const Update               = ra.Update
 const Union                = ra.Union
 const Zip                  = ra.Zip
@@ -583,6 +583,10 @@ def Test_RA_Project()
     {B: true,  C: 80},
   ]
 
+  assert_equal([], Query(Scan([])->Project(['X'])))
+  assert_equal([], Query(Scan([])->Project([])))
+  assert_equal([{}], Query(Scan([{}])->Project([])))
+  assert_equal([{}], Query(Scan(r)->Project([])))
   assert_equal(expected1, Scan(r)->Project(['A'])->SortBy(['A']))
   assert_equal(expected2, Scan(r)->Project(['B'])->SortBy(['B']))
   assert_equal(expected3, Scan(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
@@ -739,6 +743,11 @@ def Test_RA_Product()
     {C: 90},
   ]
   S->InsertMany(instanceS)
+
+  assert_equal([], Query(Scan([])->Product([])))
+  assert_equal([], Query(Scan(R)->Product([])))
+  assert_equal([], Query(Scan([])->Product(R)))
+  assert_equal(r, Query(Scan(R)->Product([{}])))
 
   const expected = [
     {A: 0, B: 'zero', C: 10},
@@ -1318,7 +1327,7 @@ def Test_RA_GroupBy()
   assert_equal(instance, r)
 enddef
 
-def Test_RA_Divide()
+def Test_RA_CoddDivide()
   var Subscription = Relation('Subscription',
      {student: Str, date: Str, course: Str},
      [['student', 'course']]
@@ -1337,6 +1346,28 @@ def Test_RA_Divide()
   Subscription->InsertMany(subscription_instance)
 
   var Session = Relation('Session', {date: Str, course: Str}, [['date', 'course']])
+  const result1 = Query(Scan(Subscription)->CoddDivide(Session))
+  const expected1 = [
+    {student: '123'},
+    {student: '283'},
+    {student: '375'},
+    {student: '303'},
+  ]
+
+  assert_equal(expected1, result1)
+
+  # If the divisor is an empty *derived* relation, the divisor carries no
+  # information about its schema. Short of explicitly providing a schema,
+  # the choice is arbitrary: we assume that the schema is empty.
+  const result2 = Query(Scan(Subscription)->CoddDivide([]))
+  const expected2 = subscription_instance
+  # The schema can be given explicitly, though (for this special case only)
+  const result3 = Query(Scan(Subscription)->CoddDivide([], ['date', 'course']))
+  const expected3 = expected1
+
+  assert_equal(expected2, result2)
+  assert_equal(expected3, result3)
+
   const session = Session.instance
   const session_instance = [
     {date: '2019-12-05', course:        'Databases'},
@@ -1346,18 +1377,26 @@ def Test_RA_Divide()
   Session->InsertMany(session_instance)
 
   # Which students are subscribed to all the courses?
-  const expected = [
+  const result4 = Scan(Subscription)->CoddDivide(Session)->SortBy(['student'])
+  const expected4 = [
     {'student': '123'},
     {'student': '283'},
   ]
-  const result = Scan(Subscription)->Divide(Session)->SortBy(['student'])
+  assert_equal(expected4, result4)
 
-  assert_equal(expected, result)
+  # Todd's division must return the same result
+  const result5 = Scan(Subscription)->Divide(Session)->SortBy(['student'])
+  const expected5 = [
+    {'student': '123'},
+    {'student': '283'},
+  ]
+  assert_equal(expected5, result5)
+
   assert_equal(subscription_instance, subscription)
   assert_equal(session_instance, session)
 enddef
 
-def Test_RA_GeneralizedDivide()
+def Test_RA_Divide()
   const SP = [  # Supplier S# supplies part P#
     {'S#': 1, 'P#': 10},
     {'S#': 1, 'P#': 20},
@@ -1377,7 +1416,7 @@ def Test_RA_GeneralizedDivide()
   ]
   # Find the pairs {S,J} such that
   # supplier S supplies all the parts used in project J:
-  const result = Query(Scan(SP)->ToddDivide(PJ))
+  const result = Query(Scan(SP)->Divide(PJ))
   const expected = [
     {'S#': 1, 'J#': 100},
     {'S#': 1, 'J#': 200},
@@ -1389,7 +1428,7 @@ def Test_RA_GeneralizedDivide()
 
   # Find the pairs {J,S} such that
   # project J uses all the parts supplied by supplier S
-  const result2 = Query(Scan(PJ)->ToddDivide(SP))
+  const result2 = Query(Scan(PJ)->Divide(SP))
   const expected2 = [
     {'J#': 100, 'S#': 2},
     {'J#': 300, 'S#': 3},
@@ -1397,6 +1436,11 @@ def Test_RA_GeneralizedDivide()
 
   assert_true(RelEq(expected2, result2),
     printf("Expected %s, but got %s", expected2, result2))
+
+  const PJEmpty = Relation('PJ', {'P#': Int, 'J#': Int}, [['J#', 'P#']])
+
+  assert_equal([], Query(Scan(SP)->Divide(PJEmpty)))
+  assert_equal([], Query(Scan(SP)->Divide([])))
 enddef
 
 def Test_RA_EmptyKey()
@@ -1415,6 +1459,18 @@ def Test_RA_EmptyKey()
   RR->Insert({A: 2, B: 'y'})
 
   assert_equal([{A: 2, B: 'y'}], RR.instance)
+enddef
+
+def Test_RA_DivideEdgeCases()
+  # For further edge cases, see Test_RA_DeeDum()
+  assert_equal([],       Query(Scan([{X: 1}])->Divide([])))
+  assert_equal([],       Query(Scan([{X: 1, Y: 2}])->Divide([])))
+  assert_equal([],       Query(Scan([])->Divide([{Y: 1}])))
+  assert_equal([],       Query(Scan([])->Divide([{Y: 1, Z: 2}])))
+  assert_equal([{}],     Query(Scan([{Y: 1}])->Divide([{Y: 1}])))
+  assert_equal([{}],     Query(Scan([{Y: 1}, {Y: 2}])->Divide([{Y: 1}])))
+  assert_equal([{Z: 2}], Query(Scan([{Y: 1}])->Divide([{Y: 1, Z: 2}])))
+  assert_equal([{Z: 2}], Query(Scan([{Y: 1}, {Y: 2}])->Divide([{Y: 1, Z: 2}])))
 enddef
 
 def Test_RA_DeeDum()
@@ -1481,7 +1537,9 @@ def Test_RA_DeeDum()
 
   assert_equal([],           Scan(dum)->Divide(dum)->Build(),                "dum ÷ dum")
   assert_equal([],           Scan(dum)->Divide(dee)->Build(),                "dum ÷ dee")
-  assert_equal([{}],         Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
+  # Differently from Codd's division, Todd's division returns [] whenever the
+  # divisor is empty (Codd's division would return [{}] here):
+  assert_equal([],           Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
   assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
 enddef
 

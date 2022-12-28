@@ -270,6 +270,25 @@ If you want to inspect the content of a relation, you may print it as a table:
 	echo Table(Buffer)
 	echo Table(Tag)
 <
+The output is (note that the columns are in an arbitrary order):
+>
+	 Buffer
+	───────────────
+	 BufName BufId
+	───────────────
+	     foo     1
+	     bar     2
+	     xyz     3
+
+	 Tag
+	───────────────────────────
+	 TagName Column Line BufId
+	───────────────────────────
+	     abc      9    3     1
+	     xyz      1    4     1
+	     lll      8    4     1
+	     abc     15   14     2
+<
 Of course, any attempt to violate a constraint is rejected with an error.
 Trying to insert another buffer called `foobar` will fail with a duplicate key
 error:
@@ -663,26 +682,137 @@ Build({cont})					*librelalg.Build()*
 
 		This is a leaf operator,
 
-Divide({cont}, {rel})				*librelalg.Build()*
+CoddDivide({cont}, {rel}[, {hint}])		*librelalg.CoddDivide()*
 		Divide a relation by another relation {rel}. The dividend is
 		pipelined from continuation {cont}. This is Relational
-		division: the output is the maximal relation instance such
-		that each tuple of the result joined with any tuple of {rel}
-		produces a tuple in the dividend. From a logical point of
-		view, division corresponds to first-order universal
-		quantification. Hence, division is a compact way to express
-		universal conditions (as opposed to a join operation, which is
-		an algebraic way of expressing an existential condition).
+		division as originally defined by Codd, which requires the
+		schema of the divisor to be a subset of the schema of the
+		dividend—that is, R(X) ÷ S(Y) = Q(X) is defined only if Y ⊆ X.
+
+		This operator builds the maximal¹ relation instance Q on
+		X such that each tuple in Q joined with any tuple of
+		S produces a tuple in R.
+
+		¹Maximality here is relative to the values of the input. That
+		is, the output must contain only values that exist in the
+		dividend. More precisely, the output is always a subset of
+		π_X(R), the projection on X from relation R.
 
 		For example, to obtain the names of the tags that appear in
-		*every* buffer:
+		every buffer you may proceed as follows:
 >
 		const tag = Query(Scan(Tag)->Project(['BufId', 'TagName']))
 		const bufid = Query(Scan(Buffer)->Project(['BufId']))
-		const result = Query(Scan(tag)->Divide(bufid))
-		echo Table(result)
+		const result = Query(Scan(tag)->CoddDivide(bufid))
 <
-		This is a pipeline operator.
+		If a divisor `S` is an empty derived relation, then `S` is
+		just an empty |list|, which does not carry any explicit
+		information about its schema (if `S` is a base relation then
+		its schema can be retrieved with `S.schema`). Hence, it is not
+		possible to infer the schema of the output relation
+		automatically. A |list| of attributes {hint} may be used to
+		specify which attributes should appear in the result in the
+		special case in which the divisor is empty and derived. For
+		instance:
+>
+		const result = Query(Scan(Buffer)->CoddDivide([], ['BufId']))
+<
+		Output:
+>
+		 BufName
+		─────────
+		     foo
+		     bar
+		     xyz
+<
+		Note that {hint} is ignored if the divisor is not empty or it
+		is a base relation.
+
+		From a logical point of view, division corresponds to
+		first-order universal quantification. Hence, division is
+		a compact way to express universal conditions (as opposed to
+		a join operation, which is an algebraic way of expressing an
+		existential condition).
+
+		This is a pipeline operator. See also |Divide()|.
+
+Divide({cont}, {rel})				*librelalg.Divide()*
+		Divide a relation by another relation {rel}. The dividend is
+		pipelined from continuation {cont}. This is a form of
+		generalized Relational division, with no restriction on the
+		schemas of the operands. Consider two relations R(X,Y) and
+		S(Y,Z), where Y is the subset of attributes in common between
+		R and S, and X and Z are disjoint sets of attributes (any of
+		these subsets may be empty). Then, R ÷ S = Q(X,Z) is the
+		maximal¹ relation instance on (X,Z) such that each tuple (x,z)
+		in Q, when joined with any tuple of S and projected on (X,Y)
+		gives a tuple in R. In other words, Q consists of the tuples
+		(x,z) such that a tuple (x,y) exists in R for every tuple
+		(y,z) in S.
+
+		¹Maximality here is relative to the values of the input. That
+		is, the output must contain only values that exist in the
+		input relations. More precisely, the output is always a subset
+		of π_X(R) ⨯ π_Z(S) (the cross-product of the projection of
+		R on X and the projection of S on Z).
+
+		Consider the following example:
+>
+		const SP = [  # Supplier S# supplies part P#
+		  {'S#': 1, 'P#': 10},
+		  {'S#': 1, 'P#': 20},
+		  {'S#': 1, 'P#': 30},
+		  {'S#': 2, 'P#': 10},
+		  {'S#': 2, 'P#': 20},
+		  {'S#': 3, 'P#': 20},
+		  {'S#': 3, 'P#': 40},
+		]
+		const PJ = [  # Part P# is used in project J#
+		  {'P#': 10, 'J#': 100},
+		  {'P#': 20, 'J#': 100},
+		  {'P#': 20, 'J#': 200},
+		  {'P#': 30, 'J#': 200},
+		  {'P#': 20, 'J#': 300},
+		  {'P#': 40, 'J#': 300},
+		]
+<
+		Then SP ÷ PJ and PJ ÷ SP are computed as follows:
+>
+		const sp_div_pj = Query(Scan(SP)->Divide(PJ))
+		const pj_div_sp = Query(Scan(PJ)->Divide(SP))
+		echo Table(sp_div_pj, 'SP ÷ PJ')
+		echo Table(pj_div_sp, 'PJ ÷ SP')
+<
+		Output:
+>
+		 SP ÷ PJ
+		─────────
+		  S#  J#
+		─────────
+		   1 100
+		   1 200
+		   2 100
+		   3 300
+
+		 PJ ÷ SP
+		─────────
+		  S#  J#
+		─────────
+		   2 100
+		   3 300
+<
+		The first query finds the pairs (S#,J#) such that supplier S#
+		supplies all the parts used in project J#; the second query
+		finds all the pairs (S#,J#) such that project J# uses all the
+		parts supplied by supplier S#.
+
+		A special case is when the schema of S is a proper subset of
+		the schema of R—that is, when Z is empty. Then, this operation
+		reduces to |CoddDivide()| (although the latter is in general
+		computed more efficiently), except for the special case of an
+		empty divisor. When computing R(X,Y) ÷ S(Y), if S is empty
+		then |Divide()| always returns an empty relation, while
+		|CoddDivide()| always returns π_X(R).
 
 						*librelalg.EquiJoin()*
 EquiJoin({cont}, {rel}, {list1}, {list2}, [, {prefix}])
@@ -717,6 +847,34 @@ EquiJoin({cont}, {rel}, {list1}, {list2}, [, {prefix}])
 		previous example.
 
 		This is a pipeline operator.
+
+Extend({cont}, {func})				*librelalg.Extend()*
+	Extend each tuple of a relation with a tuple computed by {func}. The
+	input relation is pipelined from continuation {cont}. {func} receives
+	a tuple and returns another tuple, which must not have any attribute
+	in common with the input tuple. For example:
+>
+	var R = Relation('R', {A: Int}, [['A']])
+		->InsertMany([{A: 1}, {A: 3}, {A: 5}])
+	const result = Query(
+	    Scan(R)->Extend((t): dict<any> => {
+	       return {B: t.A * 2}
+	    }))
+	echo Table(result)
+<
+	The output is:
+>
+	──────
+	 A  B
+	──────
+	 1  2
+	 3  6
+	 5 10
+<
+	Note that {func} must consistently return tuples over the same, fixed,
+	schema, otherwise the result is not a valid relation instance.
+
+	This is a pipeline operator.
 
 FilteredScan({rel}, {func})			*librelalg.FilteredScan()*
 		Emit only the tuples of relation {rel} that satisfies a
@@ -976,7 +1134,7 @@ Project({cont}, {list})				*librelalg.Project()*
 		Output:
 >
 		─────────
-		 TagName                                                                                                                                                          
+		 TagName
 		─────────
 		     abc
 		     xyz
@@ -1007,7 +1165,7 @@ Select({cont}, {func})				*librelalg.Select()*
 		Output:
 >
 		───────────────────────────
-		 TagName Column Line BufId                                                                                                                                        
+		 TagName Column Line BufId
 		───────────────────────────
 		     xyz      1    4     1
 		     lll      8    4     1
@@ -1034,7 +1192,7 @@ SemiJoin({cont}, {rel}, {func})			*librelalg.SemiJoin()*
 		Output:
 >
 		───────────────
-		 BufName BufId                                                                                                                                                              
+		 BufName BufId
 		───────────────
 		     foo     1
 		     bar     2
@@ -1158,9 +1316,9 @@ Descriptors({relobj})				*librelalg.Descriptors()*
 
 EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
 		Return a predicate comparing the attributes in {list1} and the
-		attributes in {list2} for equality. The returned function can
-		be used as an argument to the various join operators. For
-		example:
+		attributes in {list2} for equality elementwise. The returned
+		function can be used as an argument to the various join
+		operators. For example:
 >
 		const Pred = EquiJoinPred(['BufName'], ['TagName'])
 		const result = Query(Scan(Buffer)->SemiJoin(Tag, Pred))

@@ -1334,14 +1334,16 @@ Filter({rel}, {func})				*librelalg.Filter()*
 		TODO
 
 In({tuple}, {rel})				*librelalg.In()*
-		TODO
+		Return |true| if {tuple} is in relation {rel}, otherwise
+		return |false|.
 
 KeyAttributes({relobj})				*librelalg.KeyAttributes()*
 		Return the list of key attributes of relation object {relobj}.
 		A key attribute is an attribute that is part of a key.
 
 NotIn({tuple}, {rel})				*librelalg.NotIn()*
-		TODO
+		Return |true| if {tuple} is not in relation {rel}, otherwise
+		return |false|.
 
 RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		TODO

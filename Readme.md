@@ -18,5 +18,8 @@ packadd vim9asm
 
 ## What's Included
 
-- [vim9asm](https://github.com/lacygoill/vim9asm): Vim 9 disassembly on
+- **libparser**: a simple library to write parsers.
+- **librelalg:** an implementation of Relational Algebra in Vim 9 script
+- **libtinytest**: a minimal unit-testing library.
+- **[vim9asm](https://github.com/lacygoill/vim9asm):** Vim 9 disassembly on
   steroids.

@@ -1463,7 +1463,7 @@ SemiJoin({rel1}, {rel2}, {func})		*librelalg.SemiJoin()*
 <
 		This is a pipeline operator, returning a continuation.
 
-Sort({rel}, {func})				*librelalg.Materialize()*
+Sort({rel}, {func})				*librelalg.Sort()*
 		Materialize a relation by sorting its tuples according to the
 		criterion specified by {func}. The sorting predicate {func} is
 		a |Funcref| that takes as an input two tuples t1 and t2, and

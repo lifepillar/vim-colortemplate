@@ -16,9 +16,12 @@ def IsRelationInstance(R: any): bool
   return type(R) == v:t_list
 enddef
 
+def Instance(R: any): list<dict<any>>
+  return type(R) == v:t_list ? R : R.instance
+enddef
+
 export def In(t: dict<any>, R: any): bool
-  const rel = IsRelationInstance(R) ? R : R.instance
-  return index(rel, t) != -1
+  return index(Instance(R), t) != -1
 enddef
 
 export def NotIn(t: dict<any>, R: any): bool
@@ -105,7 +108,7 @@ enddef
 
 # Root operators (requiring a relation as input) {{{
 export def Scan(R: any): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     for t in rel
@@ -119,7 +122,7 @@ export def Foreach(R: any): func(func(dict<any>))
 enddef
 
 export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any>))
-  var rel = copy(IsRelationInstance(R) ? R : R.instance)
+  var rel = copy(Instance(R))
 
   filter(rel, (_, t) => Pred(t))
 
@@ -131,7 +134,7 @@ export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any
 enddef
 
 export def LimitScan(R: any, n: number): func(func(dict<any>))
-  var rel = copy(IsRelationInstance(R) ? R : R.instance)
+  var rel = copy(Instance(R))
   var i = 0
 
   return (Emit: func(dict<any>)) => {
@@ -355,7 +358,7 @@ enddef
 
 export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -403,7 +406,7 @@ def NatJoinPred(t: dict<any>, u: dict<any>): bool
 enddef
 
 export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -421,7 +424,7 @@ export def Product(Cont: func(func(dict<any>)), R: any, prefix = ''): func(func(
 enddef
 
 export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -437,7 +440,7 @@ enddef
 
 # TODO: check if materializing + sort() + uniq() is more performant
 export def Union(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     for t in rel
@@ -453,7 +456,7 @@ export def Union(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
 enddef
 
 export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -468,7 +471,7 @@ export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
 enddef
 
 export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -483,7 +486,7 @@ export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, d
 enddef
 
 export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
-  const rel = IsRelationInstance(R) ? R : R.instance
+  const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -504,8 +507,8 @@ export def LeftNatJoin(
     R: any,
     Filler: any  # TODO: extend with a fn depending of t instead?
 ): func(func(dict<any>))
-  const rel    = IsRelationInstance(R)      ? R      : R.instance
-  const filler = IsRelationInstance(Filler) ? Filler : Filler.instance
+  const rel    = Instance(R)
+  const filler = Instance(Filler)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -601,7 +604,7 @@ export def CoddDivide(Cont: func(func(dict<any>)), S: any, divisorAttrList: list
     return Scan(r)
   endif
 
-  const s = IsRelationInstance(S) ? S : S.instance
+  const s = Instance(S)
 
   if empty(s)
     const K = IsRelationInstance(S)
@@ -648,7 +651,7 @@ export def Divide(Cont: func(func(dict<any>)), S: any, codd: bool = true): func(
     return Scan(r)
   endif
 
-  const s = IsRelationInstance(S) ? S : S.instance
+  const s = Instance(S)
 
   if empty(s)
     return Scan(s)
@@ -1201,20 +1204,19 @@ enddef
 
 # Convenience functions {{{
 export def Filter(R: any, Pred: func(dict<any>): bool): list<dict<any>>
-  var rel = copy(IsRelationInstance(R) ? R : R.instance)
+  var rel = copy(Instance(R))
   return filter(rel, (_, t) => Pred(t))
 enddef
 
 # Compare two relation instances
 export def RelEq(R: any, S: any): bool
-  const rel1: list<dict<any>> = IsRelationInstance(R) ? R : R.instance
-  const rel2: list<dict<any>> = IsRelationInstance(S) ? S : S.instance
+  const rel1: list<dict<any>> = Instance(R)
+  const rel2: list<dict<any>> = Instance(S)
   return sort(copy(rel1)) == sort(copy(rel2))
 enddef
 
 export def Empty(R: any): bool
-  const rel = IsRelationInstance(R) ? R : R.instance
-  return empty(rel)
+  return empty(Instance(R))
 enddef
 
 # Returns a textual representation of a relation

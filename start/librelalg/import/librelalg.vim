@@ -740,7 +740,7 @@ enddef
 export def Avg(Cont: func(func(dict<any>)), attr: string): any
   var sum: float = 0.0
   var count = 0
-  Cont((t: dict<float>) => {
+  Cont((t: dict<any>) => {
     sum += t[attr]
     ++count
   })

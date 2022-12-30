@@ -1624,4 +1624,4 @@ END
 enddef
 
 const success = tt.Run('_RA_')
-
+:2echowindow success ? "Success!" : "Some test failed"

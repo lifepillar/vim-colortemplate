@@ -1197,6 +1197,25 @@ LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 <
 		This is a pipeline operator, returning a continuation.
 
+LimitScan({rel}, {n})				*librelalg.LimitScan()*
+		Like |librelalg.From()|, but emit at most {n} tuples. For
+		instance:
+>
+		var r = [{A: 10}, {A: 20}, {A: 30}, {A: 40}]
+		const result = Query(LimitScan(r, 2))
+		echo Table(result)
+<
+		Output:
+>
+	  	────
+	  	  A
+	  	────
+	  	 10
+	  	 20
+<
+		Note that, in general, the order of the tuples in a relation
+		is arbitrary.
+
 Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
 		Search for a tuple in relation object {relobj} whose {key}
 		matches the value specified by the |list| of values {list}. An

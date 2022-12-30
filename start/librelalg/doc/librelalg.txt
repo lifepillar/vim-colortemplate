@@ -1216,30 +1216,6 @@ LimitScan({rel}, {n})				*librelalg.LimitScan()*
 		Note that, in general, the order of the tuples in a relation
 		is arbitrary.
 
-Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
-		Search for a tuple in relation object {relobj} whose {key}
-		matches the value specified by the |list| of values {list}. An
-		empty |dict| is returned if no tuple with the given value of
-		the key can be found.
-
-		For example:
->
-		var R = Relation('R', {A: Int, B: Str}, [['A']])
-			->InsertMany([
-			  {A: 1, B: 'x'},
-			  {A: 3, B: 'y'},
-			  {A: 5, B: 'z'}
-			])
-		echo Lookup(R, ['A'], [3])  # {A: 3, B: 'y'}
-<
-		When looking up for a tuple by key, using this function is
-		generally faster than using |librelalg.Select()|, because
-		lookup access uses an index associated to the key, whereas
-		|librelalg.Select()| does a linear scan of the relation.
-
-		Note that the returned value is a tuple, not a relation
-		instance!
-
 MaxBy({rel}, {list}, {attr} [, {name}])		*librelalg.MaxBy()*
 		Group the tuples of a relation {rel} with respect to a {list}
 		of attributes, and determine the maximum value of attribute
@@ -1701,6 +1677,30 @@ In({tuple}, {rel})				*librelalg.In()*
 KeyAttributes({relobj})				*librelalg.KeyAttributes()*
 		Return the list of key attributes of relation object {relobj}.
 		A key attribute is an attribute that is part of a key.
+
+Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
+		Search for a tuple in relation object {relobj} whose {key}
+		matches the value specified by the |list| of values {list}. An
+		empty |dict| is returned if no tuple with the given value of
+		the key can be found.
+
+		For example:
+>
+		var R = Relation('R', {A: Int, B: Str}, [['A']])
+			->InsertMany([
+			  {A: 1, B: 'x'},
+			  {A: 3, B: 'y'},
+			  {A: 5, B: 'z'}
+			])
+		echo Lookup(R, ['A'], [3])  # {A: 3, B: 'y'}
+<
+		When looking up for a tuple by key, using this function is
+		generally faster than using |librelalg.Select()|, because
+		lookup access uses an index associated to the key, whereas
+		|librelalg.Select()| does a linear scan of the relation.
+
+		Note that the returned value is a tuple, not a relation
+		instance!
 
 NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		Return |true| if {tuple} is not in base or derived relation

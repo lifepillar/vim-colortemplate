@@ -1206,8 +1206,10 @@ export def Filter(R: any, Pred: func(dict<any>): bool): list<dict<any>>
 enddef
 
 # Compare two relation instances
-export def RelEq(r: list<dict<any>>, s: list<dict<any>>): bool
-  return sort(copy(r)) == sort(copy(s))
+export def RelEq(R: any, S: any): bool
+  const rel1: list<dict<any>> = IsRelationInstance(R) ? R : R.instance
+  const rel2: list<dict<any>> = IsRelationInstance(S) ? S : S.instance
+  return sort(copy(rel1)) == sort(copy(rel2))
 enddef
 
 export def Empty(R: any): bool

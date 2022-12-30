@@ -12,6 +12,10 @@ def SchemaAsString(schema: dict<number>): string
   return '{' .. join(values(schemaStr), ', ') .. '}'
 enddef
 
+def IsFunc(X: any): bool
+  return type(X) == v:t_func
+enddef
+
 def IsRelationInstance(R: any): bool
   return type(R) == v:t_list
 enddef
@@ -106,8 +110,12 @@ enddef
 # type Continuation func(Consumer): void
 
 # Root operators (requiring a relation as input) {{{
-export def From(R: any): func(func(dict<any>))
-  const rel = Instance(R)
+export def From(Arg: any): func(func(dict<any>))
+  if IsFunc(Arg)
+    return Arg
+  endif
+
+  const rel = Instance(Arg)
 
   return (Emit: func(dict<any>)) => {
     for t in rel
@@ -116,28 +124,16 @@ export def From(R: any): func(func(dict<any>))
   }
 enddef
 
-export def Scan(R: any): func(func(dict<any>))
-  return From(R)
+export def Scan(Arg: any): func(func(dict<any>))
+  return From(Arg)
 enddef
 
-export def Foreach(R: any): func(func(dict<any>))
-  return From(R)
+export def Foreach(Arg: any): func(func(dict<any>))
+  return From(Arg)
 enddef
 
-export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any>))
-  var rel = copy(Instance(R))
-
-  filter(rel, (_, t) => Pred(t))
-
-  return (Emit: func(dict<any>)) => {
-    for t in rel
-      Emit(t)
-    endfor
-  }
-enddef
-
-export def LimitScan(R: any, n: number): func(func(dict<any>))
-  var rel = copy(Instance(R))
+export def LimitScan(Arg: any, n: number): func(func(dict<any>))
+  var rel = IsFunc(Arg) ? Query(Arg) : Instance(Arg)
   var i = 0
 
   return (Emit: func(dict<any>)) => {
@@ -154,40 +150,52 @@ enddef
 # }}}
 
 # Leaf operators (returning a relation) {{{
-export def Query(Cont: func(func(dict<any>))): list<dict<any>>
-  var rel: list<dict<any>> = []
-  Cont((t) => {
-      add(rel, t)
-  })
-  return rel
+export def Query(Arg: any): list<dict<any>>
+  if IsFunc(Arg)
+    var rel: list<dict<any>> = []
+    Arg((t) => {
+        add(rel, t)
+    })
+    return rel
+  endif
+  return Instance(Arg)
 enddef
 
-export def Build(Cont: func(func(dict<any>))): list<dict<any>>
-  return Query(Cont)
+export def Build(Arg: any): list<dict<any>>
+  return Query(Arg)
 enddef
 
-export def Materialize(Cont: func(func(dict<any>))): list<dict<any>>
-  return Query(Cont)
+export def Materialize(Arg: any): list<dict<any>>
+  return Query(Arg)
 enddef
 
-export def Sort(Cont: func(func(dict<any>)), ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
-  var rel = Materialize(Cont)
+export def Sort(Arg: any, ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
+  var rel = IsFunc(Arg) ? Query(Arg) : Instance(Arg)
   return sort(rel, ComparisonFn)
 enddef
 
-export def SortBy(Cont: func(func(dict<any>)), attrList: list<string>, opts: list<string> = []): list<dict<any>>
+export def SortBy(Arg: any, attrList: list<string>, opts: list<string> = []): list<dict<any>>
   const invert: list<bool> = mapnew(opts, (_, v) => v == 'd')
   const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList, invert)
-  return Sort(Cont, SortAttrPred)
+  return Sort(Arg, SortAttrPred)
+enddef
+
+export def Union(Arg1: any, Arg2: any): list<dict<any>>
+  if IsFunc(Arg1)
+    return Query(Arg1)->extend(Query(Arg2))->sort()->uniq()
+  else
+    return Instance(Arg1)->extendnew(Query(Arg2))->sort()->uniq()
+  endif
 enddef
 
 export def SumBy(
-    Cont: func(func(dict<any>)),
+    Arg: any,
     groupBy: list<string>,
     attr: string,
     aggrName = 'sum'
 ): list<dict<any>>
   var aggr: dict<dict<any>> = {}
+  const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
@@ -202,13 +210,14 @@ export def SumBy(
 enddef
 
 export def CountBy(
-    Cont: func(func(dict<any>)),
+    Arg: any,
     groupBy: list<string>,
     attr: string = null_string,
     aggrName = 'count'
 ): list<dict<any>>
   var aggrCount: dict<dict<any>> = {}
   var aggrDistinct: dict<dict<bool>> = {}
+  const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
@@ -229,12 +238,13 @@ export def CountBy(
 enddef
 
 export def MaxBy(
-    Cont: func(func(dict<any>)),
+    Arg: any,
     groupBy: list<string>,
     attr: string,
     aggrName = 'max'
 ): list<dict<any>>
   var aggr: dict<dict<any>> = {}  # Map group => tuple
+  const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
@@ -251,12 +261,13 @@ export def MaxBy(
 enddef
 
 export def MinBy(
-    Cont: func(func(dict<any>)),
+    Arg: any,
     groupBy: list<string>,
     attr: string,
     aggrName = 'min'
 ): list<dict<any>>
   var aggr: dict<dict<any>> = {}  # Map group => tuple
+  const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
@@ -273,13 +284,14 @@ export def MinBy(
 enddef
 
 export def AvgBy(
-    Cont: func(func(dict<any>)),
+    Arg: any,
     groupBy: list<string>,
     attr: string,
     aggrName = 'avg'
 ): list<dict<any>>
   var aggrAvg: dict<dict<any>> = {}
   var aggrCnt: dict<number> = {}
+  const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
@@ -301,13 +313,9 @@ enddef
 # }}}
 
 # Pipeline operators {{{
-export def Noop(Cont: func(func(dict<any>))): func(func(dict<any>))
-  return (Emit: func(dict<any>)) => {
-    Cont(Emit)
-  }
-enddef
+export def Rename(Arg: any, old: list<string>, new: list<string>): func(func(dict<any>))
+  const Cont = From(Arg)
 
-export def Rename(Cont: func(func(dict<any>)), old: list<string>, new: list<string>): func(func(dict<any>))
   return (Emit: func(dict<any>)) => {
     def RenameAttr(t: dict<any>)
       var i = 0
@@ -319,11 +327,14 @@ export def Rename(Cont: func(func(dict<any>)), old: list<string>, new: list<stri
       endwhile
       Emit(tnew)
     enddef
+
     Cont(RenameAttr)
   }
 enddef
 
-export def Select(Cont: func(func(dict<any>)), Pred: func(dict<any>): bool): func(func(dict<any>))
+export def Select(Arg: any, Pred: func(dict<any>): bool): func(func(dict<any>))
+  const Cont = From(Arg)
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       if Pred(t)
@@ -333,10 +344,12 @@ export def Select(Cont: func(func(dict<any>)), Pred: func(dict<any>): bool): fun
   }
 enddef
 
-export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(func(dict<any>))
-  var seen: dict<bool> = {}
+export def Project(Arg: any, attrList: list<string>): func(func(dict<any>))
+  const Cont = From(Arg)
 
   return (Emit: func(dict<any>)) => {
+    var seen: dict<bool> = {}
+
     def Proj(t: dict<any>)
       var u = ProjectTuple(t, attrList)
       const v = string(values(u))
@@ -360,9 +373,10 @@ def MakeTupleMerger(prefix: string): func(dict<any>, dict<any>): dict<any>
   }
 enddef
 
-export def Join(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
+export def Join(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
-  const rel = Instance(R)
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -394,8 +408,8 @@ export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string>): f
   }
 enddef
 
-export def EquiJoin(Cont: func(func(dict<any>)), R: any, lftAttrList: list<string>, rgtAttrList: list<string>, prefix = ''): func(func(dict<any>))
-  return Join(Cont, R, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
+export def EquiJoin(Arg1: any, Arg2: any, lftAttrList: list<string>, rgtAttrList: list<string>, prefix = ''): func(func(dict<any>))
+  return Join(Arg1, Arg2, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
 enddef
 
 def NatJoinPred(t: dict<any>, u: dict<any>): bool
@@ -409,8 +423,9 @@ def NatJoinPred(t: dict<any>, u: dict<any>): bool
   return true
 enddef
 
-export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = Instance(R)
+export def NatJoin(Arg1: any, Arg2: any): func(func(dict<any>))
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -423,12 +438,23 @@ export def NatJoin(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   }
 enddef
 
-export def Product(Cont: func(func(dict<any>)), R: any, prefix = ''): func(func(dict<any>))
-  return Join(Cont, R, (t, u) => true, prefix)
+export def Product(Arg1: any, Arg2: any, prefix = ''): func(func(dict<any>))
+  const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
+
+  return (Emit: func(dict<any>)) => {
+    Cont((t: dict<any>) => {
+      for u in rel
+        Emit(MergeTuples(t, u))
+      endfor
+    })
+  }
 enddef
 
-export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = Instance(R)
+export def Intersect(Arg1: any, Arg2: any): func(func(dict<any>))
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -442,12 +468,9 @@ export def Intersect(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   }
 enddef
 
-export def Union(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  return Scan(Query(Cont)->extend(Instance(R))->sort()->uniq())
-enddef
-
-export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
-  const rel = Instance(R)
+export def Minus(Arg1: any, Arg2: any): func(func(dict<any>))
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -461,8 +484,9 @@ export def Minus(Cont: func(func(dict<any>)), R: any): func(func(dict<any>))
   }
 enddef
 
-export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
-  const rel = Instance(R)
+export def SemiJoin(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -476,8 +500,9 @@ export def SemiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, d
   }
 enddef
 
-export def AntiJoin(Cont: func(func(dict<any>)), R: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
-  const rel = Instance(R)
+export def AntiJoin(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+  const rel  = Query(Arg2)
+  const Cont = From(Arg1)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -493,13 +518,10 @@ enddef
 
 # See: C. Date & H. Darwen, Outer Join with No Nulls and Fewer Tears, Ch. 20,
 # Relational Database Writings 1989–1991
-export def LeftNatJoin(
-    Cont: func(func(dict<any>)),
-    R: any,
-    Filler: any
-): func(func(dict<any>))
-  const rel    = Instance(R)
-  const filler = Instance(Filler)
+export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): func(func(dict<any>))
+  const rel    = Query(Arg2)
+  const Cont   = From(Arg1)
+  const filler = Query(Filler)
 
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
@@ -521,7 +543,9 @@ export def LeftNatJoin(
   }
 enddef
 
-export def Extend(Cont: func(func(dict<any>)), Fn: func(dict<any>): dict<any>): func(func(dict<any>))
+export def Extend(Arg: any, Fn: func(dict<any>): dict<any>): func(func(dict<any>))
+  const Cont = From(Arg)
+
   return (Emit: func(dict<any>)) => {
     Cont((t: dict<any>) => {
       Emit(Fn(t)->extend(t, 'error'))
@@ -531,9 +555,10 @@ enddef
 
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
-export def Frame(Cont: func(func(dict<any>)), attrList: list<string>, name: string = 'fid'): func(func(dict<any>))
+export def Frame(Arg: any, attrList: list<string>, name: string = 'fid'): func(func(dict<any>))
   var fid = 0  # Frame identifier
   var seen: dict<number> = {}
+  const Cont = From(Arg)
 
   return (Emit: func(dict<any>)) => {
     def FrameTuple(t: dict<any>)
@@ -550,12 +575,13 @@ export def Frame(Cont: func(func(dict<any>)), attrList: list<string>, name: stri
 enddef
 
 export def GroupBy(
-    Cont: func(func(dict<any>)),
+    Arg: any,
     groupBy: list<string>,
     AggregateFn: func(func(func(dict<any>))): any,
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
+  const Cont = From(Arg)
 
   Cont((t) => {
     # Materialize into subrelations
@@ -588,27 +614,28 @@ enddef
 #
 # where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
 # appearing in r but not in s.
-export def CoddDivide(Cont: func(func(dict<any>)), S: any, divisorAttrList: list<string> = []): func(func(dict<any>))
-  var r = Materialize(Cont)
+export def CoddDivide(Arg1: any, Arg2: any, divisorAttrList: list<string> = []): func(func(dict<any>))
+  const r = Query(Arg1)
 
   if empty(r)
-    return Scan(r)
+    return From(r)
   endif
 
-  const s = Instance(S)
+  const s = Query(Arg2)
 
   if empty(s)
-    const K = IsRelationInstance(S)
+    const K = IsRelationInstance(Arg2) || IsFunc(Arg2)
       ? filter(keys(r[0]), (i, v) => index(divisorAttrList, v) == -1)
-      : filter(keys(r[0]), (i, v) => index(Attributes(S), v) == -1)
-    return Scan(r)->Project(K)
+      : filter(keys(r[0]), (i, v) => index(Attributes(Arg2), v) == -1)
+    return Project(r, K)
   endif
 
   const attrS = keys(s[0])
-  const K = filter(keys(r[0]), (i, v) => index(attrS, v) == -1)
-  const r1 = Scan(r)->Project(K)->Materialize()
-  const s1 = Scan(s)->Product(r1)->Minus(r)->Project(K)->Materialize()
-  return Scan(r1)->Minus(s1)
+  const K     = filter(keys(r[0]), (i, v) => index(attrS, v) == -1)
+  const R1    = Project(r, K)
+  const S1    = Product(s, R1)->Minus(r)->Project(K)
+
+  return Minus(R1, S1)
 enddef
 
 # This is a generalized form of division proposed by Stephen Todd, which does
@@ -635,32 +662,34 @@ enddef
 # Relational Database Writings 1989–1991.
 # C Date, An Introduction to Database Systems
 # M Levene and G Loizou, A Guided Tour of Relational Databases and Beyond, Ex. 3.4
-export def Divide(Cont: func(func(dict<any>)), S: any, codd: bool = true): func(func(dict<any>))
-  var r = Materialize(Cont)
+export def Divide(Arg1: any, Arg2: any, codd: bool = true): func(func(dict<any>))
+  const r = Query(Arg1)
 
   if empty(r)
-    return Scan(r)
+    return From(r)
   endif
 
-  const s = Instance(S)
+  const s = Query(Arg2)
 
   if empty(s)
-    return Scan(s)
+    return From(s)
   endif
 
   const attrR = keys(r[0])
   const attrS = keys(s[0])
   const X = filter(keys(r[0]), (_, v) => index(attrS, v) == -1)
   const Z = filter(keys(s[0]), (_, v) => index(attrR, v) == -1)
-  const r_X = Scan(r)->Project(X)->Materialize()
-  const r_join_s = Scan(r)->NatJoin(s)->Materialize()
-  const rhs = Scan(r_X)->Product(s)->Minus(r_join_s)->Project(flattennew([X, Z]))->Materialize()
-  return Scan(s)->Project(Z)->Product(r_X)->Minus(rhs)
+  const R_X = Project(r, X)
+  const Rhs = Product(R_X, s)->Minus(NatJoin(r, s))->Project(flattennew([X, Z]))
+
+  return Project(s, Z)->Product(R_X)->Minus(Rhs)
 enddef
 # }}}
 
 # Aggregate functions {{{
-def Aggregate(Cont: func(func(dict<any>)), initValue: any, Fn: func(dict<any>, any): any): any
+def Aggregate(Arg: any, initValue: any, Fn: func(dict<any>, any): any): any
+  const Cont = From(Arg)
+
   var Res: any = initValue
   Cont((t) => {
     Res = Fn(t, Res)
@@ -672,8 +701,9 @@ export def Bind(AggrFn: func(func(func(dict<any>)): void, string): any, attr: st
   return (Cont: func(func(dict<any>)): void) => AggrFn(Cont, attr)
 enddef
 
-export def Count(Cont: func(func(dict<any>))): number
+export def Count(Arg: any): number
   var count = 0
+  const Cont = From(Arg)
 
   Cont((t) => {
     ++count
@@ -682,9 +712,10 @@ export def Count(Cont: func(func(dict<any>))): number
   return count
 enddef
 
-export def CountDistinct(Cont: func(func(dict<any>)), attr: string): number
+export def CountDistinct(Arg: any, attr: string): number
   var count = 0
   var seen: dict<bool> = {}
+  const Cont = From(Arg)
 
   Cont((t) => {
     const v = String(t[attr])
@@ -697,9 +728,11 @@ export def CountDistinct(Cont: func(func(dict<any>)), attr: string): number
   return count
 enddef
 
-export def Max(Cont: func(func(dict<any>)), attr: string): any
+export def Max(Arg: any, attr: string): any
   var first = true
   var max: any = null
+  const Cont = From(Arg)
+
   Cont((t) => {
     const v = t[attr]
     if first
@@ -712,9 +745,11 @@ export def Max(Cont: func(func(dict<any>)), attr: string): any
   return max
 enddef
 
-export def Min(Cont: func(func(dict<any>)), attr: string): any
+export def Min(Arg: any, attr: string): any
   var first = true
   var min: any = null
+  const Cont = From(Arg)
+
   Cont((t) => {
     const v = t[attr]
     if first
@@ -727,13 +762,15 @@ export def Min(Cont: func(func(dict<any>)), attr: string): any
   return min
 enddef
 
-export def Sum(Cont: func(func(dict<any>)), attr: string): any
-  return Aggregate(Cont, 0, (t, sum) => sum + t[attr])
+export def Sum(Arg: any, attr: string): any
+  return Aggregate(Arg, 0, (t, sum) => sum + t[attr])
 enddef
 
-export def Avg(Cont: func(func(dict<any>)), attr: string): any
+export def Avg(Arg: any, attr: string): any
   var sum: float = 0.0
   var count = 0
+  const Cont = From(Arg)
+
   Cont((t: dict<any>) => {
     sum += t[attr]
     ++count

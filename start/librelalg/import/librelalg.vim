@@ -669,7 +669,7 @@ enddef
 # Relational Database Writings 1989–1991.
 # C Date, An Introduction to Database Systems
 # M Levene and G Loizou, A Guided Tour of Relational Databases and Beyond, Ex. 3.4
-export def Divide(Arg1: any, Arg2: any, codd: bool = true): func(func(dict<any>))
+export def Divide(Arg1: any, Arg2: any): func(func(dict<any>))
   const r = Query(Arg1)
 
   if empty(r)

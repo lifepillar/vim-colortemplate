@@ -1,4 +1,4 @@
-*librelalg.txt*	For Vim version 9.0	Last change: 2022 Dec 17
+*librelalg.txt*	For Vim version 9.0	Last change: 2022 Dec 30
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
@@ -1345,10 +1345,14 @@ EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
 		Buffer.BufName == Tag.TagName
 <
 Empty({rel})					*librelalg.Empty()*
-		TODO
+		Return |true| if {rel} is an empty relation; return |false|
+		otherwise.
 
 Filter({rel}, {func})				*librelalg.Filter()*
-		TODO
+		Filter a base or derived relation using predicate {func} and
+		return a derived relation. This is similar to |Select()|, but
+		it is not a pipeline operator. It is essentially a thin
+		wrapper around |filter()|.
 
 In({tuple}, {rel})				*librelalg.In()*
 		Return |true| if {tuple} is in relation {rel}, otherwise
@@ -1363,11 +1367,32 @@ NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		return |false|.
 
 RelEq({rel1}, {rel2})				*librelalg.RelEq()*
-		TODO
+		Compare two base or derived relations for equality. Return
+		|true| if the relations are equal, that is, the are the same
+		set of tuples; return |false| otherwise.
 
-Table({rel} [, {name}, {sep}])			*librelalg.Table()*
-		TODO
+Table({rel} [, {name}, {sep})			*librelalg.Table()*
+		Return a tabular representation of a base or derived relation
+		as a |string|. The header of the table may be specified with
+		{name}. The horizontal separator symbol can be set with {sep},
+		which must be a single character.
 
+		For instance:
+>
+		echo Table([
+		  {X: 10, Y: 'ten'},
+		  {X: 20, Y: 'twenty'},
+		], 'A table', '~')
+<
+		Output:
+>
+		 A table
+		~~~~~~~~~~~
+		  X      Y
+		~~~~~~~~~~~
+		 10    ten
+		 20 twenty
+<
 Zip({list1}, {list2})				*librelalg.Zip()*
 		Build a tuple by "zipping" the attributes in {list1} with the
 		values in {list2}. For example:

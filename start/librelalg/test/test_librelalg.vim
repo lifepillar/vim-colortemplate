@@ -27,6 +27,7 @@ const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const Frame                = ra.Frame
+const From                 = ra.From
 const GroupBy              = ra.GroupBy
 const Key                  = ra.Key
 const In                   = ra.In
@@ -53,7 +54,6 @@ const Query                = ra.Query
 const Relation             = ra.Relation
 const RelEq                = ra.RelEq
 const Rename               = ra.Rename
-const Scan                 = ra.Scan
 const Select               = ra.Select
 const SemiJoin             = ra.SemiJoin
 const Sort                 = ra.Sort
@@ -379,8 +379,8 @@ def Test_RA_Scan()
   ]
   R->InsertMany(instance)
 
-  const result1 = Query(Scan(R))
-  const result2 = Query(Scan(R.instance))
+  const result1 = Query(From(R))
+  const result2 = Query(From(R.instance))
 
   const expected = instance
 
@@ -436,8 +436,8 @@ def Test_RA_Sort()
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
   ]
 
-  assert_equal(expected, Scan(r)->Sort(Cmp))
-  assert_equal(expected, Scan(r)->SortBy(['B']))
+  assert_equal(expected, From(r)->Sort(Cmp))
+  assert_equal(expected, From(r)->SortBy(['B']))
   assert_equal(R.instance, r)
   assert_equal(instance, R.instance)
 enddef
@@ -489,12 +489,12 @@ def Test_RA_SortByAscDesc()
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
   ]
 
-  assert_equal(expected1, Scan(r)->SortBy(['B'], ['i']))
-  assert_equal(expected2, Scan(r)->SortBy(['B'], ['d']))
-  assert_equal(expected3, Scan(r)->SortBy(['C', 'B'], ['i', 'd']))
-  assert_equal(expected4, Scan(r)->SortBy(['C', 'B'], ['i', 'i']))
-  assert_equal(expected5, Scan(r)->SortBy(['C', 'B'], ['d', 'i']))
-  assert_equal(expected6, Scan(r)->SortBy(['C', 'B'], ['d', 'd']))
+  assert_equal(expected1, From(r)->SortBy(['B'], ['i']))
+  assert_equal(expected2, From(r)->SortBy(['B'], ['d']))
+  assert_equal(expected3, From(r)->SortBy(['C', 'B'], ['i', 'd']))
+  assert_equal(expected4, From(r)->SortBy(['C', 'B'], ['i', 'i']))
+  assert_equal(expected5, From(r)->SortBy(['C', 'B'], ['d', 'i']))
+  assert_equal(expected6, From(r)->SortBy(['C', 'B'], ['d', 'd']))
   assert_equal(R.instance, r)
   assert_equal(instance, R.instance)
 enddef
@@ -504,7 +504,7 @@ def Test_RA_Noop()
 
   R->Insert({A: 42})
 
-  assert_equal(Query(Scan(R)), Query(Scan(R)->Noop()->Noop()))
+  assert_equal(Query(From(R)), Query(From(R)->Noop()->Noop()))
 enddef
 
 def Test_RA_Rename()
@@ -522,8 +522,8 @@ def Test_RA_Rename()
     {X: 'a2', B: 2.0, W: 80},
   ]
 
-  assert_equal(instance, Scan(R)->Rename([], [])->Build())
-  assert_equal(expected, Scan(R)->Rename(['A', 'C'], ['X', 'W'])->Build())
+  assert_equal(instance, From(R)->Rename([], [])->Build())
+  assert_equal(expected, From(R)->Rename(['A', 'C'], ['X', 'W'])->Build())
   assert_equal(instance, r)
 enddef
 
@@ -547,9 +547,9 @@ def Test_RA_Select()
     {A: 'a5', B: 4.0, C: 20},
   ]
 
-  assert_equal(expected1, Query(Scan(r)->Select((t) => t.C == 40)))
-  assert_equal(expected2, Query(Scan(r)->Select((t) => t.B <= 4.0 && t.A == 'a5')))
-  assert_equal([], Query(Scan(r)->Select((t) => t.B > 9.0)))
+  assert_equal(expected1, Query(From(r)->Select((t) => t.C == 40)))
+  assert_equal(expected2, Query(From(r)->Select((t) => t.B <= 4.0 && t.A == 'a5')))
+  assert_equal([], Query(From(r)->Select((t) => t.B > 9.0)))
   assert_equal(instance, r)
 enddef
 
@@ -584,13 +584,13 @@ def Test_RA_Project()
     {B: true,  C: 80},
   ]
 
-  assert_equal([], Query(Scan([])->Project(['X'])))
-  assert_equal([], Query(Scan([])->Project([])))
-  assert_equal([{}], Query(Scan([{}])->Project([])))
-  assert_equal([{}], Query(Scan(r)->Project([])))
-  assert_equal(expected1, Scan(r)->Project(['A'])->SortBy(['A']))
-  assert_equal(expected2, Scan(r)->Project(['B'])->SortBy(['B']))
-  assert_equal(expected3, Scan(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
+  assert_equal([], Query(From([])->Project(['X'])))
+  assert_equal([], Query(From([])->Project([])))
+  assert_equal([{}], Query(From([{}])->Project([])))
+  assert_equal([{}], Query(From(r)->Project([])))
+  assert_equal(expected1, From(r)->Project(['A'])->SortBy(['A']))
+  assert_equal(expected2, From(r)->Project(['B'])->SortBy(['B']))
+  assert_equal(expected3, From(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
   assert_equal(instance, r)
 enddef
 
@@ -650,14 +650,14 @@ def Test_RA_Join()
     {s_B: 'three', s_C: 0, B: 'three', C: 0},
   ]
 
-  assert_equal(expected1, Scan(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy(['r_A']))
-  assert_equal(expected2, Scan(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy(['A']))
-  assert_equal(expected3, Scan(R)->Join(S, (rt, st) => rt.A <= st.C, 'r_')->SortBy(['r_A', 'B']))
-  assert_equal(expected4, Scan(S)->Join(R, (st, rt) => rt.A <= st.C, 's_')->SortBy(['s_C', 'A']))
-  assert_equal(expected5, Scan(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy(['B']))
+  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy(['r_A']))
+  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy(['A']))
+  assert_equal(expected3, From(R)->Join(S, (rt, st) => rt.A <= st.C, 'r_')->SortBy(['r_A', 'B']))
+  assert_equal(expected4, From(S)->Join(R, (st, rt) => rt.A <= st.C, 's_')->SortBy(['s_C', 'A']))
+  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy(['B']))
 
-  assert_equal(expected1, Scan(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy(['r_A']))
-  assert_equal(expected2, Scan(S)->EquiJoin(R, ['B'], ['B'], 's_')->SortBy(['A']))
+  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy(['r_A']))
+  assert_equal(expected2, From(S)->EquiJoin(R, ['B'], ['B'], 's_')->SortBy(['A']))
 
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
@@ -713,12 +713,12 @@ def Test_RA_NatJoin()
     {B: 'three', C: 0, D: 9},
   ]
 
-  assert_equal(expected1, Query(Scan(R)->NatJoin(S)))
-  assert_equal(expected1, Query(Scan(S)->NatJoin(R)))
-  assert_equal(expected2, Query(Scan(S)->NatJoin(T)))
-  assert_equal(r, Query(Scan(R)->NatJoin(R)))
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(R)->NatJoin(U)))
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(U)->NatJoin(R)))
+  assert_equal(expected1, Query(From(R)->NatJoin(S)))
+  assert_equal(expected1, Query(From(S)->NatJoin(R)))
+  assert_equal(expected2, Query(From(S)->NatJoin(T)))
+  assert_equal(r, Query(From(R)->NatJoin(R)))
+  assert_equal([{A: 1, B: 'one'}], Query(From(R)->NatJoin(U)))
+  assert_equal([{A: 1, B: 'one'}], Query(From(U)->NatJoin(R)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
   assert_equal(instanceT, t)
@@ -745,10 +745,10 @@ def Test_RA_Product()
   ]
   S->InsertMany(instanceS)
 
-  assert_equal([], Query(Scan([])->Product([])))
-  assert_equal([], Query(Scan(R)->Product([])))
-  assert_equal([], Query(Scan([])->Product(R)))
-  assert_equal(r, Query(Scan(R)->Product([{}])))
+  assert_equal([], Query(From([])->Product([])))
+  assert_equal([], Query(From(R)->Product([])))
+  assert_equal([], Query(From([])->Product(R)))
+  assert_equal(r, Query(From(R)->Product([{}])))
 
   const expected = [
     {A: 0, B: 'zero', C: 10},
@@ -759,8 +759,8 @@ def Test_RA_Product()
     {A: 2, B: 'two',  C: 90},
   ]
 
-  assert_equal(expected, Scan(R)->Product(S)->SortBy(['A', 'C']))
-  assert_equal(expected, Scan(S)->Product(R)->SortBy(['A', 'C']))
+  assert_equal(expected, From(R)->Product(S)->SortBy(['A', 'C']))
+  assert_equal(expected, From(S)->Product(R)->SortBy(['A', 'C']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -786,8 +786,8 @@ def Test_RA_Intersect()
   ]
   S->InsertMany(instanceS)
 
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(R)->Intersect(S)))
-  assert_equal([{A: 1, B: 'one'}], Query(Scan(S)->Intersect(R)))
+  assert_equal([{A: 1, B: 'one'}], Query(From(R)->Intersect(S)))
+  assert_equal([{A: 1, B: 'one'}], Query(From(S)->Intersect(R)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -822,8 +822,8 @@ def Test_RA_Minus()
     {A: 2, B: 'two'},
   ]
 
-  assert_equal(expected1, Scan(R)->Minus(S)->SortBy(['A']))
-  assert_equal(expected2, Scan(S)->Minus(R)->SortBy(['A']))
+  assert_equal(expected1, From(R)->Minus(S)->SortBy(['A']))
+  assert_equal(expected2, From(S)->Minus(R)->SortBy(['A']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -857,8 +857,8 @@ def Test_RA_Union()
     {A: 3, B: 'one'},
   ]
 
-  assert_equal(expected, Scan(R)->Union(S)->SortBy(['A', 'B']))
-  assert_equal(expected, Scan(S)->Union(R)->SortBy(['A', 'B']))
+  assert_equal(expected, From(R)->Union(S)->SortBy(['A', 'B']))
+  assert_equal(expected, From(S)->Union(R)->SortBy(['A', 'B']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -903,11 +903,11 @@ def Test_RA_SemiJoin()
     {B: 'three', C: 0},
   ]
 
-  assert_equal(expected1, Scan(R)->SemiJoin(S, (rt, st) => rt.B == st.B)->SortBy(['A']))
-  assert_equal(expected2, Query(Scan(S)->SemiJoin(R, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, Scan(R)->SemiJoin(S, (rt, st) => rt.A <= st.C)->SortBy(['A']))
-  assert_equal(expected4, Scan(S)->SemiJoin(R, (st, rt) => rt.A <= st.C)->SortBy(['B']))
-  assert_equal(expected5, Query(Scan(S)->SemiJoin(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)))
+  assert_equal(expected1, From(R)->SemiJoin(S, (rt, st) => rt.B == st.B)->SortBy(['A']))
+  assert_equal(expected2, Query(From(S)->SemiJoin(R, (st, rt) => rt.B == st.B)))
+  assert_equal(expected3, From(R)->SemiJoin(S, (rt, st) => rt.A <= st.C)->SortBy(['A']))
+  assert_equal(expected4, From(S)->SemiJoin(R, (st, rt) => rt.A <= st.C)->SortBy(['B']))
+  assert_equal(expected5, Query(From(S)->SemiJoin(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -946,11 +946,11 @@ def Test_RA_AntiJoin()
     {B: 'three', C: 0},
   ]
 
-  assert_equal(expected1, Query(Scan(R)->AntiJoin(S, (rt, st) => rt.B == st.B)))
-  assert_equal(expected2, Query(Scan(S)->AntiJoin(R, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, SortBy(Scan(R)->AntiJoin(S, (rt, st) => rt.A <= st.C), ['A']))
-  assert_equal(expected4, SortBy(Scan(S)->AntiJoin(R, (st, rt) => rt.A <= st.C), ['B']))
-  assert_equal(expected5, Query(Scan(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
+  assert_equal(expected1, Query(From(R)->AntiJoin(S, (rt, st) => rt.B == st.B)))
+  assert_equal(expected2, Query(From(S)->AntiJoin(R, (st, rt) => rt.B == st.B)))
+  assert_equal(expected3, SortBy(From(R)->AntiJoin(S, (rt, st) => rt.A <= st.C), ['A']))
+  assert_equal(expected4, SortBy(From(S)->AntiJoin(R, (st, rt) => rt.A <= st.C), ['B']))
+  assert_equal(expected5, Query(From(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -985,8 +985,8 @@ def Test_RA_LeftNatJoin()
     {BufId: 2, TagName: 'abc', Line: 14, Column: 15},
   ])
 
-  const summary = Query(Scan(Tag)->GroupBy(['BufId'], Count, 'num_tags'))
-  const result = Query(Scan(Buffer)->LeftNatJoin(summary, [{'num_tags': 0}]))
+  const summary = Query(From(Tag)->GroupBy(['BufId'], Count, 'num_tags'))
+  const result = Query(From(Buffer)->LeftNatJoin(summary, [{'num_tags': 0}]))
   const expected = [
     {BufId: 1, BufName: 'foo', num_tags: 3},
     {BufId: 2, BufName: 'bar', num_tags: 1},
@@ -1014,7 +1014,7 @@ def Test_RA_Extend()
     {A: 5, B: 10, C: 'ok'},
   ]
   const result = Query(
-    Scan(R)->Extend((t) => {
+    From(R)->Extend((t) => {
       return {B: t.A * 2, C: 'ok'}
     })
   )
@@ -1026,10 +1026,10 @@ def Test_RA_Max()
   var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
-  assert_equal(null, Scan(R)->Max('A'))
-  assert_equal(null, Scan(R)->Max('B'))
-  assert_equal(null, Scan(R)->Max('C'))
-  assert_equal(null, Scan(R)->Max('D'))
+  assert_equal(null, From(R)->Max('A'))
+  assert_equal(null, From(R)->Max('B'))
+  assert_equal(null, From(R)->Max('C'))
+  assert_equal(null, From(R)->Max('D'))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D:  true},
@@ -1040,10 +1040,10 @@ def Test_RA_Max()
   ]
   R->InsertMany(instance)
 
-  assert_equal(4,    Scan(R)->Max('A'))
-  assert_equal('Z',  Scan(R)->Max('B'))
-  assert_equal(10.0, Scan(R)->Max('C'))
-  assert_equal(true, Scan(R)->Max('D'))
+  assert_equal(4,    From(R)->Max('A'))
+  assert_equal('Z',  From(R)->Max('B'))
+  assert_equal(10.0, From(R)->Max('C'))
+  assert_equal(true, From(R)->Max('D'))
   assert_equal(instance, r)
 enddef
 
@@ -1051,10 +1051,10 @@ def Test_RA_Min()
   var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
-  assert_equal(null, Scan(R)->Min('A'))
-  assert_equal(null, Scan(R)->Min('B'))
-  assert_equal(null, Scan(R)->Min('C'))
-  assert_equal(null, Scan(R)->Min('D'))
+  assert_equal(null, From(R)->Min('A'))
+  assert_equal(null, From(R)->Min('B'))
+  assert_equal(null, From(R)->Min('C'))
+  assert_equal(null, From(R)->Min('D'))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D:  true},
@@ -1065,10 +1065,10 @@ def Test_RA_Min()
   ]
   R->InsertMany(instance)
 
-  assert_equal(0,     Scan(R)->Min('A'))
-  assert_equal('X',   Scan(R)->Min('B'))
-  assert_equal(-3.0,  Scan(R)->Min('C'))
-  assert_equal(false, Scan(R)->Min('D'))
+  assert_equal(0,     From(R)->Min('A'))
+  assert_equal('X',   From(R)->Min('B'))
+  assert_equal(-3.0,  From(R)->Min('C'))
+  assert_equal(false, From(R)->Min('D'))
   assert_equal(instance, r)
 enddef
 
@@ -1076,8 +1076,8 @@ def Test_RA_Sum()
   var R = Relation('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
-  assert_equal(0, Scan(R)->Sum('A'))
-  assert_equal(0, Scan(R)->Sum('B'))
+  assert_equal(0, From(R)->Sum('A'))
+  assert_equal(0, From(R)->Sum('B'))
 
   const instance = [
     {A: 0, B: 10.0},
@@ -1088,10 +1088,10 @@ def Test_RA_Sum()
   ]
   R->InsertMany(instance)
 
-  assert_equal(10, Scan(R)->Sum('A'))
-  assert_equal(v:t_number, type(Scan(R)->Sum('A')))
-  assert_equal(13.5, Scan(R)->Sum('B'))
-  assert_equal(v:t_float, type(Scan(R)->Sum('B')))
+  assert_equal(10, From(R)->Sum('A'))
+  assert_equal(v:t_number, type(From(R)->Sum('A')))
+  assert_equal(13.5, From(R)->Sum('B'))
+  assert_equal(v:t_float, type(From(R)->Sum('B')))
   assert_equal(instance, r)
 enddef
 
@@ -1099,8 +1099,8 @@ def Test_RA_Avg()
   var R = Relation('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
-  assert_equal(null, Scan(R)->Avg('A'))
-  assert_equal(null, Scan(R)->Avg('B'))
+  assert_equal(null, From(R)->Avg('A'))
+  assert_equal(null, From(R)->Avg('B'))
 
   const instance = [
     {A: 0, B: 10.0},
@@ -1111,10 +1111,10 @@ def Test_RA_Avg()
   ]
   R->InsertMany(instance)
 
-  assert_equal(2.0, Scan(R)->Avg('A'))
-  assert_equal(v:t_float, type(Scan(R)->Avg('A')))
-  assert_equal(2.7, Scan(R)->Avg('B'))
-  assert_equal(v:t_float, type(Scan(R)->Avg('B')))
+  assert_equal(2.0, From(R)->Avg('A'))
+  assert_equal(v:t_float, type(From(R)->Avg('A')))
+  assert_equal(2.7, From(R)->Avg('B'))
+  assert_equal(v:t_float, type(From(R)->Avg('B')))
   assert_equal(instance, r)
 enddef
 
@@ -1128,8 +1128,8 @@ def Test_RA_Count()
     {A: 4, B:  2.5},
   ]
 
-  assert_equal(0, Scan([])->Count())
-  assert_equal(6, Scan(r)->Count())
+  assert_equal(0, From([])->Count())
+  assert_equal(6, From(r)->Count())
 enddef
 
 def Test_RA_CountDistinct()
@@ -1142,16 +1142,16 @@ def Test_RA_CountDistinct()
     {A: 4, B:  2.5},
   ]
 
-  assert_equal(0, Scan([])->CountDistinct('A'))
-  assert_equal(3, Scan(r)->CountDistinct('A'))
-  assert_equal(4, Scan(r)->CountDistinct('B'))
+  assert_equal(0, From([])->CountDistinct('A'))
+  assert_equal(3, From(r)->CountDistinct('A'))
+  assert_equal(4, From(r)->CountDistinct('B'))
 enddef
 
 def Test_RA_SumBy()
-  assert_equal([{sum: 0}],   Scan([])->SumBy([], 'A'))
-  assert_equal([{summa: 0}], Scan([])->SumBy([], 'B', 'summa'))
-  assert_equal([],           Scan([])->SumBy(['A'], 'A'))
-  assert_equal([],           Scan([])->SumBy(['B'], 'A', 'summa'))
+  assert_equal([{sum: 0}],   From([])->SumBy([], 'A'))
+  assert_equal([{summa: 0}], From([])->SumBy([], 'B', 'summa'))
+  assert_equal([],           From([])->SumBy(['A'], 'A'))
+  assert_equal([],           From([])->SumBy(['B'], 'A', 'summa'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1161,21 +1161,21 @@ def Test_RA_SumBy()
     {A: 3, B:  2.5},
   ]
 
-  assert_equal([{sum: 8}],   Scan(r)->SumBy([], 'A'))
-  assert_equal([{sum: 13.5}], Scan(r)->SumBy([], 'B'))
+  assert_equal([{sum: 8}],   From(r)->SumBy([], 'A'))
+  assert_equal([{sum: 13.5}], From(r)->SumBy([], 'B'))
   assert_equal([
     {A: 0, sum: 10.0},
     {A: 1, sum: -0.5},
     {A: 3, sum:  4.0},
-  ], Scan(r)->SumBy(['A'], 'B'))
+  ], From(r)->SumBy(['A'], 'B'))
 enddef
 
 def Test_RA_CountBy()
-  assert_equal([{count: 0}], Scan([])->CountBy([]))
-  assert_equal([{count: 0}], Scan([])->CountBy([], 'A'))
-  assert_equal([{cnt: 0}],   Scan([])->CountBy([], 'B', 'cnt'))
-  assert_equal([],           Scan([])->CountBy(['A'], 'A'))
-  assert_equal([],           Scan([])->CountBy(['B'], 'A', 'cnt'))
+  assert_equal([{count: 0}], From([])->CountBy([]))
+  assert_equal([{count: 0}], From([])->CountBy([], 'A'))
+  assert_equal([{cnt: 0}],   From([])->CountBy([], 'B', 'cnt'))
+  assert_equal([],           From([])->CountBy(['A'], 'A'))
+  assert_equal([],           From([])->CountBy(['B'], 'A', 'cnt'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1185,26 +1185,26 @@ def Test_RA_CountBy()
     {A: 3, B:  2.5},
   ]
 
-  assert_equal([{count: 5}], Scan(r)->CountBy([]))
-  assert_equal([{count: 3}], Scan(r)->CountBy([], 'A'))
-  assert_equal([{count: 4}], Scan(r)->CountBy([], 'B'))
+  assert_equal([{count: 5}], From(r)->CountBy([]))
+  assert_equal([{count: 3}], From(r)->CountBy([], 'A'))
+  assert_equal([{count: 4}], From(r)->CountBy([], 'B'))
   assert_equal([
     {A: 0, cnt: 1},
     {A: 1, cnt: 2},
     {A: 3, cnt: 2},
-  ], Scan(r)->CountBy(['A'], null_string, 'cnt'))
+  ], From(r)->CountBy(['A'], null_string, 'cnt'))
   assert_equal([
     {A: 0, cnt: 1},
     {A: 1, cnt: 2},
     {A: 3, cnt: 2},
-  ], Scan(r)->CountBy(['A'], 'B', 'cnt'))
+  ], From(r)->CountBy(['A'], 'B', 'cnt'))
 enddef
 
 def Test_RA_MaxBy()
-  assert_equal([], Scan([])->MaxBy([], 'A'))
-  assert_equal([], Scan([])->MaxBy([], 'B'))
-  assert_equal([], Scan([])->MaxBy(['A'], 'A'))
-  assert_equal([], Scan([])->MaxBy(['B'], 'A'))
+  assert_equal([], From([])->MaxBy([], 'A'))
+  assert_equal([], From([])->MaxBy([], 'B'))
+  assert_equal([], From([])->MaxBy(['A'], 'A'))
+  assert_equal([], From([])->MaxBy(['B'], 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1214,20 +1214,20 @@ def Test_RA_MaxBy()
     {A: 3, B:  2.5},
   ]
 
-  assert_equal([{max: 3}],    Scan(r)->MaxBy([], 'A'))
-  assert_equal([{max: 10.0}], Scan(r)->MaxBy([], 'B'))
+  assert_equal([{max: 3}],    From(r)->MaxBy([], 'A'))
+  assert_equal([{max: 10.0}], From(r)->MaxBy([], 'B'))
   assert_equal([
     {A: 0, maximum: 10.0},
     {A: 1, maximum:  2.5},
     {A: 3, maximum:  2.5},
-  ], Scan(r)->MaxBy(['A'], 'B', 'maximum'))
+  ], From(r)->MaxBy(['A'], 'B', 'maximum'))
 enddef
 
 def Test_RA_MinBy()
-  assert_equal([], Scan([])->MinBy([], 'A'))
-  assert_equal([], Scan([])->MinBy([], 'B'))
-  assert_equal([], Scan([])->MinBy(['A'], 'A'))
-  assert_equal([], Scan([])->MinBy(['B'], 'A'))
+  assert_equal([], From([])->MinBy([], 'A'))
+  assert_equal([], From([])->MinBy([], 'B'))
+  assert_equal([], From([])->MinBy(['A'], 'A'))
+  assert_equal([], From([])->MinBy(['B'], 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1237,20 +1237,20 @@ def Test_RA_MinBy()
     {A: 3, B:  2.5},
   ]
 
-  assert_equal([{min: 0}],    Scan(r)->MinBy([], 'A'))
-  assert_equal([{min: -3.0}], Scan(r)->MinBy([], 'B'))
+  assert_equal([{min: 0}],    From(r)->MinBy([], 'A'))
+  assert_equal([{min: -3.0}], From(r)->MinBy([], 'B'))
   assert_equal([
     {A: 0, minimum: 10.0},
     {A: 1, minimum: -3.0},
     {A: 3, minimum:  1.5},
-  ], Scan(r)->MinBy(['A'], 'B', 'minimum'))
+  ], From(r)->MinBy(['A'], 'B', 'minimum'))
 enddef
 
 def Test_RA_AvgBy()
-  assert_equal([], Scan([])->AvgBy([], 'A'))
-  assert_equal([], Scan([])->AvgBy([], 'B'))
-  assert_equal([], Scan([])->AvgBy(['A'], 'A'))
-  assert_equal([], Scan([])->AvgBy(['B'], 'A'))
+  assert_equal([], From([])->AvgBy([], 'A'))
+  assert_equal([], From([])->AvgBy([], 'B'))
+  assert_equal([], From([])->AvgBy(['A'], 'A'))
+  assert_equal([], From([])->AvgBy(['B'], 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1260,13 +1260,13 @@ def Test_RA_AvgBy()
     {A: 3, B:  2.5},
   ]
 
-  assert_equal([{avg: 1.6}], Scan(r)->AvgBy([], 'A'))
-  assert_equal([{avg: 2.7}], Scan(r)->AvgBy([], 'B'))
+  assert_equal([{avg: 1.6}], From(r)->AvgBy([], 'A'))
+  assert_equal([{avg: 2.7}], From(r)->AvgBy([], 'B'))
   assert_equal([
     {A: 0, average: 10.0},
     {A: 1, average: -0.25},
     {A: 3, average:  2.0},
-  ], Scan(r)->AvgBy(['A'], 'B', 'average'))
+  ], From(r)->AvgBy(['A'], 'B', 'average'))
 enddef
 
 def Test_RA_Frame()
@@ -1282,7 +1282,7 @@ def Test_RA_Frame()
     ])
 
   var result = Query(
-    Scan(R)->Extend((t) => {
+    From(R)->Extend((t) => {
       return {'fid': t.A / 30}
     })
   )
@@ -1297,7 +1297,7 @@ def Test_RA_Frame()
   ]
   assert_equal(expected, result)
 
-  result = Query(Scan(R)->Frame(['B', 'C']))
+  result = Query(From(R)->Frame(['B', 'C']))
   expected = [
     {A: 10, B: 'a', C: 'x', fid: 0},
     {A: 20, B: 'b', C: 'y', fid: 1},
@@ -1323,7 +1323,7 @@ def Test_RA_GroupBy()
   ]
   R->InsertMany(instance)
 
-  const result = Scan(r)
+  const result = From(r)
                ->GroupBy(['name'], Bind(Sum, 'balance'), 'total')
                ->SortBy(['name'])
 
@@ -1356,7 +1356,7 @@ def Test_RA_CoddDivide()
   Subscription->InsertMany(subscription_instance)
 
   var Session = Relation('Session', {date: Str, course: Str}, [['date', 'course']])
-  const result1 = Query(Scan(Subscription)->CoddDivide(Session))
+  const result1 = Query(From(Subscription)->CoddDivide(Session))
   const expected1 = [
     {student: '123'},
     {student: '283'},
@@ -1369,10 +1369,10 @@ def Test_RA_CoddDivide()
   # If the divisor is an empty *derived* relation, the divisor carries no
   # information about its schema. Short of explicitly providing a schema,
   # the choice is arbitrary: we assume that the schema is empty.
-  const result2 = Query(Scan(Subscription)->CoddDivide([]))
+  const result2 = Query(From(Subscription)->CoddDivide([]))
   const expected2 = subscription_instance
   # The schema can be given explicitly, though (for this special case only)
-  const result3 = Query(Scan(Subscription)->CoddDivide([], ['date', 'course']))
+  const result3 = Query(From(Subscription)->CoddDivide([], ['date', 'course']))
   const expected3 = expected1
 
   assert_equal(expected2, result2)
@@ -1387,7 +1387,7 @@ def Test_RA_CoddDivide()
   Session->InsertMany(session_instance)
 
   # Which students are subscribed to all the courses?
-  const result4 = Scan(Subscription)->CoddDivide(Session)->SortBy(['student'])
+  const result4 = From(Subscription)->CoddDivide(Session)->SortBy(['student'])
   const expected4 = [
     {'student': '123'},
     {'student': '283'},
@@ -1395,7 +1395,7 @@ def Test_RA_CoddDivide()
   assert_equal(expected4, result4)
 
   # Todd's division must return the same result
-  const result5 = Scan(Subscription)->Divide(Session)->SortBy(['student'])
+  const result5 = From(Subscription)->Divide(Session)->SortBy(['student'])
   const expected5 = [
     {'student': '123'},
     {'student': '283'},
@@ -1426,7 +1426,7 @@ def Test_RA_Divide()
   ]
   # Find the pairs {S,J} such that
   # supplier S supplies all the parts used in project J:
-  const result = Query(Scan(SP)->Divide(PJ))
+  const result = Query(From(SP)->Divide(PJ))
   const expected = [
     {'S#': 1, 'J#': 100},
     {'S#': 1, 'J#': 200},
@@ -1438,7 +1438,7 @@ def Test_RA_Divide()
 
   # Find the pairs {J,S} such that
   # project J uses all the parts supplied by supplier S
-  const result2 = Query(Scan(PJ)->Divide(SP))
+  const result2 = Query(From(PJ)->Divide(SP))
   const expected2 = [
     {'J#': 100, 'S#': 2},
     {'J#': 300, 'S#': 3},
@@ -1449,8 +1449,8 @@ def Test_RA_Divide()
 
   const PJEmpty = Relation('PJ', {'P#': Int, 'J#': Int}, [['J#', 'P#']])
 
-  assert_equal([], Query(Scan(SP)->Divide(PJEmpty)))
-  assert_equal([], Query(Scan(SP)->Divide([])))
+  assert_equal([], Query(From(SP)->Divide(PJEmpty)))
+  assert_equal([], Query(From(SP)->Divide([])))
 enddef
 
 def Test_RA_EmptyKey()
@@ -1473,14 +1473,14 @@ enddef
 
 def Test_RA_DivideEdgeCases()
   # For further edge cases, see Test_RA_DeeDum()
-  assert_equal([],       Query(Scan([{X: 1}])->Divide([])))
-  assert_equal([],       Query(Scan([{X: 1, Y: 2}])->Divide([])))
-  assert_equal([],       Query(Scan([])->Divide([{Y: 1}])))
-  assert_equal([],       Query(Scan([])->Divide([{Y: 1, Z: 2}])))
-  assert_equal([{}],     Query(Scan([{Y: 1}])->Divide([{Y: 1}])))
-  assert_equal([{}],     Query(Scan([{Y: 1}, {Y: 2}])->Divide([{Y: 1}])))
-  assert_equal([{Z: 2}], Query(Scan([{Y: 1}])->Divide([{Y: 1, Z: 2}])))
-  assert_equal([{Z: 2}], Query(Scan([{Y: 1}, {Y: 2}])->Divide([{Y: 1, Z: 2}])))
+  assert_equal([],       Query(From([{X: 1}])->Divide([])))
+  assert_equal([],       Query(From([{X: 1, Y: 2}])->Divide([])))
+  assert_equal([],       Query(From([])->Divide([{Y: 1}])))
+  assert_equal([],       Query(From([])->Divide([{Y: 1, Z: 2}])))
+  assert_equal([{}],     Query(From([{Y: 1}])->Divide([{Y: 1}])))
+  assert_equal([{}],     Query(From([{Y: 1}, {Y: 2}])->Divide([{Y: 1}])))
+  assert_equal([{Z: 2}], Query(From([{Y: 1}])->Divide([{Y: 1, Z: 2}])))
+  assert_equal([{Z: 2}], Query(From([{Y: 1}, {Y: 2}])->Divide([{Y: 1, Z: 2}])))
 enddef
 
 def Test_RA_DeeDum()
@@ -1499,58 +1499,58 @@ def Test_RA_DeeDum()
   const dee = Dee.instance
   const r   = [{A: 1}, {A: 2}]
 
-  assert_equal([],   Scan(r)->NatJoin(dum)->Build(),           "r ⨝ dum")
-  assert_equal(r,    Scan(r)->NatJoin(dee)->Build(),           "r ⨝ dee")
-  assert_equal([],   Scan(dum)->NatJoin(r)->Build(),           "dum ⨝ r")
-  assert_equal(r,    Scan(dee)->NatJoin(r)->Build(),           "dee ⨝ r")
+  assert_equal([],   From(r)->NatJoin(dum)->Build(),           "r ⨝ dum")
+  assert_equal(r,    From(r)->NatJoin(dee)->Build(),           "r ⨝ dee")
+  assert_equal([],   From(dum)->NatJoin(r)->Build(),           "dum ⨝ r")
+  assert_equal(r,    From(dee)->NatJoin(r)->Build(),           "dee ⨝ r")
 
-  assert_equal([],   Scan(dum)->NatJoin(dum)->Build(),         "dum ⨝ dum")
-  assert_equal([],   Scan(dum)->NatJoin(dee)->Build(),         "dum ⨝ dee")
-  assert_equal([],   Scan(dee)->NatJoin(dum)->Build(),         "dee ⨝ dum")
-  assert_equal([{}], Scan(dee)->NatJoin(dee)->Build(),         "dee ⨝ dee")
+  assert_equal([],   From(dum)->NatJoin(dum)->Build(),         "dum ⨝ dum")
+  assert_equal([],   From(dum)->NatJoin(dee)->Build(),         "dum ⨝ dee")
+  assert_equal([],   From(dee)->NatJoin(dum)->Build(),         "dee ⨝ dum")
+  assert_equal([{}], From(dee)->NatJoin(dee)->Build(),         "dee ⨝ dee")
 
-  assert_equal([],           Scan(dum)->Select((t) => true)->Build(),              "σ[true](dum)")
-  assert_equal([],           Scan(dum)->Select((t) => false)->Build(),             "σ[false](dum)")
-  assert_equal([{}],         Scan(dee)->Select((t) => true)->Build(),              "σ[true](dee)")
-  assert_equal([],           Scan(dee)->Select((t) => false)->Build(),             "σ[false](dee)")
+  assert_equal([],           From(dum)->Select((t) => true)->Build(),              "σ[true](dum)")
+  assert_equal([],           From(dum)->Select((t) => false)->Build(),             "σ[false](dum)")
+  assert_equal([{}],         From(dee)->Select((t) => true)->Build(),              "σ[true](dee)")
+  assert_equal([],           From(dee)->Select((t) => false)->Build(),             "σ[false](dee)")
 
-  assert_equal([],           Scan(dum)->Project([])->Build(),                      "π[](dum)")
-  assert_equal([{}],         Scan(dee)->Project([])->Build(),                      "π[](dee)")
+  assert_equal([],           From(dum)->Project([])->Build(),                      "π[](dum)")
+  assert_equal([{}],         From(dee)->Project([])->Build(),                      "π[](dee)")
 
-  assert_equal([],           Scan(dum)->Product(dum)->Build(),                     "dum × dum")
-  assert_equal([],           Scan(dum)->Product(dee)->Build(),                     "dum × dee")
-  assert_equal([],           Scan(dee)->Product(dum)->Build(),                     "dee × dum")
-  assert_equal([{}],         Scan(dee)->Product(dee)->Build(),                     "dee × dee")
+  assert_equal([],           From(dum)->Product(dum)->Build(),                     "dum × dum")
+  assert_equal([],           From(dum)->Product(dee)->Build(),                     "dum × dee")
+  assert_equal([],           From(dee)->Product(dum)->Build(),                     "dee × dum")
+  assert_equal([{}],         From(dee)->Product(dee)->Build(),                     "dee × dee")
 
-  assert_equal([],           Scan(dum)->Intersect(dum)->Build(),                   "dum ∩ dum")
-  assert_equal([],           Scan(dum)->Intersect(dee)->Build(),                   "dum ∩ dee")
-  assert_equal([],           Scan(dee)->Intersect(dum)->Build(),                   "dee ∩ dum")
-  assert_equal([{}],         Scan(dee)->Intersect(dee)->Build(),                   "dee ∩ dee")
+  assert_equal([],           From(dum)->Intersect(dum)->Build(),                   "dum ∩ dum")
+  assert_equal([],           From(dum)->Intersect(dee)->Build(),                   "dum ∩ dee")
+  assert_equal([],           From(dee)->Intersect(dum)->Build(),                   "dee ∩ dum")
+  assert_equal([{}],         From(dee)->Intersect(dee)->Build(),                   "dee ∩ dee")
 
-  assert_equal([],           Scan(dum)->Minus(dum)->Build(),                       "dum - dum")
-  assert_equal([],           Scan(dum)->Minus(dee)->Build(),                       "dum - dee")
-  assert_equal([{}],         Scan(dee)->Minus(dum)->Build(),                       "dee - dum")
-  assert_equal([],           Scan(dee)->Minus(dee)->Build(),                       "dee - dee")
+  assert_equal([],           From(dum)->Minus(dum)->Build(),                       "dum - dum")
+  assert_equal([],           From(dum)->Minus(dee)->Build(),                       "dum - dee")
+  assert_equal([{}],         From(dee)->Minus(dum)->Build(),                       "dee - dum")
+  assert_equal([],           From(dee)->Minus(dee)->Build(),                       "dee - dee")
 
-  assert_equal([],           Scan(dum)->SemiJoin(dum, (t1, t2) => true)->Build(),  "dum ⋉ dum")
-  assert_equal([],           Scan(dum)->SemiJoin(dee, (t1, t2) => true)->Build(),  "dum ⋉ dee")
-  assert_equal([],           Scan(dee)->SemiJoin(dum, (t1, t2) => true)->Build(),  "dee ⋉ dum")
-  assert_equal([{}],         Scan(dee)->SemiJoin(dee, (t1, t2) => true)->Build(),  "dee ⋉ dee")
+  assert_equal([],           From(dum)->SemiJoin(dum, (t1, t2) => true)->Build(),  "dum ⋉ dum")
+  assert_equal([],           From(dum)->SemiJoin(dee, (t1, t2) => true)->Build(),  "dum ⋉ dee")
+  assert_equal([],           From(dee)->SemiJoin(dum, (t1, t2) => true)->Build(),  "dee ⋉ dum")
+  assert_equal([{}],         From(dee)->SemiJoin(dee, (t1, t2) => true)->Build(),  "dee ⋉ dee")
 
-  assert_equal([],           Scan(dum)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dum ▷ dum")
-  assert_equal([],           Scan(dum)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dum ▷ dee")
-  assert_equal([{}],         Scan(dee)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dee ▷ dum")
-  assert_equal([],           Scan(dee)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dee ▷ dee")
+  assert_equal([],           From(dum)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dum ▷ dum")
+  assert_equal([],           From(dum)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dum ▷ dee")
+  assert_equal([{}],         From(dee)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dee ▷ dum")
+  assert_equal([],           From(dee)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dee ▷ dee")
 
-  assert_equal([],           Scan(dum)->GroupBy([], Count, 'agg')->Build(), "dum group by []")
-  assert_equal([{'agg': 1}], Scan(dee)->GroupBy([], Count, 'agg')->Build(), "dee group by []")
+  assert_equal([],           From(dum)->GroupBy([], Count, 'agg')->Build(), "dum group by []")
+  assert_equal([{'agg': 1}], From(dee)->GroupBy([], Count, 'agg')->Build(), "dee group by []")
 
-  assert_equal([],           Scan(dum)->Divide(dum)->Build(),                "dum ÷ dum")
-  assert_equal([],           Scan(dum)->Divide(dee)->Build(),                "dum ÷ dee")
+  assert_equal([],           From(dum)->Divide(dum)->Build(),                "dum ÷ dum")
+  assert_equal([],           From(dum)->Divide(dee)->Build(),                "dum ÷ dee")
   # Differently from Codd's division, Todd's division returns [] whenever the
   # divisor is empty (Codd's division would return [{}] here):
-  assert_equal([],           Scan(dee)->Divide(dum)->Build(),                "dee ÷ dum")
-  assert_equal([{}],         Scan(dee)->Divide(dee)->Build(),                "dee ÷ dee")
+  assert_equal([],           From(dee)->Divide(dum)->Build(),                "dee ÷ dum")
+  assert_equal([{}],         From(dee)->Divide(dee)->Build(),                "dee ÷ dee")
 enddef
 
 def Test_RA_Zip()

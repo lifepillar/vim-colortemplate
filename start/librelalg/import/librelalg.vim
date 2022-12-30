@@ -106,7 +106,7 @@ enddef
 # type Continuation func(Consumer): void
 
 # Root operators (requiring a relation as input) {{{
-export def Scan(R: any): func(func(dict<any>))
+export def From(R: any): func(func(dict<any>))
   const rel = Instance(R)
 
   return (Emit: func(dict<any>)) => {
@@ -116,8 +116,12 @@ export def Scan(R: any): func(func(dict<any>))
   }
 enddef
 
+export def Scan(R: any): func(func(dict<any>))
+  return From(R)
+enddef
+
 export def Foreach(R: any): func(func(dict<any>))
-  return Scan(R)
+  return From(R)
 enddef
 
 export def FilteredScan(R: any, Pred: func(dict<any>): bool): func(func(dict<any>))
@@ -150,7 +154,7 @@ enddef
 # }}}
 
 # Leaf operators (returning a relation) {{{
-export def Build(Cont: func(func(dict<any>))): list<dict<any>>
+export def Query(Cont: func(func(dict<any>))): list<dict<any>>
   var rel: list<dict<any>> = []
   Cont((t) => {
       add(rel, t)
@@ -158,12 +162,12 @@ export def Build(Cont: func(func(dict<any>))): list<dict<any>>
   return rel
 enddef
 
-export def Query(Cont: func(func(dict<any>))): list<dict<any>>
-  return Build(Cont)
+export def Build(Cont: func(func(dict<any>))): list<dict<any>>
+  return Query(Cont)
 enddef
 
 export def Materialize(Cont: func(func(dict<any>))): list<dict<any>>
-  return Build(Cont)
+  return Query(Cont)
 enddef
 
 export def Sort(Cont: func(func(dict<any>)), ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
@@ -183,7 +187,7 @@ export def SumBy(
     attr: string,
     aggrName = 'sum'
 ): list<dict<any>>
-  var aggr: dict<dict<any>> = {}  # Map group => tuple
+  var aggr: dict<dict<any>> = {}
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)

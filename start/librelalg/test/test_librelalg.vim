@@ -23,7 +23,6 @@ const Extend               = ra.Extend
 const EquiJoin             = ra.EquiJoin
 const EquiJoinPred         = ra.EquiJoinPred
 const Filter               = ra.Filter
-const FilteredScan         = ra.FilteredScan
 const Float                = ra.Float
 const ForeignKey           = ra.ForeignKey
 const Frame                = ra.Frame
@@ -46,7 +45,6 @@ const Min                  = ra.Min
 const MinBy                = ra.MinBy
 const Minus                = ra.Minus
 const NatJoin              = ra.NatJoin
-const Noop                 = ra.Noop
 const NotIn                = ra.NotIn
 const Product              = ra.Product
 const Project              = ra.Project
@@ -400,7 +398,7 @@ def Test_RA_FilteredScan()
   R->InsertMany(instance)
 
   const expected = [{A: 2, B: 0.0, C: false, D: 'tuple2'}]
-  const result = Query(FilteredScan(R, (t) => !t.C && t.B >= 0))
+  const result = Query(R->Select((t) => !t.C && t.B >= 0))
 
   assert_equal(expected, result)
   assert_equal(instance, R.instance)
@@ -497,14 +495,6 @@ def Test_RA_SortByAscDesc()
   assert_equal(expected6, From(r)->SortBy(['C', 'B'], ['d', 'd']))
   assert_equal(R.instance, r)
   assert_equal(instance, R.instance)
-enddef
-
-def Test_RA_Noop()
-  var R = Relation('R', {A: Int}, [['A']])
-
-  R->Insert({A: 42})
-
-  assert_equal(Query(From(R)), Query(From(R)->Noop()->Noop()))
 enddef
 
 def Test_RA_Rename()
@@ -858,9 +848,10 @@ def Test_RA_Union()
   ]
 
   assert_equal(expected, From(R)->Union(S)->SortBy(['A', 'B']))
-  assert_equal(expected, From(S)->Union(R)->SortBy(['A', 'B']))
+  assert_equal(expected, Union(S, R)->SortBy(['A', 'B']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
+  assert_equal(expected, R->Union(Select(S, (t) => true)->SortBy(['A', 'B'])))
 enddef
 
 def Test_RA_SemiJoin()

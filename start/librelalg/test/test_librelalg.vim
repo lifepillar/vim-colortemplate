@@ -1633,5 +1633,4 @@ END
   assert_equal(expectedTable, split(Table(R), "\n"))
 enddef
 
-const success = tt.Run('_RA_')
-:2echowindow success ? "Success!" : "Some test failed"
+tt.Run('_RA_')

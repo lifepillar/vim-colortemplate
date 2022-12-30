@@ -390,4 +390,4 @@ def Test_LP_ManyWithOptionalInfiniteLoop()
   assert_equal(1, ctx.index)
 enddef
 
-const success = tt.Run('_LP_')
+tt.Run('_LP_')

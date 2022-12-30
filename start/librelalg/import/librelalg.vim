@@ -1158,7 +1158,12 @@ export def Descriptors(R: dict<any>): list<string>
   return filter(allAttributes, (_, a) => index(keyAttributes, a) == -1)
 enddef
 
-export def Insert(R: dict<any>, t: dict<any>): dict<any>
+export def Insert(R: any, t: dict<any>): any
+  if IsRelationInstance(R)
+    R->add(t)
+    return R
+  endif
+
   for CheckConstraint in R.constraints.I
     CheckConstraint(t)
   endfor
@@ -1176,7 +1181,7 @@ export def Insert(R: dict<any>, t: dict<any>): dict<any>
   return R
 enddef
 
-export def InsertMany(R: dict<any>, tuples: list<dict<any>>): dict<any>
+export def InsertMany(R: any, tuples: list<dict<any>>): any
   for t in tuples
     Insert(R, t)
   endfor
@@ -1218,7 +1223,12 @@ export def Update(R: dict<any>, t: dict<any>, upsert = false): void
   endfor
 enddef
 
-export def Delete(R: dict<any>, Pred: func(dict<any>): bool = (t) => true): void
+export def Delete(R: any, Pred: func(dict<any>): bool = (t) => true): void
+  if IsRelationInstance(R)
+    filter(R, (_, t) => !Pred(t))
+    return
+  endif
+
   const DeletePred = (i: number, t: dict<any>): bool => {
     if Pred(t)
       for CheckConstraint in R.constraints.D

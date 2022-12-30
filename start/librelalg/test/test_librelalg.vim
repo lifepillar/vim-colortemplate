@@ -124,13 +124,15 @@ def Test_RA_Insert()
 
   assert_equal(1, len(RR.instance))
 
-  RR->Insert({A: 0, B: 'b1', C: false, D: 0.2})
+  const result = RR->Insert({A: 0, B: 'b1', C: false, D: 0.2})
 
   assert_equal(2, len(RR.instance))
   assert_equal(
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
     RR.instance
   )
+  assert_equal(v:t_dict, type(result))
+  assert_true(result is RR, 'The result is not the relation object')
 
   AssertFails("RR->Insert({A: 0, B: 'b2', C: true, D: 3.5})", 'Duplicate key')
   AssertFails("RR->Insert({A: 9})", 'Expected a tuple on schema')
@@ -147,6 +149,44 @@ def Test_RA_Insert()
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
     RR.instance
   )
+enddef
+
+def Test_RA_InsertIntoInstance()
+  var r = []
+
+  Insert(r, {A: 0, B: 'b0', C: true, D: 1.2})
+
+  assert_equal(1, len(r))
+
+  const result = r->Insert({A: 0, B: 'b1', C: false, D: 0.2})
+
+  assert_equal(2, len(r))
+  assert_equal([
+      {A: 0, B: 'b0', C: true, D: 1.2},
+      {A: 0, B: 'b1', C: false, D: 0.2}
+    ], r
+  )
+  assert_equal(v:t_list, type(result))
+  assert_true(result is r, 'The result is not the relation instance')
+enddef
+
+def Test_RA_InsertManyIntoInstance()
+  var r = []
+
+  const result = InsertMany(r, [
+    {A: 0, B: 'b0', C: true, D: 1.2},
+    {A: 0, B: 'b1', C: false, D: 0.2},
+  ])
+
+  assert_equal(2, len(r))
+  assert_equal([
+      {A: 0, B: 'b0', C: true, D: 1.2},
+      {A: 0, B: 'b1', C: false, D: 0.2}
+    ], r
+  )
+  assert_equal(v:t_list, type(result))
+  assert_true(result is r, 'The result is not the relation instance')
+
 enddef
 
 def Test_RA_Update()
@@ -231,6 +271,39 @@ def Test_RA_Delete()
 
   assert_equal([], r)
   assert_equal(empty_indexes, R.indexes)
+enddef
+
+def Test_RA_DeleteFromInstance()
+  var r = [
+    {A: 0, B: 'X'},
+    {A: 1, B: 'Y'},
+    {A: 2, B: 'Z'},
+    {A: 3, B: 'Y'},
+    {A: 4, B: 'Z'},
+  ]
+
+  const expected1 = [
+    {A: 1, B: 'Y'},
+    {A: 2, B: 'Z'},
+    {A: 3, B: 'Y'},
+    {A: 4, B: 'Z'},
+  ]
+  const expected2 = [
+    {A: 1, B: 'Y'},
+    {A: 4, B: 'Z'},
+  ]
+
+  r->Delete((t) => t.B == 'X')
+
+  assert_equal(expected1, r)
+
+  Delete(r, (t) => t.A == 2 || t.A == 3)
+
+  assert_equal(expected2, r)
+
+  r->Delete()
+
+  assert_equal([], r)
 enddef
 
 def Test_RA_DeleteForeignKey()

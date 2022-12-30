@@ -509,7 +509,7 @@ enddef
 export def LeftNatJoin(
     Cont: func(func(dict<any>)),
     R: any,
-    Filler: any  # TODO: extend with a fn depending of t instead?
+    Filler: any
 ): func(func(dict<any>))
   const rel    = Instance(R)
   const filler = Instance(Filler)

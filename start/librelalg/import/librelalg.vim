@@ -70,7 +70,6 @@ def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>, invert: li
 enddef
 
 def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
-  # TODO: compare performance with copy(t) + remove(dict, key)
   var u = {}
   for attr in attrList
     u[attr] = t[attr]
@@ -336,8 +335,9 @@ export def Project(Cont: func(func(dict<any>)), attrList: list<string>): func(fu
   return (Emit: func(dict<any>)) => {
     def Proj(t: dict<any>)
       var u = ProjectTuple(t, attrList)
-      if !seen->has_key(String(u))
-        seen[String(u)] = true
+      const v = string(values(u))
+      if !seen->has_key(v)
+        seen[v] = true
         Emit(u)
       endif
     enddef

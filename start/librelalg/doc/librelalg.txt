@@ -699,7 +699,7 @@ relations), or continuations. The operators deal with their inputs
 transparently, so the user should not typically worry about the above
 categorization.
 
-If the following, unless otherwise noted, {rel}, {rel1}, {rel2} always denote
+In the following, unless otherwise noted, {rel}, {rel1}, {rel2} always denote
 a base relation, a relation instance, or a continuation: any of these three
 data types can be used as {rel}, {rel1}, or {rel2}. This allows the user
 combining the operators in a natural fashion.

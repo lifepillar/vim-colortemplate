@@ -1221,9 +1221,6 @@ Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
 		Note that the returned value is a tuple, not a relation
 		instance!
 
-Materialize({rel})				*librelalg.Materialize()*
-		A synonym of |librelalg.Query()|.
-
 MaxBy({rel}, {list}, {attr} [, {name}])		*librelalg.MaxBy()*
 		Group the tuples of a relation {rel} with respect to a {list}
 		of attributes, and determine the maximum value of attribute

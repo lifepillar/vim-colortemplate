@@ -150,22 +150,19 @@ enddef
 # }}}
 
 # Leaf operators (returning a relation) {{{
+def Materialize(Cont: func(func(dict<any>))): list<dict<any>>
+  var rel: list<dict<any>> = []
+  Cont((t) => {
+    add(rel, t)
+  })
+  return rel
+enddef
+
 export def Query(Arg: any): list<dict<any>>
-  if IsFunc(Arg)
-    var rel: list<dict<any>> = []
-    Arg((t) => {
-        add(rel, t)
-    })
-    return rel
-  endif
-  return Instance(Arg)
+  return IsFunc(Arg) ? Materialize(Arg) : Instance(Arg)
 enddef
 
 export def Build(Arg: any): list<dict<any>>
-  return Query(Arg)
-enddef
-
-export def Materialize(Arg: any): list<dict<any>>
   return Query(Arg)
 enddef
 
@@ -189,9 +186,7 @@ export def Union(Arg1: any, Arg2: any): list<dict<any>>
 enddef
 
 export def Filter(Arg: any, Pred: func(dict<any>): bool): list<dict<any>>
-  # TODO: use Materialize() only internally as a faster version of Query()
-  # that does not accept continuations. Use it here instead of Query().
-  var rel = IsFunc(Arg) ? Query(Arg) : copy(Instance(Arg))
+  var rel = IsFunc(Arg) ? Materialize(Arg) : copy(Instance(Arg))
   return filter(rel, (_, t) => Pred(t))
 enddef
 

@@ -1002,7 +1002,24 @@ Join({cont}, {rel}, {func} [, {prefix}])	*librelalg.Join()*
 		This is a pipeline operator.
 
 Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
-		TODO
+		Search for a tuple in relation object {relobj} whose {key}
+		matches the value specified by {list}. For example:
+>
+		var R = Relation('R', {A: Int, B: Str}, [['A']])
+			->InsertMany([
+			  {A: 1, B: 'x'},
+			  {A: 3, B: 'y'},
+			  {A: 5, B: 'z'}
+			])
+		echo Lookup(R, ['A'], [3])
+<
+		When looking up for a tuple by a key value, using this
+		function is generally faster than using |Select()|, because
+		lookup access uses an index associated to the key, whereas
+		|Select()| does a linear scan of the relation.
+
+		Note that the returned value is a tuple, not a relation
+		instance!
 
 Materialize({cont})				*librelalg.Materialize()*
 		A synonym of |librelalg.Build()|.

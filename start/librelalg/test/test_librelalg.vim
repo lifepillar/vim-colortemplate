@@ -38,6 +38,7 @@ const Join                 = ra.Join
 const KeyAttributes        = ra.KeyAttributes
 const LeftNatJoin          = ra.LeftNatJoin
 const LimitScan            = ra.LimitScan
+const Lookup               = ra.Lookup
 const Max                  = ra.Max
 const MaxBy                = ra.MaxBy
 const Min                  = ra.Min
@@ -993,6 +994,15 @@ def Test_RA_LeftNatJoin()
   ]
 
   assert_true(RelEq(result, expected))
+enddef
+
+def Test_RA_Lookup()
+  var R = Relation('R', {A: Int, B: Str}, [['A']])
+          ->InsertMany([{A: 1, B: 'x'}, {A: 3, B: 'y'}, {A: 5, B: 'z'}])
+
+  assert_equal({A: 1, B: 'x'}, Lookup(R, ['A'], [1]))
+  assert_equal({A: 3, B: 'y'}, Lookup(R, ['A'], [3]))
+  assert_equal({A: 5, B: 'z'}, Lookup(R, ['A'], [5]))
 enddef
 
 def Test_RA_Extend()

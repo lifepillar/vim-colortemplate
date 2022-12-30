@@ -188,6 +188,13 @@ export def Union(Arg1: any, Arg2: any): list<dict<any>>
   endif
 enddef
 
+export def Filter(Arg: any, Pred: func(dict<any>): bool): list<dict<any>>
+  # TODO: use Materialize() only internally as a faster version of Query()
+  # that does not accept continuations. Use it here instead of Query().
+  var rel = IsFunc(Arg) ? Query(Arg) : copy(Instance(Arg))
+  return filter(rel, (_, t) => Pred(t))
+enddef
+
 export def SumBy(
     Arg: any,
     groupBy: list<string>,
@@ -1231,11 +1238,6 @@ enddef
 # }}}
 
 # Convenience functions {{{
-export def Filter(R: any, Pred: func(dict<any>): bool): list<dict<any>>
-  var rel = copy(Instance(R))
-  return filter(rel, (_, t) => Pred(t))
-enddef
-
 # Compare two relation instances
 export def RelEq(R: any, S: any): bool
   const rel1: list<dict<any>> = Instance(R)

@@ -1574,7 +1574,7 @@ def Test_RA_Filter()
   assert_equal(expected2, Filter(expected, (t) => t.A == 2))
 enddef
 
-def Test_RA_PrettyPrint()
+def Test_RA_Table()
   var R = Relation("R", {AAAAAAAAA: Int, B: Str}, [["AAAAAAAAA"]])
 
   var expectedTable =<< END

@@ -151,7 +151,7 @@ export def Build(Arg: any): list<dict<any>>
 enddef
 
 export def Sort(Arg: any, ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
-  var rel = IsFunc(Arg) ? Query(Arg) : Instance(Arg)
+  var rel = Query(Arg)
   return sort(rel, ComparisonFn)
 enddef
 
@@ -163,7 +163,7 @@ enddef
 
 export def Union(Arg1: any, Arg2: any): list<dict<any>>
   if IsFunc(Arg1)
-    return Query(Arg1)->extend(Query(Arg2))->sort()->uniq()
+    return Materialize(Arg1)->extend(Query(Arg2))->sort()->uniq()
   else
     return Instance(Arg1)->extendnew(Query(Arg2))->sort()->uniq()
   endif

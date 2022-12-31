@@ -185,7 +185,7 @@ export def SumBy(
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
-    const group = String(values(tp))
+    const group = string(values(tp))
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: 0})
     endif
@@ -207,7 +207,7 @@ export def CountBy(
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
-    const group = String(values(tp))
+    const group = string(values(tp))
     if !aggrCount->has_key(group)
       aggrCount[group] = tp->extend({[aggrName]: 0})
       aggrDistinct[group] = {}
@@ -234,7 +234,7 @@ export def MaxBy(
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
-    const group = String(values(tp))
+    const group = string(values(tp))
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: t[attr]})
     endif
@@ -257,7 +257,7 @@ export def MinBy(
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
-    const group = String(values(tp))
+    const group = string(values(tp))
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: t[attr]})
     endif
@@ -281,7 +281,7 @@ export def AvgBy(
 
   Cont((t: dict<any>) => {
     var tp = ProjectTuple(t, groupBy)
-    const group = String(values(tp))
+    const group = string(values(tp))
     if !aggrAvg->has_key(group)
       aggrAvg[group] = tp->extend({[aggrName]: 0.0})
       aggrCnt[group] = 0
@@ -548,7 +548,7 @@ export def Frame(Arg: any, attrList: list<string>, name: string = 'fid'): func(f
 
   return (Emit: func(dict<any>)) => {
     def FrameTuple(t: dict<any>)
-      const groupby = String(ProjectTuple(t, attrList))
+      const groupby = string(ProjectTuple(t, attrList))
       if !seen->has_key(groupby)
         seen[groupby] = fid
         ++fid
@@ -572,7 +572,7 @@ export def GroupBy(
   Cont((t) => {
     # Materialize into subrelations
     const groupValue = mapnew(groupBy, (_, attr) => t[attr])
-    const groupKey = String(groupValue)
+    const groupKey = string(groupValue)
     if !fid->has_key(groupKey)
       fid[groupKey] = []
     endif
@@ -1153,7 +1153,7 @@ export def Insert(R: any, t: dict<any>): any
   const n = len(R.keys)
   while i < n
     const key = R.keys[i]
-    R.indexes[String(key)]->AddKey(key, t)
+    R.indexes[string(key)]->AddKey(key, t)
     i += 1
   endwhile
 

@@ -131,22 +131,6 @@ enddef
 export def Foreach(Arg: any): func(func(dict<any>))
   return From(Arg)
 enddef
-
-export def LimitScan(Arg: any, n: number): func(func(dict<any>))
-  var rel = IsFunc(Arg) ? Query(Arg) : Instance(Arg)
-  var i = 0
-
-  return (Emit: func(dict<any>)) => {
-    for t in rel
-      if i < n
-        Emit(t)
-        i += 1
-      else
-        break
-      endif
-    endfor
-  }
-enddef
 # }}}
 
 # Leaf operators (returning a relation) {{{

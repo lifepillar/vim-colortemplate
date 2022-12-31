@@ -1641,6 +1641,29 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 Attributes({relobj})				*librelalg.Attributes()*
 		Return the list of attributes of relation object {relobj}.
 
+Bind({func}, {attr})				*librelalg.Bind()*
+		Bind the attribute argument {attr} of an aggregate function
+		{func}. This makes it more convenient to pass to
+		|librelalg.GroupBy()| an aggregate function that takes an
+		attribute as a second argument. For example:
+>
+		# Number of distinct lines containing a tag, in each buffer
+		const result = Query(
+		           From(Tag)
+		           ->GroupBy(['BufId'],
+		                     Bind(CountDistinct, 'Line'), 'nLines')
+		)
+		echo Table(result)
+<
+		Output:
+>
+		──────────────
+		 nLines BufId
+		──────────────
+		      3     1
+		      1     2
+		      1     3
+<
 Descriptors({relobj})				*librelalg.Descriptors()*
 		Return the list of descriptors of relation object {relobj}.
 		A descriptor is an attribute that is not part of any key.

@@ -10,7 +10,6 @@ libparser.Eol()	libparser.txt	/*libparser.Eol()*
 libparser.Eps()	libparser.txt	/*libparser.Eps()*
 libparser.Err()	libparser.txt	/*libparser.Err()*
 libparser.Fail()	libparser.txt	/*libparser.Fail()*
-libparser.Fatal()	libparser.txt	/*libparser.Fatal()*
 libparser.Lexeme()	libparser.txt	/*libparser.Lexeme()*
 libparser.LookAhead()	libparser.txt	/*libparser.LookAhead()*
 libparser.Many()	libparser.txt	/*libparser.Many()*
@@ -23,6 +22,7 @@ libparser.RT()	libparser.txt	/*libparser.RT()*
 libparser.Regex()	libparser.txt	/*libparser.Regex()*
 libparser.Seq()	libparser.txt	/*libparser.Seq()*
 libparser.Skip()	libparser.txt	/*libparser.Skip()*
+libparser.SoftFail()	libparser.txt	/*libparser.SoftFail()*
 libparser.Space()	libparser.txt	/*libparser.Space()*
 libparser.T()	libparser.txt	/*libparser.T()*
 libparser.Text()	libparser.txt	/*libparser.Text()*

@@ -39,12 +39,8 @@ export def Null(ctx: dict<any>): dict<any>
   return Success(null)
 enddef
 
-export def Fail(ctx: dict<any>): dict<any>
+export def SoftFail(ctx: dict<any>): dict<any>
   return Failure(ctx.index)
-enddef
-
-export def Fatal(ctx: dict<any>): dict<any>
-  return Failure(ctx.index, 'no failure')
 enddef
 
 export def Eof(ctx: dict<any>): dict<any>
@@ -57,6 +53,12 @@ enddef
 # }}}
 
 # Parser generators {{{
+export def Fail(msg: string): func(dict<any>): dict<any>
+  return (ctx: dict<any>): dict<any> => {
+    return Failure(ctx.index, msg)
+  }
+enddef
+
 # Case-sensitively matches a string at the current position.
 # Fails when not found.
 #

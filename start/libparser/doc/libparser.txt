@@ -188,12 +188,16 @@ Eps({ctx})					*libparser.Eps()*
 		{'success': true, 'value': ''}
 		{'index': 0, 'text': 'abc'}
 <
-Fail({ctx})					*libparser.Fail()*
+SoftFail({ctx})					*libparser.SoftFail()*
 		A parser that does nothing and always fails, allowing
-		backtracking. For example:
+		backtracking.
+
+		In the following example, the first choice fails
+		unconditionally, so the parser backtracks and always tries the
+		second choice:
 >
 		var ctx = {text: 'abc', index: 0}
-		const Parse = OneOf(Fatal, Text('ab'))
+		const Parse = OneOf(SoftFail, Text('ab'))
 		const result = Parse(ctx)
 		echo result
 		echo ctx
@@ -202,21 +206,6 @@ Fail({ctx})					*libparser.Fail()*
 >
 		{'success': true, 'value': 'ab'}
 		{'index': 2, 'text': 'abc'}
-<
-Fatal({ctx})					*libparser.Fatal()*
-		A parser that does nothing and always fails with a syntax
-		error, preventing backtracking. For example:
->
-		var ctx = {text: 'abc', index: 0}
-		const Parse = OneOf(Fail, Text('ab'))
-		const result = Parse(ctx)
-		echo result
-		echo ctx
-<
-		Output:
->
-		{'label': 'no failure', 'errpos': 0, 'success': false}
-		{'index': 0, 'text': 'abc'}
 <
 Null({ctx})					*libparser.Null()*
 		A parser that does nothing and never fails. The returned value
@@ -251,6 +240,22 @@ Space({ctx})					*libparser.Space()*
 
 Parser generators are functions that build and return a parser.
 
+Fail({msg})					*libparser.Fail()*
+		A parser that does nothing and always fails with a syntax
+		error emitting the given message {msg} and preventing
+		backtracking. For example, this parser never succeeds:
+>
+		var ctx = {text: 'abc', index: 0}
+		const Parse = OneOf(Fail('@#$!'), Text('ab'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'label': 'no failure', 'errpos': 0, 'success': false}
+		{'index': 0, 'text': 'abc'}
+<
 Regex({pat})					*libparser.Regex()*
 		Return a parser that matches regular expression {pat}. Note
 		that this parser consumes some input only if {pat} is matched

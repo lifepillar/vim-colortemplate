@@ -373,8 +373,7 @@ Err({parser}, {string})				*libparser.Err()*
 		parsing is successful in both examples.
 
 LookAhead({parser})				*libparser.LookAhead()*
-		Apply parser {parser} return its result, but do not
-		consume any input. For example:
+		Apply {parser} without consuming any input. For example:
 >
 		var ctx = {text: 'abc', index: 0}
 		const Parse = LookAhead(Text('ab'))
@@ -384,7 +383,7 @@ LookAhead({parser})				*libparser.LookAhead()*
 <
 		Output:
 >
-		{'success': true, 'value': 'ab'}
+		{'success': true, 'value': null}
 		{'index': 0, 'text': 'abc'}
 <
 		Parsing is successful, but the index still points to the first
@@ -406,9 +405,9 @@ Many({parser})					*libparser.Many()*
 		{'index': 5, 'text': 'aaaaabc'}
 <
 NegLookAhead({parser})				*libparser.NegLookAhead()*
-		Apply parser {parser}, then turn any failure into a success,
-		and a success into a backtracking failure. In any case, it
-		does not consume any input.
+		Apply {parser}, then turn any failure into a success, and
+		a success into a backtracking failure. In any case, do not
+		consume any input.
 
 		An example of failure turned a success:
 >

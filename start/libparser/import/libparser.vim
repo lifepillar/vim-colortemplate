@@ -197,7 +197,7 @@ enddef
 export def LookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
     const startIndex = ctx.index
-    const result = Parser(ctx)
+    const result = Skip(Parser)(ctx)
     ctx.index = startIndex
     return result
   }
@@ -206,7 +206,7 @@ enddef
 export def NegLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
     const startIndex = ctx.index
-    const result = Parser(ctx)
+    const result = Skip(Parser)(ctx)
 
     if result.success
       const errPos = ctx.index

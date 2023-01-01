@@ -1,8 +1,9 @@
 vim9script
-# Description: A tiny testing framework for Vim
-# Author:      Lifepillar <lifepillar@lifepillar.me>
-# Maintainer:  Lifepillar <lifepillar@lifepillar.me>
-# License:     Vim license (see `:help license`)
+
+# Author:       Lifepillar <lifepillar@lifepillar.me>
+# Maintainer:   Lifepillar <lifepillar@lifepillar.me>
+# Website:      https://github.com/lifepillar/vim-devel
+# License:      Vim License (see `:help license`)
 
 if !&magic
   echomsg "Tiny Test requires 'magic' on"

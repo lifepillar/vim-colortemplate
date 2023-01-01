@@ -1,5 +1,10 @@
 vim9script
 
+# Author:       Lifepillar <lifepillar@lifepillar.me>
+# Maintainer:   Lifepillar <lifepillar@lifepillar.me>
+# Website:      https://github.com/lifepillar/vim-devel
+# License:      Vim License (see `:help license`)
+
 # Helper functions {{{
 # string() turns 'A' into a string of length 3, with quotes.
 # We do not want that.

@@ -1,5 +1,10 @@
 vim9script
 
+# Author:       Lifepillar <lifepillar@lifepillar.me>
+# Maintainer:   Lifepillar <lifepillar@lifepillar.me>
+# Website:      https://github.com/lifepillar/vim-devel
+# License:      Vim License (see `:help license`)
+
 import 'librelalg.vim' as ra
 import 'libtinytest.vim' as tt
 

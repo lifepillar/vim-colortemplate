@@ -150,10 +150,7 @@ enddef
 export def Opt(
     Parser: func(dict<any>): dict<any>
 ): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
-    const result = Parser(ctx)
-    return result.success ? result : Success(null)
-  }
+  return OneOf(Parser, Null)
 enddef
 
 export def Many(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>

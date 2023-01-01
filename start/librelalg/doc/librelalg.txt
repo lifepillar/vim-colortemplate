@@ -123,7 +123,7 @@ Output:
 
 Suppose that you want to write a script that keeps track of some “tags”
 associated to each buffer. Since data is king, a good place to start is by
-defining a (Relational) *data* *model* for your script. Suppose that, after
+defining a (Relational) data model for your script. Suppose that, after
 carefully evaluating the requirements for your script, your model looks like
 this (using standard IDEF1X notation):
 >
@@ -148,23 +148,23 @@ this (using standard IDEF1X notation):
 	(1) Lines and columns must be greater than zero.
 <
 If you are not familiar with IDEF1X or similar diagramming tools, each box
-represents an *entity* (your script will deal with “buffers” and “tags”, so
+represents an "entity" (your script will deal with “buffers” and “tags”, so
 there are two entities in this model). Each entity has a name, written above
 its box, and attributes, which are written inside the box. The attributes will
 be the actual pieces of data stored and manipulated by your script. Each box
 also contains a separator line: the attributes above the separator form the
-*primary* *key* of the entity—that is, the main identifier of each entity
+"primary key" of the entity—that is, the main identifier of each entity
 instance; the attributes below the separator are further descriptors of the
 entity. For instance, each tag is identified by the pair {TagName, BufId}, and
 it is described by the attributes Line and Column.
 
-Entities are connected by *relationships* represented by lines joining two
+Entities are connected by "relationships" represented by lines joining two
 entities. The above diagram contains a one-to-many relationship, the dot
 representing the “many” side: such relationship establishes that each buffer
 is possibly associated to many tags, but each tag is always associated to one
 and only one buffer. The entity on the “one” side of the relationship (Buffer,
-in this example) is called the *parent* entity; the entity on the “many” side
-of the relationship (Tag, in this example) is called a *child* entity. Each
+in this example) is called the "parent" entity; the entity on the “many” side
+of the relationship (Tag, in this example) is called a "child" entity. Each
 relationship is described by two verb phrases separated by a slash: the first
 verb phrase is read from parent to child (in this example: “A buffer is tagged
 by zero or more tags”); the second is read from child to parent (“a tag
@@ -176,12 +176,12 @@ that no two buffers share the same name, so `BufName` can be used as an
 identifier as well as `BufId`. A foreign key is the primary key of a parent
 entity, which is “migrated” into the child entity by virtue of its
 relationship with the parent. When a foreign key is entirely part of the
-primary key of the child (as in Tag), the child entity is *dependent* on its
+primary key of the child (as in Tag), the child entity is "dependent" on its
 parent: in this example, that means that it is not possible to designate a tag
 without referencing the buffer to which the tag belongs (dependent entities
 are drawn as rectangles with rounded corners, although the rounded corners may
 not be particularly prominent in the extended ASCII rendition above). In this
-example, Buffer is an *independent* entity: the existence of a buffer does not
+example, Buffer is an "independent" entity: the existence of a buffer does not
 depend on anything else in this model. The distinction between independent and
 dependent entities has a number of implications: among the rest, it determines
 the order in which the database is populated (you cannot insert tags before
@@ -233,7 +233,7 @@ straightforward task:
    librelalg's names without prefix, as if aliases such as those above had
    been defined for all the imported items.
 
-2. Define one *base* relation for each entity:
+2. Define one base relation for each entity:
 >
 	var Buffer = Relation('Buffer', {
 	    BufId:   Int,
@@ -405,7 +405,7 @@ to filter it. Output:
 	     lll      8    4     1
 <
 The result of a query is just a set of tuples (that is, a |list| of
-homogeneous |dict|s), called a *derived* relation. Contrary to base relations,
+homogeneous |dict|s), called a "derived" relation. Contrary to base relations,
 derived relations do not have any associated keys, constraints or indexes.
 
 If you want to get just the tag names and lines, you may use a projection:
@@ -544,7 +544,7 @@ Relation({name}, {schema}, {keys} [, {typecheck}])
 3. Data manipulation language			*librelalg-dml*
 
 Note: you should never use Vim's functions (|add()|, |filter()|, etc.) to
-insert, update, or delete from *base* relations, because the integrity of the
+insert, update, or delete from base relations, because the integrity of the
 data may be compromised. Only the functions described in this section should
 be used. Derived relations, however, can be manipulated with any function.
 
@@ -596,15 +596,15 @@ help, however, to make the most out of it.
 
 This section uses the following terminology:
 
-- A *tuple* is a |dict| mapping attributes to values. Values can be strings,
+- A "tuple" is a |dict| mapping attributes to values. Values can be strings,
   integers, booleans, or floats.
-- A *relation* *instance* (or simply an “instance”) is a |list| of tuples.
-- A *base* *relation* is an object built with |librelalg.Relation()|.
-- A *derived* *relation* is a relation instance obtained as the result of
+- A "relation" instance (or simply an “instance”) is a |list| of tuples.
+- A "base relation" is an object built with |librelalg.Relation()|.
+- A "derived relation" is a relation instance obtained as the result of
   a query.
-- A *relation* is a base relation or a relation instance.
-- A *consumer* is any function with signature func({tuple}): void.
-- A *continuation* is any function with signature func({Consumer}): void.
+- A "relation" is a base relation or a relation instance.
+- A "consumer" is any function with signature func({tuple}): void.
+- A "continuation" is any function with signature func({Consumer}): void.
 
 Intuitively, a consumer is a function that operates in some way on a tuple,
 typically by invoking a continuation. A continuation receives as an input
@@ -712,7 +712,7 @@ that unnecessarily create temporary objects.
 Note: some of the examples in the rest of this section are based on the sample
 database discussed in |librelalg-tutorial|.
 
-AvgBy({rel}, {list}, {attr} [, {name}])		*librelalg.MinBy()*
+AvgBy({rel}, {list}, {attr} [, {name}])		*librelalg.AvgBy()*
 		Group the tuples of relation {rel} with respect to a {list} of
 		attributes, and determine the average of the values of
 		attribute {attr} in each group. The schema of the output
@@ -1050,7 +1050,7 @@ Frame({rel}, {list}[, {name}])			*librelalg.Frame()*
 <
 		This is a pipeline operator, returning a continuation.
 
-From({rel})					*librelalg.Scan()*
+From({rel})					*librelalg.From()*
 		Return a continuation that iterates over the tuples of
 		a relation {rel} and emits each tuple. If {rel} is already
 		a continuation, then this function just returns it. This is
@@ -1610,7 +1610,7 @@ Count({rel})					*librelalg.Count()*
 >
 		const nBuf = From(Buffer)->Count()  # 3
 <
-CountDistinct({rel}, {attr})			*librelalg.Count()*
+CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 		Return the number of distinct values in attribute {attr} of
 		a relation {rel}. For instance, to return the number of
 		distinct tag names:

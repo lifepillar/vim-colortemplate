@@ -26,7 +26,7 @@ Output:
 	{'success': true, 'value': 'Vim'}
 	{'index': 3, 'text': 'Vim - the text editor'}
 <
-To parse some text, at a minimum you have to define a *context* dictionary
+To parse some text, at a minimum you have to define a "context" dictionary
 containing at least two keys:
 
 - "text": the |string| to be parsed;
@@ -543,7 +543,7 @@ Token({parser})				*libparser.Token()*
 ==============================================================================
 5. Other functions				*libparser-other*
 
-Apply({parser}, {func})				*libparser.Map()*
+Apply({parser}, {func})				*libparser.Apply()*
 		Apply {parser} and, upon success, consume the parsed value by
 		applying {func}, and return a null value. {func} is a function
 		that takes as input the parsed value and does not return

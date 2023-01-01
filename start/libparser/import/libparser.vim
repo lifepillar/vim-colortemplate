@@ -26,12 +26,12 @@ enddef
 # }}}
 
 # Basic parsers {{{
-export def Null(ctx: dict<any>): dict<any>
-  return Success(null)
-enddef
-
 export def Eps(ctx: dict<any>): dict<any>
   return Success('')
+enddef
+
+export def Null(ctx: dict<any>): dict<any>
+  return Success(null)
 enddef
 
 export def Fail(ctx: dict<any>): dict<any>
@@ -39,7 +39,7 @@ export def Fail(ctx: dict<any>): dict<any>
 enddef
 
 export def Fatal(ctx: dict<any>): dict<any>
-  return Failure(ctx.index, 'fatal')
+  return Failure(ctx.index, 'no failure')
 enddef
 
 export def Eof(ctx: dict<any>): dict<any>
@@ -140,7 +140,7 @@ export def OneOf(
   }
 enddef
 
-export def Optional(
+export def Opt(
     Parser: func(dict<any>): dict<any>
 ): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
@@ -182,7 +182,6 @@ export def Many(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   }
 enddef
 
-# Apply a parser and throw away its result upon success.
 export def Skip(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
     const result = Parser(ctx)
@@ -190,19 +189,19 @@ export def Skip(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   }
 enddef
 
-export def PositiveLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
+export def LookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
     const startIndex = ctx.index
-    const result = Skip(Parser)(ctx)
+    const result = Parser(ctx)
     ctx.index = startIndex
     return result
   }
 enddef
 
-export def NegativeLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
+export def NegLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
     const startIndex = ctx.index
-    const result = Skip(Parser)(ctx)
+    const result = Parser(ctx)
 
     if result.success
       const errPos = ctx.index
@@ -217,7 +216,6 @@ enddef
 # }}}
 
 # Convenience functions {{{
-# Maps a Success to a callback.
 export def Map(
     Parser: func(dict<any>): dict<any>,
     Fn: func(any): any
@@ -228,7 +226,6 @@ export def Map(
   }
 enddef
 
-# Upon success, consume the parsed value by applying a function, and return a null value.
 export def Apply(Parser: func(dict<any>): dict<any>, Fn: func(any): void): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
     const result = Parser(ctx)
@@ -240,9 +237,6 @@ export def Apply(Parser: func(dict<any>): dict<any>, Fn: func(any): void): func(
   }
 enddef
 
-# Return a function that transforms a parser P into another parser that first
-# applies P and then uses SkipParser to skip stuff (e.g., white space,
-# comments). Return the result of P.
 export def Lexeme(
     SkipParser: func(dict<any>): dict<any>
 ): func(func(dict<any>): dict<any>): func(dict<any>): dict<any>

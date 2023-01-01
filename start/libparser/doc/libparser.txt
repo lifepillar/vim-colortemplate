@@ -1,14 +1,13 @@
-*libparser.txt*	For Vim version 9.0	Last change: 2022 Dec 29
+*libparser.txt*	For Vim version 9.0	Last change: 2023 Jan 01
 
 A simple library to write parsers.
-
-Note: Vim 9.0.1065 or later is required.
 
 0. Quick start				|libparser-quickstart|
 1. Tutorial				|libparser-tutorial|
 2. Basic parsers			|libparser-basic|
 3. Parser generators			|libparser-generators|
 4. Parser combinators			|libparser-combinators|
+5. Other functions			|libparser-other|
 
 ==============================================================================
 0. Quick start					*libparser-quickstart*
@@ -47,28 +46,26 @@ dictionary contains two keys:
 A failure dictionary contains three keys:
 
 - "success": this is set to |false|;
-- "expected": a message explaining what the parser expected;
-- "backtrack": when |true|, the failure is considered recoverable, and the
-  parser should backtrack; when |false|, the failure is considered a fatal
-  error and the parser should stop.
+- "errpos": the position of the error.
+- "label": a message explaining what the parser expected;
 
 ==============================================================================
 1. Tutorial					*libparser-tutorial*
 
-The following example,
+TODO
 >
 	vim9script
-	
+
 	import 'libparser.vim' as parser
-	
+
 	const Eps       = parser.Eps
 	const Many      = parser.Many
 	const OneOf     = parser.OneOf
-	const Opt       = parser.Optional
+	const Opt       = parser.Opt
 	const RT        = parser.RT
 	const Seq       = parser.Seq
 	const T         = parser.T
-	
+
 	const ASSIGN = T('=')
 	const CLASS  = T('class')
 	const DIV    = T('/')
@@ -96,13 +93,13 @@ The following example,
 	const TIMES  = T('*')
 	const VOID   = T('void')
 	const WHILE  = T('while')
-	
+
 	def Ref(name: string): func(dict<any>): dict<any>
 	  return (ctx: dict<any>): dict<any> => {
 	    return eval(name)(ctx)
 	  }
 	enddef
-	
+
 	const AtomExp    = OneOf(Seq(LPAR, Ref('Exp'), RPAR), NUMBER, NAME)
 	const MulExp     = Seq(AtomExp, Many(Seq(OneOf(TIMES, DIV), AtomExp)))
 	const AddExp     = Seq(MulExp, Many(Seq(OneOf(PLUS, MINUS), MulExp)))
@@ -115,14 +112,14 @@ The following example,
 	const IfStmt     = Seq(IF, LPAR, Exp, RPAR, Ref('Stmt'), OneOf(Seq(ELSE, Ref('Stmt')), Eps))
 	const Stmt       = OneOf(IfStmt, WhileStmt, PrintStmt, DecStmt, AssignStmt, Ref('BlockStmt'))
 	const BlockStmt  = Seq(LCUR, Many(Stmt), RCUR)
-	
+
 	const Prog = Seq(
 	  PUBLIC, CLASS, NAME, LCUR,
 	    PUBLIC, STATIC, VOID, MAIN, LPAR, STRING, LBRA, RBRA, NAME, RPAR,
 	    BlockStmt,
 	  RCUR
 	)
-	
+
 	const text =<< END
 	public class Example {
 	  public static void main(String[] args) {
@@ -136,7 +133,7 @@ The following example,
 	  }
 	}
 	END
-	
+
 	var ctx = { text: join(text), index: 0 }
 	const result = Prog(ctx)
 	echo result
@@ -144,12 +141,28 @@ The following example,
 ==============================================================================
 2. Basic parsers				*libparser-basic*
 
-Eof({ctx})					*libparser.Null()*
+Eol({ctx})					*libparser.Eol()*
+		A parser that matches an end-of-line character. The returned
+		value is the actual new line character. For example:
+>
+		var ctx = {text: "\nX", index: 0}
+		var result = Eol(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': '
+		'}
+		{'index': 1, 'text': '
+		X'}
+<
+Eof({ctx})					*libparser.Eof()*
 		A parser that matches at the end of the text. The returned
 		value is |null|. This parser does not modify the context
 		{ctx}. For example:
 >
-		var ctx = {text: "abc", index: 0}
+		var ctx = {text: 'abc', index: 0}
 		var result = Eof(ctx)
 		echo result
 		ctx.index = 3
@@ -158,28 +171,58 @@ Eof({ctx})					*libparser.Null()*
 <
 		Output:
 >
-		{'backtrack': true, 'expected': 'end of input', 'success': false}
+		{'label': '', 'errpos': 0, 'success': false}
 		{'success': true, 'value': null}
 <
-Fail({ctx})					*libparser.Null()*
-		A parser that does nothing and always fails fatally. The
-		returned value is the string "fail". For example:
+Eps({ctx})					*libparser.Eps()*
+		A parser that matches an empty string. The returned value
+		is always an empty string. It never fails. For example:
 >
-		var ctx = {text: "abc", index: 0}
-		const result = Fail(ctx)
+		var ctx = {text: 'abc', index: 0}
+		const result = Eps(ctx)
 		echo result
 		echo ctx
 <
 		Output:
 >
-		{'backtrack': false, 'expected': 'fail', 'success': false}
+		{'success': true, 'value': ''}
+		{'index': 0, 'text': 'abc'}
+<
+Fail({ctx})					*libparser.Fail()*
+		A parser that does nothing and always fails, allowing
+		backtracking. For example:
+>
+		var ctx = {text: 'abc', index: 0}
+		const Parse = OneOf(Fatal, Text('ab'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': 'ab'}
+		{'index': 2, 'text': 'abc'}
+<
+Fatal({ctx})					*libparser.Fatal()*
+		A parser that does nothing and always fails with a syntax
+		error, preventing backtracking. For example:
+>
+		var ctx = {text: 'abc', index: 0}
+		const Parse = OneOf(Fail, Text('ab'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'label': 'no failure', 'errpos': 0, 'success': false}
 		{'index': 0, 'text': 'abc'}
 <
 Null({ctx})					*libparser.Null()*
 		A parser that does nothing and never fails. The returned value
 		is always |null|. For example:
 >
-		var ctx = {text: "abc", index: 0}
+		var ctx = {text: 'abc', index: 0}
 		const result = Null(ctx)
 		echo result
 		echo ctx
@@ -189,19 +232,32 @@ Null({ctx})					*libparser.Null()*
 		{'success': true, 'value': null}
 		{'index': 0, 'text': 'abc'}
 <
+Space({ctx})					*libparser.Space()*
+		A parser that matches whitespace, including new lines. For
+		example:
+>
+		var ctx = {text: '   abc', index: 0}
+		const result = Space(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': '   '}
+		{'index': 3, 'text': '   abc'}
+<
 ==============================================================================
 3. Parser generators				*libparser-generators*
 
 Parser generators are functions that build and return a parser.
 
-Regex({pat}, {string})				*libparser.Regex()*
-		Return a parser that matches regular expression {pat}.
-		When it fails, it sets the expected value to {string}.
-		Note that this parser consumes some input only if {pat} is
-		matched in its entirety.
+Regex({pat})					*libparser.Regex()*
+		Return a parser that matches regular expression {pat}. Note
+		that this parser consumes some input only if {pat} is matched
+		in its entirety.
 >
-		var ctx = {text: "aaaabc", index: 0}
-		const Parse = Regex('a\+', "a string of a's")
+		var ctx = {text: 'aaaabc', index: 0}
+		const Parse = Regex('a\+')
 		const result = Parse(ctx)
 		echo result
 		echo ctx
@@ -210,14 +266,52 @@ Regex({pat}, {string})				*libparser.Regex()*
 >
 		{'success': true, 'value': 'aaaa'}
 		{'index': 4, 'text': 'aaaabc'}
+
+RT({pat})					*libparser.RT()*
+		Return a parser that matches regular expression {pat}, then
+		skips whitespace (including new lines). Note that this parser
+		consumes some input only if {pat} is matched in its
+		entirety.
+>
+		var ctx = {text: 'ab  c', index: 0}
+		const Parse = RT('\w\+')
+		const result = Parse(ctx)
+		echo result
+		echo ctx
 <
+		Output:
+>
+		{'success': true, 'value': 'ab'}
+		{'index': 4, 'text': 'ab  c'}
+<
+		Note that the index now points to character `c` in the text.
+
+T({string})					*libparser.T()*
+		Return a parser that matches {string} case-sensitively, then
+		skips whitespace (including new lines). Note that this parser
+		consumes some input only if {string} is matched in its
+		entirety.
+>
+		var ctx = {text: 'a  b c', index: 0}
+		const Parse = Text('a')
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': 'a'}
+		{'index': 3, 'text': 'a  b c'}
+<
+		Note that the index now points to character `b` in the text.
+
 Text({string})					*libparser.Text()*
 		Return a parser that matches {string} case-sensitively.
 		Note that this parser consumes some input only if {string} is
 		matched in its entirety.
 >
-		var ctx = {text: "abc", index: 0}
-		const Parse = Text("ab")
+		var ctx = {text: 'ab  c', index: 0}
+		const Parse = Text('ab')
 		const result = Parse(ctx)
 		echo result
 		echo ctx
@@ -241,7 +335,7 @@ Err({parser}, {string})				*libparser.Err()*
 >
 		var ctx = {text: 'abc', index: 0}
 		const Parse = OneOf(
-		                 Sequence(Text('a'), Text('x')),
+		                 Seq(Text('a'), Text('x')),
 				 Regex('.bc')
 			      )
 		const result = Parse(ctx)
@@ -253,9 +347,9 @@ Err({parser}, {string})				*libparser.Err()*
 		{'success': true, 'value': 'abc'}
 		{'index': 3, 'text': 'abc'}
 <
-		The sequence fails when trying to match `Text('x')`, but the
-		parser backtracks and tries the next parser (`Text('abc')`),
-		which succeeds.
+		Seq() fails when trying to match `Text('x')`, but the parser
+		backtracks and tries the next parser (`Regex('.bc')`), which
+		succeeds.
 
 		The following produces a syntax error and stops parsing as
 		soon as it fails to match `Text('x')`, and it does not even
@@ -263,7 +357,7 @@ Err({parser}, {string})				*libparser.Err()*
 >
 		var ctx = {text: 'abc', index: 0}
 		const Parse = OneOf(
-		                 Sequence(Text('a'), Err(Text('x'), 'x')),
+		                 Seq(Text('a'), Err(Text('x'), 'x')),
 		                 Regex('.bc')
 		              )
 		const result = Parse(ctx)
@@ -272,18 +366,127 @@ Err({parser}, {string})				*libparser.Err()*
 <
 		Output:
 >
-		{'backtrack': false, 'errpos': 1, 'expected': 'x',
-		 'success': false}
-		{'index': 0, 'text': 'abc'}                                                                                                                                                             
+		{'label': 'x', 'errpos': 1, 'success': false}
+		{'index': 0, 'text': 'abc'}
 <
 		If the text to be parsed is, say, `zbc` instead of `abc`, then
 		parsing is successful in both examples.
 
-Optional({parser})				*libparser.Optional()*
+LookAhead({parser})				*libparser.LookAhead()*
+		Apply parser {parser} return its result, but do not
+		consume any input. For example:
+>
+		var ctx = {text: 'abc', index: 0}
+		const Parse = LookAhead(Text('ab'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': 'ab'}
+		{'index': 0, 'text': 'abc'}
+<
+		Parsing is successful, but the index still points to the first
+		character.
+
+Many({parser})					*libparser.Many()*
+		Apply a parser zero or more times, as many as possible, and
+		accumulate the parsed results into a List.
+>
+		var ctx = {text: 'aaaaabc', index: 0}
+		const Parse = Many(Text('a'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': ['a', 'a', 'a', 'a', 'a']}
+		{'index': 5, 'text': 'aaaaabc'}
+<
+NegLookAhead({parser})				*libparser.NegLookAhead()*
+		Apply parser {parser}, then turn any failure into a success,
+		and a success into a backtracking failure. In any case, it
+		does not consume any input.
+
+		An example of failure turned a success:
+>
+		var ctx = {text: 'abc', index: 0}
+		const Parse = NegLookAhead(Text('ax'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': null}
+		{'index': 0, 'text': 'abc'}
+<
+		An example of success turned into a failure:
+>
+		var ctx = {text: 'abc', index: 0}
+		const Parse = NegLookAhead(Text('ab'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'label': '', 'errpos': 2, 'success': false}
+		{'index': 0, 'text': 'abc'}
+<
+		In either case, after the look-ahead the index still points to
+		the same character in the text.
+
+OneOf(...{parser})				*libparser.OneOf()*
+		Return a parser that tries each of the input parsers in the
+		given order, starting from the same point in the input.
+		A parser is tried only if the previous one has failed. The
+		returned result is the result of the first parser that
+		succeeds, or fails with an error that prevents backtracking
+		(see |libparser.Err()|.
+
+		An example where the parser succeeds:
+>
+		var ctx = {text: 'abcd', index: 0}
+		const Parse = OneOf(Seq(Text('abc'), Eof), Text('abc'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		The first parser tried by OneOf() matches `abc`, but then it
+		fails to match the end of the text. The parser then backtracks
+		and tries the second choice `Text('abc')`, which succeeds.
+		Output:
+>
+		{'success': true, 'value': 'abc'}
+		{'index': 3, 'text': 'abcd'}
+<
+		An example where the parser fails:
+>
+		var ctx = {text: 'abcd', index: 0}
+		const ErrEof = Err(Eof, 'end of file')
+		const Parse = OneOf(Seq(Text("abc"), ErrEof), Text("ab"))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'label': 'end of file', 'errpos': 3, 'success': false}
+		{'index': 0, 'text': 'abcd'}
+<
+		In this example, OneOf() fails because, after successfully
+		matching `abc`, it fails to match the end of the text, and
+		this is considered a non-backtracking failure (i.e., a syntax
+		error).
+
+Opt({parser})					*libparser.Opt()*
 		Matches a parser, or succeeds without consuming any input.
 >
-		var ctx = {text: "abcd", index: 0}
-		const Parse = Optional(Sequence(Text("abc"), Text("x")))
+		var ctx = {text: 'abcd', index: 0}
+		const Parse = Opt(Seq(Text('abc'), Text('x')))
 		const result = Parse(ctx)
 		echo result
 		echo ctx
@@ -293,48 +496,97 @@ Optional({parser})				*libparser.Optional()*
 		{'success': true, 'value': null}
 		{'index': 0, 'text': 'abcd'}
 <
-Many({parser})					*libparser.Many()*
-		Apply a parser zero or more times, as many as possible, and
-		accumulate the parsed results into a List. Fail when an
-		instance of the parser fails.
-
-OneOf(...{parser})				*libparser.OneOf()*
-		Return a parser that tries each of the input parsers in the
-		given order, starting from the same point in the input.
-		A parser is tried only if the previous one has failed without
-		consuming any input. The returned result is the result of the
-		first parser that succeeds, or fails after consuming some
-		input, or fails and its result prevents backtracking.
-
-		An example where the parser succeeds:
+Seq(...{parser})				*libparser.Seq()*
+		Matches a sequence of parsers.
 >
-		var ctx = {text: "abcd", index: 0}
-		const Parse = OneOf(Text("abx"), Text("abc"))
+		var ctx = {text: 'abc', index: 0}
+		const Parse = Seq(Text('a'), Text('b'))
 		const result = Parse(ctx)
 		echo result
 		echo ctx
 <
 		Output:
 >
-		{'success': true, 'value': 'abc'}
-		{'index': 3, 'text': 'abcd'}
+		{'success': true, 'value': ['a', 'b']}
+		{'index': 2, 'text': 'abc'}
 <
-		An example where the parser fails:
+Skip({parser})					*libparser.Skip()*
+		Apply a parser and throw away its result upon success.
 >
-		var ctx = {text: "abcd", index: 0}
-		const Parse = OneOf(Sequence(Text("abc"), Eof), Text("abc"))
+		var ctx = {text: 'abc', index: 0}
+		const Parse = Skip(Text('ab'))
 		const result = Parse(ctx)
 		echo result
 		echo ctx
 <
 		Output:
 >
-		{'backtrack': true, 'expected': 'end of input', 'success': false}
-		{'index': 3, 'text': 'abcd'}
+		{'success': true, 'value': null}
+		{'index': 2, 'text': 'abc'}
 <
-		In the last example, the OneOf parser fails because it
-		successfully matches "abc" (hence, it consumes some input),
-		but then it expects the end of the text, and not the character
-		"d".
+Token({parser})				*libparser.Token()*
+		Apply {parser} then skip whitespace, including newlines.
+>
+		var ctx = {text: 'ab   cd', index: 0}
+		const Parse = Token(Text('ab'))
+		const result = Parse(ctx)
+		echo result
+		echo ctx
+<
+		Output:
+>
+		{'success': true, 'value': 'ab'}
+		{'index': 5, 'text': 'ab   cd'}
+<
+		The index now points at character `c`. If only `Text('ab')`
+		had been used, the index would be at position 2.
 
+==============================================================================
+5. Other functions				*libparser-other*
+
+Apply({parser}, {func})				*libparser.Map()*
+		Apply {parser} and, upon success, consume the parsed value by
+		applying {func}, and return a null value. {func} is a function
+		that takes as input the parsed value and does not return
+		anything. Example:
+>
+		var ctx = {text: '42', index: 0}
+		var n: number
+
+		def StoreNumber(v: string)
+		    n = str2nr(v)
+		enddef
+
+		const Parse = Regex('\d\+')->Apply((v) => StoreNumber(v))
+		const result = Parse(ctx)
+		echo result
+		echo n
+<
+		Output:
+>
+		{'success': true, 'value': null}
+		42
+<
+Lexeme({parser})				*libparser.Lexeme()*
+		Return a function that transforms a parser P into another
+		parser that first applies P and then uses {parser} to skip
+		stuff (e.g., white space, comments). Return the result of P.
+		For example, |libparser.Token()| is defined as follows:
+>
+		const Token = Lexeme(Space)
+<
+Map({parser}, {func})				*libparser.Map()*
+		Apply {parser} and map a successful result to a callback
+		{func}. {func} is a function that takes as input the parsed
+		value and returns another value. Example:
+>
+		var ctx = {text: '42', index: 0}
+		const Parse = Regex('\d\+')->Map((v) => str2nr(v))
+		const result = Parse(ctx)
+		echo result
+<
+		Output:
+>
+		{'success': true, 'value': 42}
+<
  vim:tw=78:ts=8:noet:ft=help:norl:

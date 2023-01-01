@@ -23,6 +23,9 @@ dictionaries, such as this:
 		 {A: 2, B: 'aaa'},
 		 {A: 3, B: 'bbb'}]
 <
+Each dictionary is called a "tuple". Each key is called an "attribute".
+A relation must not contain any duplicate tuples.
+
 Relational Algebra operators (conceptually) transform relations into other
 relations. For example:
 >

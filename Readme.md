@@ -18,13 +18,23 @@ packadd vim9asm
 
 ## What's Included
 
-Libraries:
+**Libraries:**
 
-- **libparser**: a simple library to write parsers (WIP).
-- **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha level).
-- **libtinytest**: a minimal unit-testing library (beta).
+- **libparser**: a simple library to write parsers (alpha level).
+- **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha
+  level).
+- **libtinytest**: a minimal unit-testing library (beta level).
 
-Plugins:
+“alpha level” means that the library generally works, but there may be serious
+bugs and the interface is still WIP.
+
+“beta level” means that the library is stable and has been tested, but some
+issues may still exist.
+
+You should not used alpha level libraries in your own plugins, and you should
+use beta level libraries only if you feel adventurous.
+
+**Plugins:**
 
 - **[vim9asm](https://github.com/lacygoill/vim9asm):** Vim 9 disassembly on
   steroids.

@@ -4,7 +4,6 @@ librelalg-dml	librelalg.txt	/*librelalg-dml*
 librelalg-other	librelalg.txt	/*librelalg-other*
 librelalg-quickstart	librelalg.txt	/*librelalg-quickstart*
 librelalg-ra	librelalg.txt	/*librelalg-ra*
-librelalg-tips	librelalg.txt	/*librelalg-tips*
 librelalg-tutorial	librelalg.txt	/*librelalg-tutorial*
 librelalg.AntiJoin()	librelalg.txt	/*librelalg.AntiJoin()*
 librelalg.Attributes()	librelalg.txt	/*librelalg.Attributes()*
@@ -38,7 +37,6 @@ librelalg.Join()	librelalg.txt	/*librelalg.Join()*
 librelalg.Key()	librelalg.txt	/*librelalg.Key()*
 librelalg.KeyAttributes()	librelalg.txt	/*librelalg.KeyAttributes()*
 librelalg.LeftNatJoin()	librelalg.txt	/*librelalg.LeftNatJoin()*
-librelalg.LimitScan()	librelalg.txt	/*librelalg.LimitScan()*
 librelalg.Lookup()	librelalg.txt	/*librelalg.Lookup()*
 librelalg.Max()	librelalg.txt	/*librelalg.Max()*
 librelalg.MaxBy()	librelalg.txt	/*librelalg.MaxBy()*

@@ -11,7 +11,6 @@ Note: Vim 9.0.1108 or later is required.
 4. Relational Algebra			|librelalg-ra|
 5. Aggregate functions			|librelalg-aggr|
 6. Other functions			|librelalg-other|
-7. Tips and tricks			|librelalg-tips|
 
 ==============================================================================
 0. Quick start					*librelalg-quickstart*
@@ -20,21 +19,21 @@ A relation instance (or, simply, a relation) is just a list of homogeneous
 dictionaries, such as this:
 >
 	var r = [{A: 1, B: 'bbb'},
-		 {A: 2, B: 'aaa'},
-		 {A: 3, B: 'bbb'}]
+	         {A: 2, B: 'aaa'},
+	         {A: 3, B: 'bbb'}]
 <
 Each dictionary is called a "tuple". Each key is called an "attribute".
 A relation must not contain any duplicate tuples.
 
-Relational Algebra operators (conceptually) transform relations into other
-relations. For example:
+Relational Algebra operators transform relations into other relations. For
+example:
 >
 	vim9script
 	import 'librelalg.vim' as ra
 
 	var r = [{A: 1, B: 'bbb'},
-		 {A: 2, B: 'aaa'},
-		 {A: 3, B: 'bbb'}]
+	         {A: 2, B: 'aaa'},
+	         {A: 3, B: 'bbb'}]
 
 	const result = ra.Query( ra.Select(r, (t) => t.B == 'bbb') )
 	echo result
@@ -124,7 +123,7 @@ Output:
 ==============================================================================
 1. Tutorial					*librelalg-tutorial*
 
-Suppose that you want to write a script that keeps track of some “tags”
+Suppose that you want to write a script that keeps track of some "tags"
 associated to each buffer. Since data is king, a good place to start is by
 defining a (Relational) data model for your script. Suppose that, after
 carefully evaluating the requirements for your script, your model looks like
@@ -151,7 +150,7 @@ this (using standard IDEF1X notation):
 	(1) Lines and columns must be greater than zero.
 <
 If you are not familiar with IDEF1X or similar diagramming tools, each box
-represents an "entity" (your script will deal with “buffers” and “tags”, so
+represents an "entity" (your script will deal with "buffers" and "tags", so
 there are two entities in this model). Each entity has a name, written above
 its box, and attributes, which are written inside the box. The attributes will
 be the actual pieces of data stored and manipulated by your script. Each box
@@ -161,23 +160,23 @@ instance; the attributes below the separator are further descriptors of the
 entity. For instance, each tag is identified by the pair {TagName, BufId}, and
 it is described by the attributes Line and Column.
 
-Entities are connected by "relationships" represented by lines joining two
+Entities are connected by "relationships", represented by lines joining two
 entities. The above diagram contains a one-to-many relationship, the dot
-representing the “many” side: such relationship establishes that each buffer
+representing the "many" side: such relationship establishes that each buffer
 is possibly associated to many tags, but each tag is always associated to one
-and only one buffer. The entity on the “one” side of the relationship (Buffer,
-in this example) is called the "parent" entity; the entity on the “many” side
+and only one buffer. The entity on the "one" side of the relationship (Buffer,
+in this example) is called the "parent" entity; the entity on the "many" side
 of the relationship (Tag, in this example) is called a "child" entity. Each
 relationship is described by two verb phrases separated by a slash: the first
-verb phrase is read from parent to child (in this example: “A buffer is tagged
-by zero or more tags”); the second is read from child to parent (“a tag
-appears in one buffer”).
+verb phrase is read from parent to child (in this example: "A buffer is tagged
+by zero or more tags"); the second is read from child to parent ("a tag
+appears in one buffer").
 
 AK stands for Alternate Key, and FK stands for Foreign Key. An alternate key
 is an alternative identifier for the entity: in this example, it is assumed
 that no two buffers share the same name, so `BufName` can be used as an
 identifier as well as `BufId`. A foreign key is the primary key of a parent
-entity, which is “migrated” into the child entity by virtue of its
+entity, which is "migrated" into the child entity by virtue of its
 relationship with the parent. When a foreign key is entirely part of the
 primary key of the child (as in Tag), the child entity is "dependent" on its
 parent: in this example, that means that it is not possible to designate a tag
@@ -199,7 +198,7 @@ To summarize, the diagram above captures the following facts:
 - Tag is dependent on Buffer;
 - a tag is identified by {BufId, TagName};
 - a tag is described by {Line, Column};
-- a tag appears in one (an only one) buffer.
+- a tag appears in one (and only one) buffer.
 - a tag's line must be an integer greater than zero.
 - a tag's column must be an integer greater than zero.
 
@@ -207,7 +206,7 @@ The last two constraints derive from footnote (1) in the data model.
 
 Note: IDEF1X is the ISO standard for Relational modelling (ISO/IEC/IEEE
 31320-2). The ISO document is not available for free, but the sections
-relevant for Relational modelling are derived (essentially verbatim) from the
+relevant to Relational modelling are derived (essentially verbatim) from the
 older FIPS 184, which is available, for instance, from the Internet Archive:
 https://archive.org/details/federalinformati184nati/. Despite its age, the
 latter document, and its Annex A in particular, is a good introduction to data
@@ -230,7 +229,7 @@ straightforward task:
 	const Str      = ra.Str
 	const Relation = ra.Relation
 	const Insert   = ra.Insert
-        # etc.
+	# etc.
 <
    Note: in the following, for clarity and conciseness, we will write
    librelalg's names without prefix, as if aliases such as those above had
@@ -254,7 +253,7 @@ straightforward task:
 	  [['BufId', 'TagName']]
 	)
 <
-   The three mandatory arguments of `Relation()` are
+   The three mandatory arguments of |librelalg.Relation()| are:
 
    a. a descriptive relation name;
    b. the relation schema: this is a |dict| mapping attribute names to the
@@ -271,17 +270,17 @@ straightforward task:
 	Check(Tag, (t) => t.Line > 0 && t.Column > 0,
 	      'Line and column numbers must be positive')
 <
-   A `Check` clause defines a generic constraint, which is simply a function
-   or a lambda that, given a tuple t, returns |true| if t satisfies the given
-   constraint, and returns |false| otherwise.
+   A |librelalg.Check()| clause defines a generic constraint, which is simply
+   a function or a lambda that, given a tuple t, returns |true| if t satisfies
+   the given constraint, and returns |false| otherwise.
 >
 	ForeignKey(Tag, ['BufId'], Buffer, ['BufId'], 'is tagged by')
 <
-   `ForeignKey()` defines a foreign key constraint from `BufId` in `Tag` to
-   `BufId` in `Buffer`. The verb associated to the constraint (as read from
-   the parent to the child entity in the data model) can be optionally
-   specified: the verb phrase is used in error messages when the referential
-   integrity is violated.
+   |librelalg.ForeignKey()| defines a foreign key constraint, in this case
+   from `BufId` in `Tag` to `BufId` in `Buffer`. The verb associated to the
+   constraint (as read from the parent to the child entity in the data
+   model—see |librelalg-tutorial|—can be optionally specified: the verb phrase
+   is used in error messages when the referential integrity is violated.
 
    Note: constraints are checked in the order in which they are declared.
 
@@ -311,7 +310,7 @@ If you want to inspect the content of a relation, you may print it as a table:
 	echo Table(Buffer)
 	echo Table(Tag)
 <
-The output is (note that the columns are in an arbitrary order):
+The output looks as follows (note that the columns are in an arbitrary order):
 >
 	 Buffer
 	───────────────
@@ -334,7 +333,7 @@ The output is (note that the columns are in an arbitrary order):
 <
 Of course, any attempt to violate a constraint is rejected with an error.
 Trying to insert another buffer called `foobar` will fail with a duplicate key
-error, because BufName is a key:
+error, because `BufName` is a key:
 >
 	Buffer->Insert({BufId: 2, BufName: 'foobar'})
 
@@ -351,7 +350,7 @@ And, of course, you are not allowed to insert an invalid line number either:
 >
 	Tag->Insert({BufId: 1, TagName: 'x', Line: 0, Column: 40})
 <
-This insertion is rejected with the error defined by the `Check` clause:
+This insertion is rejected with:
 >
 	Line and column numbers must be positive
 <
@@ -388,9 +387,9 @@ group-by, etc.). All operators are implemented using a "push-based" strategy:
 without entering into technical details, that means that queries are typically
 expanded into tight loops and executed as efficiently as hand-written code.
 
-Queries are expressions typically enclosed in a call to |librelalg.Query()|.
-For instance, the query “Retrieve the tags in buffer 1 before line 6” can be
-formulated as follows:
+Queries are expressions that are typically used as an argument to
+|librelalg.Query()|. For instance, the query "Retrieve the tags in buffer
+1 before line 6" can be formulated as follows:
 >
 	const result = Query(
 	    From(Tag)->Select((t) => t.BufId == 1 && t.Line <= 6)
@@ -407,14 +406,14 @@ to filter it. Output:
 	     xyz      1    4     1
 	     lll      8    4     1
 <
-The result of a query is just a set of tuples (that is, a |list| of
-homogeneous |dict|s), called a "derived" relation. Contrary to base relations,
-derived relations do not have any associated keys, constraints or indexes.
+The result of a query is just a set of tuples, called a "derived" relation.
+Contrary to base relations, derived relations do not have any associated keys,
+constraints or indexes.
 
-If you want to get just the tag names and lines, you may use a projection:
+If you want to get just the tag names and lines, you may add a projection:
 >
 	const filteredTags = Query(
-	    From(Tag)
+	      From(Tag)
 	    ->Select((t) => t.BufId == 1 && t.Line <= 6)
 	    ->Project(['TagName', 'Line'])
 	)
@@ -430,10 +429,10 @@ This query also uses |librelalg.Project()|. Output:
 	     lll    4
 <
 As another example, the natural join of `Buffer` and `Tag`, sorted by `BufId`
-and tag name, can be written as follows:
+and `TagName`, can be written as follows:
 >
 	const btags = Query(
-	    From(Buffer)
+	      From(Buffer)
 	    ->NatJoin(Tag)
 	    ->SortBy(['BufId', 'TagName'])
 	)
@@ -485,9 +484,11 @@ ForeignKey({relobj1}, {list1}, {relobj2}, {list2} [, {verb}])
 
 Key({relobj}, {key})				*librelalg.Key()*
 		Define the |list| of attributes {key} to be a key of base
-		relation {relobj}. Since multiple keys can be specified when
-		a base relation is created (see |librelalg.Relation()|), in
-		general using this function is not necessary. For example:
+		relation {relobj}.
+
+		In general, using this function is unnecessary, because
+		multiple keys can be specified when a base relation is created
+		(see |librelalg.Relation()|). For example:
 >
 		var R = Relation('R', {A: Int, B: Str}, [['A'], ['B']])
 <
@@ -498,26 +499,23 @@ Key({relobj}, {key})				*librelalg.Key()*
 <
 						*librelalg.Relation()*
 Relation({name}, {schema}, {keys} [, {typecheck}])
-		Define a base relation (aka “relation object”). A base
+		Define a base relation (aka "relation object"). A base
 		relation has a descriptive {name} (a |string| used in error
 		messages) and is defined over a {schema}, which is a |dict|
 		mapping attributes to their corresponding data types. The
 		supported data types are:
 
-		- Int: integers
-		- Str: strings
-		- Float: floats
-		- Bool: booleans
+		- Int: integers;
+		- Str: strings;
+		- Float: floats;
+		- Bool: booleans.
 
 		{keys} is a |list| of keys, where each key is a |list| of
 		attributes. Every base relation must have at least one key.
 
-		Example: A relation object with schema:
->
-		R(A: integer, B: string, C: integer)
-<
-		with a composite primary key A,B and an alternate key C can be
-		defined in Vim 9 script as follows:
+		Example: A relation object R with two integer attributes A and
+		C, a string attribute B, a composite primary key A,B and an
+		alternate key C can be defined as follows:
 >
 		var R = Relation('R', {
 		    A: Int,
@@ -534,12 +532,10 @@ Relation({name}, {schema}, {keys} [, {typecheck}])
 		because the gain may be negligible, and type checking is
 		useful to detect errors.
 
-		The value returned by `Relation()`, which in this document is
-		referred to as a “base relation” or as a “relation object”, is
-		a complex object consisting of the relation instance itself
-		(that is, the set of tuples of the relation) together with its
-		schema, keys, constraints, and indexes. If you want to
-		retrieve just the relation instance, you may access the
+		The value returned by |librelalg.Relation()| is a complex
+		object consisting of the relation instance itself together
+		with its schema, keys, constraints, and indexes. If you want
+		to retrieve just the relation instance, you may access the
 		`instance` attribute of the relation object (e.g.,
 		`Tag.instance`).
 
@@ -551,12 +547,16 @@ insert, update, or delete from base relations, because the integrity of the
 data may be compromised. Only the functions described in this section should
 be used. Derived relations, however, can be manipulated with any function.
 
+Note: nulls are not supported. A properly designed database never needs nulls,
+so this is not a loss of generality, and it is a great gain in simplicity and
+semantic clarity.
+
 Delete({rel} [, {func}])			*librelalg.Delete()*
 		Delete all the tuples of a base or derived relation {rel}
 		satisfying predicate {func}, which is a function that takes as
-		an input a tuple t and returns |true| if and only if t must be
-		deleted. When {func} is not provided, all the tuples are
-		deleted unconditionally.
+		an input a tuple t and returns |true| if t must be deleted,
+		|false| otherwise. When {func} is not provided, all the tuples
+		are deleted unconditionally.
 
 Insert({rel}, {tuple})				*librelalg.Insert()*
 		Insert a {tuple} into relation {rel}. Return the updated
@@ -567,16 +567,14 @@ InsertMany({rel}, {list})			*librelalg.InsertMany()*
 
 Update({relobj}, {tuple} [, {upsert}])		*librelalg.Update()*
 		Replace a tuple with a new {tuple} in base relation {relobj}.
-		The tuple that is replaced is the one with the same key(s) as
-		{tuple}. An error is raised if such a tuple does not exist in
-		the base relation, unless {upsert} is |true|, in which case
-		{tuple} is inserted into the relation and no error is raised.
-		For instance:
+		The tuple that is replaced is the one with the same values of
+		the key(s) as {tuple}. An error is raised if such a tuple does
+		not exist in the base relation, unless {upsert} is |true|, in
+		which case {tuple} is inserted into the relation and no error
+		is raised. For instance:
 >
-		var R = Relation('R',
-			  {A: Int, B: Str},
-			  [['A']]
-			)
+		var R = Relation('R', {A: Int, B: Str}, [['A']])
+
 		R->Insert({A: 1, B: 'v'})
 		R->Update({A: 1, B: 'w'})  # OK
 		R->Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 2
@@ -601,7 +599,7 @@ This section uses the following terminology:
 
 - A "tuple" is a |dict| mapping attributes to values. Values can be strings,
   integers, booleans, or floats.
-- A "relation" instance (or simply an “instance”) is a |list| of tuples.
+- A "relation" instance (or simply an "instance") is a |list| of tuples.
 - A "base relation" is an object built with |librelalg.Relation()|.
 - A "derived relation" is a relation instance obtained as the result of
   a query.
@@ -613,13 +611,14 @@ Intuitively, a consumer is a function that operates in some way on a tuple,
 typically by invoking a continuation. A continuation receives as an input
 a consumer and applies it to one or more tuples.
 
-This is best described with an example. Consider the following simple query:
+This is best described with an example. Consider the following simple query,
+expressed using chaining:
 >
 	From(Relation)->Select(Pred)->Query()
 <
-|librelalg.From()| returns a continuation that looks like this:
+When executed, |librelalg.From()| returns a continuation that looks like this:
 >
-	def Cont(Emit: func(Tuple): void): void
+	def Cont(Emit: func(dict<any>): void): void
 	  for t in relation
 	    Emit(t)
 	  endfor
@@ -629,8 +628,8 @@ where `Emit()` is a consumer. The continuation `Cont` is passed to
 |librelalg.Select()| together with a filter `Pred`. Select() builds and
 returns another continuation, which look as follows:
 >
-	def Cont2(Emit: func(Tuple): void): void
-	  def Consumer(t: Tuple)
+	def Cont2(Emit: func(dict<any>): void): void
+	  def Consumer(t: dict<any>)
 	    if Pred(t)
 	      Emit(t)
 	    endif
@@ -644,32 +643,33 @@ input predicate `Pred`, and then applies its input continuation `Cont` to that
 consumer.
 
 Finally, continuation `Cont2` is passed to |librelalg.Query()|, which defines
-a consumer to materialize a relation,  by generating code similar to the
+a consumer to materialize a relation, by generating code similar to the
 following:
 >
-	var rel: list<Tuple> = []
+	var rel: list<dict<any>> = []
 
-	def Consumer2(t: Tuple)
+	def Consumer2(t: dict<any>)
 	  add(rel, t)
 	enddef
 
 	Cont2(Consumer2)
 <
-Again, what this operator does is define a consumer (`Consumer2`) and then it
-applies a continuation (`Cont2`) to that consumer.
+Again, what this operator does is define a consumer (`Consumer2`) and apply
+a continuation (`Cont2`) to that consumer.
 
 The original chained call:
 >
 	From(Relation)->Select(Pred)->Query()
 <
-can be re-written as follows:
+can be equivalently re-written as follows:
 >
 	Query(Select(From(Relation), Pred))
 <
-Taking into account the foregoing discussion, if you try expanding the above,
-you will realize that the result is equivalent to the following loop:
+Taking into account the foregoing discussion, if you try to expand the latter
+expression, you will realize that the result is equivalent to the following
+loop:
 >
-	var rel: list<Tuple> = []
+	var rel: list<dict<any>> = []
 
 	for t in Relation
 	  if Pred(t)
@@ -692,20 +692,18 @@ categories:
 The most important rule is that each query should start (or end, if you use
 the chaining notation `->`) with a leaf operator, such as |librelalg.Query()|
 (other commonly used leaf operators are |librelalg.Sort()| and
-|librelalg.SortBy()|, and there are others), which “materialize” a result.
+|librelalg.SortBy()|, and there are others), which "materialize" a result.
 Without a leaf operator, a query will just return a continuation—that is,
 a function.
 
-To simplify writing queries, most operators accept various types of arguments:
-base relations (relation objects), relation instances (e.g., derived
-relations), or continuations. The operators deal with their inputs
+To simplify writing queries, most operators accept base relations, relation
+instances, or continuations indifferently. They deal with their inputs
 transparently, so the user should not typically worry about the above
-categorization.
+categorization, and just write queries in a natural way.
 
-In the following, unless otherwise noted, {rel}, {rel1}, {rel2} always denote
-a base relation, a relation instance, or a continuation: any of these three
-data types can be used as {rel}, {rel1}, or {rel2}. This allows the user
-combining the operators in a natural fashion.
+In the following, unless otherwise noted, whenever a parameter named {rel},
+{rel1}, {rel2} appears, that parameter denotes a base relation, a relation
+instance, or a continuation.
 
 Note: binary operators materialize their second argument {rel2}—that is, they
 build a temporary instance from {rel2} (unless {rel2} is already a relation,
@@ -713,15 +711,34 @@ of course). It may be worth knowing that, in order to avoid writing queries
 that unnecessarily create temporary objects.
 
 Note: some of the examples in the rest of this section are based on the sample
-database discussed in |librelalg-tutorial|.
+instance at the end of |librelalg-tutorial|:
+>
+	 Buffer
+	───────────────
+	 BufName BufId
+	───────────────
+	     foo     1
+	     bar     2
+	     xyz     3
 
+	 Tag
+	───────────────────────────
+	 TagName Column Line BufId
+	───────────────────────────
+	     zzz      1    2     1
+	     abc     12    7     1
+	     xyz      1    4     1
+	     lll      8    4     1
+	     abc     15   14     2
+	     abc      3    6     3
+<
 AvgBy({rel}, {list}, {attr} [, {name}])		*librelalg.AvgBy()*
 		Group the tuples of relation {rel} with respect to a {list} of
 		attributes, and determine the average of the values of
 		attribute {attr} in each group. The schema of the output
 		relation consists of the grouping attributes plus the
-		aggregate attribute. The name of the latter may be specified
-		by {name} (the default name is "avg").
+		aggregate attribute. The name of the aggregate attribute is
+		given by {name} (the default name is "avg").
 
 		For instance:
 >
@@ -747,10 +764,28 @@ AntiJoin({rel1}, {rel2}, {func})		*librelalg.AntiJoin()*
 		Perform the anti-join of {rel1} and {rel2}. The join condition
 		is specified by {func}, which is defined as in
 		|librelalg.Join()|. The result is the set of tuples of {rel1}
-		that cannot be joined with any tuple in {rel2}.
-
-		For instance, to obtain the buffers that have no tags before
-		line 10:
+		that cannot be joined with any tuple in {rel2}. Examples:
+>
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 1, B: 4},
+		]
+		var s = [
+		  {C: 6, D: 40},
+		  {C: 6, D: 50},
+		  {C: 2, D: 60},
+		]
+		const result = Query(AntiJoin(r, s, (t, u) => t.B == u.C))
+		echo Table(result)
+<
+		Output:
+>
+		─────
+		 A B
+		─────
+		 1 4
+<
+		To obtain the buffers that have no tags before line 10:
 >
 		const result = Query(
 		    AntiJoin(
@@ -788,8 +823,32 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 		precisely, the output is always a subset of π_X(R), the
 		projection of R on X.
 
-		For example, to obtain the names of the tags that appear in
-		every buffer:
+		Examples:
+>
+		var r = [
+		  {A: 10, B: 'a', C: 6},
+		  {A: 10, B: 'a', C: 4},
+		  {A: 10, B: 'a', C: 2},
+		  {A: 10, B: 'b', C: 2},
+		  {A: 20, B: 'c', C: 6},
+		  {A: 20, B: 'c', C: 2},
+		]
+		var s = [
+		  {C: 6},
+		  {C: 4},
+		  {C: 2},
+		]
+		const result = Query(CoddDivide(r, s))
+		echo Table(result)
+<
+		Output:
+>
+		──────
+		  A B
+		──────
+		 10 a
+<
+		To obtain the names of the tags that appear in every buffer:
 >
 		const result = Query(
 		    Project(Tag, ['BufId', 'TagName'])
@@ -807,9 +866,10 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 		If the divisor is an empty derived relation, then it does not
 		carry any explicit information about its schema, because it is
 		just an empty |list|. Hence, it is not possible to infer the
-		schema of the quotient relation automatically. In this case,
-		a |list| of attributes {hint} may be used to specify the
-		attributes of the divisor. For instance:
+		schema of the quotient relation automatically. In this special
+		case, a |list| of attributes {hint} may be used to specify the
+		attributes of the divisor (if {hint} is not given, an empty
+		schema is assumed). For instance:
 >
 		const result = Query(Buffer->CoddDivide([], ['BufId']))
 <
@@ -821,9 +881,10 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 		     bar
 		     xyz
 <
-		Note that {hint} is ignored if the divisor is not empty or it
-		is a base relation (because a base relation has an associated
-		schema).
+		Note that {hint} is ignored if the divisor is not empty,
+		because the schema can be inferred from each tuple, or if the
+		divisor is a base relation, because a base relation has an
+		associated schema.
 
 		This is a pipeline operator, returning a continuation. See
 		also |Divide()|.
@@ -835,51 +896,54 @@ CountBy({rel}, {list}[, {attr}, {name}])	*librelalg.CountBy()*
 		number of distinct values of attribute {attr} in each group.
 		The schema of the output relation consists of the grouping
 		attributes plus the aggregate attribute. The name of the
-		latter may be specified by {name} (the default name is
+		aggregate attribute is given by {name} (the default name is
 		"count").
 
 		For instance:
 >
 		var r = [
-		    {A: 1, B: 6},
-		    {A: 1, B: 4},
-		    {A: 2, B: 6},
-		    {A: 1, B: 6}]
+		    {N: 0, A: 100, B: 6},
+		    {N: 1, A: 100, B: 4},
+		    {N: 2, A: 200, B: 3},
+		    {N: 3, A: 100, B: 5},
+		    {N: 4, A: 200, B: 3},
+		    {N: 5, A: 100, B: 6},
+		]
 		const result1 = From(r)->CountBy(['A'])
 		const result2 = From(r)->CountBy(['A'], 'B')
-		echo Table(result1, 'Count by A')
+		echo Table(result1, 'Count all')
 		echo Table(result2, 'Count distinct B')
 <
 		Output:
 >
-		 Count by A
-		────────────
-		    A count
-		────────────
-		    1     3
-		    2     1
+		 Count all
+		───────────
+		   A count
+		───────────
+		 200     2
+		 100     4
 
 		 Count distinct B
 		──────────────────
 		          A count
 		──────────────────
-		          1     2
-		          2     1
+		        200     1
+		        100     3
 <
 		This is a leaf operator, returning a relation instance.
 
 Divide({rel1}, {rel2})				*librelalg.Divide()*
 		Divide a relation {rel1} by another relation {rel2}. This is
-		a form of generalized Relational division, with no restriction
+		a form of generalized Relational division with no restriction
 		on the schemas of the operands. Consider two relations R(X,Y)
-		and S(Y,Z), where Y is the subset of attributes in common
-		between R and S, and X and Z are disjoint sets of attributes
-		(any of these subsets may be empty). Then, R ÷ S = Q(X,Z) is
-		the maximal¹ relation instance on (X,Z) such that each tuple
-		(x,z) in Q, when joined with any tuple of S and projected on
-		(X,Y) gives a tuple in R. In other words, Q consists of the
-		tuples (x,z) such that a tuple (x,y) exists in R for every
-		tuple (y,z) in S.
+		and S(Y,Z) where Y is the subset of attributes in common
+		between R and S, hence X and Z are disjoint (any of these
+		subsets may be empty). Then, R ÷ S = Q(X,Z) is the maximal¹
+		relation instance on (X,Z) such that each tuple (x,z) in Q,
+		when joined with any tuple of S and projected on (X,Y) gives
+		a tuple in R. In other words, Q consists of the tuples (x,z)
+		such that a tuple (x,y) exists in R for every tuple (y,z) in
+		S.
 
 		¹Maximality here is relative to the values of the input. More
 		precisely, the output is always a subset of π_X(R) ⨯ π_Z(S),
@@ -950,13 +1014,32 @@ EquiJoin({rel1}, {rel2}, {list1}, {list2}, [, {prefix}])
 		Perform an equi-join between two relations {rel1} and {rel2}.
 
 		The |list| {list1} is a subset of the attributes of {rel1}.
-		{list2} is a matching |list| of attributes in {rel2}. The two
-		lists must have the same length. Attributes at the same
-		position in the two lists are compared with equality.
-
-		For {prefix}, see |librelalg.Join()|.
-
-		Example:
+		{list2} is a matching |list| of attributes of {rel2}, that is,
+		the two lists must have the same length. Attributes at the
+		same position in the two lists are compared for equality. For
+		{prefix}, see |librelalg.Join()|. Examples:
+>
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 1, B: 4},
+		]
+		var s = [
+		  {C: 6, D: 40},
+		  {C: 6, D: 50},
+		  {C: 2, D: 60},
+		]
+		const result = Query(EquiJoin(r, s, ['B'], ['C']))
+		echo Table(result)
+<
+		Output:
+>
+		──────────
+		 A B C  D
+		──────────
+		 1 6 6 40
+		 1 6 6 50
+<
+		To join all the buffers with all their tags:
 >
 		const result = Query(
 		    EquiJoin(Buffer, Tag, ['BufId'], ['BufId'], 't_')
@@ -989,21 +1072,21 @@ Extend({rel}, {func})				*librelalg.Extend()*
 
 	const result = Query(
 	    Extend(r, (t): dict<any> => {
-	       return {B: t.A * 2}
+	       return {B: t.A * 2, C: -t.A}
 	    }))
 	echo Table(result)
 <
 	The output is:
 >
-	──────
-	 A  B
-	──────
-	 1  2
-	 3  6
-	 5 10
+	─────────
+	 A  B  C
+	─────────
+	 1  2 -1
+	 3  6 -3
+	 5 10 -5
 <
 	Note that {func} should consistently return tuples over the same,
-	fixed, schema, if the result has to be a valid relation instance.
+	fixed, schema, for the result to be a valid relation instance.
 
 	This is a pipeline operator, returning a continuation.
 
@@ -1023,8 +1106,8 @@ Frame({rel}, {list}[, {name}])			*librelalg.Frame()*
 		attributes, extend the relation with a new attribute and,
 		within this attribute, assign a distinct integer value to each
 		distinct member of the partition. The standard name of the
-		added attribute is "fid", but a different value can be set
-		with {name}. For instance:
+		added attribute is "fid" (for "frame ID"), but a different
+		value can be set with {name}. For instance:
 >
 		var r = [
 		    {A: 10, B: 'a', C: 'x'},
@@ -1064,10 +1147,33 @@ GroupBy({rel}, {list}, {func} [, {string}])	*librelalg.GroupBy()*
 		of attributes, and apply an aggregate function {func} to each
 		group. The schema of the output relation consists of the
 		grouping attributes and the aggregate attribute. The name of
-		the aggregate attribute is given by {string}.
-
-		For instance, to count the number of tags in each buffer with
-		at least one tag:
+		the aggregate attribute is given by {string}. Examples:
+>
+		var r = [
+		    {A: 10, B: 'a', C: 'x', D: 4},
+		    {A: 20, B: 'b', C: 'y', D: 7},
+		    {A: 30, B: 'a', C: 'x', D: 3},
+		    {A: 40, B: 'a', C: 'x', D: 0},
+		    {A: 50, B: 'b', C: 'x', D: 3},
+		    {A: 60, B: 'b', C: 'y', D: 9},
+		    {A: 70, B: 'a', C: 'y', D: 3},
+		  ]
+		const result = Query(
+		   From(r)->GroupBy(['B', 'C'], Bind(Min, 'D'), "minD")
+		)
+		echo Table(result)
+<
+		See also |librelalg.Bind()|. Output:
+>
+		──────────
+		 B C minD
+		──────────
+		 a y    3
+		 b x    3
+		 a x    0
+		 b y    7
+<
+		To count the number of tags in each buffer with tags:
 >
 		const result = Query(
 		    GroupBy(Tag, ['BufId'], Count, 'num_tags')
@@ -1083,8 +1189,8 @@ GroupBy({rel}, {list}, {func} [, {string}])	*librelalg.GroupBy()*
 		        1     2
 		        1     3
 <
-		|librelalg.Count()| is an aggregate function. To learn about
-		aggregate functions, see |librelalg-aggr|.
+		|librelalg.Min()| and |librelalg.Count()| are aggregate
+		functions. For more aggregate functions, see |librelalg-aggr|.
 
 		For the most common aggregate functions, specialized operators
 		exist, which are generally preferrable over GroupBy(): see
@@ -1094,8 +1200,8 @@ GroupBy({rel}, {list}, {func} [, {string}])	*librelalg.GroupBy()*
 		This is a pipeline operator, returning a continuation.
 
 Intersect({rel1}, {rel2})			*librelalg.Intersect()*
-		Intersect two relations. Note: the relations must be defined
-		on the same schema!
+		Return the intersection of two relations {rel1} and {rel2}.
+		Note: the relations must be defined on the same schema!
 
 		For instance:
 >
@@ -1123,17 +1229,50 @@ Intersect({rel1}, {rel2})			*librelalg.Intersect()*
 Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 		Join two relations {rel1} and {rel2}. The join condition is
 		specified by {func}, which is a |Funcref| that takes as an
-		input two tuples t1 and t2 and returns |true| if and only if
-		t1 and t2 should be joined.
+		input two tuples t1 and t2 and returns |true| if t1 and t2
+		should be joined, and returns |false| otherwise.
 
 		{prefix} is a string that is added to each attribute name of
 		{rel1} in the output relation. The prefix is mandatory if the
 		relations to be joined have some attributes in common, because
 		the attributes in a relation must be all distinct. The prefix
-		must not be used inside {func}.
-
-		For example, to join `Buffer` with `Tag` on the common `BufId`
-		attribute:
+		must not be used inside {func}. Examples:
+>
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 1, B: 4},
+		]
+		var s = [
+		  {C: 6, D: 40},
+		  {C: 6, D: 50},
+		  {C: 2, D: 60},
+		]
+		const result = Query(Join(r, s, (t, u) => t.B == u.C))
+		echo Table(result)
+<
+		Output:
+>
+		──────────
+		 A B C  D
+		──────────
+		 1 6 6 40
+		 1 6 6 50
+<
+		This join can also be done with |librelalg.EquiJoin()|. But
+		with this operator you may join on arbitrary conditions:
+>
+		const result2 = Query(Join(r, s, (t, u) => t.B > u.C))
+		echo Table(result2)
+<
+		Output:
+>
+		──────────
+		 A B C  D
+		──────────
+		 1 6 2 60
+		 1 4 2 60
+<
+		To join `Buffer` with `Tag` on the common `BufId` attribute:
 >
 		const result = Query(
 		    Join(Buffer, Tag, (t, u) => t.BufId == u.BufId, 't_')
@@ -1166,9 +1305,9 @@ LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 		Perform the left natural join of two relations {rel1} and
 		{rel2}. {filler} is an arbitrary relation defined on the
 		attributes of {rel} minus the join attributes. The result is
-		the union of the natural join between the input relations and
-		the cross-product of {filler} with the set of tuples in {rel1}
-		that do not match any tuple in {rel2}.
+		the natural join between the input relations extended (by
+		union) with the cross-product of {filler} and the set of
+		tuples in {rel1} that do not match any tuple in {rel2}.
 
 		For instance:
 >
@@ -1177,13 +1316,13 @@ LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 		    {A: 2, B: 'x'},
 		    {A: 3, B: 'y'},
 		    {A: 4, B: 'z'},
+		    {A: 5, B: 'w'},
 		]
 		var s = [
 		    {B: 'x', C: 10},
 		    {B: 'z', C: 20},
 		    {B: 'z', C: 30},
 		]
-
 		const result = Query(LeftNatJoin(r, s, [{C: -1}]))
 		echo Table(result)
 <
@@ -1197,53 +1336,35 @@ LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 		 3 y -1
 		 4 z 20
 		 4 z 30
+		 5 w -1
 <
 		This is a pipeline operator, returning a continuation.
-
-LimitScan({rel}, {n})				*librelalg.LimitScan()*
-		Like |librelalg.From()|, but emit at most {n} tuples. For
-		instance:
->
-		var r = [{A: 10}, {A: 20}, {A: 30}, {A: 40}]
-		const result = Query(LimitScan(r, 2))
-		echo Table(result)
-<
-		Output:
->
-	  	────
-	  	  A
-	  	────
-	  	 10
-	  	 20
-<
-		Note that, in general, the order of the tuples in a relation
-		is arbitrary.
 
 MaxBy({rel}, {list}, {attr} [, {name}])		*librelalg.MaxBy()*
 		Group the tuples of a relation {rel} with respect to a {list}
 		of attributes, and determine the maximum value of attribute
 		{attr} in each group. The schema of the output relation
 		consists of the grouping attributes plus the aggregate
-		attribute. The name of the latter may be specified by {name}
-		(the default name is "max").
+		attribute. The name of the aggregate attribute is given by
+		{name} (the default name is "max").
 
 		For instance:
 >
 		var r = [
-		    {A: 1, B: 6},
-		    {A: 1, B: 4},
-		    {A: 2, B: 3}
+		    {A: 100, B: 6},
+		    {A: 100, B: 4},
+		    {A: 200, B: 3}
 		]
 		const result = From(r)->MaxBy(['A'], 'B')
 		echo Table(result)
 <
 		Output:
 >
-		───────
-		 A max
-		───────
-		 1   6
-		 2   3
+		─────────
+		   A max
+		─────────
+		 200   3
+		 100   6
 <
 		This is a leaf operator, returning a relation instance.
 
@@ -1252,26 +1373,26 @@ MinBy({rel}, {list}, {attr} [, {name}])		*librelalg.MinBy()*
 		of attributes, and determine the minimum value of attribute
 		{attr} in each group. The schema of the output relation
 		consists of the grouping attributes plus the aggregate
-		attribute. The name of the latter may be specified by {name}
-		(the default name is "min").
+		attribute. The name of the aggregate attribute is given by
+		{name} (the default name is "min").
 
 		For instance:
 >
 		var r = [
-		    {A: 1, B: 6},
-		    {A: 1, B: 4},
-		    {A: 2, B: 3}
+		    {A: 100, B: 6},
+		    {A: 100, B: 4},
+		    {A: 200, B: 3}
 		]
 		const result = From(r)->MinBy(['A'], 'B')
 		echo Table(result)
 <
 		Output:
 >
-		───────
-		 min A
-		───────
-		   4 1
-		   3 2
+		─────────
+		 min   A
+		─────────
+		   3 200
+		   4 100
 <
 		This is a leaf operator, returning a continuation.
 
@@ -1305,7 +1426,29 @@ Minus({rel1}, {rel2})				*librelalg.Minus()*
 
 NatJoin({rel1}, {rel2})				*librelalg.NatJoin()*
 		Perform the natural join of two relations {rel1} and {rel2}.
-		For instance:
+		Examples:
+>
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 1, B: 4},
+		]
+		var s = [
+		  {B: 6, C: 40},
+		  {B: 6, C: 50},
+		  {B: 2, C: 60},
+		]
+		const result = Query(NatJoin(r, s))
+		echo Table(result)
+<
+		Output:
+>
+		────────
+		 A B  C
+		────────
+		 1 6 40
+		 1 6 50
+<
+		To join `Buffer` with `Tag` on the common `BufId` attribute:
 >
 		const result = Query(NatJoin(Buffer, Tag))
 		echo Table(result)
@@ -1361,13 +1504,37 @@ Rename({rel}, {list1}, {list2})			*librelalg.Rename()*
 
 Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
 		Perform the cross product of two relations {rel1} and {rel2}.
-		For {prefix}, see |librelalg.Join()|.
-
-		For example, to obtain all the sorted pairs of tag names:
+		For {prefix}, see |librelalg.Join()|. Examples:
+>
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 1, B: 4},
+		]
+		var s = [
+		  {C: 9, D: 40},
+		  {C: 7, D: 50},
+		  {C: 4, D: 60},
+		]
+		const result = Query(Product(r, s))
+		echo Table(result)
+<
+		Output:
+>
+		──────────
+		 A B C  D
+		──────────
+		 1 6 9 40
+		 1 6 7 50
+		 1 6 4 60
+		 1 4 9 40
+		 1 4 7 50
+		 1 4 4 60
+<
+		To obtain all the sorted pairs of tag names:
 >
 		const Tagname = Project(Tag, ['TagName'])
 		const result  = Query(
-		    Product(Tagname, Tagname, 't_')
+		      Product(Tagname, Tagname, 't_')
 		    ->Select((t) => t.TagName < t.t_TagName)
 		    ->SortBy(['TagName', 't_TagName'])
 		)
@@ -1389,7 +1556,30 @@ Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
 
 Project({rel}, {list})				*librelalg.Project()*
 		Perform a projection of a relation {rel} on a {list} of
-		attributes. For instance:
+		attributes. Examples:
+>
+		var r = [
+		  {A: 1, B: 'one', C: 10},
+		  {A: 2, B: 'one', C: 10},
+		  {A: 3, B: 'one', C: 15},
+		  {A: 4, B: 'two', C: 20},
+		  {A: 5, B: 'two', C: 20},
+		  {A: 5, B: 'six', C: 60},
+		]
+		const result = Query(Project(r, ['B', 'C']))
+		echo Table(result)
+<
+		Output:
+>
+		────────
+		   B  C
+		────────
+		 one 10
+		 one 15
+		 two 20
+		 six 60
+<
+		To obtain all the tag names:
 >
 		const result = Query(Project(Tag, ['TagName']))
 		echo Table(result)
@@ -1409,12 +1599,32 @@ Scan({rel})					*librelalg.Scan()*
 		A synonym of |librelalg.From()|.
 
 Select({rel}, {func})				*librelalg.Select()*
-		Filter the tuples of a relation {rel} based on a predicate.
-		The predicate is defined by {func}, which is a |Funcref| that
-		takes as an input a tuple t and returns |true| if and only if
-		t must be selected.
-
-		For instance, to select all the tags after line 3 in buffer 1:
+		Filter the tuples of a relation {rel} based on a predicate
+		{func}, which is a |Funcref| that takes as an input a tuple t
+		and returns |true| if and only if t must be selected.
+		Examples:
+>
+		var r = [
+		  {A: 1, B: 5, C: 10},
+		  {A: 2, B: 8, C: 10},
+		  {A: 3, B: 7, C: 14},
+		  {A: 4, B: 8, C: 20},
+		  {A: 5, B: 2, C: 20},
+		  {A: 5, B: 1, C:  2},
+		]
+		const result = Query(Select(r, (t) => t.C == 2 * t.B))
+		echo Table(result)
+<
+		Output:
+>
+		────────
+		 A B  C
+		────────
+		 1 5 10
+		 3 7 14
+		 5 1  2
+<
+		To select all the tags after line 3 in buffer 1:
 >
 		const result = Query(
 		    Select(Tag, (t) => t.BufId == 1 && t.Line > 3)
@@ -1437,14 +1647,32 @@ SemiJoin({rel1}, {rel2}, {func})		*librelalg.SemiJoin()*
 		Perform the semi-join of two relations {rel1} and {rel2}. This
 		is the same as joining {rel1} with {rel2} (see
 		|librelalg.Join()|), then projecting the result on the
-		attributes of {rel1}.
-
-		For instance, to obtain the buffers that have some tag beyond
-		column 10:
+		attributes of {rel1}. Examples:
+>
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 1, B: 4},
+		]
+		var s = [
+		  {C: 6, D: 40},
+		  {C: 6, D: 50},
+		  {C: 2, D: 60},
+		]
+		const result = Query(SemiJoin(r, s, (t, u) => t.B == u.C))
+		echo Table(result)
+<
+		Output:
+>
+		─────
+		 A B
+		─────
+		 1 6
+<
+		To obtain the buffers with tags beyond column 10:
 >
 		const result = Query(
 		      SemiJoin(Buffer, Tag,
-			(t, u) => t.BufId == u.BufId && u.Column > 10)
+		               (t, u) => t.BufId == u.BufId && u.Column > 10)
 		  )
 		echo Table(result)
 <
@@ -1462,15 +1690,58 @@ Sort({rel}, {func})				*librelalg.Sort()*
 		Materialize a relation by sorting its tuples according to the
 		criterion specified by {func}. The sorting predicate {func} is
 		a |Funcref| that takes as an input two tuples t1 and t2, and
-		returns -1, 0, or 1 depending on whether t1 precedes t2, t1
-		equals t2 or t1 follows t2, respectively. For instance, to
-		sort tags by line number (regardless of the buffers):
+		returns a negative |number| if t1 precedes t2, a positive |number|
+		if t1 follows t2, and zero if t1 equals t2. Examples:
 >
-		def Compare(t1: dict<any>, t2: dict<any>): number
-		   return t1.Line < t2.Line ? -1 : t1.Line > t2.Line ? 1 : 0
-		enddef
+		var r = [
+		  {A: 1, B: 6},
+		  {A: 2, B: 4},
+		  {A: 3, B: 9},
+		  {A: 4, B: 2},
+		]
+		const result = Query(Sort(r, (t, u): number => t.B - u.B))
+		echo Table(result)
+<
+		Output:
+>
+		─────
+		 A B
+		─────
+		 4 2
+		 2 4
+		 1 6
+		 3 9
+<
+		To sort tags by line number (regardless of the buffers) in
+		decreasing order:
+>
+		const result = From(Tag)->Sort((t1, t2) => t2.Line - t1.Line)
+		echo Table(result)
+<
+		Output:
+>
+		───────────────────────────
+		 TagName Column Line BufId
+		───────────────────────────
+		     abc     15   14     2
+		     abc     12    7     1
+		     abc      3    6     3
+		     xyz      1    4     1
+		     lll      8    4     1
+		     zzz      1    2     1
+<
+		See |librelalg.SortBy()| for an equivalent, but simpler,
+		formulation of this query.
 
-		const result = From(Tag)->Sort(Compare)
+		This is a leaf operator, returning a relation instance. See
+		also |librelalg.SortBy()|.
+
+SortBy({rel}, {list} [, {opts}])		*librelalg.SortBy()*
+		Materialize a relation {rel} by sorting the tuples according
+		to the specified {list} of attributes. For instance:
+>
+		const result = From(Tag)->SortBy(['Line'])
+		echo Table(result)
 <
 		Output:
 >
@@ -1484,21 +1755,6 @@ Sort({rel}, {func})				*librelalg.Sort()*
 		     abc     12    7     1
 		     abc     15   14     2
 <
-		See |librelalg.SortBy()| for an equivalent, but simpler,
-		formulation of this query.
-
-		This is a leaf operator, returning a relation instance. See
-		also |librelalg.SortBy()|.
-
-SortBy({rel}, {list} [, {opts}])		*librelalg.SortBy()*
-		Materialize a relation {rel} by sorting the tuples according
-		the specified {list} of attributes. For instance:
->
-		const result = From(Tag)->SortBy(['Line'])
-<
-		This gives the same result as the example in
-		|librelalg.Sort()|.
-
 		{opts} is a list that specifies, for each sorting attribute,
 		whether to sort the values of that attribute in increasing or
 		decreasing order. For instance:
@@ -1520,7 +1776,7 @@ SortBy({rel}, {list} [, {opts}])		*librelalg.SortBy()*
 <
 		The tuples of `Tag` are sorted in increasing order (`'i'`)
 		with respect to `TagName`, and then the tags with the same
-		value are sorted in decreasing order (`'d'`) with respect to
+		name are sorted in decreasing order (`'d'`) with respect to
 		`Column`.
 
 		This is a leaf operator, returning a relation instance. See
@@ -1531,26 +1787,26 @@ SumBy({rel}, {list}, {attr} [, {name}])		*librelalg.SumBy()*
 		of attributes, and sum the values of attribute {attr} in each
 		group. The schema of the output relation consists of the
 		grouping attributes plus the aggregate attribute. The name of
-		the latter may be specified by {name} (the default name is
-		"sum").
+		the aggregate attribute is given by {name} (the default name
+		is "sum").
 
 		For instance:
 >
 		var r = [
-		    {A: 1, B: 6},
-		    {A: 1, B: 4},
-		    {A: 2, B: 3}
+		    {A: 100, B: 6},
+		    {A: 100, B: 4},
+		    {A: 200, B: 3}
 		]
 		const result = From(r)->SumBy(['A'], 'B')
 		echo Table(result)
 <
 		Output:
 >
-		───────
-		 A sum
-		───────
-		 1  10
-		 2   3
+		─────────
+		   A sum
+		─────────
+		 200   3
+		 100  10
 <
 		This is a leaf operator, returning a relation instance.
 
@@ -1590,51 +1846,75 @@ Union({rel1}, {rel2})				*librelalg.Union()*
 
 An aggregate function is a special type of leaf operator: instead of returning
 a relation instance, an aggregate function returns a scalar. These functions
-can be used as normal operators or as an argument to |librelalg.GroupBy()|
-(see also |librelalg.Bind()|), although computing group-by aggregates can be
-done more efficiently with the following specialized operators:
-
-- |librelalg.AvgBy()|,
-- |librelalg.CountBy()|,
-- |librelalg.MinBy()|,
-- |librelalg.MaxBy()|,
-- |librelalg.SumBy()|.
+can be used as normal leaf operators, as in the following example:
+>
+	# Count the number of tuples
+	echo From([{A: 9}, {A: 4}, {A: 6}])->Count()  # 3
+<
+Aggregate functions can also be used as an argument to |librelalg.GroupBy()|
+(see also |librelalg.Bind()|).
 
 Avg({rel}, {attr})				*librelalg.Avg()*
 		Return the average value of attribute {attr} in a relation
-		{rel}. For instance, to return the average tag's column
-		number:
+		{rel}. Examples:
+>
+		echo From([{A: 9}, {A: 7}, {A: 11}])->Avg('A')  # 9.0
+<		
+		To return the average tag's column number:
 >
 		const avg = From(Tag)->Avg('Column')  # 6.666667
 <
 Count({rel})					*librelalg.Count()*
-		Return the number of tuples of a relation {rel}. For instance,
-		to return the number of buffers:
+		Return the number of tuples of a relation {rel}.  Examples:
 >
-		const nBuf = From(Buffer)->Count()  # 3
+		echo From([{A: 9}, {A: 7}])->Count()  # 2
+<		
+		To compute the number of buffers:
+>
+		const nBuf = From(Buffer)->Count()    # 3
 <
 CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 		Return the number of distinct values in attribute {attr} of
-		a relation {rel}. For instance, to return the number of
-		distinct tag names:
+		a relation {rel}. Examples:
+>
+		echo From([
+		  {X: 0, Y: 1},
+		  {X: 1, Y: 1},
+		  {X: 2, Y: 3},
+		  {X: 3, Y: 3},
+		])->CountDistinct('Y')  # 2
+<
+		To return the number of distinct tag names:
 >
 		const nDistinctTags = From(Tag)->CountDistinct('TagName')  # 4
 <
 Min({rel}, {attr})				*librelalg.Min()*
 		Return the minimum value of attribute {attr} in a relation
-		{rel}. For instance, to return the minimum buffer id:
+		{rel}. Examples:
+>
+		echo From([{A: 9}, {A: 7}, {A: 11}])->Min('A')  # 7
+<
+		To return the minimum buffer id:
 >
 		const minBufId = From(Buffer)->Min('BufId')  # 1
 <
 Max({rel}, {attr})				*librelalg.Max()*
 		Return the maximum value of attribute {attr} in a relation
-		{rel}. For instance, to return the maximum column of a tag:
+		{rel}. Examples:
+>
+		echo From([{A: 9}, {A: 7}, {A: 11}])->Max('A')  # 11
+<
+		To return the maximum column of a tag:
 >
 		const maxCol = From(Tag)->Max('Column')  # 15
 <
 Sum({rel}, {attr})				*librelalg.Sum()*
 		Return the sum of the values of attribute {attr} in a relation
-		{rel}. For instance:
+		{rel}. Examples:
+>
+		echo From([{A: 9}, {A: 7}, {A: 11}])->Sum('A')  # 27
+<
+		To compute the sum of all tags' columns:
 >
 		const colSum = From(Tag)->Sum('Column')  # 40
 <
@@ -1645,10 +1925,9 @@ Attributes({relobj})				*librelalg.Attributes()*
 		Return the list of attributes of relation object {relobj}.
 
 Bind({func}, {attr})				*librelalg.Bind()*
-		Bind the attribute argument {attr} of an aggregate function
-		{func}. This makes it more convenient to pass to
-		|librelalg.GroupBy()| an aggregate function that takes an
-		attribute as a second argument. For example:
+		Bind the attribute argument of an aggregate function {func} to
+		attribute {attr}. This makes it more convenient to pass some
+		aggregate functions to |librelalg.GroupBy()|. For example:
 >
 		# Number of distinct lines containing a tag, in each buffer
 		const result = Query(
@@ -1706,27 +1985,31 @@ KeyAttributes({relobj})				*librelalg.KeyAttributes()*
 
 Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
 		Search for a tuple in relation object {relobj} whose {key}
-		matches the value specified by the |list| of values {list}. An
-		empty |dict| is returned if no tuple with the given value of
-		the key can be found.
+		matches the value specified by the given {list}. A special
+		`KEY_NOT_FOUND` value is returned if no tuple with the given
+		value of the key can be found.
 
 		For example:
 >
+		import 'librelalg.vim' as ra
+
+		# [...]
+
 		var R = Relation('R', {A: Int, B: Str}, [['A']])
-			->InsertMany([
-			  {A: 1, B: 'x'},
-			  {A: 3, B: 'y'},
-			  {A: 5, B: 'z'}
-			])
+		        ->InsertMany([
+		          {A: 1, B: 'x'},
+		          {A: 3, B: 'y'},
+		          {A: 5, B: 'z'}
+		])
 		echo Lookup(R, ['A'], [3])  # {A: 3, B: 'y'}
+		echo Lookup(R, ['A'], [9]) is ra.KEY_NOT_FOUND  # true
 <
 		When looking up for a tuple by key, using this function is
 		generally faster than using |librelalg.Select()|, because
 		lookup access uses an index associated to the key, whereas
 		|librelalg.Select()| does a linear scan of the relation.
 
-		Note that the returned value is a tuple, not a relation
-		instance!
+		Note that the returned value is a tuple, not a relation!
 
 NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		Return |true| if {tuple} is not in base or derived relation
@@ -1734,15 +2017,16 @@ NotIn({tuple}, {rel})				*librelalg.NotIn()*
 
 RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		Compare two base or derived relations for equality. Return
-		|true| if the relations are equal, that is, the are the same
-		set of tuples; return |false| otherwise.
+		|true| if the relations are equal, that is, they are the same
+		set of tuples (the order of the tuples does not matter);
+		return |false| otherwise.
 
 Table({rel} [, {name}, {sep})			*librelalg.Table()*
 		Return a tabular representation of a base or derived relation
-		as a |string|. The title of the table may be specified with
-		{name} (the default is to use the relation name for base
-		relations, and no title for derived relations). The horizontal
-		separator symbol can be set with {sep}, which must be a single
+		{rel} as a |string|. The title of the table may be specified
+		with {name}: the default is to use the relation name for base
+		relations, and no title for derived relations. The horizontal
+		separator symbol can be set with {sep}, and must be a single
 		character.
 
 		For instance:
@@ -1762,7 +2046,7 @@ Table({rel} [, {name}, {sep})			*librelalg.Table()*
 		 20 twenty
 <
 Zip({list1}, {list2})				*librelalg.Zip()*
-		Build a tuple by “zipping” the attributes in {list1} with the
+		Build a tuple by "zipping" the attributes in {list1} with the
 		values in {list2}. For example:
 >
 		const t = Zip(['A', 'B'], [7, 'v'])
@@ -1772,39 +2056,4 @@ Zip({list1}, {list2})				*librelalg.Zip()*
 >
 		{A: 7, B: 'v'}
 <
-==============================================================================
-7. Tips and tricks				*librelalg-tips*
-
-Base relations must be updated only through librelalg's operators, because
-that is the only way integrity constraints can be verified.
-Derived relations, however, are just lists of dictionaties, and can be further
-processed in any way. For instance:
->
-	var R = Relation('R', {A: Int, B: Int}, [['A']])
-
-	# […]
-
-	const S = Filter(R, (t) => t.A > 0)    # OK
-	filter(R.instance, (_, t) => t.A > 0)  # BAD! R is a base relation
-
-	var s = Scan(R)->Project(['A'])->Build()
-	Filter(s, (t) => t.A > 0)     # OK
-	filter(s, (_, t) => t.A > 0)  # Also OK: s is a derived instance
-<
-Keys ~
-
-An index is built for each key. The indexes help speed up some operations and
-are used to enforce key constraints. The order of the attributes in a compound
-key matters for performance. In the example above, if tags are often looked up
-by name, it may be more efficient to define the primary key as `['TagName',
-'BufId', 'Line']` rather than `['BufId',` `'TagName', 'Line']` as was done
-above. In general, the attributes that are accessed more frequently should
-appear earlier in the key.
-
-Nulls ~
-
-Nulls are not supported. A properly designed database never needs nulls, so
-this is not a loss of generality, and it is a great gain in simplicity and
-semantic clarity.
-
  vim:tw=78:ts=8:noet:ft=help:norl:

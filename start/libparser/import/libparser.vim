@@ -25,8 +25,12 @@ def Success(value: any): dict<any>
   return {success: true, value: value}
 enddef
 
-def Failure(errpos: number, label: string = fail): dict<any>
-  return {success: false,  label: label, errpos: errpos}
+def Failure(ctx: dict<any>, errpos: number, label: string = fail): dict<any>
+  # FIXME: ctx is defined by the user, may be const
+  if get(ctx, 'furthest', -1) < errpos
+    ctx.furthest = errpos
+  endif
+  return {success: false,  label: label, errpos: ctx.furthest}
 enddef
 # }}}
 
@@ -40,14 +44,14 @@ export def Null(ctx: dict<any>): dict<any>
 enddef
 
 export def SoftFail(ctx: dict<any>): dict<any>
-  return Failure(ctx.index)
+  return Failure(ctx, ctx.index)
 enddef
 
 export def Eof(ctx: dict<any>): dict<any>
   if ctx.index >= strchars(ctx.text)
     return Success(null)
   else
-    return Failure(ctx.index)
+    return Failure(ctx, ctx.index)
   endif
 enddef
 # }}}
@@ -55,7 +59,7 @@ enddef
 # Parser generators {{{
 export def Fail(msg: string): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
-    return Failure(ctx.index, msg)
+    return Failure(ctx, ctx.index, msg)
   }
 enddef
 
@@ -71,7 +75,7 @@ export def Text(text: string): func(dict<any>): dict<any>
       ctx.index = ctx.index + n
       return Success(text)
     else
-      return Failure(ctx.index)
+      return Failure(ctx, ctx.index)
     endif
   }
 enddef
@@ -82,7 +86,7 @@ export def Regex(pattern: string): func(dict<any>): dict<any>
     const match = matchstrpos(ctx.text, '^\%(' .. pattern .. '\)', ctx.index)
 
     if match[2] == -1
-      return Failure(ctx.index)
+      return Failure(ctx, ctx.index)
     else
       ctx.index = match[2]
       return Success(match[0])
@@ -99,11 +103,11 @@ export def Err(
   return (ctx: dict<any>): dict<any> => {
     const result = Parser(ctx)
 
-    if result.success
+    if result.success || result.label isnot fail
       return result
     endif
 
-    return Failure(ctx.index, label)
+    return Failure(ctx, ctx.index, label)
   }
 enddef
 
@@ -135,15 +139,19 @@ export def OneOf(
     ...Parsers: list<func(dict<any>): dict<any>>
 ): func(dict<any>): dict<any>
   return (ctx: dict<any>): dict<any> => {
+    var furthestFailure = ctx.index
+
     for Parser in Parsers
       const result = Parser(ctx)
 
       if result.success || result.label isnot fail
         return result
+      elseif result.errpos > furthestFailure
+        furthestFailure = result.errpos
       endif
     endfor
 
-    return Failure(ctx.index)
+    return Failure(ctx, furthestFailure)
   }
 enddef
 
@@ -165,7 +173,7 @@ export def Many(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
       if result.success
         if ctx.index <= currIndex # Guard against infinite loops
           ctx.index = startIndex
-          return Failure(currIndex, 'no infinite loop')
+          return Failure(ctx, currIndex, 'no infinite loop')
         endif
 
         if result.value != null
@@ -210,7 +218,7 @@ export def NegLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): di
     if result.success
       const errPos = ctx.index
       ctx.index = startIndex
-      return Failure(errPos)
+      return Failure(ctx, errPos)
     else
       ctx.index = startIndex
       return Success(null)

@@ -1,7 +1,7 @@
 # Vim Development Package
 
-A package consisting of plugins and libraries that facilite the development of
-modern Vim plugins and libraries.
+A package consisting of plugins and libraries that facilitate the development
+of modern Vim plugins and libraries.
 
 ## Installation
 

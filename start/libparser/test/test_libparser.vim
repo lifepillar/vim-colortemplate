@@ -4,29 +4,32 @@ import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
 const Eof       = parser.Eof
-const Label     = parser.Label
+const Eps       = parser.Eps
+const Err       = parser.Err
+const fail      = parser.fail
 const Lexeme    = parser.Lexeme
-const LookAhead = parser.LookAhead
 const Many      = parser.Many
 const Map       = parser.Map
 const OneOf     = parser.OneOf
 const Optional  = parser.Optional
+const PositiveLookAhead = parser.PositiveLookAhead
+const NegativeLookAhead = parser.NegativeLookAhead
 const Regex     = parser.Regex
-const Sequence  = parser.Sequence
+const Seq  = parser.Seq
 const Skip      = parser.Skip
 const Text      = parser.Text
 
-const Eol       = Regex('[\r\n]', 'end of line')
-const Space     = Regex('\s*', 'whitespace')
+const Eol       = Regex('[\r\n]')
+const Space     = Regex('\s*')
 const Token     = Lexeme(Space)
-const Integer   = Regex('\d\+', 'integer')->Map((x) => str2nr(x))
+const Integer   = Regex('\d\+')->Map((x) => str2nr(x))
 
 def TT(token: string): func(dict<any>): dict<any>
   return Token(Text(token))
 enddef
 
-def RT(pattern: string, expected: string): func(dict<any>): dict<any>
-  return Token(Regex(pattern, expected))
+def RT(pattern: string): func(dict<any>): dict<any>
+  return Token(Regex(pattern))
 enddef
 
 # Test consuming a new line
@@ -122,7 +125,7 @@ enddef
 def Test_LP_ParseRegex001()
   const text = "x012abc"
   var ctx = { text: text, index: 1 }
-  const result = Regex('\d\+', "number")(ctx)
+  const result = Regex('\d\+')(ctx)
   assert_true(result.success)
   assert_equal("012", result.value)
   assert_equal(4, ctx.index)
@@ -131,9 +134,10 @@ enddef
 def Test_LP_ParseRegex002()
   const text = "x012abc"
   var ctx = { text: text, index: 0 }
-  const result = Regex('\d\+', "number")(ctx)
+  const result = Regex('\d\+')(ctx)
   assert_false(result.success)
-  assert_equal("number", result.expected)
+  assert_equal(fail, result.label)
+  assert_true(result.label is fail)
   assert_equal(0, ctx.index)
 enddef
 
@@ -155,18 +159,20 @@ enddef
 
 def Test_LP_ParseOneOf003()
   var ctx = { text: "A:v", index: 0 }
-  const result = Label(OneOf(Text("B"), Text("C")), "OneOf failed")(ctx)
+  const Parse = OneOf(Text("B"), Text("C"))
+  const result = Parse(ctx)
   assert_false(result.success)
-  assert_equal("OneOf failed", result.expected)
+  assert_true(result.label is fail)
   assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseOneOf004()
   var ctx = { text: "A:v", index: 0 }
-  const result = OneOf(Text("B"), Sequence(Text("A"), Text("=")))(ctx)
+  const Parse = OneOf(Text("B"), Seq(Text("A"), Text("=")))
+  const result = Parse(ctx)
   assert_false(result.success)
-  assert_equal("=", result.expected)
-  assert_equal(1, ctx.index)
+  assert_true(result.label is fail)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseOptional001()
@@ -185,6 +191,15 @@ def Test_LP_ParseOptional002()
   assert_equal(0, ctx.index)
 enddef
 
+def Test_LP_ParseOptional003()
+  var ctx = { text: "abcd", index: 0 }
+  const Parse = Optional(Seq(Text('abc'), Text('x')))
+  const result = Parse(ctx)
+  assert_true(result.success)
+  assert_equal(null, result.value)
+  assert_equal(0, ctx.index)
+enddef
+
 def Test_LP_ParseMany001()
   var ctx = { text: "xyxyxyz", index: 0 }
   const result = Many(Text("xy"))(ctx)
@@ -197,7 +212,7 @@ def Test_LP_ParseMany002()
   var ctx = { text: "xyxyxyz", index: 0 }
   const result = Many(Text("xz"))(ctx)
   assert_true(result.success)
-  assert_equal([], result.value)
+  assert_equal(null, result.value)
   assert_equal(0, ctx.index)
 enddef
 
@@ -205,13 +220,13 @@ def Test_LP_ParseManyInfiniteLoop()
   var ctx = { text: "xyxyxyz", index: 0 }
   const result = Many(Text(""))(ctx)
   assert_false(result.success)
-  assert_equal("no infinite loop", result.expected)
+  assert_equal("no infinite loop", result.label)
   assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseSequence001()
   var ctx = { text: "xyabuv", index: 0 }
-  const result = Sequence(Text("xy"), Text("abu"))(ctx)
+  const result = Seq(Text("xy"), Text("abu"))(ctx)
   assert_true(result.success)
   assert_equal(["xy", "abu"], result.value)
   assert_equal(5, ctx.index)
@@ -219,19 +234,20 @@ enddef
 
 def Test_LP_ParseSequence002()
   var ctx = { text: "xyabuv", index: 0 }
-  const result = Sequence(Text("xy"), Text("buv"))(ctx)
+  const Parse = Seq(Text("xy"), Text("buv"))
+  const result = Parse(ctx)
   assert_false(result.success)
-  assert_equal("buv", result.expected)
-  assert_equal(2, ctx.index)
+  assert_true(result.label is fail)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseSequence003()
   var ctx = { text: "X=:", index: 0 }
-  const Parser = Sequence(TT('X'), TT(':'))
-  const result = Parser(ctx)
+  const Parse = Seq(TT('X'), Err(TT(':'), ':'))
+  const result = Parse(ctx)
   assert_false(result.success)
-  assert_equal(":", result.expected)
-  assert_equal(1, ctx.index)
+  assert_equal(':', result.label)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseAndSkip()
@@ -244,23 +260,29 @@ enddef
 
 def Test_LP_LookAhead001()
   var ctx = { text: "A: v", index: 0 }
-  const result = LookAhead(Regex('.*:', 'colon'), Text("A"), Text("B"))(ctx)
+  const Parse = PositiveLookAhead(Regex('.*:'))
+  const result = Parse(ctx)
   assert_true(result.success)
-  assert_equal("A", result.value)
-  assert_equal(1, ctx.index)
+  assert_equal(null, result.value)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_LookAhead002()
   var ctx = { text: "A.v", index: 0 }
-  const result = LookAhead(Regex('.*\.', 'dot'), Text("B"), Text("A"))(ctx)
-  assert_false(result.success)
-  assert_equal("B", result.expected)
-  assert_equal(0, ctx.index)
+  const Parse = Seq(PositiveLookAhead(Regex('.*\.')), Text('A.'))
+  const result = Parse(ctx)
+  assert_true(result.success)
+  assert_equal(['A.'], result.value)
+  assert_equal(2, ctx.index)
 enddef
 
 def Test_LP_LookAhead003()
   var ctx = { text: "A\nB:w", index: 0 }
-  const result = LookAhead(Regex('[^\n]*:', 'colon'), Text("B"), Text("A"))(ctx)
+  const Parse = OneOf(
+    Seq(PositiveLookAhead(Regex('[^\n]*:')), Text('B')),
+    Text('A')
+  )
+  const result = Parse(ctx)
   assert_true(result.success)
   assert_equal("A", result.value)
   assert_equal(1, ctx.index)
@@ -271,7 +293,7 @@ def Test_LP_ParseAndMap()
   def F(L: list<string>): number
     return len(L[2]) + 38
   enddef
-  const Parser = Sequence(Text("x"), Text("yab"), Regex("u*", "some u's"))
+  const Parser = Seq(Text("x"), Text("yab"), Regex("u*"))
   const result = Map(Parser, F)(ctx)
   assert_true(result.success)
   assert_equal(42, result.value)
@@ -283,25 +305,25 @@ def Test_LP_ParseAndMapFails()
   def F(L: list<string>): number
     return len(L[2]) + 38
   enddef
-  const Parser = Sequence(Text("x"), Text("yab"), Regex('v\+', "some v's"))
+  const Parser = Seq(Text("x"), Text("yab"), Regex('v\+'))
   const result = Map(Parser, F)(ctx)
   assert_false(result.success)
-  assert_equal("some v's", result.expected)
-  assert_equal(4, ctx.index)
+  assert_true(result.label is fail)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_LabelledParser()
-  var ctx = { text: "A: v", index: 0 }
-  const Parser = OneOf(Text('B'), Text('CD'))
-  const result = Label(Parser, "one of B or CD")(ctx)
+  var ctx = { text: 'A: v', index: 0 }
+  const Parse = OneOf(Seq(Text('A'), Err(Text(';'), 'semicolon')), Eps)
+  const result = Parse(ctx)
   assert_false(result.success)
-  assert_equal("one of B or CD", result.expected)
+  assert_equal('semicolon', result.label)
   assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_Lexeme()
   var ctx = { text: "; x", index: 0 }
-  const Skipper = Lexeme(Regex('.*$', "rest of line"))
+  const Skipper = Lexeme(Regex('.*$'))
   const CommentParser = Skipper(Text(";"))
   const result = CommentParser(ctx)
   assert_true(result.success)
@@ -349,45 +371,46 @@ def Test_LP_ParseInteger002()
   var ctx = { text: 'xyz42', index: 2 }
   const result = Integer(ctx)
   assert_false(result.success)
-  assert_equal('integer', result.expected)
+  assert_true(result.label is fail)
   assert_equal(2, ctx.index)
 enddef
 
 def Test_LP_ParseExpectedColon001()
   var ctx = { text: "Author=:", index: 0 }
-  const Seq = Sequence(OneOf(TT('Author'), TT('XYZ')), Skip(TT(":")))
-  const Parser = Many(OneOf(Seq, TT("Tsk")))
+  const S = Seq(OneOf(TT('Author'), TT('XYZ')), Skip(TT(':')))
+  const Parser = Many(OneOf(S, TT("Tsk")))
   const result = Parser(ctx)
-  assert_false(result.success)
-  assert_equal(":", result.expected)
-  assert_equal(6, ctx.index)
+  assert_true(result.success)
+  assert_equal(null, result.value)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseExpectedColon002()
   var ctx = { text: "Author=:", index: 0 }
-  const Dir = OneOf(TT('Foo'), Sequence(TT('Author'), TT(':')))
+  const Dir = OneOf(TT('Foo'), Seq(TT('Author'), Err(TT(':'), 'colon')))
   const Parser = Many(OneOf(Dir, TT("Tsk")))
   const result = Parser(ctx)
   assert_false(result.success)
-  assert_equal(":", result.expected)
-  assert_equal(6, ctx.index)
+  assert_equal('colon', result.label)
+  assert_equal(0, ctx.index)
 enddef
 
 def Test_LP_ParseExpectedColon003()
-  var ctx = { text: "X=:", index: 0 }
-  const Parser = OneOf(Text('Y'), Sequence(Text('X'), Text(':')))
+  var ctx = { text: "X:=", index: 0 }
+  const Parser = OneOf(Text('Y'), Seq(Text('X'), Err(Text(':'), 'colon')))
   const result = Parser(ctx)
-  assert_false(result.success)
-  assert_equal(":", result.expected)
-  assert_equal(1, ctx.index)
+  assert_true(result.success)
+  assert_equal(['X', ':'], result.value)
+  assert_equal(2, ctx.index)
 enddef
 
 def Test_LP_ManyWithOptionalInfiniteLoop()
   var ctx = { text: "\n", index: 0 }
-  const result = Many(Optional(Eol))(ctx)
-  assert_true(!result.success)
-  assert_equal('no infinite loop', result.expected)
-  assert_equal(1, ctx.index)
+  const Parse = Many(Optional(Eol))
+  const result = Parse(ctx)
+  assert_false(result.success)
+  assert_equal('no infinite loop', result.label)
+  assert_equal(0, ctx.index)
 enddef
 
 tt.Run('_LP_')

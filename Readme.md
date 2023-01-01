@@ -18,8 +18,13 @@ packadd vim9asm
 
 ## What's Included
 
-- **libparser**: a simple library to write parsers.
-- **librelalg:** an implementation of Relational Algebra in Vim 9 script
-- **libtinytest**: a minimal unit-testing library.
+Libraries:
+
+- **libparser**: a simple library to write parsers (WIP).
+- **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha level).
+- **libtinytest**: a minimal unit-testing library (beta).
+
+Plugins:
+
 - **[vim9asm](https://github.com/lacygoill/vim9asm):** Vim 9 disassembly on
   steroids.

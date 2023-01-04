@@ -516,8 +516,9 @@ LookAhead({parser})				*libparser.LookAhead()*
 
 Many({parser})					*libparser.Many()*
 		Apply a parser zero or more times, as many as possible, and
-		accumulate the parsed results into a |list|. This parser never
-		fails.
+		accumulate the parsed results into a |list|. This parser fails
+		only if {parser} fails with a labelled failure (see
+		|libparser.Lab()|).
 >
 		var ctx = Context('aaaaabc', 0)
 		const Parse = Many(Text('a'))
@@ -608,7 +609,6 @@ OneOf(...{parser})				*libparser.OneOf()*
 		failure:
 >
 		var ctx = Context('abcd', 0)
-		const ErrEof = Lab(Eof, 'end of input')
 		const Parse = OneOf(Seq(Text("abc"), Eof), Text("abx"))
 		const result = Parse(ctx)
 		echo result "Index:" ctx.index
@@ -622,10 +622,10 @@ OneOf(...{parser})				*libparser.OneOf()*
 		the furthest failure is returned.
 
 Opt({parser})					*libparser.Opt()*
-		Return a parser that executes {parser} and return its result
-		in case of success; if the parser fails, succeed without
-		consuming any input. That is, this parser is equivalent to
-		OneOf({parser}, Null). This parser never fails.
+		Apply {parser} and return its result in case of success; if
+		{parser} fails, succeed without consuming any input. That is,
+		this parser is equivalent to OneOf({parser}, Null). This
+		parser can fail only if {parser} returns a labelled failure.
 >
 		var ctx = Context('abcd', 0)
 		const Parse = Opt(Text('abx'))
@@ -637,9 +637,9 @@ Opt({parser})					*libparser.Opt()*
 		{'success': true, 'value': null} Index: 0
 <
 Seq(...{parser})				*libparser.Seq()*
-		Compose parsers sequentially, and succeed if and only if every
-		parser in the sequence succeeds. If a parser fails, return its
-		failure. Examples:
+		Compose the given parsers sequentially, and succeed if and
+		only if every parser in the sequence succeeds. If a parser
+		fails, return its failure. Examples:
 >
 		var ctx = Context('abcd', 0)
 		const Parse = Seq(Text('a'), Text('b'), Text('cd'))
@@ -717,8 +717,8 @@ Apply({parser}, {func})				*libparser.Apply()*
 <
 Context({string}[, {index}])			*libparser.Context()*
 		Return a context for parsing {string} starting from position
-		{index}. If {index} is not given, the string is parsed at the
-		beginning.
+		{index}. If {index} is not given, the string is parsed
+		starting at index zero.
 
 Lexeme({parser})				*libparser.Lexeme()*
 		Return a function that transforms a parser P into another

@@ -265,7 +265,7 @@ export def T(token: string): func(dict<any>): dict<any>
   return Token(Text(token))
 enddef
 
-export def RT(pattern: string): func(dict<any>): dict<any>
+export def R(pattern: string): func(dict<any>): dict<any>
   return Token(Regex(pattern))
 enddef
 # }}}

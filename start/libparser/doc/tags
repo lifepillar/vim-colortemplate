@@ -5,11 +5,12 @@ libparser-other	libparser.txt	/*libparser-other*
 libparser-quickstart	libparser.txt	/*libparser-quickstart*
 libparser-tutorial	libparser.txt	/*libparser-tutorial*
 libparser.Apply()	libparser.txt	/*libparser.Apply()*
+libparser.Context()	libparser.txt	/*libparser.Context()*
 libparser.Eof()	libparser.txt	/*libparser.Eof()*
 libparser.Eol()	libparser.txt	/*libparser.Eol()*
 libparser.Eps()	libparser.txt	/*libparser.Eps()*
-libparser.Err()	libparser.txt	/*libparser.Err()*
 libparser.Fail()	libparser.txt	/*libparser.Fail()*
+libparser.Lab()	libparser.txt	/*libparser.Lab()*
 libparser.Lexeme()	libparser.txt	/*libparser.Lexeme()*
 libparser.LookAhead()	libparser.txt	/*libparser.LookAhead()*
 libparser.Many()	libparser.txt	/*libparser.Many()*
@@ -18,7 +19,7 @@ libparser.NegLookAhead()	libparser.txt	/*libparser.NegLookAhead()*
 libparser.Null()	libparser.txt	/*libparser.Null()*
 libparser.OneOf()	libparser.txt	/*libparser.OneOf()*
 libparser.Opt()	libparser.txt	/*libparser.Opt()*
-libparser.RT()	libparser.txt	/*libparser.RT()*
+libparser.R()	libparser.txt	/*libparser.R()*
 libparser.Regex()	libparser.txt	/*libparser.Regex()*
 libparser.Seq()	libparser.txt	/*libparser.Seq()*
 libparser.Skip()	libparser.txt	/*libparser.Skip()*

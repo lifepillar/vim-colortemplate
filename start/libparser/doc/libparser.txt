@@ -228,7 +228,7 @@ above, looks as follows:
 >
 	const AtomExp  = OneOf(Seq(LPAR,
 	                           Lab(Ref('Exp'), 'expr in parentheses'),
-	                           Lab(RPAR, 'closed parenthesis')
+	                           Lab(RPAR,       'closed parenthesis')
 	                          ),
 	                       NUMBER,
 	                       NAME)
@@ -247,7 +247,7 @@ above, looks as follows:
 
 	const Exp      = Seq(RelExp,
 	                     Many(Seq(EQ,
-	                             Lab(RelExp, 'rhs of equality'))))
+	                             Lab(RelExp,  'rhs of equality'))))
 
 	const ParseExp = Seq(Exp,
 	                     Lab(Eof, 'end of input'))
@@ -256,25 +256,26 @@ So far, we have written code to recognize well-formed expressions. But
 probably we also want to evaluate them. A possibility is to append some
 semantic actions to some rules, using |libparser.Map()| or
 |libparser.Apply()|, in order to process the parsed text. For this example,
-the evaluation may be done when the whole expression has been parsed:
+the evaluation may be done when the whole expression has been parsed, so we
+update the `ParseExp` rule:
 >
 	const ParseExp = Seq(Exp,
 	                     Lab(Eof, 'end of input'))
 	                 ->Map((v) => eval(join(flattennew(v))))
 <
-This is enough to parse numerical expressions, such as `exp1`:
+This is enough to evaluate numerical expressions, such as `exp1`:
 >
 	const exp1 = '3 * (12 / 4) - 1'
 	Parse(exp1)  # 8
 <
-To parse expressions with variables, a value must be assigned to such
-variables, which is normally done by maintaining some kind of lookup table.
-To keep this example simple, we assume that each name has value `42`, and we
+To evaluate expressions with variables, a value must be assigned to such
+variables, which is normally done by maintaining some kind of lookup table. To
+keep this example simple, we assume that each name has value `42`, and we
 update the `AtomExp` rule accordingly:
 >
 	const AtomExp  = OneOf(Seq(Skip(LPAR),
 	                           Lab(Ref('Exp'), 'expression in parentheses'),
-	                           Lab(Skip(RPAR),       'closed parenthesis')
+	                           Lab(Skip(RPAR), 'closed parenthesis')
 	                          ),
 	                       NUMBER,
 	                       NAME->Map((v): number => 42)

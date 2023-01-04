@@ -87,7 +87,7 @@ enddef
 # }}}
 
 # Parser combinators {{{
-export def Err(
+export def Lab(
     Parser: func(dict<any>): dict<any>,
     label: string
 ): func(dict<any>): dict<any>

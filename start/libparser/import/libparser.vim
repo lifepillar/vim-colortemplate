@@ -13,13 +13,13 @@ vim9script
 # type TParser  func(TContext): TResult
 
 # Internals {{{
-export const fail = null_string  # Backtracking label
+export const FAIL = null_string  # Backtracking label
 
 def Success(value: any): dict<any>
   return {success: true, value: value}
 enddef
 
-def Failure(ctx: dict<any>, errpos: number, label: string = fail): dict<any>
+def Failure(ctx: dict<any>, errpos: number, label: string = FAIL): dict<any>
   ctx.furthest = errpos
   return {success: false,  label: label, errpos: ctx.furthest}
 enddef
@@ -42,7 +42,7 @@ export def Eof(ctx: dict<any>): dict<any>
   if ctx.index >= strchars(ctx.text)
     return Success(null)
   else
-    return Failure(ctx, ctx.index)
+    return Failure(ctx, ctx.index, FAIL)
   endif
 enddef
 # }}}
@@ -94,7 +94,7 @@ export def Lab(
   return (ctx: dict<any>): dict<any> => {
     const result = Parser(ctx)
 
-    if result.success || result.label isnot fail
+    if result.success || result.label isnot FAIL
       return result
     endif
 
@@ -135,7 +135,7 @@ export def OneOf(
     for Parser in Parsers
       const result = Parser(ctx)
 
-      if result.success || result.label isnot fail
+      if result.success || result.label isnot FAIL
         return result
       elseif result.errpos > furthestFailure
         furthestFailure = result.errpos
@@ -171,7 +171,7 @@ export def Many(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
           values->add(result.value)
         endif
       else
-        if result.label isnot fail
+        if result.label isnot FAIL
           ctx.index = startIndex
           return result
         endif

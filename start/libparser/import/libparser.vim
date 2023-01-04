@@ -12,12 +12,6 @@ vim9script
 # type TContext dict<any>
 # type TParser  func(TContext): TResult
 
-# The parser's context must have these keys:
-#
-# text:      string  (Immutable, multi-line) text to be parsed
-# index:     number  Current position in text
-
-
 # Internals {{{
 export const fail = null_string  # Backtracking label
 
@@ -26,10 +20,7 @@ def Success(value: any): dict<any>
 enddef
 
 def Failure(ctx: dict<any>, errpos: number, label: string = fail): dict<any>
-  # FIXME: ctx is defined by the user, may be const
-  if get(ctx, 'furthest', -1) < errpos
-    ctx.furthest = errpos
-  endif
+  ctx.furthest = errpos
   return {success: false,  label: label, errpos: ctx.furthest}
 enddef
 # }}}
@@ -227,7 +218,11 @@ export def NegLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): di
 enddef
 # }}}
 
-# Convenience functions {{{
+# Derived parsers and other functions {{{
+export def Context(text: string, index: number = 0): dict<any>
+  return {text: text, index: index, furthest: index}
+enddef
+
 export def Map(
     Parser: func(dict<any>): dict<any>,
     Fn: func(any): any

@@ -456,11 +456,14 @@ This query uses |librelalg.NatJoin()| to perform the join,  and
 2. Data definition language			*librelalg-ddl*
 
 
-Check({relobj}, {func} [, {opts}])		*librelalg.Check()*
+Check({relobj}, {func}, {string}, [, {opts}])	*librelalg.Check()*
 		Define a generic constraint. The constraint is associated to
 		base relation {relobj} and is defined by {func}, which is
 		a |Funcref| taking as an input a tuple and returning |true| if
 		the tuple satisfies the constraint, and |false| otherwise.
+
+		{string} is a message that is used when the constraint is
+		violated.
 
 		A check constraint can be triggered before each insertion,
 		update or deletion in {relobj}. The operations that should

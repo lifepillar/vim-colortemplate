@@ -1057,29 +1057,31 @@ export def ForeignKey(
   Child: dict<any>,
   fkey: list<string>,
   Parent: dict<any>,
-  key: list<string>,
-  verbphrase = 'has'
+  verbphrase = 'has',
+  key: list<string> = null_list
 ): void
-  fkey->SameSize(key,     ErrForeignKeySize(Child.name, fkey, Parent.name, key))
-  fkey->Conforms(Child, ErrForeignKeySource(Child.name, fkey, Parent.name, key))
-  Parent->HasKey(key,   ErrForeignKeyTarget(Child.name, fkey, Parent.name, key))
+  const tkey = key == null ? fkey : key
 
-  const index = Parent.indexes[string(key)]
+  fkey->SameSize(tkey,    ErrForeignKeySize(Child.name, fkey, Parent.name, tkey))
+  fkey->Conforms(Child, ErrForeignKeySource(Child.name, fkey, Parent.name, tkey))
+  Parent->HasKey(tkey,  ErrForeignKeyTarget(Child.name, fkey, Parent.name, tkey))
+
+  const index = Parent.indexes[string(tkey)]
   const FkCheck = (t: dict<any>): void => {
     if index->SearchKey(fkey, t) is KEY_NOT_FOUND
-      throw ErrReferentialIntegrity(Child.name, fkey, Parent.name, key, t, verbphrase)
+      throw ErrReferentialIntegrity(Child.name, fkey, Parent.name, tkey, t, verbphrase)
     endif
   }
 
   Child.constraints.I->add(FkCheck)
   Child.constraints.U->add(FkCheck)
 
-  const FkPred = EquiJoinPred(fkey, key)
+  const FkPred = EquiJoinPred(fkey, tkey)
 
   const DelCheck = (t_p: dict<any>): void => {
     for t_c in Child.instance
       if FkPred(t_c, t_p)
-        throw ErrReferentialIntegrityDeletion(Child.name, fkey, Parent.name, key, t_c, t_p, verbphrase)
+        throw ErrReferentialIntegrityDeletion(Child.name, fkey, Parent.name, tkey, t_c, t_p, verbphrase)
       endif
     endfor
   }

@@ -314,7 +314,7 @@ enddef
 def Test_RA_DeleteForeignKey()
   RR = Relation('R', {A: Int}, [['A']])
   SS = Relation('S', {X: Str, Y: Int}, [['X']])
-  ForeignKey(SS, ['Y'], RR, ['A'])
+  ForeignKey(SS, ['Y'], RR, 'has', ['A'])
   RR->Insert({A: 2})
   SS->Insert({X: 'a', Y: 2})
 
@@ -370,14 +370,14 @@ def Test_RA_ForeignKey()
   RR = Relation('RR', {A: Str}, [['A']])
   SS = Relation('SS', {B: Int, C: Str}, [['B']])
 
-  AssertFails("ForeignKey(SS, ['B', 'C'], RR, ['A'])",
+  AssertFails("ForeignKey(SS, ['B', 'C'], RR, '', ['A'])",
               "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
-  AssertFails("ForeignKey(SS, ['C'], RR, ['C'])",
+  AssertFails("ForeignKey(SS, ['C'], RR, '', ['C'])",
               "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
-  AssertFails("ForeignKey(SS, ['A'], RR, ['A'])",
+  AssertFails("ForeignKey(SS, ['A'], RR, '', ['A'])",
               "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
 
-  ForeignKey(SS, ['C'], RR, ['A'], 'constrains')
+  ForeignKey(SS, ['C'], RR, 'constrains', ['A'])
 
   RR->InsertMany([
     {A: 'ab'},
@@ -401,6 +401,24 @@ def Test_RA_ForeignKey()
     {B: 30, C: 'ab'},
   ]
   assert_equal(expected, SS.instance)
+enddef
+
+def Test_RA_ForeignKeySameAttrs()
+  RR = Relation('R', {A: Str}, [['A']])
+  SS = Relation('S', {B: Int, A: Str}, [['B']])
+
+  ForeignKey(SS, ['A'], RR, 'flocks with')
+
+  RR->InsertMany([
+    {A: 'ab'},
+    {A: 'tm'}
+  ])
+  SS->Insert({B: 10, A: 'tm'})
+  SS->Insert({B: 20, A: 'tm'})
+  SS->Insert({B: 30, A: 'ab'})
+
+  AssertFails("SS->Insert({B: 40, A: 'xy'})",
+              "R flocks with S: S['A'] = ('xy') is not present in R['A']")
 enddef
 
 def Test_RA_GenericConstraint()

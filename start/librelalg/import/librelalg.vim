@@ -692,6 +692,17 @@ export def Bind(AggrFn: func(func(func(dict<any>)): void, string): any, attr: st
   return (Cont: func(func(dict<any>)): void) => AggrFn(Cont, attr)
 enddef
 
+export def ListAgg(Arg: any, attr: string): list<any>
+  var agg: list<any> = []
+  const Cont = From(Arg)
+
+  Cont((t) => {
+    agg->add(t[attr])
+  })
+
+  return agg
+enddef
+
 export def Count(Arg: any): number
   var count = 0
   const Cont = From(Arg)
@@ -785,6 +796,7 @@ export const Str     = v:t_string
 export const Bool    = v:t_bool
 export const Float   = v:t_float
 export const Func    = v:t_func
+export const List    = v:t_list
 
 const TypeString = {
   [Int]:         'integer',
@@ -792,7 +804,7 @@ const TypeString = {
   [Float]:       'float',
   [Bool]:        'boolean',
   [Func]:        'funcref',
-  [v:t_list]:    'list',
+  [List]:        'list',
   [v:t_dict]:    'dictionary',
   [v:t_none]:    'none',
   [v:t_job]:     'job',

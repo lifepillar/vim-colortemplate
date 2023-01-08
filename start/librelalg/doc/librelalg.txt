@@ -509,6 +509,7 @@ Relation({name}, {schema}, {keys} [, {typecheck}])
 		- Str: strings;
 		- Float: floats;
 		- Bool: booleans.
+		- List: lists.
 
 		{keys} is a |list| of keys, where each key is a |list| of
 		attributes. Every base relation must have at least one key.
@@ -1859,7 +1860,7 @@ Avg({rel}, {attr})				*librelalg.Avg()*
 		{rel}. Examples:
 >
 		echo From([{A: 9}, {A: 7}, {A: 11}])->Avg('A')  # 9.0
-<		
+<
 		To return the average tag's column number:
 >
 		const avg = From(Tag)->Avg('Column')  # 6.666667
@@ -1868,7 +1869,7 @@ Count({rel})					*librelalg.Count()*
 		Return the number of tuples of a relation {rel}.  Examples:
 >
 		echo From([{A: 9}, {A: 7}])->Count()  # 2
-<		
+<
 		To compute the number of buffers:
 >
 		const nBuf = From(Buffer)->Count()    # 3
@@ -1888,6 +1889,29 @@ CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 >
 		const nDistinctTags = From(Tag)->CountDistinct('TagName')  # 4
 <
+ListAgg({rel}, {attr})				*librelalg.ListAgg()*
+		Return the values of attribute {attr} in a relation {rel} as
+		a |list|. Examples:
+>
+		echo From([{A: 9}, {A: 7}, {A: 11}])
+			->ListAgg('A')  # [9, 7, 11]
+<
+		To return the list of tags in each buffer, sorted by buffer:
+>
+		const result = From(Tag)
+		               ->GroupBy(['BufId'], Bind(ListAgg, 'TagName'))
+		               ->SortBy(['BufId'])
+		echo Table(result)
+<
+		Output:
+>
+		────────────────────────────────────
+		                    aggrValue BufId
+		────────────────────────────────────
+		 ['zzz', 'abc', 'xyz', 'lll']     1
+		                      ['abc']     2
+		                      ['abc']     3
+<
 Min({rel}, {attr})				*librelalg.Min()*
 		Return the minimum value of attribute {attr} in a relation
 		{rel}. Examples:
@@ -1896,7 +1920,7 @@ Min({rel}, {attr})				*librelalg.Min()*
 <
 		To return the minimum buffer id:
 >
-		const minBufId = From(Buffer)->Min('BufId')  # 1
+		const minBufId = From(Buffer)->Min('BufId')     # 1
 <
 Max({rel}, {attr})				*librelalg.Max()*
 		Return the maximum value of attribute {attr} in a relation
@@ -1906,7 +1930,7 @@ Max({rel}, {attr})				*librelalg.Max()*
 <
 		To return the maximum column of a tag:
 >
-		const maxCol = From(Tag)->Max('Column')  # 15
+		const maxCol = From(Tag)->Max('Column')         # 15
 <
 Sum({rel}, {attr})				*librelalg.Sum()*
 		Return the sum of the values of attribute {attr} in a relation
@@ -1916,7 +1940,7 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 <
 		To compute the sum of all tags' columns:
 >
-		const colSum = From(Tag)->Sum('Column')  # 40
+		const colSum = From(Tag)->Sum('Column')         # 40
 <
 ==============================================================================
 6. Other functions				*librelalg-other*

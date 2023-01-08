@@ -42,6 +42,7 @@ const Intersect            = ra.Intersect
 const Join                 = ra.Join
 const KeyAttributes        = ra.KeyAttributes
 const LeftNatJoin          = ra.LeftNatJoin
+const ListAgg              = ra.ListAgg
 const Lookup               = ra.Lookup
 const Max                  = ra.Max
 const MaxBy                = ra.MaxBy
@@ -1177,12 +1178,12 @@ enddef
 
 def Test_RA_Count()
   const r = [
-    {A: 0, B: 10.0},
-    {A: 2, B:  2.5},
-    {A: 2, B: -3.0},
-    {A: 2, B:  1.5},
-    {A: 4, B:  2.5},
-    {A: 4, B:  2.5},
+    {id: 0, A: 0, B: 10.0},
+    {id: 1, A: 2, B:  2.5},
+    {id: 2, A: 2, B: -3.0},
+    {id: 3, A: 2, B:  1.5},
+    {id: 4, A: 4, B:  2.5},
+    {id: 5, A: 4, B:  2.5},
   ]
 
   assert_equal(0, From([])->Count())
@@ -1191,17 +1192,38 @@ enddef
 
 def Test_RA_CountDistinct()
   const r = [
-    {A: 0, B: 10.0},
-    {A: 2, B:  2.5},
-    {A: 2, B: -3.0},
-    {A: 2, B:  1.5},
-    {A: 4, B:  2.5},
-    {A: 4, B:  2.5},
+    {id: 0, A: 0, B: 10.0},
+    {id: 1, A: 2, B:  2.5},
+    {id: 2, A: 2, B: -3.0},
+    {id: 3, A: 2, B:  1.5},
+    {id: 4, A: 4, B:  2.5},
+    {id: 5, A: 4, B:  2.5},
   ]
 
   assert_equal(0, From([])->CountDistinct('A'))
   assert_equal(3, From(r)->CountDistinct('A'))
   assert_equal(4, From(r)->CountDistinct('B'))
+enddef
+
+def Test_RA_ListAgg()
+  const r = [
+    {id: 0, A: 0, B: 10.0},
+    {id: 1, A: 2, B:  2.5},
+    {id: 2, A: 2, B: -3.0},
+    {id: 3, A: 2, B:  1.5},
+    {id: 4, A: 4, B:  2.5},
+    {id: 5, A: 4, B:  2.5},
+  ]
+  const expected = [
+    {A: 0, aggrValue: [10.0]},
+    {A: 2, aggrValue: [2.5, -3.0, 1.5]},
+    {A: 4, aggrValue: [2.5, 2.5]},
+  ]
+
+  assert_equal([], From([])->ListAgg('A'))
+  assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A'))
+  assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B'))
+  assert_equal(expected, From(r)->GroupBy(['A'], Bind(ListAgg, 'B'))->SortBy(['A']))
 enddef
 
 def Test_RA_SumBy()

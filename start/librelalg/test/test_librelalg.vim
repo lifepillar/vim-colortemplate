@@ -1642,12 +1642,16 @@ def Test_RA_DeeDum()
   assert_equal([],           From(dum)->GroupBy([], Count, 'agg')->Build(), "dum group by []")
   assert_equal([{'agg': 1}], From(dee)->GroupBy([], Count, 'agg')->Build(), "dee group by []")
 
-  assert_equal([],           From(dum)->Divide(dum)->Build(),                "dum ÷ dum")
-  assert_equal([],           From(dum)->Divide(dee)->Build(),                "dum ÷ dee")
-  # Differently from Codd's division, Todd's division returns [] whenever the
-  # divisor is empty (Codd's division would return [{}] here):
-  assert_equal([],           From(dee)->Divide(dum)->Build(),                "dee ÷ dum")
-  assert_equal([{}],         From(dee)->Divide(dee)->Build(),                "dee ÷ dee")
+  assert_equal([],           From(dum)->CoddDivide(dum)->Build(),           "dum ÷ dum")
+  assert_equal([],           From(dum)->CoddDivide(dee)->Build(),           "dum ÷ dee")
+  assert_equal([{}],         From(dee)->CoddDivide(dum)->Build(),           "dee ÷ dum")
+  assert_equal([{}],         From(dee)->CoddDivide(dee)->Build(),           "dee ÷ dee")
+
+  assert_equal([],           From(dum)->Divide(dum)->Build(),               "dum ÷ dum")
+  assert_equal([],           From(dum)->Divide(dee)->Build(),               "dum ÷ dee")
+  # Todd's division returns [] whenever the divisor is empty
+  assert_equal([],           From(dee)->Divide(dum)->Build(),               "dee ÷ dum")
+  assert_equal([{}],         From(dee)->Divide(dee)->Build(),               "dee ÷ dee")
 enddef
 
 def Test_RA_Zip()

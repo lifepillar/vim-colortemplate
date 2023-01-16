@@ -12,44 +12,76 @@ vim9script
 # type TContext dict<any>
 # type TParser  func(TContext): TResult
 
-# Internals {{{
-export const FAIL = null_string  # Backtracking label
+# Context and result {{{
+export class Context
+  this.text:            string      # The text to be parsed
+  public this.index:    number = 0  # Next position yet to be parsed
+  public this.farthest: number = -1 # Position of farthest failure
 
-def Success(value: any): dict<any>
-  return {success: true, value: value}
+  def new(this.text, this.index = v:none)
+  enddef
+
+  def Reset(idx = 0)
+    this.index = idx
+    this.farthest = -1
+  enddef
+endclass
+
+export const FAIL: string = null_string  # Backtracking label
+
+export class Result
+  this.success: bool   = true
+  this.value:   any    = null
+  this.label:   string = FAIL
+  this.errpos:  number = -1
+
+  def newSuccess(this.value = v:none)
+    this.success = true
+  enddef
+
+  def newFailure(this.errpos, this.label = v:none)
+    this.success = false
+  enddef
+endclass
+
+def Success(value: any = null): Result
+  return Result.newSuccess(value)
 enddef
 
-def Failure(ctx: dict<any>, errpos: number, label: string = FAIL): dict<any>
-  ctx.furthest = errpos
-  return {success: false,  label: label, errpos: ctx.furthest}
+def Failure(
+    ctx: Context,
+    errpos: number = ctx.index,
+    label: string = FAIL
+): Result
+  if ctx.farthest < errpos
+    ctx.farthest = errpos
+  endif
+
+  return Result.newFailure(errpos, label)
 enddef
 # }}}
 
 # Basic parsers {{{
-export def Eps(ctx: dict<any>): dict<any>
+export def Eps(ctx: Context): Result
   return Success('')
 enddef
 
-export def Null(ctx: dict<any>): dict<any>
-  return Success(null)
+export def Null(ctx: Context): Result
+  return Success()
 enddef
 
-export def SoftFail(ctx: dict<any>): dict<any>
-  return Failure(ctx, ctx.index)
+export def SoftFail(ctx: Context): Result
+  return Failure(ctx)
 enddef
 
-export def Eof(ctx: dict<any>): dict<any>
-  if ctx.index >= strchars(ctx.text)
-    return Success(null)
-  else
-    return Failure(ctx, ctx.index, FAIL)
-  endif
+export def Eof(ctx: Context): Result
+  return ctx.index >= strchars(ctx.text) ? Success() : Failure(ctx)
 enddef
 # }}}
 
 # Parser generators {{{
-export def Fail(msg: string): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def Fail(msg: string): func(Context): Result
+  return (ctx: Context): Result => {
     return Failure(ctx, ctx.index, msg)
   }
 enddef
@@ -58,26 +90,26 @@ enddef
 # Fails when not found.
 #
 # NOTE: the text should not match across lines.
-export def Text(text: string): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def Text(text: string): func(Context): Result
+  return (ctx: Context): Result => {
     const n = strchars(text)
 
     if strcharpart(ctx.text, ctx.index, n) == text
       ctx.index = ctx.index + n
       return Success(text)
     else
-      return Failure(ctx, ctx.index)
+      return Failure(ctx)
     endif
   }
 enddef
 
 # NOTE: the pattern should not match across lines.
-export def Regex(pattern: string): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def Regex(pattern: string): func(Context): Result
+  return (ctx: Context): Result => {
     const match = matchstrpos(ctx.text, '^\%(' .. pattern .. '\)', ctx.index)
 
     if match[2] == -1
-      return Failure(ctx, ctx.index)
+      return Failure(ctx)
     else
       ctx.index = match[2]
       return Success(match[0])
@@ -88,10 +120,10 @@ enddef
 
 # Parser combinators {{{
 export def Lab(
-    Parser: func(dict<any>): dict<any>,
+    Parser: func(Context): Result,
     label: string
-): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+): func(Context): Result
+  return (ctx: Context): Result => {
     const result = Parser(ctx)
 
     if result.success || result.label isnot FAIL
@@ -103,9 +135,9 @@ export def Lab(
 enddef
 
 export def Seq(
-    ...Parsers: list<func(dict<any>): dict<any>>
-): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+    ...Parsers: list<func(Context): Result>
+): func(Context): Result
+  return (ctx: Context): Result => {
     const startIndex = ctx.index
     var values: list<any> = []
 
@@ -122,38 +154,38 @@ export def Seq(
       endif
     endfor
 
-    return empty(values) ? Success(null) : Success(values)
+    return empty(values) ? Success() : Success(values)
   }
 enddef
 
 export def OneOf(
-    ...Parsers: list<func(dict<any>): dict<any>>
-): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
-    var furthestFailure = ctx.index
+    ...Parsers: list<func(Context): Result>
+): func(Context): Result
+  return (ctx: Context): Result => {
+    var farthestFailure = ctx.index
 
     for Parser in Parsers
       const result = Parser(ctx)
 
       if result.success || result.label isnot FAIL
         return result
-      elseif result.errpos > furthestFailure
-        furthestFailure = result.errpos
+      elseif result.errpos > farthestFailure
+        farthestFailure = result.errpos
       endif
     endfor
 
-    return Failure(ctx, furthestFailure)
+    return Failure(ctx, farthestFailure)
   }
 enddef
 
 export def Opt(
-    Parser: func(dict<any>): dict<any>
-): func(dict<any>): dict<any>
+    Parser: func(Context): Result
+): func(Context): Result
   return OneOf(Parser, Null)
 enddef
 
-export def Many(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def Many(Parser: func(Context): Result): func(Context): Result
+  return (ctx: Context): Result => {
     const startIndex = ctx.index
     var values: list<any> = []
 
@@ -181,19 +213,19 @@ export def Many(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
       endif
     endwhile
 
-    return empty(values) ? Success(null) : Success(values)
+    return empty(values) ? Success() : Success(values)
   }
 enddef
 
-export def Skip(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def Skip(Parser: func(Context): Result): func(Context): Result
+  return (ctx: Context): Result => {
     const result = Parser(ctx)
-    return result.success ? Success(null) : result
+    return result.success ? Success() : result
   }
 enddef
 
-export def LookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def LookAhead(Parser: func(Context): Result): func(Context): Result
+  return (ctx: Context): Result => {
     const startIndex = ctx.index
     const result = Skip(Parser)(ctx)
     ctx.index = startIndex
@@ -201,8 +233,8 @@ export def LookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<
   }
 enddef
 
-export def NegLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def NegLookAhead(Parser: func(Context): Result): func(Context): Result
+  return (ctx: Context): Result => {
     const startIndex = ctx.index
     const result = Skip(Parser)(ctx)
 
@@ -212,42 +244,38 @@ export def NegLookAhead(Parser: func(dict<any>): dict<any>): func(dict<any>): di
       return Failure(ctx, errPos)
     else
       ctx.index = startIndex
-      return Success(null)
+      return Success()
     endif
   }
 enddef
 # }}}
 
 # Derived parsers and other functions {{{
-export def Context(text: string, index: number = 0): dict<any>
-  return {text: text, index: index, furthest: index}
-enddef
-
 export def Map(
-    Parser: func(dict<any>): dict<any>,
+    Parser: func(Context): Result,
     Fn: func(any): any
-): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+): func(Context): Result
+  return (ctx: Context): Result => {
     const result = Parser(ctx)
     return result.success ? Success(Fn(result.value)) : result
   }
 enddef
 
-export def Apply(Parser: func(dict<any>): dict<any>, Fn: func(any): void): func(dict<any>): dict<any>
-  return (ctx: dict<any>): dict<any> => {
+export def Apply(Parser: func(Context): Result, Fn: func(any): void): func(Context): Result
+  return (ctx: Context): Result => {
     const result = Parser(ctx)
     if result.success
       Fn(result.value)
-      return Success(null)
+      return Success()
     endif
     return result
   }
 enddef
 
 export def Lexeme(
-    SkipParser: func(dict<any>): dict<any>
-): func(func(dict<any>): dict<any>): func(dict<any>): dict<any>
-  return (Parser: func(dict<any>): dict<any>): func(dict<any>): dict<any> => {
+    SkipParser: func(Context): Result
+): func(func(Context): Result): func(Context): Result
+  return (Parser: func(Context): Result): func(Context): Result => {
     return Seq(Parser, SkipParser)->Map((x) => x[0])
   }
 enddef
@@ -256,11 +284,11 @@ export const Eol   = Regex('[\r\n]')
 export const Space = Regex('\%(\r\|\n\|\s\)*')
 export const Token = Lexeme(Space)
 
-export def T(token: string): func(dict<any>): dict<any>
+export def T(token: string): func(Context): Result
   return Token(Text(token))
 enddef
 
-export def R(pattern: string): func(dict<any>): dict<any>
+export def R(pattern: string): func(Context): Result
   return Token(Regex(pattern))
 enddef
 # }}}

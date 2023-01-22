@@ -890,20 +890,45 @@ new({string}[, {index}])
 		position {index}. If {index} is not given, the string is
 		parsed starting at index zero.
 
+		A Context object has the following attributes:
+
+		- "text" (read-only): the text to be parsed.
+		- "index": the next position in the text yet to be parsed.
+		- "farthest": The position of the farthest failure.
+
 Reset([{index}])
-		Reset a context by positioning the index at the given {index}
-		(0 by default). This also reset the internal state of the
-		object.
+		Reset this context by positioning the index at the given
+		{index} (0 by default). This also resets the internal state of
+		the object.
 
 						*libparser.Result*
 newSuccess([{value}])
 		Instantiate a parser's result representing successful parsing
 		producing the given {value}.
 
+		A Result object built with this function has a state
+		initialized as follows:
+
+		- "success" (read-only): a Boolean flag automatically set to
+		  |true| to indicate successful parsing.
+		- "value" (read-only): the parsed value.
+		- "label" (read-only): not used (an empty string).
+		- "errpos" (read-only): not used (set to -1).
+
 newFailure({errpos}[, {label}])
 		Instantiate a parser's result representing a failure at
 		position {errpos}. If a string {label} is given, then the
 		failure causes the parser to stop. If {label} is not given,
 		then the result is a normal, backtracking, failure.
+
+		A Result object built with this function has a state
+		initialized as follows:
+
+		- "success" (read-only): a Boolean flag automatically set to
+		  |false| to indicate that parsing has failed.
+		- "value" (read-only): set to |null|.
+		- "label" (read-only): an error message.
+		- "errpos" (read-only): the position in the text where the
+		  failure occurred.
 
  vim:tw=78:ts=8:noet:ft=help:norl:

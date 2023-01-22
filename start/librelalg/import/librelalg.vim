@@ -17,24 +17,36 @@ def SchemaAsString(schema: dict<number>): string
   return '{' .. join(values(schemaStr), ', ') .. '}'
 enddef
 
+def All(items: list<any>, Pred: func(any): bool): bool
+  return reduce(items, (res, item) => res && Pred(item), true)
+enddef
+
+def Any(items: list<any>, Pred: func(any): bool): bool
+  return reduce(items, (res, item) => res || Pred(item), false)
+enddef
+
 def IsFunc(X: any): bool
   return type(X) == v:t_func
 enddef
 
-def IsRelationInstance(R: any): bool
-  return type(R) == v:t_list
+def NormalizeKey(key: any): list<string>
+  return type(key) == v:t_list ? key : [key]
 enddef
 
-def Instance(R: any): list<dict<any>>
-  return type(R) == v:t_list ? R : R.instance
-enddef
+def NormalizeKeys(keys: any): list<list<string>>
+  if type(keys) == v:t_string
+    return [[keys]]  # One single-attribute key
+  endif
 
-export def In(t: dict<any>, R: any): bool
-  return index(Instance(R), t) != -1
-enddef
+  if empty(keys)
+    return []
+  endif
 
-export def NotIn(t: dict<any>, R: any): bool
-  return !(t->In(R))
+  if All(keys, (k) => type(k) == v:t_string)
+    return [keys]  # One composite key
+  endif
+
+  return mapnew(keys, (_, v) => NormalizeKey(v))  # Many keys
 enddef
 
 # v1 and v2 must have the same type
@@ -86,17 +98,528 @@ def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
   return u
 enddef
 
-# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
-export def Zip(l1: list<any>, l2: list<any>): dict<any>
-  const n = len(l1)
-  var zipdict: dict<any> = {}
-  var i = 0
-  while i < n
-    zipdict[String(l1[i])] = l2[i]
-    ++i
-  endwhile
-  return zipdict
+def Values(t: dict<any>, attrList: list<string>): list<any>
+  var values = []
+  for a in attrList
+    values->add(t[a])
+  endfor
+  return values
 enddef
+# }}}
+
+# Data definition and manipulation {{{
+# type TType        number
+# type TTupleSchema dict<TType>
+# type TRelSchema   dict<any>
+# type TKey         list<TAttr>
+# type TConstraint  func(Tuple, string): void
+# type TIndex       dict<any>
+
+# Data types  {{{
+export const Int     = v:t_number
+export const Str     = v:t_string
+export const Bool    = v:t_bool
+export const Float   = v:t_float
+export const Func    = v:t_func
+export const List    = v:t_list
+
+const TypeString = {
+  [Int]:         'integer',
+  [Str]:         'string',
+  [Float]:       'float',
+  [Bool]:        'boolean',
+  [Func]:        'funcref',
+  [List]:        'list',
+  [v:t_dict]:    'dictionary',
+  [v:t_none]:    'none',
+  [v:t_job]:     'job',
+  [v:t_channel]: 'channel',
+  [v:t_blob]:    'blob'
+}
+
+def TypeName(atype: number): string
+  return get(TypeString, atype, 'unknown')
+enddef
+# }}}
+
+# Error messages {{{
+
+
+def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
+  const value = t[attr]
+  const wrongType = TypeName(type(value))
+  const rightType = TypeName(schema[attr])
+  return printf("Attribute %s is of type %s, but value '%s' of type %s was provided",
+                attr, rightType, value, wrongType)
+enddef
+
+def ErrConstraintNotSatisfied(relname: string, t: dict<any>, msg: string): string
+  return printf("%s violates a constraint of %s: %s", t, relname, msg)
+enddef
+
+def ErrKeyAlreadyDefined(name: string, key: list<string>): string
+  return printf('Key %s already defined in %s', key, name)
+enddef
+
+def ErrDuplicateKey(key: list<string>, t: dict<any>): string
+  const tStr = join(mapnew(key, (_, v) => string(t[v])), ', ')
+  return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
+enddef
+
+def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
+  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
+enddef
+
+def ErrReferentialIntegrity(
+    child:      string,
+    verbphrase: string,
+    parent:     string,
+    fkey:       list<string>,
+    key:        list<string>,
+    t:          dict<any>
+): string
+    const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
+    return printf("%s %s %s: %s%s = (%s) is not present in %s%s",
+                  child, verbphrase, parent, child, fkey, tStr, parent, key)
+enddef
+
+def ErrReferentialIntegrityDeletion(
+    child:      string,
+    verbphrase: string,
+    parent:     string,
+    fkey:       list<string>,
+    key:        list<string>,
+    t_c:        dict<any>,
+    t_p:        dict<any>
+): string
+  const keyVal  = join(mapnew(key,  (_, v) => string(t_p[v])), ', ')
+  return printf("%s %s %s: %s%s = (%s) is referenced by %s",
+                child, verbphrase, parent, parent, key, keyVal, t_c)
+enddef
+
+def ErrForeignKeySize(child: string, fkey: list<string>, parent: string, key: list<string>): string
+  return printf("Wrong foreign key size: %s%s -> %s%s", child, fkey, parent, key)
+enddef
+
+def ErrForeignKeySource(child: string, fkey: list<string>, parent: string, key: list<string>): string
+  return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
+                child, fkey, parent, key, '%s', child)
+enddef
+
+def ErrForeignKeyTarget(child: string, fkey: list<string>, parent: string, key: list<string>): string
+  return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
+                child, fkey, parent, key, key, parent)
+enddef
+
+def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
+  const schemaStr = SchemaAsString(schema)
+  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
+enddef
+
+def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
+  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
+enddef
+
+def ErrNoKey(relname: string): string
+  return printf("No key specified for relation %s", relname)
+enddef
+
+def ErrInvalidAttribute(relname: string, attr: string): string
+  return printf("%s is not an attribute of %s", attr, relname)
+enddef
+
+def ErrNotAKey(relname: string, key: list<string>): string
+  return printf("%s is not a key of %s", key, relname)
+enddef
+
+def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
+  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
+enddef
+
+def ErrInvalidConstraintClause(op: string): string
+  return printf("Expected one of 'I' (insert), 'U' (update), 'D' (deletion), but got %s", op)
+enddef
+# }}}
+
+# Indexes {{{
+const INDEX_KEY_NOT_FOUND: dict<bool> = {}
+
+class KeyIndex
+  this.key: list<string> = []
+  this._index: dict<any> = {}
+
+  def GetRawIndex(): dict<any>
+    return this._index
+  enddef
+
+  def IsEmpty(): bool
+    return empty(this._index)
+  enddef
+
+  def Add(t: dict<any>)
+    if empty(this.key)
+      this._index[''] = t
+      return
+    endif
+
+    this.Add_(this._index, t, 0)
+  enddef
+
+  def Remove(theKey: list<any>)
+    if len(theKey) != len(this.key)
+      throw 'Mismatch'
+    endif
+
+    if empty(this.key)
+      this._index->remove('')
+      return
+    endif
+
+    this.Remove_(this._index, theKey, 0)
+  enddef
+
+  def Search(theKey: list<any>): dict<any>
+    if len(theKey) != len(this.key)
+      throw 'Mismatch'
+    endif
+
+    if empty(this.key)
+      return get(this._index, '', INDEX_KEY_NOT_FOUND)
+    endif
+
+    return this.Search_(this._index, theKey, 0)
+  enddef
+
+  def Add_(index: dict<any>, t: dict<any>, i: number)
+    const value = t[this.key[i]]
+
+    if i + 1 == len(this.key)
+      index[value] = t
+      return
+    endif
+
+    if !index->has_key(String(value))
+      index[value] = {}
+    endif
+
+    this.Add_(index[value], t, i + 1)
+  enddef
+
+  def Remove_(index: dict<any>, theKey: list<any>, i: number)
+    const value = theKey[i]
+
+    if i + 1 == len(this.key)
+      index->remove(value)
+      return
+    endif
+
+    this.Remove_(index[value], theKey, i + 1)
+
+    if empty(index[value])
+      index->remove(value)
+    endif
+  enddef
+
+  def Search_(index: dict<any>, theKey: list<any>, i: number): dict<any>
+    const value = theKey[i]
+
+    if index->has_key(String(value))
+      if i + 1 == len(this.key)
+        return index[value]
+      else
+        return this.Search_(index[value], theKey, i + 1)
+      endif
+    endif
+
+    return INDEX_KEY_NOT_FOUND
+  enddef
+endclass
+# }}}
+
+# Relations {{{
+export class Rel
+  this.name:          string
+  this.schema:        dict<number>
+  this.instance:      list<dict<any>> = []
+  this.keys:          list<list<string>>
+  this.attributes:    list<string>
+  this.keyAttributes: list<string>
+  this.descriptors:   list<string>
+  this._attrtype:     list<number> = []
+  this._indexes:      dict<KeyIndex> = {}
+  this._constraints:  dict<list<func(dict<any>): void>> = {'I': [], 'U': [], 'D': []}
+
+  def new(this.name, this.schema, keys: any, checkType = true)
+    if checkType
+      this.TypeCheck_()
+    endif
+
+    if empty(keys)
+      throw ErrNoKey(this.name)
+    endif
+
+    const keys_: list<list<string>> = NormalizeKeys(keys)
+
+    this.attributes = keys(this.schema)->sort()
+    this.keyAttributes = flattennew(keys_)->sort()->uniq()
+    this.descriptors = filter(copy(this.attributes), (_, v) => index(this.keyAttributes, v) == -1)
+
+    for attr in this.attributes
+      this._attrtype->add(this.schema[attr])
+    endfor
+
+    for key in keys_
+      this.Key(key)
+    endfor
+  enddef
+
+  def Key(key: any)
+    const key_: list<string> = NormalizeKey(key)
+
+    if index(this.keys, key_) != -1
+      throw ErrKeyAlreadyDefined(this.name, key_)
+    endif
+
+    for attr in key_
+      if index(this.attributes, attr) == -1
+        throw ErrInvalidAttribute(this.name, attr)
+      endif
+    endfor
+
+    this.keys->add(key_)
+
+    var index = KeyIndex.new(key_)
+
+    this._indexes[string(key_)] = index
+
+    const KeyConstraint = (t: dict<any>): void => {
+      if index.Search(Values(t, key_)) isnot INDEX_KEY_NOT_FOUND
+        throw ErrDuplicateKey(key_, t)
+      endif
+    }
+
+    this._constraints.I->add(KeyConstraint)
+  enddef
+
+  def IsEmpty(): bool
+    return empty(this.instance)
+  enddef
+
+  def InsertConstraints(): list<func(dict<any>)>
+    return this._constraints.I
+  enddef
+
+  def UpdateConstraints(): list<func(dict<any>)>
+    return this._constraints.U
+  enddef
+
+  def DeleteConstraints(): list<func(dict<any>)>
+    return this._constraints.D
+  enddef
+
+  def Index(key: any): KeyIndex
+    return this._indexes[string(NormalizeKey(key))]
+  enddef
+
+  def Insert(t: dict<any>): any
+    for CheckConstraint in this._constraints.I
+      CheckConstraint(t)
+    endfor
+
+    this.DoInsert_(t)
+
+    return this
+  enddef
+
+  def InsertMany(tuples: list<dict<any>>): any
+    for CheckConstraint in this._constraints.I
+      for t in tuples
+        CheckConstraint(t)
+      endfor
+    endfor
+
+    for t in tuples
+      this.DoInsert_(t)
+    endfor
+
+    return this
+  enddef
+
+  def DoInsert_(t: dict<any>)
+    this.instance->add(t)
+
+    for idx in values(this._indexes)
+      idx.Add(t)
+    endfor
+  enddef
+
+  def Update(t: dict<any>, upsert = false): any
+    const key = this.keys[0]
+    const keyValue = Values(t, key)
+    const oldt = this.Lookup(key, keyValue)
+
+    if oldt is INDEX_KEY_NOT_FOUND
+      if upsert
+        this.Insert(t)
+      else
+        throw ErrKeyNotFound(this.name, key, keyValue)
+      endif
+      return this
+    endif
+
+    for attr in this.keyAttributes
+      if t[attr] != oldt[attr]
+        throw ErrUpdateKeyAttribute(this.name, attr, t, oldt)
+      endif
+    endfor
+
+    # This may be tricky for some kind of constraints, as the old tuple is
+    # still in the relation at this point. But for simple checks it should work.
+    for CheckConstraint in this._constraints.U
+      CheckConstraint(t)
+    endfor
+
+    for attr in this.descriptors
+      oldt[attr] = t[attr]
+    endfor
+
+    return this
+  enddef
+
+  def Delete(Pred: func(dict<any>): bool = (t) => true): any
+    const DeletePred = (i: number, t: dict<any>): bool => {
+      if Pred(t)
+        for CheckConstraint in this.DeleteConstraints()
+          CheckConstraint(t)
+        endfor
+
+        for key in this.keys
+          const index = this.Index(key)
+          const keyValue = Values(t, index.key)
+          index.Remove(keyValue)
+        endfor
+
+        return false
+      endif
+
+      return true
+    }
+
+    filter(this.instance, DeletePred)
+
+    return this
+  enddef
+
+  def Lookup(key: list<string>, value: list<any>): dict<any>
+    if index(this.keys, key) == -1
+      throw ErrNotAKey(this.name, key)
+    endif
+    const index = this._indexes[String(key)]
+    return index.Search(value)
+  enddef
+
+  def Check(Constraint: func(dict<any>), opList: list<string> = ['I', 'U'])
+    for op in opList
+      if index(['I', 'U', 'D'], op) == -1
+        throw ErrInvalidConstraintClause(op)
+      endif
+
+      this._constraints[op]->add(Constraint)
+    endfor
+  enddef
+
+
+  def TypeCheck_()
+    const TypeConstraint = (t: dict<any>): void => {
+      const schema = this.schema
+
+      if sort(keys(t)) != this.attributes
+        throw ErrIncompatibleTuple(t, schema)
+      endif
+
+      for [attr, atype] in items(schema)
+        if type(t[attr]) != atype
+          throw ErrAttributeType(t, schema, attr)
+        endif
+      endfor
+    }
+
+    this.Check(TypeConstraint, ['I', 'U'])
+  enddef
+endclass
+# }}}
+
+# Rel related helper functions {{{
+def AsRel(R: Rel): Rel
+  return R
+enddef
+
+def IsRel(R: any): bool
+  return type(R) == v:t_object
+enddef
+
+def Instance(R: any): list<dict<any>>
+  return type(R) == v:t_object ? AsRel(R).instance : R
+enddef
+# }}}
+
+# Integrity constraints {{{
+def SameSize(l1: any, l2: any, errMsg: string): void
+  if len(l1) != len(l2)
+    throw errMsg
+  endif
+enddef
+
+def Conforms(attrList: list<string>, R: Rel, errMsg: string): void
+  const schema = R.attributes
+  for attr in attrList
+    if index(schema, attr) == -1
+      throw printf(errMsg, attr)
+    endif
+  endfor
+enddef
+
+def HasKey(R: Rel, key: list<string>, errMsg: string): void
+  if index(R.keys, key) == -1
+    throw errMsg
+  endif
+enddef
+
+export def ForeignKey(
+  Child:      Rel,
+  verbphrase: string,
+  Parent:     Rel,
+  fkey:       any,
+  key:        any = null
+): void
+  const fkey_: list<string> = NormalizeKey(fkey)
+  const key_:  list<string> = key == null ? fkey_ : NormalizeKey(key)
+
+  fkey_->SameSize(key_,  ErrForeignKeySize(Child.name, fkey_, Parent.name, key_))
+  fkey_->Conforms(Child, ErrForeignKeySource(Child.name, fkey_, Parent.name, key_))
+  Parent->HasKey(key_,   ErrForeignKeyTarget(Child.name, fkey_, Parent.name, key_))
+
+  const FkConstraint = (t: dict<any>): void => {
+    if Parent.Lookup(key_, Values(t, fkey_)) is INDEX_KEY_NOT_FOUND
+      throw ErrReferentialIntegrity(Child.name, verbphrase, Parent.name, fkey_, key_, t)
+    endif
+  }
+
+  Child.Check(FkConstraint, ['I', 'U'])
+
+  const FkPred = EquiJoinPred(fkey_, key_)
+
+  const DelConstraint = (t_p: dict<any>): void => {
+    for t_c in Child.instance
+      if FkPred(t_c, t_p)
+        throw ErrReferentialIntegrityDeletion(Child.name, verbphrase, Parent.name, fkey_, key_, t_c, t_p)
+      endif
+    endfor
+  }
+
+  Parent.Check(DelConstraint, ['D'])
+enddef
+# }}}
 # }}}
 
 # Relational Algebra {{{
@@ -120,7 +643,7 @@ export def From(Arg: any): func(func(dict<any>))
     return Arg
   endif
 
-  const rel = Instance(Arg)
+  const rel: list<dict<any>> = Instance(Arg)
 
   return (Emit: func(dict<any>)) => {
     for t in rel
@@ -615,9 +1138,9 @@ export def CoddDivide(Arg1: any, Arg2: any, divisorAttrList: list<string> = []):
   const s = Query(Arg2)
 
   if empty(s)
-    const K = IsRelationInstance(Arg2) || IsFunc(Arg2)
-      ? filter(keys(r[0]), (i, v) => index(divisorAttrList, v) == -1)
-      : filter(keys(r[0]), (i, v) => index(Attributes(Arg2), v) == -1)
+    const K = IsRel(Arg2)
+      ? filter(keys(r[0]), (i, v) => index(AsRel(Arg2).attributes, v) == -1)
+      : filter(keys(r[0]), (i, v) => index(divisorAttrList, v) == -1)
     return Project(r, K)
   endif
 
@@ -782,479 +1305,32 @@ enddef
 # }}}
 # }}}
 
-# Data definition and manipulation {{{
-# type TType        number
-# type TTupleSchema dict<TType>
-# type TRelSchema   dict<any>
-# type TKey         list<TAttr>
-# type TConstraint  func(Tuple, string): void
-# type TIndex       dict<any>
-
-# Data types  {{{
-export const Int     = v:t_number
-export const Str     = v:t_string
-export const Bool    = v:t_bool
-export const Float   = v:t_float
-export const Func    = v:t_func
-export const List    = v:t_list
-
-const TypeString = {
-  [Int]:         'integer',
-  [Str]:         'string',
-  [Float]:       'float',
-  [Bool]:        'boolean',
-  [Func]:        'funcref',
-  [List]:        'list',
-  [v:t_dict]:    'dictionary',
-  [v:t_none]:    'none',
-  [v:t_job]:     'job',
-  [v:t_channel]: 'channel',
-  [v:t_blob]:    'blob'
-}
-
-def TypeName(atype: number): string
-  return get(TypeString, atype, 'unknown')
-enddef
-# }}}
-
-# Error messages {{{
-def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
-  const value = t[attr]
-  const wrongType = TypeName(type(value))
-  const rightType = TypeName(schema[attr])
-  return printf("Attribute %s is of type %s, but value '%s' of type %s was provided",
-                attr, rightType, value, wrongType)
-enddef
-
-def ErrConstraintNotSatisfied(relname: string, t: dict<any>, msg: string): string
-  return printf("%s violates a constraint of %s: %s", t, relname, msg)
-enddef
-
-def ErrKeyAlreadyDefined(name: string, key: list<string>): string
-  return printf('Key %s already defined in %s', key, name)
-enddef
-
-def ErrDuplicateKey(key: list<string>, t: dict<any>): string
-  const tStr = join(mapnew(key, (_, v) => string(t[v])), ', ')
-  return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
-enddef
-
-def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
-  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
-enddef
-
-def ErrReferentialIntegrity(rname: string, fkey: list<string>, sname: string, key: list<string>, t: dict<any>, verbphrase: string): string
-  const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
-  return printf("%s %s %s: %s%s = (%s) is not present in %s%s",
-                sname, verbphrase, rname, rname, fkey, tStr, sname, key)
-enddef
-
-def ErrReferentialIntegrityDeletion(child: string, fkey: list<string>, parent: string, key: list<string>, t_c: dict<any>, t_p: dict<any>, verbphrase: string): string
-  const keyVal  = join(mapnew(key,  (_, v) => string(t_p[v])), ', ')
-  return printf("%s %s %s: %s%s = (%s) is referenced by %s in %s%s",
-                parent, verbphrase, child, parent, key, keyVal, t_c, child, fkey)
-enddef
-
-def ErrForeignKeySize(child: string, fkey: list<string>, parent: string, key: list<string>): string
-  return printf("Wrong foreign key size: %s%s -> %s%s", child, fkey, parent, key)
-enddef
-
-def ErrForeignKeySource(child: string, fkey: list<string>, parent: string, key: list<string>): string
-  return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
-                child, fkey, parent, key, '%s', child)
-enddef
-
-def ErrForeignKeyTarget(child: string, fkey: list<string>, parent: string, key: list<string>): string
-  return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
-                child, fkey, parent, key, key, parent)
-enddef
-
-def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
-  const schemaStr = SchemaAsString(schema)
-  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
-enddef
-
-def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
-  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
-enddef
-
-def ErrNoKey(relname: string): string
-  return printf("No key specified for relation %s", relname)
-enddef
-
-def ErrInvalidAttribute(relname: string, attr: string): string
-  return printf("%s is not an attribute of %s", attr, relname)
-enddef
-
-def ErrNotAKey(relname: string, key: list<string>): string
-  return printf("%s is not a key of %s", key, relname)
-enddef
-
-def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
-  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
-enddef
-
-def ErrInvalidConstraintClause(op: string): string
-  return printf("Expected one of 'I' (insert), 'U' (update), 'D' (deletion), but got %s", op)
-enddef
-# }}}
-
-# Indexes {{{
-def AddKey(index: dict<any>, key: list<string>, t: dict<any>): void
-  if empty(key)
-    index[''] = t
-    return
-  endif
-  AddKey_(index, key, 0, t)
-enddef
-
-def AddKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): void
-  const value = t[key[i]]
-
-  if i + 1 == len(key)
-    index[value] = t
-    return
-  endif
-
-  if !index->has_key(String(value))
-    index[value] = {}
-  endif
-
-  index[value]->AddKey_(key, i + 1, t)
-enddef
-
-export const KEY_NOT_FOUND: dict<bool> = {}
-
-# Search for a tuple in R with the same key as t using an index
-def SearchKey(index: dict<any>, key: list<string>, t: dict<any>): dict<any>
-  if empty(key)
-    return empty(index) ? KEY_NOT_FOUND : index['']
-  endif
-  return SearchKey_(index, key, 0, t)
-enddef
-
-def SearchKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): dict<any>
-  const value = t[key[i]]
-
-  if index->has_key(String(value))
-    return i + 1 == len(key) ? index[value] : index[value]->SearchKey_(key, i + 1, t)
-  endif
-
-  return KEY_NOT_FOUND
-enddef
-
-def RemoveKey(index: dict<any>, key: list<string>, t: dict<any>): void
-  if empty(key)
-    index->remove('')
-    return
-  endif
-  RemoveKey_(index, key, 0, t)
-enddef
-
-def RemoveKey_(index: dict<any>, key: list<string>, i: number, t: dict<any>): void
-  const value = t[key[i]]
-
-  if i + 1 == len(key)
-    index->remove(value)
-    return
-  endif
-
-  index[value]->RemoveKey_(key, i + 1, t)
-
-  if empty(index[value])
-    index->remove(value)
-  endif
-enddef
-
-export def Lookup(R: dict<any>, key: list<string>, value: list<any>): dict<any>
-  if index(R.keys, key) == -1
-    throw ErrNotAKey(R.name, key)
-  endif
-  const index = R.indexes[String(key)]
-  return SearchKey(index, key, Zip(key, value))
-enddef
-# }}}
-
-# Integrity constraints {{{
-def SameSize(l1: any, l2: any, errMsg: string): void
-  if len(l1) != len(l2)
-    throw errMsg
-  endif
-enddef
-
-# A type constraint checks whether a tuple is compatible with a schema.
-#
-# R  [TRelSchema]: a relational schema
-def TypeCheck(R: dict<any>): void
-  const Constraint = (t: dict<any>): void => {
-    const schema = R.schema
-
-    if sort(keys(schema)) != sort(keys(t))
-      throw ErrIncompatibleTuple(t, schema)
-    endif
-
-    for [attr, atype] in items(schema)
-      if type(t[attr]) != atype
-        throw ErrAttributeType(t, schema, attr)
-      endif
-    endfor
-  }
-
-  R.constraints.I->add(Constraint)
-  R.constraints.U->add(Constraint)
-enddef
-
-# A key constraint prevents duplicate keys
-#
-# R   [TRelSchema]: a relational schema
-# key [TKey]: a list of attributes that form a key for a certain relation
-export def Key(R: dict<any>, key: list<string>): void
-  if index(R.keys, key) != -1
-    throw ErrKeyAlreadyDefined(R.name, key)
-  endif
-
-  const attributes = Attributes(R)
-
-  for keyAttr in key
-    if index(attributes, keyAttr) == -1
-      throw ErrInvalidAttribute(R.name, keyAttr)
-    endif
-  endfor
-
-  R.keys->add(key)
-
-  var index = {}
-
-  R.indexes[string(key)] = index
-
-  const K = (t: dict<any>): void => {
-    if index->SearchKey(key, t) is KEY_NOT_FOUND
-      return
-    endif
-    throw ErrDuplicateKey(key, t)
-  }
-
-  R.constraints.I->add(K)
-enddef
-
-def Conforms(attrList: list<string>, R: dict<any>, errMsg: string): void
-  const schema = Attributes(R)
-  for attr in attrList
-    if index(schema, attr) == -1
-      throw printf(errMsg, attr)
-    endif
-  endfor
-enddef
-
-def HasKey(R: dict<any>, key: list<string>, errMsg: string): void
-  if index(R.keys, key) == -1
-    throw errMsg
-  endif
-enddef
-
-# Define a foreign key from Child[fkey] to Parent[key].
-export def ForeignKey(
-  Child: dict<any>,
-  fkey: list<string>,
-  Parent: dict<any>,
-  verbphrase = 'has',
-  key: list<string> = null_list
-): void
-  const tkey = key == null ? fkey : key
-
-  fkey->SameSize(tkey,    ErrForeignKeySize(Child.name, fkey, Parent.name, tkey))
-  fkey->Conforms(Child, ErrForeignKeySource(Child.name, fkey, Parent.name, tkey))
-  Parent->HasKey(tkey,  ErrForeignKeyTarget(Child.name, fkey, Parent.name, tkey))
-
-  const index = Parent.indexes[string(tkey)]
-  const FkCheck = (t: dict<any>): void => {
-    if index->SearchKey(fkey, t) is KEY_NOT_FOUND
-      throw ErrReferentialIntegrity(Child.name, fkey, Parent.name, tkey, t, verbphrase)
-    endif
-  }
-
-  Child.constraints.I->add(FkCheck)
-  Child.constraints.U->add(FkCheck)
-
-  const FkPred = EquiJoinPred(fkey, tkey)
-
-  const DelCheck = (t_p: dict<any>): void => {
-    for t_c in Child.instance
-      if FkPred(t_c, t_p)
-        throw ErrReferentialIntegrityDeletion(Child.name, fkey, Parent.name, tkey, t_c, t_p, verbphrase)
-      endif
-    endfor
-  }
-
-  Parent.constraints.D->add(DelCheck)
-enddef
-
-# Generic constraint
-export def Check(
-    R: dict<any>,
-    Constraint: func(dict<any>): bool,
-    msg: string,
-    opList: list<string> = ['I', 'U']
-): void
-  for op in opList
-    if index(['I', 'U', 'D'], op) == -1
-      throw ErrInvalidConstraintClause(op)
-    endif
-
-    R.constraints[op]->add(
-      (t: dict<any>): void => {
-        if !Constraint(t)
-          throw ErrConstraintNotSatisfied(R.name, t, msg)
-        endif
-      }
-    )
-  endfor
-enddef
-# }}}
-
-export def Relation(
-  name: string,
-  schema: dict<number>,
-  keys: list<list<string>>,
-  checkType = true
-): dict<any>
-  if empty(keys)
-    throw ErrNoKey(name)
-  endif
-
-  var R = {
-    name:        name,
-    schema:      schema,
-    instance:    [],
-    keys:        [],
-    indexes:     {},
-    constraints: {'I': [], 'U': [], 'D': []},
-  }
-
-  if checkType
-    TypeCheck(R)
-  endif
-
-  for key in keys
-    Key(R, key)
-  endfor
-
-  return R
-enddef
-
-export def Attributes(R: dict<any>): list<string>
-  return keys(R.schema)
-enddef
-
-export def KeyAttributes(R: dict<any>): list<string>
-  return flattennew(R.keys)->sort()->uniq()
-enddef
-
-export def Descriptors(R: dict<any>): list<string>
-  var allAttributes = Attributes(R)
-  const keyAttributes = KeyAttributes(R)
-  return filter(allAttributes, (_, a) => index(keyAttributes, a) == -1)
-enddef
-
-export def Insert(R: any, t: dict<any>): any
-  if IsRelationInstance(R)
-    R->add(t)
-    return R
-  endif
-
-  for CheckConstraint in R.constraints.I
-    CheckConstraint(t)
-  endfor
-
-  R.instance->add(t)
-
-  var i = 0
-  const n = len(R.keys)
-  while i < n
-    const key = R.keys[i]
-    R.indexes[string(key)]->AddKey(key, t)
-    i += 1
-  endwhile
-
-  return R
-enddef
-
-export def InsertMany(R: any, tuples: list<dict<any>>): any
-  for t in tuples
-    Insert(R, t)
-  endfor
-  return R
-enddef
-
-export def Update(R: dict<any>, t: dict<any>, upsert = false): void
-  const key = R.keys[0]
-  var keyValue = []
-  for a in key
-    keyValue->add(t[a])
-  endfor
-  const oldt = Lookup(R, key, keyValue)
-
-  if oldt is KEY_NOT_FOUND
-    if upsert
-      Insert(R, t)
-    else
-      throw ErrKeyNotFound(R.name, key, keyValue)
-    endif
-    return
-  endif
-
-  # Update
-  for attr in KeyAttributes(R)
-    if t[attr] != oldt[attr]
-      throw ErrUpdateKeyAttribute(R.name, attr, t, oldt)
-    endif
-  endfor
-
-  # This may be tricky for some kinds of constraints, as the old tuple is
-  # still in the relation at this point. But for simple checks it should work.
-  for CheckConstraint in R.constraints.U
-    CheckConstraint(t)
-  endfor
-
-  for attr in Descriptors(R)
-    oldt[attr] = t[attr]
-  endfor
-enddef
-
-export def Delete(R: any, Pred: func(dict<any>): bool = (t) => true): void
-  if IsRelationInstance(R)
-    filter(R, (_, t) => !Pred(t))
-    return
-  endif
-
-  const DeletePred = (i: number, t: dict<any>): bool => {
-    if Pred(t)
-      for CheckConstraint in R.constraints.D
-        CheckConstraint(t)
-      endfor
-      for key in R.keys
-        const index = R.indexes[string(key)]
-        index->RemoveKey(key, t)
-      endfor
-      return false
-    endif
-    return true
-  }
-
-  filter(R.instance, DeletePred)
-enddef
-# }}}
-
 # Convenience functions {{{
 # Compare two relation instances
+export def In(t: dict<any>, R: any): bool
+  return index(Instance(R), t) != -1
+enddef
+
+export def NotIn(t: dict<any>, R: any): bool
+  return !(t->In(R))
+enddef
+
+# NOTE: l2 may be longer than l1 (extra elements are simply ignored)
+export def Zip(l1: list<any>, l2: list<any>): dict<any>
+  const n = len(l1)
+  var zipdict: dict<any> = {}
+  var i = 0
+  while i < n
+    zipdict[String(l1[i])] = l2[i]
+    ++i
+  endwhile
+  return zipdict
+enddef
+
 export def RelEq(R: any, S: any): bool
   const rel1: list<dict<any>> = Instance(R)
   const rel2: list<dict<any>> = Instance(S)
   return sort(copy(rel1)) == sort(copy(rel2))
-enddef
-
-export def Empty(R: any): bool
-  return empty(Instance(R))
 enddef
 
 # Returns a textual representation of a relation
@@ -1266,12 +1342,12 @@ export def Table(R: any, name = null_string, sep = '─'): string
   var rel: list<dict<any>>
   var relname: string
 
-  if IsRelationInstance(R)
+  if IsRel(R)
+    rel = AsRel(R).instance
+    relname = empty(name) ? AsRel(R).name : name
+  else
     rel = R
     relname = name
-  else
-    rel = R.instance
-    relname = empty(name) ? R.name : name
   endif
 
   if empty(rel)

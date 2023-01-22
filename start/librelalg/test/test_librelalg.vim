@@ -8,22 +8,18 @@ vim9script
 import 'librelalg.vim' as ra
 import 'libtinytest.vim' as tt
 
+# Aliases {{{
 const AntiJoin             = ra.AntiJoin
-const Attributes           = ra.Attributes
 const Avg                  = ra.Avg
 const AvgBy                = ra.AvgBy
 const Bind                 = ra.Bind
 const Bool                 = ra.Bool
 const Build                = ra.Build
-const Check                = ra.Check
 const CoddDivide           = ra.CoddDivide
 const Count                = ra.Count
 const CountBy              = ra.CountBy
 const CountDistinct        = ra.CountDistinct
-const Delete               = ra.Delete
-const Descriptors          = ra.Descriptors
 const Divide               = ra.Divide
-const Empty                = ra.Empty
 const Extend               = ra.Extend
 const EquiJoin             = ra.EquiJoin
 const EquiJoinPred         = ra.EquiJoinPred
@@ -33,17 +29,12 @@ const ForeignKey           = ra.ForeignKey
 const Frame                = ra.Frame
 const From                 = ra.From
 const GroupBy              = ra.GroupBy
-const Key                  = ra.Key
 const In                   = ra.In
-const Insert               = ra.Insert
-const InsertMany           = ra.InsertMany
 const Int                  = ra.Int
 const Intersect            = ra.Intersect
 const Join                 = ra.Join
-const KeyAttributes        = ra.KeyAttributes
 const LeftNatJoin          = ra.LeftNatJoin
 const ListAgg              = ra.ListAgg
-const Lookup               = ra.Lookup
 const Max                  = ra.Max
 const MaxBy                = ra.MaxBy
 const Min                  = ra.Min
@@ -54,7 +45,7 @@ const NotIn                = ra.NotIn
 const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
-const Relation             = ra.Relation
+const Rel                  = ra.Rel
 const RelEq                = ra.RelEq
 const Rename               = ra.Rename
 const Select               = ra.Select
@@ -65,9 +56,9 @@ const Str                  = ra.Str
 const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
-const Update               = ra.Update
 const Union                = ra.Union
 const Zip                  = ra.Zip
+# }}}
 
 # assert_fails() logs exceptions in messages. This function is quiet.
 def AssertFails(what: string, expectedError: string): void
@@ -81,73 +72,142 @@ enddef
 
 # These are defined at the script level for using with AssertFails().
 # See also: https://github.com/vim/vim/issues/6868
-var RR: dict<any>
-var SS: dict<any>
+var RR: Rel
+var SS: Rel
 
-def Test_RA_CreateEmptyRelation()
-  # Every relation must have at least one key
-  AssertFails("Relation('R', {A: Int, B: Str}, [])", "No key")
+# Data definition {{{
+def Test_RA_CreateEmptyRel()
+  const M = Rel.new('M', {}, [[]])
 
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  assert_equal('M', M.name)
+  assert_equal({}, M.schema)
+  assert_equal([], M.instance)
+  assert_equal([], M.attributes)
+  assert_equal([], M.keyAttributes)
+  assert_equal([], M.descriptors)
+  assert_equal(1, len(M.keys))
+  assert_equal([], M.keys[0])
 
-  assert_true(R->has_key('name'),        "R does not have key 'name'")
-  assert_true(R->has_key('schema'),      "R does not have key 'schema'")
-  assert_true(R->has_key('instance'),    "R does not have key 'instance'")
-  assert_true(R->has_key('keys'),        "R does not have key 'keys'")
-  assert_true(R->has_key('indexes'),     "R does not have key 'indexes'")
-  assert_true(R->has_key('constraints'), "R does not have key 'constraints'")
-  assert_equal('R', R.name)
-  assert_equal({A: Int, B: Str}, R.schema)
-  assert_equal(v:t_list, type(R.instance))
-  assert_true(Empty(R), "R instance is not empty")
-  assert_equal([['A']], R.keys)
-  assert_equal(1, len(keys(R.indexes)))
-  assert_equal("['A']", keys(R.indexes)[0])
-  assert_true(!empty(R.constraints.I), "R does not have any insertion constraint")
-  assert_true(!empty(R.constraints.U), "R does not have any update constraint")
-  assert_true(empty(R.constraints.D),  "R should not have any delete constraint")
-  assert_equal(['A', 'B'], sort(Attributes(R)))
-  assert_equal(['A'], KeyAttributes(R))
-  assert_equal(['B'], Descriptors(R))
+  const R1 = Rel.new('R', {A: Int, C: Float, B: Str}, [['A']])
+  const R2 = Rel.new('R', {A: Int, C: Float, B: Str}, ['A'])
+  const R3 = Rel.new('R', {A: Int, C: Float, B: Str}, 'A')
+
+  for R in [R1, R2, R3]
+    assert_equal('R', R.name)
+    assert_equal({A: Int, B: Str, C: Float}, R.schema)
+    assert_equal([], R.instance)
+    assert_equal(['A', 'B', 'C'], R.attributes)
+    assert_equal(['A'], R.keyAttributes)
+    assert_equal(['B', 'C'], R.descriptors)
+    assert_equal(1, len(R.keys))
+    assert_equal(['A'], R.keys[0])
+  endfor
+
+  const S = Rel.new('S',
+    {Z: Str, Y: Int, W: Float, X: Str},
+    [['X', 'Y'], ['Z', 'Y']]
+  )
+  assert_equal('S', S.name)
+  assert_equal({X: Str, Y: Int, W: Float, Z: Str}, S.schema)
+  assert_equal([], S.instance)
+  assert_equal(['W', 'X', 'Y', 'Z'], S.attributes)
+  assert_equal(['X', 'Y', 'Z'], S.keyAttributes)
+  assert_equal(['W'], S.descriptors)
+  assert_equal(2, len(S.keys))
+  assert_equal(['X', 'Y'], S.keys[0])
+  assert_equal(['Z', 'Y'], S.keys[1])
+
+  const T = Rel.new('T',
+    {Z: Str, Y: Int, W: Float, X: Str},
+    [['X', 'Y'], 'Z', ['Y']]
+  )
+  assert_equal('T', T.name)
+  assert_equal({X: Str, Y: Int, W: Float, Z: Str}, T.schema)
+  assert_equal([], T.instance)
+  assert_equal(['W', 'X', 'Y', 'Z'], T.attributes)
+  assert_equal(['X', 'Y', 'Z'], T.keyAttributes)
+  assert_equal(['W'], T.descriptors)
+  assert_equal(3, len(T.keys))
+  assert_equal(['X', 'Y'], T.keys[0])
+  assert_equal(['Z'], T.keys[1])
+  assert_equal(['Y'], T.keys[2])
+
+  const U = Rel.new('U',
+    {A: Int, B: Int},
+    ['B', 'A']  # One composite key
+  )
+  assert_equal('U', U.name)
+  assert_equal({A: Int, B: Int}, U.schema)
+  assert_equal([], U.instance)
+  assert_equal(['A', 'B'], U.attributes)
+  assert_equal(['A', 'B'], U.keyAttributes)
+  assert_equal([], U.descriptors)
+  assert_equal(1, len(U.keys))
+  assert_equal(['B', 'A'], U.keys[0])
+
+  const V = Rel.new('V',
+    {A: Int, B: Int},
+    [['B'], 'A']  # Two single-attribute keys
+  )
+  assert_equal('V', V.name)
+  assert_equal({A: Int, B: Int}, V.schema)
+  assert_equal([], V.instance)
+  assert_equal(['A', 'B'], V.attributes)
+  assert_equal(['A', 'B'], V.keyAttributes)
+  assert_equal([], V.descriptors)
+  assert_equal(2, len(V.keys))
+  assert_equal(['B'], V.keys[0])
+  assert_equal(['A'], V.keys[1])
 enddef
 
-def Test_RA_KeyCannotBeRedefined()
-  RR = Relation('RR', {A: Int, B: Str}, [['A']])
-  AssertFails('Key(RR, ["A"])', "Key ['A'] already defined in RR")
-  Key(RR, ["B"])
-  Key(RR, ["A", "B"])  # Superkeys are also allowed
-  assert_equal([["A"], ["B"], ["A", "B"]], RR.keys)
+def Test_RA_DuplicateKey()
+  RR = Rel.new('RR', {A: Int, B: Str}, ['A'])
+  AssertFails('RR.Key(["A"])', "Key ['A'] already defined in RR")
+  AssertFails('RR.Key("A")',   "Key ['A'] already defined in RR")
+  RR.Key('B')
+  RR.Key(['A', 'B'])  # Superkeys are also allowed
+  assert_equal([['A'], ['B'], ['A', 'B']], RR.keys)
 enddef
 
 def Test_RA_WrongKey()
-  AssertFails("Relation('RR', {A: Int}, [['B']])", "B is not an attribute of RR")
+  AssertFails("Rel.new('RR', {A: Int}, [['B']])", "B is not an attribute of RR")
+  AssertFails("Rel.new('RR', {A: Int}, ['B'])",   "B is not an attribute of RR")
 enddef
+# }}}
 
+# Data manipulation {{{
 def Test_RA_Insert()
-  RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
-       ->Insert({A: 0, B: 'b0', C: true, D: 1.2})
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  RR.Insert({A: 0, B: 'b0', C: true, D: 1.2})
 
   assert_equal(1, len(RR.instance))
 
-  const result = RR->Insert({A: 0, B: 'b1', C: false, D: 0.2})
+  const result = RR.Insert({A: 0, B: 'b1', C: false, D: 0.2})
 
   assert_equal(2, len(RR.instance))
   assert_equal(
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
     RR.instance
   )
-  assert_equal(v:t_dict, type(result))
+  assert_equal(v:t_object, type(result))
   assert_true(result is RR, 'The result is not the relation object')
 
-  AssertFails("RR->Insert({A: 0, B: 'b2', C: true, D: 3.5})", 'Duplicate key')
-  AssertFails("RR->Insert({A: 9})", 'Expected a tuple on schema')
-  AssertFails("RR->Insert({A: false, B: 'b3', C: false, D: 7.0})",
+  AssertFails("RR.Insert({A: 0, B: 'b2', C: true, D: 3.5})",
+              'Duplicate key')
+
+  AssertFails("RR.Insert({A: 9})",
+              'Expected a tuple on schema')
+
+  AssertFails("RR.Insert({A: false, B: 'b3', C: false, D: 7.0})",
               "Attribute A is of type integer, but value 'false' of type boolean")
-  AssertFails("RR->Insert({A: 9, B: 9, C: false, D: 'tsk'})",
+
+  AssertFails("RR.Insert({A: 9, B: 9, C: false, D: 'tsk'})",
               "Attribute B is of type string, but value '9' of type integer")
-  AssertFails("RR->Insert({A: 9, B: 'b3', C: 3.2, D: 'tsk'})",
+
+  AssertFails("RR.Insert({A: 9, B: 'b3', C: 3.2, D: 'tsk'})",
               "Attribute C is of type boolean, but value '3.2' of type float")
-  AssertFails("RR->Insert({A: 9, B: 'b3', C: false, D: 'tsk'})",
+
+  AssertFails("RR.Insert({A: 9, B: 'b3', C: false, D: 'tsk'})",
               "Attribute D is of type float, but value 'tsk' of type string")
 
   assert_equal(
@@ -156,54 +216,41 @@ def Test_RA_Insert()
   )
 enddef
 
-def Test_RA_InsertIntoInstance()
-  var r = []
-
-  Insert(r, {A: 0, B: 'b0', C: true, D: 1.2})
-
-  assert_equal(1, len(r))
-
-  const result = r->Insert({A: 0, B: 'b1', C: false, D: 0.2})
-
-  assert_equal(2, len(r))
-  assert_equal([
-      {A: 0, B: 'b0', C: true, D: 1.2},
-      {A: 0, B: 'b1', C: false, D: 0.2}
-    ], r
-  )
-  assert_equal(v:t_list, type(result))
-  assert_true(result is r, 'The result is not the relation instance')
-enddef
-
-def Test_RA_InsertManyIntoInstance()
-  var r = []
-
-  const result = InsertMany(r, [
+def Test_RA_InsertMany()
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  const instance = [
     {A: 0, B: 'b0', C: true, D: 1.2},
-    {A: 0, B: 'b1', C: false, D: 0.2},
-  ])
+    {A: 1, B: 'b1', C: true, D: 3.4},
+  ]
+  RR.InsertMany(instance)
 
-  assert_equal(2, len(r))
-  assert_equal([
-      {A: 0, B: 'b0', C: true, D: 1.2},
-      {A: 0, B: 'b1', C: false, D: 0.2}
-    ], r
-  )
-  assert_equal(v:t_list, type(result))
-  assert_true(result is r, 'The result is not the relation instance')
+  assert_equal(instance, RR.instance)
 
+  # InsertMany() should work in a transactional way: if a tuple cannot be
+  # inserted then the relation should not be modified at all.
+  const statement =<< trim END
+    RR.InsertMany([
+      {A: 2, B: 'b2', C: false, D: 1.0},
+      {A: 1, B: 'b3', C: true,  D: 3.4},
+    ])
+  END
+
+  AssertFails(join(statement),
+    "Duplicate key value: ['A', 'C'] = (1, true) already exists")
+
+  assert_equal(instance, RR.instance)
 enddef
 
 def Test_RA_Update()
-  RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
   const rr = RR.instance
-  RR->InsertMany([
+  RR.InsertMany([
     {A: 0, B: 'x', C: true, D: 'd1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  RR->Update({A: 0, B: 'x', C: true, D: 'new-d1'})
-  RR->Update({A: 1, B: 'x', C: false, D: 'new-d2'})
+  RR.Update({A: 0, B: 'x', C: true, D: 'new-d1'})
+  RR.Update({A: 1, B: 'x', C: false, D: 'new-d2'})
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -211,22 +258,22 @@ def Test_RA_Update()
   ]
 
   assert_equal(expected, rr)
-  AssertFails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
+  AssertFails("RR.Update({A: 0, B: 'x', C: false, D: ''})",
               "Key attribute C in RR cannot be changed")
-  AssertFails("RR->Update({A: 2, B: 'y', C: true, D: 'd3'})",
+  AssertFails("RR.Update({A: 2, B: 'y', C: true, D: 'd3'})",
               "Tuple with ['A'] = [2] not found in RR")
 enddef
 
 def Test_RA_Upsert()
-  RR = Relation('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
   const rr = RR.instance
-  RR->InsertMany([
+  RR.InsertMany([
     {A: 0, B: 'x', C: true, D: 'd1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  RR->Update({A: 2, B: 'y', C: true, D: 'd3'}, true)
-  RR->Update({A: 0, B: 'x', C: true, D: 'new-d1'}, true)
+  RR.Update({A: 2, B: 'y', C: true, D: 'd3'}, true)
+  RR.Update({A: 0, B: 'x', C: true, D: 'new-d1'}, true)
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -236,16 +283,14 @@ def Test_RA_Upsert()
 
   assert_equal(expected, rr)
 
-  AssertFails("RR->Update({A: 0, B: 'x', C: false, D: ''})",
+  AssertFails("RR.Update({A: 0, B: 'x', C: false, D: ''})",
               "Key attribute C in RR cannot be changed")
 enddef
 
 def Test_RA_Delete()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
-  const empty_indexes = deepcopy(R.indexes)
-  const r = R.instance
+  var R = Rel.new('R', {A: Int, B: Str}, ['A'])
 
-  R->InsertMany([
+  R.InsertMany([
     {A: 0, B: 'X'},
     {A: 1, B: 'Y'},
     {A: 2, B: 'Z'},
@@ -264,136 +309,62 @@ def Test_RA_Delete()
     {A: 4, B: 'Z'},
   ]
 
-  R->Delete((t) => t.B == 'X')
+  R.Delete((t) => t.B == 'X')
 
-  assert_equal(expected1, r)
+  assert_equal(expected1, R.instance)
 
-  R->Delete((t) => t.A == 2 || t.A == 3)
+  R.Delete((t) => t.A == 2 || t.A == 3)
 
-  assert_equal(expected2, r)
+  assert_equal(expected2, R.instance)
 
-  R->Delete()
+  R.Delete()
 
-  assert_equal([], r)
-  assert_equal(empty_indexes, R.indexes)
+  assert_equal([], R.instance)
 enddef
 
-def Test_RA_DeleteFromInstance()
-  var r = [
-    {A: 0, B: 'X'},
-    {A: 1, B: 'Y'},
-    {A: 2, B: 'Z'},
-    {A: 3, B: 'Y'},
-    {A: 4, B: 'Z'},
-  ]
+def Test_RA_DeletionViolatingReferentialIntegrity()
+  RR = Rel.new('R', {A: Int}, ['A'])
+  SS = Rel.new('S', {X: Str, Y: Int}, ['X'])
+  ForeignKey(SS, 'references', RR, ['Y'], ['A'])
+  RR.Insert({A: 2})
+  SS.Insert({X: 'a', Y: 2})
 
-  const expected1 = [
-    {A: 1, B: 'Y'},
-    {A: 2, B: 'Z'},
-    {A: 3, B: 'Y'},
-    {A: 4, B: 'Z'},
-  ]
-  const expected2 = [
-    {A: 1, B: 'Y'},
-    {A: 4, B: 'Z'},
-  ]
+  AssertFails("RR.Delete()",
+    "S references R: R['A'] = (2) is referenced by {'X': 'a', 'Y': 2}")
 
-  r->Delete((t) => t.B == 'X')
+  SS.Delete()
+  RR.Delete()
 
-  assert_equal(expected1, r)
-
-  Delete(r, (t) => t.A == 2 || t.A == 3)
-
-  assert_equal(expected2, r)
-
-  r->Delete()
-
-  assert_equal([], r)
+  assert_true(RR.IsEmpty())
 enddef
+# }}}
 
-def Test_RA_DeleteForeignKey()
-  RR = Relation('R', {A: Int}, [['A']])
-  SS = Relation('S', {X: Str, Y: Int}, [['X']])
-  ForeignKey(SS, ['Y'], RR, 'has', ['A'])
-  RR->Insert({A: 2})
-  SS->Insert({X: 'a', Y: 2})
-
-  AssertFails("RR->Delete()",
-    "R has S: R['A'] = (2) is referenced by {'X': 'a', 'Y': 2} in S['Y']")
-
-  SS->Delete()
-  RR->Delete()
-
-  assert_true(RR->Empty())
-enddef
-
-def Test_RA_Index()
-  const key = ['A', 'B']
-  const keyStr = string(key)
-  var R = Relation('R', {A: Int, B: Str}, [key])
-
-  assert_equal(1, len(R.indexes))
-
-  const index = R.indexes[keyStr]
-
-  assert_equal({}, index)
-
-  const t0 = {A: 9, B: 'veni'}
-  const t1 = {A: 3, B: 'vici'}
-  const t2 = {A: 9, B: 'vidi'}
-  R->Insert(t0)
-  R->Insert(t1)
-  R->Insert(t2)
-
-  assert_equal({'3': { 'vici': t1 },
-                '9': { 'veni': t0, 'vidi': t2 }}, index)
-
-  assert_true(index[3]['vici'] is t1)
-  assert_true(index[9]['veni'] is t0)
-  assert_true(index[9]['vidi'] is t2)
-
-  R->Delete((t) => t.A == 9 && t.B == 'veni')
-
-  assert_equal({'3': { 'vici': t1 },
-                '9': { 'vidi': t2 }}, index)
-
-  R->Delete((t) => t.B == 'vici')
-
-  assert_equal({'9': { 'vidi': t2 }}, index)
-
-  R->Delete()
-
-  assert_equal({}, index)
-enddef
-
+# Integrity constraints {{{
 def Test_RA_ForeignKey()
-  RR = Relation('RR', {A: Str}, [['A']])
-  SS = Relation('SS', {B: Int, C: Str}, [['B']])
+  RR = Rel.new('RR', {A: Str}, 'A')
+  SS = Rel.new('SS', {B: Int, C: Str}, 'B')
 
-  AssertFails("ForeignKey(SS, ['B', 'C'], RR, '', ['A'])",
+  AssertFails("ForeignKey(SS, 'ref', RR, ['B', 'C'], ['A'])",
               "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
-  AssertFails("ForeignKey(SS, ['C'], RR, '', ['C'])",
+  AssertFails("ForeignKey(SS, 'ref', RR, ['C'])",
               "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
-  AssertFails("ForeignKey(SS, ['A'], RR, '', ['A'])",
+  AssertFails("ForeignKey(SS, 'ref', RR, ['A'], ['A'])",
               "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
 
-  ForeignKey(SS, ['C'], RR, 'constrains', ['A'])
+  ForeignKey(SS, 'references', RR, 'C', 'A')
 
-  RR->InsertMany([
-    {A: 'ab'},
-    {A: 'tm'}
-  ])
-  SS->Insert({B: 10, C: 'tm'})
-  SS->Insert({B: 20, C: 'tm'})
-  SS->Insert({B: 30, C: 'ab'})
+  RR.InsertMany([{A: 'ab'}, {A: 'tm'}])
+  SS.Insert({B: 10, C: 'tm'})
+  SS.Insert({B: 20, C: 'tm'})
+  SS.Insert({B: 30, C: 'ab'})
 
-  AssertFails("SS->Insert({B: 40, C: 'xy'})",
-              "RR constrains SS: SS['C'] = ('xy') is not present in RR['A']")
+  AssertFails("SS.Insert({B: 40, C: 'xy'})",
+              "SS references RR: SS['C'] = ('xy') is not present in RR['A']")
 
-  SS->Update({B: 20, C: 'ab'})
+  SS.Update({B: 20, C: 'ab'})
 
-  AssertFails("SS->Update({B: 30, C: 'wz'})",
-              "RR constrains SS: SS['C'] = ('wz') is not present in RR['A']")
+  AssertFails("SS.Update({B: 30, C: 'wz'})",
+              "SS references RR: SS['C'] = ('wz') is not present in RR['A']")
 
   const expected = [
     {B: 10, C: 'tm'},
@@ -404,52 +375,96 @@ def Test_RA_ForeignKey()
 enddef
 
 def Test_RA_ForeignKeySameAttrs()
-  RR = Relation('R', {A: Str}, [['A']])
-  SS = Relation('S', {B: Int, A: Str}, [['B']])
+  RR = Rel.new('R', {A: Str}, 'A')
+  SS = Rel.new('S', {B: Int, A: Str}, 'B')
 
-  ForeignKey(SS, ['A'], RR, 'flocks with')
+  ForeignKey(SS, 'flocks with', RR, 'A')
 
-  RR->InsertMany([
-    {A: 'ab'},
-    {A: 'tm'}
-  ])
-  SS->Insert({B: 10, A: 'tm'})
-  SS->Insert({B: 20, A: 'tm'})
-  SS->Insert({B: 30, A: 'ab'})
+  RR.InsertMany([{A: 'ab'}, {A: 'tm'}])
+  SS.Insert({B: 10, A: 'tm'})
+  SS.Insert({B: 20, A: 'tm'})
+  SS.Insert({B: 30, A: 'ab'})
 
-  AssertFails("SS->Insert({B: 40, A: 'xy'})",
-              "R flocks with S: S['A'] = ('xy') is not present in R['A']")
+  AssertFails("SS.Insert({B: 40, A: 'xy'})",
+              "S flocks with R: S['A'] = ('xy') is not present in R['A']")
 enddef
 
 def Test_RA_GenericConstraint()
-  RR = Relation('R', {A: Int, B: Int}, [['A']])
+  RR = Rel.new('R', {A: Int, B: Int}, 'A')
 
-  def Positive(t: dict<any>): bool
-    return t.B > 0
-  enddef
+  RR.Check((t) => {
+    if t.B <= 0
+      throw printf('B must be positive: got %s', t.B)
+    endif
+  })
 
-  Check(RR, Positive, 'B must be positive')
+  var t0 = {A: 1, B: 2}
+  RR.Insert(t0)
 
-  RR->Insert({A: 1, B: 2})
+  assert_equal([t0], RR.instance)
 
-  AssertFails("RR->Insert({A: 2, B: -1})",
-    "{'A': 2, 'B': -1} violates a constraint of R: B must be positive")
+  AssertFails("RR.Insert({A: 2, B: -3})", "B must be positive: got -3")
 
-  RR->Update({A: 1, B: 3})
+  assert_equal([t0], RR.instance)
 
-  AssertFails("RR->Update({A: 1, B: -2})",
-    "{'A': 1, 'B': -2} violates a constraint of R: B must be positive")
+  RR.Update({A: 1, B: 3})
 
-  assert_equal([{A: 1, B: 3}], RR.instance)
+  AssertFails("RR.Update({A: 1, B: -2})", "B must be positive: got -2")
 
-  RR->Delete()
+  assert_equal([t0], RR.instance)
 
-  assert_true(Empty(RR))
+  RR.Delete()
+
+  assert_true(RR.IsEmpty())
 enddef
+# }}}
 
+# Indexes {{{
+def Test_RA_Index()
+  const key = ['A', 'B']
+  const keyStr = string(key)
+  var R = Rel.new('R', {A: Int, B: Str}, key)
+
+  assert_equal([['A', 'B']], R.keys)
+
+  const I = R.Index(key)
+
+  assert_equal(v:t_object, type(I))
+  assert_equal('object<KeyIndex>', typename(I))
+
+  assert_true(I.IsEmpty(), 'Index must be initially empty')
+
+  const t0 = {A: 9, B: 'veni'}
+  const t1 = {A: 3, B: 'vici'}
+  const t2 = {A: 9, B: 'vidi'}
+  R.InsertMany([t0, t1, t2])
+  const index = I.GetRawIndex()
+
+  assert_equal({'3': { 'vici': t1 },
+                '9': { 'veni': t0, 'vidi': t2 }}, index)
+
+  assert_true(index[3]['vici'] is t1)
+  assert_true(index[9]['veni'] is t0)
+  assert_true(index[9]['vidi'] is t2)
+
+  R.Delete((t) => t.A == 9 && t.B == 'veni')
+
+  assert_equal({'3': { 'vici': t1 },
+                '9': { 'vidi': t2 }}, index)
+
+  R.Delete((t) => t.B == 'vici')
+
+  assert_equal({'9': { 'vidi': t2 }}, index)
+
+  R.Delete()
+
+  assert_equal({}, index)
+enddef
+# }}}
+#
 def Test_RA_In()
-  const R = Relation('R', {A: Str, B: Int}, [['A']])
-  R->InsertMany([
+  const R = Rel.new('R', {A: Str, B: Int}, [['A']])
+  R.InsertMany([
     {A: 'a', B: 1},
     {A: 'b', B: 1},
     {A: 'c', B: 2},
@@ -464,14 +479,14 @@ def Test_RA_In()
 enddef
 
 def Test_RA_Scan()
-  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
 
   const instance = [
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const result1 = Query(From(R))
   const result2 = Query(From(R.instance))
@@ -484,14 +499,14 @@ def Test_RA_Scan()
 enddef
 
 def Test_RA_FilteredScan()
-  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
 
   const instance = [
     {A: 1, B:  2.5, C: true,  D: 'tuple1'},
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const expected = [{A: 2, B: 0.0, C: false, D: 'tuple2'}]
   const result = Query(R->Select((t) => !t.C && t.B >= 0))
@@ -501,7 +516,7 @@ def Test_RA_FilteredScan()
 enddef
 
 def Test_RA_Sort()
-  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
   const r = R.instance
 
   const instance = [
@@ -509,7 +524,7 @@ def Test_RA_Sort()
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const Cmp = (t1, t2) => t1.B == t2.B ? 0 : t1.B > t2.B ? 1 : -1
 
@@ -526,7 +541,7 @@ def Test_RA_Sort()
 enddef
 
 def Test_RA_SortByAscDesc()
-  var R = Relation('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
   const r = R.instance
 
   const instance = [
@@ -534,7 +549,7 @@ def Test_RA_SortByAscDesc()
     {A: 2, B:  0.0, C: false, D: 'tuple2'},
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const expected1 = [
     {A: 3, B: -1.0, C: false, D: 'tuple3'},
@@ -583,14 +598,14 @@ def Test_RA_SortByAscDesc()
 enddef
 
 def Test_RA_Rename()
-  var R = Relation('R', {A: Str, B: Float, C: Int}, [['A']])
+  var R = Rel.new('R', {A: Str, B: Float, C: Int}, 'A')
   const r = R.instance
 
   const instance = [
     {A: 'a1', B: 4.0, C: 40},
     {A: 'a2', B: 2.0, C: 80},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const expected = [
     {X: 'a1', B: 4.0, W: 40},
@@ -603,7 +618,7 @@ def Test_RA_Rename()
 enddef
 
 def Test_RA_Select()
-  var R = Relation('R', {A: Str, B: Float, C: Int}, [['A']])
+  var R = Rel.new('R', {A: Str, B: Float, C: Int}, [['A']])
   const r = R.instance
 
   const instance = [
@@ -613,7 +628,7 @@ def Test_RA_Select()
     {A: 'a4', B: 5.0, C: 80},
     {A: 'a5', B: 4.0, C: 20},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const expected1 = [
     {A: 'a1', B: 4.0, C: 40},
@@ -629,7 +644,7 @@ def Test_RA_Select()
 enddef
 
 def Test_RA_Project()
-  var R = Relation('R', {A: Str, B: Bool, C: Int}, [['A']])
+  var R = Rel.new('R', {A: Str, B: Bool, C: Int}, [['A']])
   const r = R.instance
 
   const instance = [
@@ -639,7 +654,7 @@ def Test_RA_Project()
     {A: 'a4', B: true,  C: 80},
     {A: 'a5', B: false, C: 20},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const expected1 = [
     {A: 'a1'},
@@ -682,7 +697,7 @@ def Test_RA_EquiJoinPred()
 enddef
 
 def Test_RA_Join()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -690,16 +705,16 @@ def Test_RA_Join()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
     ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {B: Str, C: Int}, [['C']])
+  var S = Rel.new('S', {B: Str, C: Int}, [['C']])
   const s = S.instance
 
   const instanceS = [
     {B: 'one', C: 1},
     {B: 'three', C: 0},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
 
   const expected1 = [
@@ -739,7 +754,7 @@ def Test_RA_Join()
 enddef
 
 def Test_RA_NatJoin()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -747,27 +762,27 @@ def Test_RA_NatJoin()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
     ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {B: Str, C: Int}, [['C']])
+  var S = Rel.new('S', {B: Str, C: Int}, [['C']])
   const s = S.instance
 
   const instanceS = [
     {B: 'one', C: 1},
     {B: 'three', C: 0},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
-  var T = Relation('T', {D: Int}, [['D']])
+  var T = Rel.new('T', {D: Int}, [['D']])
   const t = T.instance
 
   const instanceT = [
     {D: 8},
     {D: 9},
   ]
-  T->InsertMany(instanceT)
+  T.InsertMany(instanceT)
 
-  var U = Relation('U', {A: Int, B: Str}, [['A', 'B']])
+  var U = Rel.new('U', {A: Int, B: Str}, [['A', 'B']])
   const u = U.instance
 
   const instanceU = [
@@ -775,7 +790,7 @@ def Test_RA_NatJoin()
     {A: 1, B: 'one'},
     {A: 2, B: 'two'},
   ]
-  U->InsertMany(instanceU)
+  U.InsertMany(instanceU)
 
   const expected1 = [
     {A: 1, B: 'one', C: 1},
@@ -801,7 +816,7 @@ def Test_RA_NatJoin()
 enddef
 
 def Test_RA_Product()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -809,16 +824,16 @@ def Test_RA_Product()
     {A: 1, B: 'one'},
     {A: 2, B: 'two'},
     ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {C: Int}, [['C']])
+  var S = Rel.new('S', {C: Int}, [['C']])
   const s = S.instance
 
   const instanceS = [
     {C: 10},
     {C: 90},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
   assert_equal([], Query(From([])->Product([])))
   assert_equal([], Query(From(R)->Product([])))
@@ -841,7 +856,7 @@ def Test_RA_Product()
 enddef
 
 def Test_RA_Intersect()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -849,9 +864,9 @@ def Test_RA_Intersect()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
   ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {A: Int, B: Str}, [['A', 'B']])
+  var S = Rel.new('S', {A: Int, B: Str}, [['A', 'B']])
   const s = S.instance
 
   const instanceS = [
@@ -859,7 +874,7 @@ def Test_RA_Intersect()
     {A: 1, B: 'one'},
     {A: 2, B: 'two'},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
   assert_equal([{A: 1, B: 'one'}], Query(From(R)->Intersect(S)))
   assert_equal([{A: 1, B: 'one'}], Query(From(S)->Intersect(R)))
@@ -868,7 +883,7 @@ def Test_RA_Intersect()
 enddef
 
 def Test_RA_Minus()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -876,9 +891,9 @@ def Test_RA_Minus()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
   ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {A: Int, B: Str}, [['A', 'B']])
+  var S = Rel.new('S', {A: Int, B: Str}, [['A', 'B']])
   const s = S.instance
 
   const instanceS = [
@@ -886,7 +901,7 @@ def Test_RA_Minus()
     {A: 1, B: 'one'},
     {A: 2, B: 'two'},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
   const expected1 = [
     {A: 0, B: 'zero'},
@@ -904,7 +919,7 @@ def Test_RA_Minus()
 enddef
 
 def Test_RA_Union()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -912,9 +927,9 @@ def Test_RA_Union()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
   ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {A: Int, B: Str}, [['A', 'B']])
+  var S = Rel.new('S', {A: Int, B: Str}, [['A', 'B']])
   const s = S.instance
 
   const instanceS = [
@@ -922,7 +937,7 @@ def Test_RA_Union()
     {A: 1, B: 'one'},
     {A: 3, B: 'one'},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
   const expected = [
     {A: 0, B: 'many'},
@@ -940,7 +955,7 @@ def Test_RA_Union()
 enddef
 
 def Test_RA_SemiJoin()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -948,16 +963,16 @@ def Test_RA_SemiJoin()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
   ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {B: Str, C: Int}, [['C']])
+  var S = Rel.new('S', {B: Str, C: Int}, [['C']])
   const s = S.instance
 
   const instanceS = [
     {B: 'one', C: 1},
     {B: 'three', C: 0}
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
   const expected1 = [
     {A: 1, B: 'one'},
@@ -989,7 +1004,7 @@ def Test_RA_SemiJoin()
 enddef
 
 def Test_RA_AntiJoin()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance
 
   const instanceR = [
@@ -997,16 +1012,16 @@ def Test_RA_AntiJoin()
     {A: 1, B: 'one'},
     {A: 2, B: 'one'},
   ]
-  R->InsertMany(instanceR)
+  R.InsertMany(instanceR)
 
-  var S = Relation('S', {B: Str, C: Int}, [['C']])
+  var S = Rel.new('S', {B: Str, C: Int}, [['C']])
   const s = S.instance
 
   const instanceS = [
     {B: 'one',   C: 1},
     {B: 'three', C: 0},
   ]
-  S->InsertMany(instanceS)
+  S.InsertMany(instanceS)
 
   const expected1 = [
     {A: 0, B: 'zero'},
@@ -1032,14 +1047,14 @@ def Test_RA_AntiJoin()
 enddef
 
 def Test_RA_LeftNatJoin()
-  var Buffer = Relation('Buffer', {
+  var Buffer = Rel.new('Buffer', {
       BufId:   Int,
       BufName:  Str,
     },
     [['BufId'], ['BufName']]
   )
 
-  var Tag = Relation('Tag', {
+  var Tag = Rel.new('Tag', {
       BufId:   Int,
       TagName: Str,
       Line:    Int,
@@ -1048,13 +1063,13 @@ def Test_RA_LeftNatJoin()
     [['BufId', 'TagName']]
   )
 
-  Buffer->InsertMany([
+  Buffer.InsertMany([
     {BufId: 1, BufName: 'foo'},
     {BufId: 2, BufName: 'bar'},
     {BufId: 3, BufName: 'xyz'},
   ])
 
-  Tag->InsertMany([
+  Tag.InsertMany([
     {BufId: 1, TagName: 'abc', Line: 3,  Column: 9},
     {BufId: 1, TagName: 'xyz', Line: 4,  Column: 1},
     {BufId: 1, TagName: 'lll', Line: 4,  Column: 8},
@@ -1073,17 +1088,16 @@ def Test_RA_LeftNatJoin()
 enddef
 
 def Test_RA_Lookup()
-  var R = Relation('R', {A: Int, B: Str}, [['A']])
-          ->InsertMany([{A: 1, B: 'x'}, {A: 3, B: 'y'}, {A: 5, B: 'z'}])
+  var R = Rel.new('R', {A: Int, B: Str}, 'A')
+  R.InsertMany([{A: 1, B: 'x'}, {A: 3, B: 'y'}, {A: 5, B: 'z'}])
 
-  assert_equal({A: 1, B: 'x'}, Lookup(R, ['A'], [1]))
-  assert_equal({A: 3, B: 'y'}, Lookup(R, ['A'], [3]))
-  assert_equal({A: 5, B: 'z'}, Lookup(R, ['A'], [5]))
+  assert_equal({A: 1, B: 'x'}, R.Lookup(['A'], [1]))
+  assert_equal({A: 3, B: 'y'}, R.Lookup(['A'], [3]))
+  assert_equal({A: 5, B: 'z'}, R.Lookup(['A'], [5]))
 enddef
 
 def Test_RA_Extend()
-  var R = Relation('R', {A: Int}, [['A']])
-          ->InsertMany([{A: 1}, {A: 3}, {A: 5}])
+  var R = Rel.new('R', {A: Int}, [['A']]).InsertMany([{A: 1}, {A: 3}, {A: 5}])
   const expected = [
     {A: 1, B: 2,  C: 'ok'},
     {A: 3, B: 6,  C: 'ok'},
@@ -1099,7 +1113,7 @@ def Test_RA_Extend()
 enddef
 
 def Test_RA_Max()
-  var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
   assert_equal(null, From(R)->Max('A'))
@@ -1114,7 +1128,7 @@ def Test_RA_Max()
     {A: 3, B: "X", C:  1.5, D:  true},
     {A: 4, B: "Z", C:  2.5, D:  true},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   assert_equal(4,    From(R)->Max('A'))
   assert_equal('Z',  From(R)->Max('B'))
@@ -1124,7 +1138,7 @@ def Test_RA_Max()
 enddef
 
 def Test_RA_Min()
-  var R = Relation('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.instance
 
   assert_equal(null, From(R)->Min('A'))
@@ -1139,7 +1153,7 @@ def Test_RA_Min()
     {A: 3, B: "X", C:  1.5, D:  true},
     {A: 4, B: "Z", C:  2.5, D:  true},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   assert_equal(0,     From(R)->Min('A'))
   assert_equal('X',   From(R)->Min('B'))
@@ -1149,7 +1163,7 @@ def Test_RA_Min()
 enddef
 
 def Test_RA_Sum()
-  var R = Relation('R', {A: Int, B: Float}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
   assert_equal(0, From(R)->Sum('A'))
@@ -1162,7 +1176,7 @@ def Test_RA_Sum()
     {A: 3, B:  1.5},
     {A: 4, B:  2.5},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   assert_equal(10, From(R)->Sum('A'))
   assert_equal(v:t_number, type(From(R)->Sum('A')))
@@ -1172,7 +1186,7 @@ def Test_RA_Sum()
 enddef
 
 def Test_RA_Avg()
-  var R = Relation('R', {A: Int, B: Float}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float}, [['A']])
   const r = R.instance
 
   assert_equal(null, From(R)->Avg('A'))
@@ -1185,7 +1199,7 @@ def Test_RA_Avg()
     {A: 3, B:  1.5},
     {A: 4, B:  2.5},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   assert_equal(2.0, From(R)->Avg('A'))
   assert_equal(v:t_float, type(From(R)->Avg('A')))
@@ -1367,16 +1381,16 @@ def Test_RA_AvgBy()
 enddef
 
 def Test_RA_Frame()
-  var R = Relation('R', {A: Int, B: Str, C: Str}, [['A']])
-    ->InsertMany([
-      {A: 10, B: 'a', C: 'x'},
-      {A: 20, B: 'b', C: 'y'},
-      {A: 30, B: 'a', C: 'x'},
-      {A: 40, B: 'a', C: 'x'},
-      {A: 50, B: 'b', C: 'x'},
-      {A: 60, B: 'b', C: 'y'},
-      {A: 70, B: 'a', C: 'y'},
-    ])
+  var R = Rel.new('R', {A: Int, B: Str, C: Str}, [['A']])
+  R.InsertMany([
+    {A: 10, B: 'a', C: 'x'},
+    {A: 20, B: 'b', C: 'y'},
+    {A: 30, B: 'a', C: 'x'},
+    {A: 40, B: 'a', C: 'x'},
+    {A: 50, B: 'b', C: 'x'},
+    {A: 60, B: 'b', C: 'y'},
+    {A: 70, B: 'a', C: 'y'},
+  ])
 
   var result = Query(
     From(R)->Extend((t) => {
@@ -1408,7 +1422,7 @@ def Test_RA_Frame()
 enddef
 
 def Test_RA_GroupBy()
-  var R = Relation('R', {id: Int, name: Str, balance: Float}, [['id']])
+  var R = Rel.new('R', {id: Int, name: Str, balance: Float}, [['id']])
   const r = R.instance
 
   const instance = [
@@ -1418,7 +1432,7 @@ def Test_RA_GroupBy()
     {id: 3, name: "A", balance:  1.5},
     {id: 4, name: "B", balance:  2.5},
   ]
-  R->InsertMany(instance)
+  R.InsertMany(instance)
 
   const result = From(r)
                ->GroupBy(['name'], Bind(Sum, 'balance'), 'total')
@@ -1435,7 +1449,7 @@ def Test_RA_GroupBy()
 enddef
 
 def Test_RA_CoddDivide()
-  var Subscription = Relation('Subscription',
+  var Subscription = Rel.new('Subscription',
      {student: Str, date: Str, course: Str},
      [['student', 'course']]
   )
@@ -1450,9 +1464,9 @@ def Test_RA_CoddDivide()
     {student: '283', date: '2020-12-05', course: 'Computer Science'},
     {student: '303', date: '2020-12-05', course: 'Computer Science'},
   ]
-  Subscription->InsertMany(subscription_instance)
+  Subscription.InsertMany(subscription_instance)
 
-  var Session = Relation('Session', {date: Str, course: Str}, [['date', 'course']])
+  var Session = Rel.new('Session', {date: Str, course: Str}, [['date', 'course']])
   const result1 = Query(From(Subscription)->CoddDivide(Session))
   const expected1 = [
     {student: '123'},
@@ -1481,7 +1495,7 @@ def Test_RA_CoddDivide()
     {date: '2020-12-05', course: 'Computer Science'},
     {date: '2021-12-05', course:          'Algebra'},
   ]
-  Session->InsertMany(session_instance)
+  Session.InsertMany(session_instance)
 
   # Which students are subscribed to all the courses?
   const result4 = From(Subscription)->CoddDivide(Session)->SortBy(['student'])
@@ -1544,26 +1558,26 @@ def Test_RA_Divide()
   assert_true(RelEq(expected2, result2),
     printf("Expected %s, but got %s", expected2, result2))
 
-  const PJEmpty = Relation('PJ', {'P#': Int, 'J#': Int}, [['J#', 'P#']])
+  const PJEmpty = Rel.new('PJ', {'P#': Int, 'J#': Int}, [['J#', 'P#']])
 
   assert_equal([], Query(From(SP)->Divide(PJEmpty)))
   assert_equal([], Query(From(SP)->Divide([])))
 enddef
 
 def Test_RA_EmptyKey()
-  RR = Relation('RR', {'A': Int, 'B': Str}, [[]])
+  RR = Rel.new('RR', {'A': Int, 'B': Str}, [[]])
 
-  AssertFails("Key(RR, [])", "Key [] already defined in RR")
-  AssertFails("RR->Insert({})",
+  AssertFails("RR.Key([])", "Key [] already defined in RR")
+  AssertFails("RR.Insert({})",
     "Expected a tuple on schema {A: integer, B: string}: got {} instead")
 
-  RR->Insert({A: 1, B: 'x'})
+  RR.Insert({A: 1, B: 'x'})
 
   assert_equal([{A: 1, B: 'x'}], RR.instance)
-  AssertFails("RR->Insert({A: 2, B: 'y'})", "Duplicate key")
+  AssertFails("RR.Insert({A: 2, B: 'y'})", "Duplicate key")
 
-  RR->Delete()
-  RR->Insert({A: 2, B: 'y'})
+  RR.Delete()
+  RR.Insert({A: 2, B: 'y'})
 
   assert_equal([{A: 2, B: 'y'}], RR.instance)
 enddef
@@ -1581,16 +1595,16 @@ def Test_RA_DivideEdgeCases()
 enddef
 
 def Test_RA_DeeDum()
-  RR = Relation('Dee', {}, [[]])
+  RR = Rel.new('Dee', {}, [[]])
   assert_equal(0, len(RR.instance))
-  AssertFails("RR->Insert({A: 0})", "Expected a tuple on schema {}")
+  AssertFails("RR.Insert({A: 0})", "Expected a tuple on schema {}")
 
-  RR->Insert({})
+  RR.Insert({})
 
   assert_equal(1, len(RR.instance))
-  AssertFails("RR->Insert({})", "Duplicate key")
+  AssertFails("RR.Insert({})", "Duplicate key")
 
-  var Dum = Relation('Dum', {}, [[]])
+  var Dum = Rel.new('Dum', {}, [[]])
   var Dee = RR
   const dum = Dum.instance
   const dee = Dee.instance
@@ -1661,7 +1675,7 @@ def Test_RA_Zip()
 enddef
 
 def Test_RA_Filter()
-  var R = Relation('R', {A: Int, B: Int}, [['A']])->InsertMany([
+  var R = Rel.new('R', {A: Int, B: Int}, [['A']]).InsertMany([
     {A: 0, B: 10},
     {A: 2, B: 30},
     {A: 1, B: 20},
@@ -1676,7 +1690,7 @@ def Test_RA_Filter()
 enddef
 
 def Test_RA_Table()
-  var R = Relation("R", {AAAAAAAAA: Int, B: Str}, [["AAAAAAAAA"]])
+  var R = Rel.new("R", {AAAAAAAAA: Int, B: Str}, [["AAAAAAAAA"]])
 
   var expectedTable =<< END
  Empty Instance
@@ -1685,7 +1699,7 @@ END
 
   assert_equal(expectedTable, split(Table(R, 'Empty Instance', '='), "\n"))
 
-  R->InsertMany([
+  R.InsertMany([
     {AAAAAAAAA: 1, B: 'XYWZ'},
     {AAAAAAAAA: 2, B: 'ABC'},
   ])
@@ -1715,9 +1729,9 @@ enddef
 
 
 def Test_RA_PrettyPrintUnicode()
-  var R = Relation("R", {'🙂☀︎': Int, '✔︎✖︎': Str}, [['✔︎✖︎']])
+  var R = Rel.new("R", {'🙂☀︎': Int, '✔︎✖︎': Str}, [['✔︎✖︎']])
 
-  R->InsertMany([
+  R.InsertMany([
     {'🙂☀︎': 9, '✔︎✖︎': '⌘'},
     {'🙂☀︎': 99, '✔︎✖︎': '►◀︎└┴┴┴┘'},
   ])

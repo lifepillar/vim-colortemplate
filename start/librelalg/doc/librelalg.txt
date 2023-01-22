@@ -524,7 +524,7 @@ new{name}, {schema}, {keys} [, {typecheck}])
 		because the gain may be negligible, and type checking is
 		useful to detect errors.
 
-		A |librelalg.Rel| object has the following attributes:
+		A |librelalg.Rel| object has the following read-only attributes:
 
 		- "name": the name of the relation.
 		- "schema": the relation schema.

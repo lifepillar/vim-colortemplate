@@ -2022,6 +2022,15 @@ Bind({func}, {attr})				*librelalg.Bind()*
 		      1     2
 		      1     3
 <
+		Without using Bind(), the query above would be written as
+		follows:
+>
+		const result = Query(
+		           From(Tag)
+		           ->GroupBy(['BufId'],
+		                     (rel) => CountDistinct(rel, 'Line'), 'nLines')
+		)
+<
 EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
 		Return a predicate comparing the attributes in {list1} and the
 		attributes in {list2} for equality elementwise. The returned

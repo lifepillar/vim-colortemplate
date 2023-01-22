@@ -242,7 +242,7 @@ enddef
 # }}}
 
 # Indexes {{{
-const INDEX_KEY_NOT_FOUND: dict<bool> = {}
+export const KEY_NOT_FOUND: dict<bool> = {}
 
 class KeyIndex
   this.key: list<string> = []
@@ -284,7 +284,7 @@ class KeyIndex
     endif
 
     if empty(this.key)
-      return get(this._index, '', INDEX_KEY_NOT_FOUND)
+      return get(this._index, '', KEY_NOT_FOUND)
     endif
 
     return this.Search_(this._index, theKey, 0)
@@ -331,7 +331,7 @@ class KeyIndex
       endif
     endif
 
-    return INDEX_KEY_NOT_FOUND
+    return KEY_NOT_FOUND
   enddef
 endclass
 # }}}
@@ -393,7 +393,7 @@ export class Rel
     this._indexes[string(key_)] = index
 
     const KeyConstraint = (t: dict<any>): void => {
-      if index.Search(Values(t, key_)) isnot INDEX_KEY_NOT_FOUND
+      if index.Search(Values(t, key_)) isnot KEY_NOT_FOUND
         throw ErrDuplicateKey(key_, t)
       endif
     }
@@ -458,7 +458,7 @@ export class Rel
     const keyValue = Values(t, key)
     const oldt = this.Lookup(key, keyValue)
 
-    if oldt is INDEX_KEY_NOT_FOUND
+    if oldt is KEY_NOT_FOUND
       if upsert
         this.Insert(t)
       else
@@ -600,7 +600,7 @@ export def ForeignKey(
   Parent->HasKey(key_,   ErrForeignKeyTarget(Child.name, fkey_, Parent.name, key_))
 
   const FkConstraint = (t: dict<any>): void => {
-    if Parent.Lookup(key_, Values(t, fkey_)) is INDEX_KEY_NOT_FOUND
+    if Parent.Lookup(key_, Values(t, fkey_)) is KEY_NOT_FOUND
       throw ErrReferentialIntegrity(Child.name, verbphrase, Parent.name, fkey_, key_, t)
     endif
   }

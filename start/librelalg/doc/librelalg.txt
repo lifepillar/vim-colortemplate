@@ -1,16 +1,15 @@
-*librelalg.txt*	For Vim version 9.0	Last change: 2022 Dec 30
+*librelalg.txt*	For Vim version 9.0	Last change: 2023 Jan 22
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
-Note: Vim 9.0.1108 or later is required.
+Note: Vim 9.0.1217 or later is required.
 
 0. Quick start				|librelalg-quickstart|
 1. Tutorial				|librelalg-tutorial|
 2. Data definition language		|librelalg-ddl|
-3. Data manipulation language		|librelalg-dml|
-4. Relational Algebra			|librelalg-ra|
-5. Aggregate functions			|librelalg-aggr|
-6. Other functions			|librelalg-other|
+3. Relational Algebra			|librelalg-ra|
+4. Aggregate functions			|librelalg-aggr|
+5. Other functions			|librelalg-other|
 
 ==============================================================================
 0. Quick start					*librelalg-quickstart*
@@ -22,8 +21,8 @@ dictionaries, such as this:
 	         {A: 2, B: 'aaa'},
 	         {A: 3, B: 'bbb'}]
 <
-Each dictionary is called a "tuple". Each key is called an "attribute".
-A relation must not contain any duplicate tuples.
+Each dictionary is called a "tuple". Each dictionary key is called an
+"attribute". A relation must not contain any duplicate tuples.
 
 Relational Algebra operators transform relations into other relations. For
 example:
@@ -63,21 +62,26 @@ with built-in integrity. For that, start by defining a Relational schema:
 	const Str   = ra.Str
 	const Float = ra.Float
 
-	#                    Name  Schema               Keys
-	var R = ra.Relation('R',   {A: Int, B: Float},  [['A']])
-	var S = ra.Relation('S',   {X: Str, Y: Int},    [['X']])
+	#                   Name  Schema               Keys
+	var R = ra.Rel.new('R',   {A: Int, B: Float},  'A')
+	var S = ra.Rel.new('S',   {X: Str, Y: Int},    'X')
 
-	ra.ForeignKey(S, ['Y'], R, ['A'])  # FK: S[Y] -> R[A]
-	ra.Check(R, (t) => t.B > 0.0, 'B must be greater than zero')
+	R.Check((t) => {
+	  if t.B <= 0.0
+	   throw printf('B must be greater than zero: got %s', t.B)
+	  endif
+	})
+
+	ra.ForeignKey(S, 'references', R, 'Y', 'A')  # FK: S[Y] -> R[A]
 <
 Populate the database:
 >
-	R->ra.InsertMany([
+	R.InsertMany([
 	  {A: 10, B: 3.2},
 	  {A: 20, B: 0.6},
 	])
 
-	S->ra.InsertMany([
+	S.InsertMany([
 	  {X: 'xyz', Y: 10},
 	  {X: 'abc', Y: 20},
 	  {X: 'klm', Y: 10},
@@ -106,9 +110,9 @@ Output:
 <
 Update the database:
 >
-	R->ra.Insert({A: 30, B: 4.3})
-	S->ra.Update({X: 'klm', Y: 30})
-	S->ra.Delete((t) => t.Y == 10)
+	R.Insert({A: 30, B: 4.3})
+	S.Update({X: 'klm', Y: 30})
+	S.Delete((t) => t.Y == 10)
 	rel = ra.Query(ra.EquiJoin(R, S, ['A'], ['Y']))
 	echo ra.Table(rel)
 <
@@ -126,8 +130,8 @@ Output:
 Suppose that you want to write a script that keeps track of some "tags"
 associated to each buffer. Since data is king, a good place to start is by
 defining a (Relational) data model for your script. Suppose that, after
-carefully evaluating the requirements for your script, your model looks like
-this (using standard IDEF1X notation):
+carefully evaluating your requirements, your model looks like this (using
+standard IDEF1X notation):
 >
 	 Buffer
 	┌───────────────┐
@@ -177,25 +181,13 @@ is an alternative identifier for the entity: in this example, it is assumed
 that no two buffers share the same name, so `BufName` can be used as an
 identifier as well as `BufId`. A foreign key is the primary key of a parent
 entity, which is "migrated" into the child entity by virtue of its
-relationship with the parent. When a foreign key is entirely part of the
-primary key of the child (as in Tag), the child entity is "dependent" on its
-parent: in this example, that means that it is not possible to designate a tag
-without referencing the buffer to which the tag belongs (dependent entities
-are drawn as rectangles with rounded corners, although the rounded corners may
-not be particularly prominent in the extended ASCII rendition above). In this
-example, Buffer is an "independent" entity: the existence of a buffer does not
-depend on anything else in this model. The distinction between independent and
-dependent entities has a number of implications: among the rest, it determines
-the order in which the database is populated (you cannot insert tags before
-inserting the corresponding buffers).
+relationship with the parent.
 
 To summarize, the diagram above captures the following facts:
 
-- Buffer is independent;
 - a buffer is identified by BufId;
 - a buffer is alternatively identified by BufName;
 - a buffer is tagged by zero or more tags;
-- Tag is dependent on Buffer;
 - a tag is identified by {BufId, TagName};
 - a tag is described by {Line, Column};
 - a tag appears in one (and only one) buffer.
@@ -224,11 +216,10 @@ straightforward task:
 
 	import 'librelalg.vim' as ra
 
-	const Bool     = ra.Bool
-	const Int      = ra.Int
-	const Str      = ra.Str
-	const Relation = ra.Relation
-	const Insert   = ra.Insert
+	const Bool   = ra.Bool
+	const Int    = ra.Int
+	const Str    = ra.Str
+	const Rel    = ra.Rel
 	# etc.
 <
    Note: in the following, for clarity and conciseness, we will write
@@ -237,14 +228,14 @@ straightforward task:
 
 2. Define one base relation for each entity:
 >
-	var Buffer = Relation('Buffer', {
+	var Buffer = Rel.new('Buffer', {
 	    BufId:   Int,
 	    BufName: Str,
 	  },
 	  [['BufId'], ['BufName']]
 	)
 
-	var Tag = Relation('Tag', {
+	var Tag = Rel.new('Tag', {
 	    BufId:   Int,
 	    TagName: Str,
 	    Line:    Int,
@@ -253,11 +244,11 @@ straightforward task:
 	  [['BufId', 'TagName']]
 	)
 <
-   The three mandatory arguments of |librelalg.Relation()| are:
+   The three mandatory arguments of |librelalg.Rel.new()| are:
 
    a. a descriptive relation name;
    b. the relation schema: this is a |dict| mapping attribute names to the
-   corresponding data types;
+      corresponding data types;
    c. the |list| of keys. Each relation must have at least one key. Each key is
       a |list| of attributes.
 
@@ -267,36 +258,40 @@ straightforward task:
 
 3. Add the relevant constraints:
 >
-	Check(Tag, (t) => t.Line > 0 && t.Column > 0,
-	      'Line and column numbers must be positive')
+	Tag.Check((t) => {
+	   if t.Line <= 0 || t.Column <= 0
+	      throw 'Line and column numbers must be positive'
+	   endif
+	})
 <
-   A |librelalg.Check()| clause defines a generic constraint, which is simply
-   a function or a lambda that, given a tuple t, returns |true| if t satisfies
-   the given constraint, and returns |false| otherwise.
+   A check clause defines a generic constraint, which is simply a function or
+   a lambda that, given a tuple t, checks for some condition depending on t,
+   and throws an error if the condition is not satisfied.
 >
-	ForeignKey(Tag, ['BufId'], Buffer, ['BufId'], 'is tagged by')
+	ForeignKey(Tag, 'must appear in', Buffer, 'BufId')
 <
    |librelalg.ForeignKey()| defines a foreign key constraint, in this case
-   from `BufId` in `Tag` to `BufId` in `Buffer`. The verb associated to the
-   constraint (as read from the parent to the child entity in the data
-   model—see |librelalg-tutorial|—can be optionally specified: the verb phrase
-   is used in error messages when the referential integrity is violated.
-
-   Note: constraints are checked in the order in which they are declared.
+   from `BufId` in `Tag` to `BufId` in `Buffer`. The second argument is the
+   verb phrase associated to the constraint as read from the child to the
+   parent entity in the data model—see |librelalg-tutorial|: the verb phrase
+   is used in error messages when the referential integrity is violated. Using
+   a mode of obligation ("must") typically makes the constraint violation
+   easier to understand.
 
 Data Manipulation ~
 
-When the database is defined, you may start populating each base relation with
+Once the database has been defined, each base relation may be populated with
 tuples. Each tuple is just a dictionary conforming to the corresponding
 relation schema. Let us insert some data:
 >
-	Buffer->InsertMany([
+	Buffer.InsertMany([
 	  {BufId: 1, BufName: 'foo'},
 	  {BufId: 2, BufName: 'bar'},
 	  {BufId: 3, BufName: 'xyz'},
 	])
 
-	Tag->InsertMany([
+	Tag.InsertMany([
+	  {BufId: 1, TagName: 'zzz', Line: 1,  Column: 5},
 	  {BufId: 1, TagName: 'zzz', Line: 2,  Column: 1},
 	  {BufId: 1, TagName: 'abc', Line: 3,  Column: 9},
 	  {BufId: 1, TagName: 'xyz', Line: 4,  Column: 1},
@@ -331,24 +326,24 @@ The output looks as follows (note that the columns are in an arbitrary order):
 	     abc     15   14     2
 	     abc      3    6     3
 <
-Of course, any attempt to violate a constraint is rejected with an error.
-Trying to insert another buffer called `foobar` will fail with a duplicate key
-error, because `BufName` is a key:
+Of course, any attempt to violate a constraint is rejected with an error. For
+example, trying to insert another buffer called `foobar` will fail with
+a duplicate key error, because `BufName` is a key:
 >
-	Buffer->Insert({BufId: 2, BufName: 'foobar'})
+	Buffer.Insert({BufId: 2, BufName: 'foobar'})
 
 	# Duplicate key value: ['BufId'] = (2) already exists
 <
 Referential integrity is also guaranteed. For instance:
 >
-	Tag->Insert({BufId: 5, TagName: 'x', Line: 3, Column: 9})
+	Tag.Insert({BufId: 5, TagName: 'x', Line: 3, Column: 9})
 
-	# Buffer is tagged by Tag: Tag['BufId'] = (5) is not present
-	# in Buffer['BufId']
+	# Tag must appear in Buffer:
+	# Tag['BufId'] = (5) is not present in Buffer['BufId']
 <
 And, of course, you are not allowed to insert an invalid line number either:
 >
-	Tag->Insert({BufId: 1, TagName: 'x', Line: 0, Column: 40})
+	Tag.Insert({BufId: 1, TagName: 'x', Line: 0, Column: 40})
 <
 This insertion is rejected with:
 >
@@ -356,8 +351,8 @@ This insertion is rejected with:
 <
 Updates and deletions are possible, too:
 >
-	Tag->Update({BufId: 1, TagName: 'abc', Line: 7, Column: 12})
-	Tag->Delete((t) => t.Line < 2)
+	Tag.Update({BufId: 1, TagName: 'abc', Line: 7, Column: 12})
+	Tag.Delete((t) => t.Line < 2)
 	echo Table(Tag)
 <
 	Output:
@@ -376,6 +371,10 @@ Updates and deletions are possible, too:
 For updates, you just pass the updated tuple. For deletions, you provide
 a predicate (typically, in the form of a lambda) that the tuples to be deleted
 must satisfy.
+
+Note: nulls are not supported. A properly designed database never needs nulls,
+so this is not a loss of generality, and it is a great gain in simplicity and
+semantic clarity.
 
 Queries ~
 
@@ -408,7 +407,7 @@ to filter it. Output:
 <
 The result of a query is just a set of tuples, called a "derived" relation.
 Contrary to base relations, derived relations do not have any associated keys,
-constraints or indexes.
+constraints or indexes. They are just lists of homogeneous dictionaries.
 
 If you want to get just the tag names and lines, you may add a projection:
 >
@@ -455,53 +454,9 @@ This query uses |librelalg.NatJoin()| to perform the join,  and
 ==============================================================================
 2. Data definition language			*librelalg-ddl*
 
-
-Check({relobj}, {func}, {string}, [, {opts}])	*librelalg.Check()*
-		Define a generic constraint. The constraint is associated to
-		base relation {relobj} and is defined by {func}, which is
-		a |Funcref| taking as an input a tuple and returning |true| if
-		the tuple satisfies the constraint, and |false| otherwise.
-
-		{string} is a message that is used when the constraint is
-		violated.
-
-		A check constraint can be triggered before each insertion,
-		update or deletion in {relobj}. The operations that should
-		trigger the constraint check can be specified by {opts}, which
-		is a |list| of one or more of `'I'`, `'U'`, and `'D'`, for
-		insertion, update, and deletion, respectively. By default
-		(when {opts} is not given), a constraint is checked before
-		each insertion and update, but not upon deletion.
-
-						*librelalg.ForeignKey()*
-ForeignKey({relobj1}, {list1}, {relobj2}, {list2} [, {verb}])
-		Define a referential integrity constraint from attributes
-		{list1} in base relation {relobj1} to attributes {list2} in
-		base relation {relobj2}.
-
-		An optional string {verb} can be used to specify a verb
-		phrase. This should be read from parent to child, that is,
-		from {relobj2} to {relobj1}. The verb phrase is used in error
-		messages when referential integrity is violated. See
-		|librelalg-tutorial| for an example.
-
-Key({relobj}, {key})				*librelalg.Key()*
-		Define the |list| of attributes {key} to be a key of base
-		relation {relobj}.
-
-		In general, using this function is unnecessary, because
-		multiple keys can be specified when a base relation is created
-		(see |librelalg.Relation()|). For example:
->
-		var R = Relation('R', {A: Int, B: Str}, [['A'], ['B']])
-<
-		is equivalent to:
->
-		var R = Relation('R', {A: Int, B: Str}, [['A']])
-		Key(R, ['B'])
-<
-						*librelalg.Relation()*
-Relation({name}, {schema}, {keys} [, {typecheck}])
+Classes ~
+						*librelalg.Rel*
+new{name}, {schema}, {keys} [, {typecheck}])
 		Define a base relation (aka "relation object"). A base
 		relation has a descriptive {name} (a |string| used in error
 		messages) and is defined over a {schema}, which is a |dict|
@@ -521,12 +476,45 @@ Relation({name}, {schema}, {keys} [, {typecheck}])
 		C, a string attribute B, a composite primary key A,B and an
 		alternate key C can be defined as follows:
 >
-		var R = Relation('R', {
+		var R = Rel.new('R', {
 		    A: Int,
 		    B: Str,
 		    C: Int,
 		  }, [['A', 'B'], ['C']])
 <
+		When a relation has only one key, the outermost list can
+		be omitted:
+>
+		var S = Rel.new('S', {A: Int, B: Str}, ['A'])
+<
+		When a key has only one attribute, it may be denoted by
+		a |string|. So, the above definition is equivalent to the
+		following:
+>
+		var S = Rel.new('S', {A: Int, B: Str}, 'A')
+<
+		When there is no ambiguity (see the note below), this rule may
+		be extended to multiple keys. For instance, the following
+		relation has one composite key `['A', 'B']`, and two
+		single-attribute keys `['B']`, and `['C']`:
+>
+		var T = Rel.new('T', {A: Int, B: Int, C: Int},
+		                [['A', 'B'], 'B', 'C'])
+<
+		Note: the following relation has one composite key, not two
+		one-single attribute keys:
+>
+		var U = Rel.new('U', {A: Int, B: Int}, ['A', 'B'])
+<
+		To define two single-attribute keys, you must use one of these
+		forms:
+>
+		var V = Rel.new('V', {A: Int, B: Int}, [['A'], ['B'])
+		var V = Rel.new('V', {A: Int, B: Int}, [['A'], 'B'])
+		var V = Rel.new('V', {A: Int, B: Int}, ['A', ['B']])
+<
+		The last two forms are valid, but not recommended.
+
 		Only tuples conforming to the specified schema may be inserted
 		into a base relation. By default, an error is raised if
 		a tuple is not compatible with the relation schema. This type
@@ -536,63 +524,127 @@ Relation({name}, {schema}, {keys} [, {typecheck}])
 		because the gain may be negligible, and type checking is
 		useful to detect errors.
 
-		The value returned by |librelalg.Relation()| is a complex
-		object consisting of the relation instance itself together
-		with its schema, keys, constraints, and indexes. If you want
-		to retrieve just the relation instance, you may access the
-		`instance` attribute of the relation object (e.g.,
-		`Tag.instance`).
+		A |librelalg.Rel| object has the following attributes:
 
-==============================================================================
-3. Data manipulation language			*librelalg-dml*
+		- "name": the name of the relation.
+		- "schema": the relation schema.
+		- "instance": the relation instance.
+		- "keys": the relation keys.
+		- "attributes": the sorted list of attributes.
+		- "keyAttributes: the sorted list of key attributes.
+		- "descriptors": the sorted list of descriptors (that is,
+		  attributes that are not part of any key).
 
-Note: you should never use Vim's functions (|add()|, |filter()|, etc.) to
-insert, update, or delete from base relations, because the integrity of the
-data may be compromised. Only the functions described in this section should
-be used. Derived relations, however, can be manipulated with any function.
+Check({func}[, {opts}])
+		Add a generic constraint to this base relation. The constraint
+		is defined by {func}, which is a |Funcref| taking as an input
+		a tuple and raising an error when the tuple does not satisfy
+		the constraint.
 
-Note: nulls are not supported. A properly designed database never needs nulls,
-so this is not a loss of generality, and it is a great gain in simplicity and
-semantic clarity.
+		A check constraint can be triggered before each insertion,
+		update or deletion in the base relation. The operations that
+		should trigger the constraint check can be specified by
+		{opts}, which is a |list| of one or more of `'I'`, `'U'`, and
+		`'D'`, for insertion, update, and deletion, respectively. By
+		default (when {opts} is not given), a constraint is checked
+		before each insertion and update, but not upon deletion.
 
-Delete({rel} [, {func}])			*librelalg.Delete()*
-		Delete all the tuples of a base or derived relation {rel}
-		satisfying predicate {func}, which is a function that takes as
-		an input a tuple t and returns |true| if t must be deleted,
-		|false| otherwise. When {func} is not provided, all the tuples
-		are deleted unconditionally.
+Delete([, {func}])
+		Delete all the tuples of this base relation satisfying
+		predicate {func}, which is a function that takes as an input
+		a tuple t and returns |true| if t must be deleted, |false|
+		otherwise. When {func} is not provided, all the tuples are
+		deleted unconditionally, so the relation object becomes empty.
 
-Insert({rel}, {tuple})				*librelalg.Insert()*
-		Insert a {tuple} into relation {rel}. Return the updated
-		relation.
+Key({key})
+		Add a {key} to this base relation.
 
-InsertMany({rel}, {list})			*librelalg.InsertMany()*
-		Insert a {list} of tuples into relation {rel}.
+		In general, using this function is unnecessary, because
+		multiple keys can be specified when a base relation is created
+		(see |librelalg.Rel|). For example:
+>
+		var R = Rel.new('R', {A: Int, B: Str}, [['A'], ['B']])
+<
+		is equivalent to:
+>
+		var R = Rel.new('R', {A: Int, B: Str}, 'A')
+		R.Key('B')
+<
+Insert({tuple})
+		Insert a {tuple} into this base relation. Return the updated
+		relation object.
 
-Update({relobj}, {tuple} [, {upsert}])		*librelalg.Update()*
-		Replace a tuple with a new {tuple} in base relation {relobj}.
-		The tuple that is replaced is the one with the same values of
-		the key(s) as {tuple}. An error is raised if such a tuple does
-		not exist in the base relation, unless {upsert} is |true|, in
+InsertMany({list})
+		Insert a {list} of tuples into this base relation. Return the
+		updated relation object.
+
+IsEmpty()
+		Return |true| if this relation is empty, |false| otherwise.
+
+Lookup({key}, {list})
+		Search for a tuple in this base relation whose {key}
+		attributes match the values specified by the given {list}. A special
+		`KEY_NOT_FOUND` value is returned if no tuple with the given
+		value of the key can be found.
+
+		For example:
+>
+		import 'librelalg.vim' as ra
+
+		# [...]
+
+		var R = Rel.new('R', {A: Int, B: Str}, 'A')
+		R.InsertMany([
+		    {A: 1, B: 'x'},
+		    {A: 3, B: 'y'},
+		    {A: 5, B: 'z'}
+		])
+		echo Lookup(R, ['A'], [3])  # {A: 3, B: 'y'}
+		echo Lookup(R, ['A'], [9]) is ra.KEY_NOT_FOUND  # true
+<
+		When looking up for a tuple by key, using this function is
+		generally faster than using |librelalg.Select()|, because
+		lookup access uses an index associated to the key, whereas
+		|librelalg.Select()| does a linear scan of the relation.
+
+		Note that the returned value is a tuple, not a relation!
+
+Update({tuple} [, {upsert}])
+		Replace a tuple in this base relation with a new {tuple}. The
+		tuple that is replaced is the one with the same values of the
+		key(s) as {tuple}. An error is raised if such a tuple does not
+		exist in the base relation, unless {upsert} is |true|, in
 		which case {tuple} is inserted into the relation and no error
 		is raised. For instance:
 >
-		var R = Relation('R', {A: Int, B: Str}, [['A']])
+		var R = Rel.new('R', {A: Int, B: Str}, 'A')
 
-		R->Insert({A: 1, B: 'v'})
-		R->Update({A: 1, B: 'w'})  # OK
-		R->Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 2
-		R->Update({A: 2, B: 'z'}, true)  # OK (Upsert)
+		R.Insert({A: 1, B: 'v'})
+		R.Update({A: 1, B: 'w'})  # OK
+		R.Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 2
+		R.Update({A: 2, B: 'z'}, true)  # OK (Upsert)
 <
 		Note that the above semantics implies that only attributes
 		that are not part of any key (the "descriptors" of the base
 		relation) can be updated. To update a key attribute, remove
 		the corresponding tuple and insert a new one.
 
-		Note also that Update() cannot be used with derived relations.
+Functions ~
+						*librelalg.ForeignKey()*
+ForeignKey({relobj1}, {verb}, {relobj2}, {list}[, {key})
+		Define a referential integrity constraint between the list of
+		attributes {list} in base relation {relobj1} and a key in base
+		relation {relobj2}. When {key} is omitted, the target key is
+		assumed to be {list}; otherwise, the list of attributes {key}
+		is the target key.
+
+		The string {verb} specifies a verb phrase to be read from
+		{relobj1} to {relobj2}. The verb phrase is used in error
+		messages when referential integrity is violated. See
+		|librelalg-tutorial| for an example.
 
 ==============================================================================
-4. Relational Algebra				*librelalg-ra*
+3. Relational Algebra				*librelalg-ra*
 
 The following paragraphs provide a high-level description of the inner working
 of the Relational Algebra operators as defined by this library. Such
@@ -604,7 +656,7 @@ This section uses the following terminology:
 - A "tuple" is a |dict| mapping attributes to values. Values can be strings,
   integers, booleans, or floats.
 - A "relation" instance (or simply an "instance") is a |list| of tuples.
-- A "base relation" is an object built with |librelalg.Relation()|.
+- A "base relation" is a |librelalg.Rel| object. 
 - A "derived relation" is a relation instance obtained as the result of
   a query.
 - A "relation" is a base relation or a relation instance.
@@ -701,21 +753,21 @@ Without a leaf operator, a query will just return a continuation—that is,
 a function.
 
 To simplify writing queries, most operators accept base relations, relation
-instances, or continuations indifferently. They deal with their inputs
-transparently, so the user should not typically worry about the above
-categorization, and just write queries in a natural way.
+instances, and continuations transparently, so the user should not typically
+worry about the above categorization, and can just write queries in a natural
+way.
 
 In the following, unless otherwise noted, whenever a parameter named {rel},
-{rel1}, {rel2} appears, that parameter denotes a base relation, a relation
+{rel1}, or {rel2} appears, that parameter denotes a base relation, a relation
 instance, or a continuation.
 
-Note: binary operators materialize their second argument {rel2}—that is, they
-build a temporary instance from {rel2} (unless {rel2} is already a relation,
-of course). It may be worth knowing that, in order to avoid writing queries
-that unnecessarily create temporary objects.
+Note: binary operators internally materialize their second argument
+{rel2}—that is, they build a temporary instance from {rel2} (unless {rel2} is
+already a relation, of course). This is something worth keeping in mind in
+order to avoid writing queries that unnecessarily create temporary objects.
 
 Note: some of the examples in the rest of this section are based on the sample
-instance at the end of |librelalg-tutorial|:
+instance at the end of |librelalg-tutorial|, which we report again here:
 >
 	 Buffer
 	───────────────
@@ -1846,7 +1898,7 @@ Union({rel1}, {rel2})				*librelalg.Union()*
 		This is a leaf operator, returning a relation instance.
 
 ==============================================================================
-5. Aggregate functions				*librelalg-aggr*
+4. Aggregate functions				*librelalg-aggr*
 
 An aggregate function is a special type of leaf operator: instead of returning
 a relation instance, an aggregate function returns a scalar. These functions
@@ -1946,10 +1998,7 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 		const colSum = From(Tag)->Sum('Column')         # 40
 <
 ==============================================================================
-6. Other functions				*librelalg-other*
-
-Attributes({relobj})				*librelalg.Attributes()*
-		Return the list of attributes of relation object {relobj}.
+5. Other functions				*librelalg-other*
 
 Bind({func}, {attr})				*librelalg.Bind()*
 		Bind the attribute argument of an aggregate function {func} to
@@ -1973,10 +2022,6 @@ Bind({func}, {attr})				*librelalg.Bind()*
 		      1     2
 		      1     3
 <
-Descriptors({relobj})				*librelalg.Descriptors()*
-		Return the list of descriptors of relation object {relobj}.
-		A descriptor is an attribute that is not part of any key.
-
 EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
 		Return a predicate comparing the attributes in {list1} and the
 		attributes in {list2} for equality elementwise. The returned
@@ -1998,45 +2043,9 @@ EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
 		───────────────
 		     xyz     3
 <
-Empty({rel})					*librelalg.Empty()*
-		Return |true| if {rel} is an empty base or derived relation;
-		return |false| otherwise.
-
 In({tuple}, {rel})				*librelalg.In()*
 		Return |true| if {tuple} is in base or derived relation {rel},
 		otherwise return |false|.
-
-KeyAttributes({relobj})				*librelalg.KeyAttributes()*
-		Return the list of key attributes of relation object {relobj}.
-		A key attribute is an attribute that is part of a key.
-
-Lookup({relobj}, {key}, {list})			*librelalg.Lookup()*
-		Search for a tuple in relation object {relobj} whose {key}
-		matches the value specified by the given {list}. A special
-		`KEY_NOT_FOUND` value is returned if no tuple with the given
-		value of the key can be found.
-
-		For example:
->
-		import 'librelalg.vim' as ra
-
-		# [...]
-
-		var R = Relation('R', {A: Int, B: Str}, [['A']])
-		        ->InsertMany([
-		          {A: 1, B: 'x'},
-		          {A: 3, B: 'y'},
-		          {A: 5, B: 'z'}
-		])
-		echo Lookup(R, ['A'], [3])  # {A: 3, B: 'y'}
-		echo Lookup(R, ['A'], [9]) is ra.KEY_NOT_FOUND  # true
-<
-		When looking up for a tuple by key, using this function is
-		generally faster than using |librelalg.Select()|, because
-		lookup access uses an index associated to the key, whereas
-		|librelalg.Select()| does a linear scan of the relation.
-
-		Note that the returned value is a tuple, not a relation!
 
 NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		Return |true| if {tuple} is not in base or derived relation

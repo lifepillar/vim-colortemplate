@@ -29,8 +29,8 @@ def IsFunc(X: any): bool
   return type(X) == v:t_func
 enddef
 
-def NormalizeKey(key: any): list<string>
-  return type(key) == v:t_list ? key : [key]
+def NormalizeList(item: any): list<string>
+  return type(item) == v:t_list ? item : [item]
 enddef
 
 def NormalizeKeys(keys: any): list<list<string>>
@@ -46,7 +46,7 @@ def NormalizeKeys(keys: any): list<list<string>>
     return [keys]  # One composite key
   endif
 
-  return mapnew(keys, (_, v) => NormalizeKey(v))  # Many keys
+  return mapnew(keys, (_, v) => NormalizeList(v))  # Many keys
 enddef
 
 # v1 and v2 must have the same type
@@ -374,7 +374,7 @@ export class Rel
   enddef
 
   def Key(key: any)
-    const key_: list<string> = NormalizeKey(key)
+    const key_: list<string> = NormalizeList(key)
 
     if index(this.keys, key_) != -1
       throw ErrKeyAlreadyDefined(this.name, key_)
@@ -406,7 +406,7 @@ export class Rel
   enddef
 
   def Index(key: any): KeyIndex
-    return this._indexes[string(NormalizeKey(key))]
+    return this._indexes[string(NormalizeList(key))]
   enddef
 
   def Insert(t: dict<any>): any
@@ -579,8 +579,8 @@ export def ForeignKey(
   fkey:       any,
   key:        any = null
 ): void
-  const fkey_: list<string> = NormalizeKey(fkey)
-  const key_:  list<string> = key == null ? fkey_ : NormalizeKey(key)
+  const fkey_: list<string> = NormalizeList(fkey)
+  const key_:  list<string> = key == null ? fkey_ : NormalizeList(key)
 
   fkey_->SameSize(key_,  ErrForeignKeySize(Child.name, fkey_, Parent.name, key_))
   fkey_->Conforms(Child, ErrForeignKeySource(Child.name, fkey_, Parent.name, key_))
@@ -670,8 +670,9 @@ export def Sort(Arg: any, ComparisonFn: func(dict<any>, dict<any>): number): lis
   return sort(rel, ComparisonFn)
 enddef
 
-export def SortBy(Arg: any, attrList: list<string>, opts: list<string> = []): list<dict<any>>
+export def SortBy(Arg: any, attrs: any, opts: list<string> = []): list<dict<any>>
   const invert: list<bool> = mapnew(opts, (_, v) => v == 'd')
+  const attrList: list<string> = NormalizeList(attrs)
   const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList, invert)
   return Sort(Arg, SortAttrPred)
 enddef

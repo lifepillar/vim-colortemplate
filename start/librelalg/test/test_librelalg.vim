@@ -535,13 +535,13 @@ def Test_RA_Sort()
   ]
 
   assert_equal(expected, From(r)->Sort(Cmp))
-  assert_equal(expected, From(r)->SortBy(['B']))
+  assert_equal(expected, From(r)->SortBy('B'))
   assert_equal(R.instance, r)
   assert_equal(instance, R.instance)
 enddef
 
 def Test_RA_SortByAscDesc()
-  var R = Rel.new('R', {A: Int, B: Float, C: Bool, D: Str}, [['A']])
+  var R = Rel.new('R', {A: Int, B: Float, C: Bool, D: Str}, 'A')
   const r = R.instance
 
   const instance = [
@@ -588,7 +588,7 @@ def Test_RA_SortByAscDesc()
   ]
 
   assert_equal(expected1, From(r)->SortBy(['B'], ['i']))
-  assert_equal(expected2, From(r)->SortBy(['B'], ['d']))
+  assert_equal(expected2, From(r)->SortBy('B', ['d']))
   assert_equal(expected3, From(r)->SortBy(['C', 'B'], ['i', 'd']))
   assert_equal(expected4, From(r)->SortBy(['C', 'B'], ['i', 'i']))
   assert_equal(expected5, From(r)->SortBy(['C', 'B'], ['d', 'i']))
@@ -678,8 +678,8 @@ def Test_RA_Project()
   assert_equal([], Query(From([])->Project([])))
   assert_equal([{}], Query(From([{}])->Project([])))
   assert_equal([{}], Query(From(r)->Project([])))
-  assert_equal(expected1, From(r)->Project(['A'])->SortBy(['A']))
-  assert_equal(expected2, From(r)->Project(['B'])->SortBy(['B']))
+  assert_equal(expected1, From(r)->Project(['A'])->SortBy('A'))
+  assert_equal(expected2, From(r)->Project(['B'])->SortBy('B'))
   assert_equal(expected3, From(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
   assert_equal(instance, r)
 enddef
@@ -740,14 +740,14 @@ def Test_RA_Join()
     {s_B: 'three', s_C: 0, B: 'three', C: 0},
   ]
 
-  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy(['r_A']))
-  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy(['A']))
+  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy('r_A'))
+  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy('A'))
   assert_equal(expected3, From(R)->Join(S, (rt, st) => rt.A <= st.C, 'r_')->SortBy(['r_A', 'B']))
   assert_equal(expected4, From(S)->Join(R, (st, rt) => rt.A <= st.C, 's_')->SortBy(['s_C', 'A']))
-  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy(['B']))
+  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy('B'))
 
-  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy(['r_A']))
-  assert_equal(expected2, From(S)->EquiJoin(R, ['B'], ['B'], 's_')->SortBy(['A']))
+  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('r_A'))
+  assert_equal(expected2, From(S)->EquiJoin(R, ['B'], ['B'], 's_')->SortBy('A'))
 
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
@@ -912,8 +912,8 @@ def Test_RA_Minus()
     {A: 2, B: 'two'},
   ]
 
-  assert_equal(expected1, From(R)->Minus(S)->SortBy(['A']))
-  assert_equal(expected2, From(S)->Minus(R)->SortBy(['A']))
+  assert_equal(expected1, From(R)->Minus(S)->SortBy('A'))
+  assert_equal(expected2, From(S)->Minus(R)->SortBy('A'))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -994,10 +994,10 @@ def Test_RA_SemiJoin()
     {B: 'three', C: 0},
   ]
 
-  assert_equal(expected1, From(R)->SemiJoin(S, (rt, st) => rt.B == st.B)->SortBy(['A']))
+  assert_equal(expected1, From(R)->SemiJoin(S, (rt, st) => rt.B == st.B)->SortBy('A'))
   assert_equal(expected2, Query(From(S)->SemiJoin(R, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, From(R)->SemiJoin(S, (rt, st) => rt.A <= st.C)->SortBy(['A']))
-  assert_equal(expected4, From(S)->SemiJoin(R, (st, rt) => rt.A <= st.C)->SortBy(['B']))
+  assert_equal(expected3, From(R)->SemiJoin(S, (rt, st) => rt.A <= st.C)->SortBy('A'))
+  assert_equal(expected4, From(S)->SemiJoin(R, (st, rt) => rt.A <= st.C)->SortBy('B'))
   assert_equal(expected5, Query(From(S)->SemiJoin(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
@@ -1039,8 +1039,8 @@ def Test_RA_AntiJoin()
 
   assert_equal(expected1, Query(From(R)->AntiJoin(S, (rt, st) => rt.B == st.B)))
   assert_equal(expected2, Query(From(S)->AntiJoin(R, (st, rt) => rt.B == st.B)))
-  assert_equal(expected3, SortBy(From(R)->AntiJoin(S, (rt, st) => rt.A <= st.C), ['A']))
-  assert_equal(expected4, SortBy(From(S)->AntiJoin(R, (st, rt) => rt.A <= st.C), ['B']))
+  assert_equal(expected3, SortBy(From(R)->AntiJoin(S, (rt, st) => rt.A <= st.C), 'A'))
+  assert_equal(expected4, SortBy(From(S)->AntiJoin(R, (st, rt) => rt.A <= st.C), 'B'))
   assert_equal(expected5, Query(From(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
@@ -1255,7 +1255,7 @@ def Test_RA_ListAgg()
   assert_equal([], From([])->ListAgg('A'))
   assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A'))
   assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B'))
-  assert_equal(expected, From(r)->GroupBy(['A'], Bind(ListAgg, 'B'))->SortBy(['A']))
+  assert_equal(expected, From(r)->GroupBy(['A'], Bind(ListAgg, 'B'))->SortBy('A'))
 enddef
 
 def Test_RA_SumBy()
@@ -1436,7 +1436,7 @@ def Test_RA_GroupBy()
 
   const result = From(r)
                ->GroupBy(['name'], Bind(Sum, 'balance'), 'total')
-               ->SortBy(['name'])
+               ->SortBy('name')
 
   const expected = [
     {name: 'A', total: 14.0},
@@ -1498,7 +1498,7 @@ def Test_RA_CoddDivide()
   Session.InsertMany(session_instance)
 
   # Which students are subscribed to all the courses?
-  const result4 = From(Subscription)->CoddDivide(Session)->SortBy(['student'])
+  const result4 = From(Subscription)->CoddDivide(Session)->SortBy('student')
   const expected4 = [
     {'student': '123'},
     {'student': '283'},
@@ -1506,7 +1506,7 @@ def Test_RA_CoddDivide()
   assert_equal(expected4, result4)
 
   # Todd's division must return the same result
-  const result5 = From(Subscription)->Divide(Session)->SortBy(['student'])
+  const result5 = From(Subscription)->Divide(Session)->SortBy('student')
   const expected5 = [
     {'student': '123'},
     {'student': '283'},

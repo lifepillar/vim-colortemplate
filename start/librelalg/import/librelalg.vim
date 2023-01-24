@@ -405,18 +405,6 @@ export class Rel
     return empty(this.instance)
   enddef
 
-  def InsertConstraints(): list<func(dict<any>)>
-    return this._constraints.I
-  enddef
-
-  def UpdateConstraints(): list<func(dict<any>)>
-    return this._constraints.U
-  enddef
-
-  def DeleteConstraints(): list<func(dict<any>)>
-    return this._constraints.D
-  enddef
-
   def Index(key: any): KeyIndex
     return this._indexes[string(NormalizeKey(key))]
   enddef
@@ -489,12 +477,11 @@ export class Rel
   def Delete(Pred: func(dict<any>): bool = (t) => true): any
     const DeletePred = (i: number, t: dict<any>): bool => {
       if Pred(t)
-        for CheckConstraint in this.DeleteConstraints()
+        for CheckConstraint in this._constraints.D
           CheckConstraint(t)
         endfor
 
-        for key in this.keys
-          const index = this.Index(key)
+        for index in values(this._indexes)
           const keyValue = Values(t, index.key)
           index.Remove(keyValue)
         endfor

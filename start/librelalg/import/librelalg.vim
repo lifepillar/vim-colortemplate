@@ -846,8 +846,9 @@ export def Select(Arg: any, Pred: func(dict<any>): bool): func(func(dict<any>))
   }
 enddef
 
-export def Project(Arg: any, attrList: list<string>): func(func(dict<any>))
+export def Project(Arg: any, attrs: any): func(func(dict<any>))
   const Cont = From(Arg)
+  const attrList = NormalizeList(attrs)
 
   return (Emit: func(dict<any>)) => {
     var seen: dict<bool> = {}

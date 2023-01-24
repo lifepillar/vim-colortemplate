@@ -644,7 +644,7 @@ def Test_RA_Select()
 enddef
 
 def Test_RA_Project()
-  var R = Rel.new('R', {A: Str, B: Bool, C: Int}, [['A']])
+  var R = Rel.new('R', {A: Str, B: Bool, C: Int}, 'A')
   const r = R.instance
 
   const instance = [
@@ -674,12 +674,12 @@ def Test_RA_Project()
     {B: true,  C: 80},
   ]
 
-  assert_equal([], Query(From([])->Project(['X'])))
+  assert_equal([], Query(From([])->Project('X')))
   assert_equal([], Query(From([])->Project([])))
   assert_equal([{}], Query(From([{}])->Project([])))
   assert_equal([{}], Query(From(r)->Project([])))
-  assert_equal(expected1, From(r)->Project(['A'])->SortBy('A'))
-  assert_equal(expected2, From(r)->Project(['B'])->SortBy('B'))
+  assert_equal(expected1, From(r)->Project('A')->SortBy('A'))
+  assert_equal(expected2, From(r)->Project('B')->SortBy('B'))
   assert_equal(expected3, From(r)->Project(['B', 'C'])->SortBy(['B', 'C']))
   assert_equal(instance, r)
 enddef

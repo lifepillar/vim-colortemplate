@@ -95,7 +95,7 @@ Query the database:
 	var rel = ra.Query(
 	    ra.EquiJoin(S, R, ['Y'], ['A'])
 	    ->ra.Select((t) => t.B > 1.5)
-	    ->ra.Project(['X'])
+	    ->ra.Project('X')
 	    ->ra.SortBy('X')
 	)
 	echo ra.Table(rel)
@@ -1588,7 +1588,7 @@ Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
 <
 		To obtain all the sorted pairs of tag names:
 >
-		const Tagname = Project(Tag, ['TagName'])
+		const Tagname = Project(Tag, 'TagName')
 		const result  = Query(
 		      Product(Tagname, Tagname, 't_')
 		    ->Select((t) => t.TagName < t.t_TagName)
@@ -1610,9 +1610,10 @@ Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
 <
 		This is a pipeline operator, returning a continuation.
 
-Project({rel}, {list})				*librelalg.Project()*
-		Perform a projection of a relation {rel} on a {list} of
-		attributes. Examples:
+Project({rel}, {attrs})				*librelalg.Project()*
+		Perform a projection of a relation {rel} on the list of
+		attributes {attrs}. When {attrs} is a single attribute,
+		a |string| can also be used. Examples:
 >
 		var r = [
 		  {A: 1, B: 'one', C: 10},
@@ -1637,7 +1638,7 @@ Project({rel}, {list})				*librelalg.Project()*
 <
 		To obtain all the tag names:
 >
-		const result = Query(Project(Tag, ['TagName']))
+		const result = Query(Project(Tag, 'TagName'))
 		echo Table(result)
 <
 		Output:

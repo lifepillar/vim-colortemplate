@@ -96,7 +96,7 @@ Query the database:
 	    ra.EquiJoin(S, R, ['Y'], ['A'])
 	    ->ra.Select((t) => t.B > 1.5)
 	    ->ra.Project(['X'])
-	    ->ra.SortBy(['X'])
+	    ->ra.SortBy('X')
 	)
 	echo ra.Table(rel)
 <
@@ -1792,11 +1792,12 @@ Sort({rel}, {func})				*librelalg.Sort()*
 		This is a leaf operator, returning a relation instance. See
 		also |librelalg.SortBy()|.
 
-SortBy({rel}, {list} [, {opts}])		*librelalg.SortBy()*
+SortBy({rel}, {attrs} [, {opts}])		*librelalg.SortBy()*
 		Materialize a relation {rel} by sorting the tuples according
-		to the specified {list} of attributes. For instance:
+		to the specified list of attributes {attrs}. When {attrs} is
+		a single attribute, a |string| may also be used. For instance:
 >
-		const result = From(Tag)->SortBy(['Line'])
+		const result = From(Tag)->SortBy('Line')
 		echo Table(result)
 <
 		Output:

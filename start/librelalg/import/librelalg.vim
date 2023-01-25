@@ -947,7 +947,9 @@ export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string>): f
   }
 enddef
 
-export def EquiJoin(Arg1: any, Arg2: any, lftAttrList: list<string>, rgtAttrList: list<string>, prefix = ''): func(func(dict<any>))
+export def EquiJoin(Arg1: any, Arg2: any, lftAttrs: any, rgtAttrs: any, prefix = ''): func(func(dict<any>))
+  const lftAttrList = Listify(lftAttrs)
+  const rgtAttrList = Listify(rgtAttrs)
   return Join(Arg1, Arg2, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
 enddef
 

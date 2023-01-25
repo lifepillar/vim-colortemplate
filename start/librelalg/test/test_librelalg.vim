@@ -747,7 +747,7 @@ def Test_RA_Join()
   assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy('B'))
 
   assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('r_A'))
-  assert_equal(expected2, From(S)->EquiJoin(R, ['B'], ['B'], 's_')->SortBy('A'))
+  assert_equal(expected2, From(S)->EquiJoin(R, 'B', 'B', 's_')->SortBy('A'))
 
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)

@@ -2072,29 +2072,51 @@ RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		set of tuples (the order of the tuples does not matter);
 		return |false| otherwise.
 
-Table({rel} [, {name}, {sep})			*librelalg.Table()*
+Table({rel} [, {name}, {columns}, {sep})	*librelalg.Table()*
 		Return a tabular representation of a base or derived relation
 		{rel} as a |string|. The title of the table may be specified
 		with {name}: the default is to use the relation name for base
-		relations, and no title for derived relations. The horizontal
-		separator symbol can be set with {sep}, and must be a single
-		character.
+		relations, and no title for derived relations.
 
-		For instance:
+		The columns are printed in an arbitrary order. If you want the
+		columns to be in a particular order or you want to print only
+		a subset of the columns, specify the |list| of {columns}. When
+		{columns} is a single attribute, it can also be a |string|.
+
+		The horizontal separator symbol can be set with {sep}, and
+		must be a single character.
+
+		Examples:
 >
-		echo Table([
+		const r = [
 		  {X: 10, Y: 'ten'},
 		  {X: 20, Y: 'twenty'},
-		], 'A table', '~')
+		]
+
+		echo Table(r) "\n"
+		echo Table(r, 'A table', ['Y', 'X'], '~') "\n"
+		echo Table(r, null_string, 'Y')
 <
 		Output:
 >
-		 A table
-		~~~~~~~~~~~
+		───────────
 		  X      Y
-		~~~~~~~~~~~
+		───────────
 		 10    ten
 		 20 twenty
+		
+		 A table
+		~~~~~~~~~~~
+		      Y  X
+		~~~~~~~~~~~
+		    ten 10
+		 twenty 20
+
+		────────
+		      Y
+		────────
+		    ten
+		 twenty
 <
 Zip({list1}, {list2})				*librelalg.Zip()*
 		Build a tuple by "zipping" the attributes in {list1} with the

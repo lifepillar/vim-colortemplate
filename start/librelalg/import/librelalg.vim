@@ -1382,7 +1382,7 @@ export def RelEq(R: any, S: any): bool
 enddef
 
 # Returns a textual representation of a relation
-export def Table(R: any, name = null_string, sep = '─'): string
+export def Table(R: any, name = null_string, columns: any = null, sep = '─'): string
   if strchars(sep) != 1
     throw printf("A table separator must be a single character. Got %s", sep)
   endif
@@ -1402,7 +1402,7 @@ export def Table(R: any, name = null_string, sep = '─'): string
     return printf(" %s\n%s\n", relname, repeat(sep, 2 + strwidth(relname)))
   endif
 
-  const attributes: list<string> = keys(rel[0])
+  const attributes: list<string> = columns == null ? keys(rel[0]) : Listify(columns)
   var width: dict<number> = {}
 
   for attr in attributes
@@ -1455,4 +1455,3 @@ export def Table(R: any, name = null_string, sep = '─'): string
   return table
 enddef
 # }}}
-

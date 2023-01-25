@@ -1785,7 +1785,7 @@ def Test_RA_Table()
 ================
 END
 
-  assert_equal(expectedTable, split(Table(R, 'Empty Instance', '='), "\n"))
+  assert_equal(expectedTable, split(Table(R, 'Empty Instance', null, '='), "\n"))
 
   R.InsertMany([
     {AAAAAAAAA: 1, B: 'XYWZ'},
@@ -1835,5 +1835,41 @@ END
 
   assert_equal(expectedTable, split(Table(R), "\n"))
 enddef
+
+def Test_RA_TableColumns()
+  const r = [{A: 9, B: 1}, {A: 11, B: 5}]
+
+  var expected =<< END
+ Test
+──────
+ B  A
+──────
+ 1  9
+ 5 11
+END
+
+  assert_equal(expected, split(Table(r, 'Test', ['B', 'A']), "\n"))
+
+  expected =<< END
+───
+ B
+───
+ 1
+ 5
+END
+
+  assert_equal(expected, split(Table(r, null_string, ['B']), "\n"))
+
+  expected =<< END
+────
+  A
+────
+  9
+ 11
+END
+
+  assert_equal(expected, split(Table(r, null_string, 'A'), "\n"))
+enddef
+
 
 tt.Run('_RA_')

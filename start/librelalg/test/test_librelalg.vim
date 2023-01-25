@@ -1261,7 +1261,7 @@ def Test_RA_SumBy()
   assert_equal([{sum: 0}],   From([])->SumBy([], 'A'))
   assert_equal([{summa: 0}], From([])->SumBy([], 'B', 'summa'))
   assert_equal([],           From([])->SumBy(['A'], 'A'))
-  assert_equal([],           From([])->SumBy(['B'], 'A', 'summa'))
+  assert_equal([],           From([])->SumBy('B', 'A', 'summa'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1307,14 +1307,14 @@ def Test_RA_CountBy()
     {A: 0, cnt: 1},
     {A: 1, cnt: 2},
     {A: 3, cnt: 2},
-  ], From(r)->CountBy(['A'], 'B', 'cnt'))
+  ], From(r)->CountBy('A', 'B', 'cnt'))
 enddef
 
 def Test_RA_MaxBy()
   assert_equal([], From([])->MaxBy([], 'A'))
   assert_equal([], From([])->MaxBy([], 'B'))
   assert_equal([], From([])->MaxBy(['A'], 'A'))
-  assert_equal([], From([])->MaxBy(['B'], 'A'))
+  assert_equal([], From([])->MaxBy('B', 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1337,7 +1337,7 @@ def Test_RA_MinBy()
   assert_equal([], From([])->MinBy([], 'A'))
   assert_equal([], From([])->MinBy([], 'B'))
   assert_equal([], From([])->MinBy(['A'], 'A'))
-  assert_equal([], From([])->MinBy(['B'], 'A'))
+  assert_equal([], From([])->MinBy('B', 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1360,7 +1360,7 @@ def Test_RA_AvgBy()
   assert_equal([], From([])->AvgBy([], 'A'))
   assert_equal([], From([])->AvgBy([], 'B'))
   assert_equal([], From([])->AvgBy(['A'], 'A'))
-  assert_equal([], From([])->AvgBy(['B'], 'A'))
+  assert_equal([], From([])->AvgBy('B', 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -1444,7 +1444,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy(['name'], Max('balance'), 'max')->SortBy('name')
+  result = r->GroupBy('name', Max('balance'), 'max')->SortBy('name')
 
   expected = [
     {name: 'A', max: 10.0},
@@ -1453,7 +1453,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy(['name'], Min('balance'), 'min')->SortBy('name')
+  result = r->GroupBy('name', Min('balance'), 'min')->SortBy('name')
 
   expected = [
     {name: 'A', min: 1.5},
@@ -1462,7 +1462,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy(['name'], Avg('balance'), 'avg')->SortBy('name')
+  result = r->GroupBy('name', Avg('balance'), 'avg')->SortBy('name')
 
   expected = [
     {name: 'A', avg: 5.0},
@@ -1471,7 +1471,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy(['name'], Count, 'count')->SortBy('name')
+  result = r->GroupBy('name', Count, 'count')->SortBy('name')
 
   expected = [
     {name: 'A', count: 3},
@@ -1480,7 +1480,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy(['name'], CountDistinct('class'), 'num_class')->SortBy('name')
+  result = r->GroupBy('name', CountDistinct('class'), 'num_class')->SortBy('name')
 
   expected = [
     {name: 'A', num_class: 2},

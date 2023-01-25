@@ -723,15 +723,16 @@ enddef
 
 export def SumBy(
     Arg: any,
-    groupBy: list<string>,
+    groupBy: any,
     attr: string,
     aggrName = 'sum'
 ): list<dict<any>>
-  var aggr: dict<dict<any>> = {}
+  var   aggr: dict<dict<any>> = {}
+  const groupBy_: list<string> = NormalizeList(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
-    var tp = ProjectTuple(t, groupBy)
+    var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: 0})
@@ -739,21 +740,22 @@ export def SumBy(
     aggr[group][aggrName] += t[attr]
   })
 
-  return empty(groupBy) && empty(aggr) ? [{[aggrName]: 0}] : values(aggr)
+  return empty(groupBy_) && empty(aggr) ? [{[aggrName]: 0}] : values(aggr)
 enddef
 
 export def CountBy(
     Arg: any,
-    groupBy: list<string>,
+    groupBy: any,
     attr: string = null_string,
     aggrName = 'count'
 ): list<dict<any>>
-  var aggrCount: dict<dict<any>> = {}
-  var aggrDistinct: dict<dict<bool>> = {}
+  var   aggrCount: dict<dict<any>> = {}
+  var   aggrDistinct: dict<dict<bool>> = {}
+  const groupBy_: list<string> = NormalizeList(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
-    var tp = ProjectTuple(t, groupBy)
+    var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
     if !aggrCount->has_key(group)
       aggrCount[group] = tp->extend({[aggrName]: 0})
@@ -767,20 +769,21 @@ export def CountBy(
     endif
   })
 
-  return empty(groupBy) && empty(aggrCount) ? [{[aggrName]: 0}] : values(aggrCount)
+  return empty(groupBy_) && empty(aggrCount) ? [{[aggrName]: 0}] : values(aggrCount)
 enddef
 
 export def MaxBy(
     Arg: any,
-    groupBy: list<string>,
+    groupBy: any,
     attr: string,
     aggrName = 'max'
 ): list<dict<any>>
-  var aggr: dict<dict<any>> = {}  # Map group => tuple
+  var   aggr: dict<dict<any>> = {}  # Map group => tuple
+  const groupBy_: list<string> = NormalizeList(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
-    var tp = ProjectTuple(t, groupBy)
+    var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: t[attr]})
@@ -795,15 +798,16 @@ enddef
 
 export def MinBy(
     Arg: any,
-    groupBy: list<string>,
+    groupBy: any,
     attr: string,
     aggrName = 'min'
 ): list<dict<any>>
-  var aggr: dict<dict<any>> = {}  # Map group => tuple
+  var   aggr: dict<dict<any>> = {}  # Map group => tuple
+  const groupBy_: list<string> = NormalizeList(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
-    var tp = ProjectTuple(t, groupBy)
+    var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: t[attr]})
@@ -818,16 +822,17 @@ enddef
 
 export def AvgBy(
     Arg: any,
-    groupBy: list<string>,
+    groupBy: any,
     attr: string,
     aggrName = 'avg'
 ): list<dict<any>>
-  var aggrAvg: dict<dict<any>> = {}
-  var aggrCnt: dict<number> = {}
+  var   aggrAvg: dict<dict<any>> = {}
+  var   aggrCnt: dict<number> = {}
+  const groupBy_: list<string> = NormalizeList(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
-    var tp = ProjectTuple(t, groupBy)
+    var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
     if !aggrAvg->has_key(group)
       aggrAvg[group] = tp->extend({[aggrName]: 0.0})
@@ -1110,16 +1115,17 @@ enddef
 
 export def GroupBy(
     Arg: any,
-    groupBy: list<string>,
+    groupBy: any,
     AggregateFn: func(...any): any,
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
+  const groupBy_: list<string> = NormalizeList(groupBy)
   const Cont = From(Arg)
 
   Cont((t) => {
     # Materialize into subrelations
-    const groupValue = mapnew(groupBy, (_, attr) => t[attr])
+    const groupValue = mapnew(groupBy_, (_, attr) => t[attr])
     const groupKey = string(groupValue)
     if !fid->has_key(groupKey)
       fid[groupKey] = []
@@ -1132,7 +1138,7 @@ export def GroupBy(
     for groupKey in keys(fid)
       const subrel = fid[groupKey]
       var t0: dict<any> = {}
-      for attr in groupBy
+      for attr in groupBy_
         t0[attr] = subrel[0][attr]
       endfor
       t0[aggrName] = Scan(subrel)->AggregateFn()

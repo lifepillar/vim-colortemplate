@@ -6,8 +6,7 @@ vim9script
 # License:      Vim License (see `:help license`)
 
 # Helper functions {{{
-# string() turns 'A' into a string of length 3, with quotes.
-# We do not want that.
+# string() turns 'A' into a string of length 3, with quotes. We do not want that.
 def String(value: any): string
   return type(value) == v:t_string ? value : string(value)
 enddef

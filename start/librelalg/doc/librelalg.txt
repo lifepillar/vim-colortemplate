@@ -1,4 +1,4 @@
-*librelalg.txt*	For Vim version 9.0	Last change: 2023 Jan 24
+*librelalg.txt*	For Vim version 9.0	Last change: 2023 Jan 25
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
@@ -788,11 +788,14 @@ instance at the end of |librelalg-tutorial|, which we report again here:
 	     abc     15   14     2
 	     abc      3    6     3
 <
-AvgBy({rel}, {list}, {attr} [, {name}])		*librelalg.AvgBy()*
-		Group the tuples of relation {rel} with respect to a {list} of
-		attributes, and determine the average of the values of
-		attribute {attr} in each group. The schema of the output
-		relation consists of the grouping attributes plus the
+Functions ~
+
+AvgBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.AvgBy()*
+		Group the tuples of relation {rel} with respect to a |list| of
+		attributes {groupby}, and determine the average of the values
+		of attribute {attr} in each group. When grouping by a single
+		attribute, {groupby} can also be a |string|. The schema of the
+		output relation consists of the grouping attributes plus the
 		aggregate attribute. The name of the aggregate attribute is
 		given by {name} (the default name is "avg").
 
@@ -803,7 +806,7 @@ AvgBy({rel}, {list}, {attr} [, {name}])		*librelalg.AvgBy()*
 		    {A: 1, B: 4},
 		    {A: 2, B: 3}
 		]
-		const result = From(r)->AvgBy(['A'], 'B')
+		const result = From(r)->AvgBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -945,15 +948,16 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 		This is a pipeline operator, returning a continuation. See
 		also |Divide()|.
 
-CountBy({rel}, {list}[, {attr}, {name}])	*librelalg.CountBy()*
-		Group the tuples of a relation {rel} with respect to a {list}
-		of attributes, and count the number of tuples in each group.
-		If {attr} is given and is not |null_string|, then count the
-		number of distinct values of attribute {attr} in each group.
-		The schema of the output relation consists of the grouping
-		attributes plus the aggregate attribute. The name of the
-		aggregate attribute is given by {name} (the default name is
-		"count").
+CountBy({rel}, {groupby}[, {attr}, {name}])	*librelalg.CountBy()*
+		Group the tuples of a relation {rel} with respect to a |list|
+		of attributes {groupby}, and count the number of tuples in
+		each group. When grouping by a single attribute, {groupby} can
+		also be a |string|. If {attr} is given and is not
+		|null_string|, then count the number of distinct values of
+		attribute {attr} in each group. The schema of the output
+		relation consists of the grouping attributes plus the
+		aggregate attribute. The name of the aggregate attribute is
+		given by {name} (the default name is "count").
 
 		For instance:
 >
@@ -965,8 +969,8 @@ CountBy({rel}, {list}[, {attr}, {name}])	*librelalg.CountBy()*
 		    {N: 4, A: 200, B: 3},
 		    {N: 5, A: 100, B: 6},
 		]
-		const result1 = From(r)->CountBy(['A'])
-		const result2 = From(r)->CountBy(['A'], 'B')
+		const result1 = From(r)->CountBy('A')
+		const result2 = From(r)->CountBy('A', 'B')
 		echo Table(result1, 'Count all')
 		echo Table(result2, 'Count distinct B')
 <
@@ -1198,12 +1202,14 @@ From({rel})					*librelalg.From()*
 		a continuation, then this function just returns it. This is
 		a root operator, that is, an operator that starts a query.
 
-GroupBy({rel}, {list}, {func} [, {string}])	*librelalg.GroupBy()*
-		Group the tuples of a relation {rel} with respect to a {list}
-		of attributes, and apply an aggregate function {func} to each
-		group. The schema of the output relation consists of the
-		grouping attributes and the aggregate attribute. The name of
-		the aggregate attribute is given by {string}. Examples:
+GroupBy({rel}, {groupby}, {func} [, {name}])	*librelalg.GroupBy()*
+		Group the tuples of a relation {rel} with respect to a |list|
+		of attributes {groupby}, and apply an aggregate function
+		{func} to each group. When grouping by a single attribute,
+		{groupby} can also be a |string|. The schema of the output
+		relation consists of the grouping attributes and the aggregate
+		attribute. The name of the aggregate attribute is given by
+		{name}. Examples:
 >
 		var r = [
 		    {A: 10, B: 'a', C: 'x', D: 4},
@@ -1215,11 +1221,11 @@ GroupBy({rel}, {list}, {func} [, {string}])	*librelalg.GroupBy()*
 		    {A: 70, B: 'a', C: 'y', D: 3},
 		  ]
 		const result = Query(
-		   From(r)->GroupBy(['B', 'C'], Bind(Min, 'D'), "minD")
+		   From(r)->GroupBy(['B', 'C'], Min('D'), 'minD')
 		)
 		echo Table(result)
 <
-		See also |librelalg.Bind()|. Output:
+		Output:
 >
 		──────────
 		 B C minD
@@ -1232,7 +1238,7 @@ GroupBy({rel}, {list}, {func} [, {string}])	*librelalg.GroupBy()*
 		To count the number of tags in each buffer with tags:
 >
 		const result = Query(
-		    GroupBy(Tag, ['BufId'], Count, 'num_tags')
+		    Tag->GroupBy('BufId', Count, 'num_tags')
 		  )
 		echo Table(result)
 <
@@ -1396,13 +1402,14 @@ LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 <
 		This is a pipeline operator, returning a continuation.
 
-MaxBy({rel}, {list}, {attr} [, {name}])		*librelalg.MaxBy()*
-		Group the tuples of a relation {rel} with respect to a {list}
-		of attributes, and determine the maximum value of attribute
-		{attr} in each group. The schema of the output relation
-		consists of the grouping attributes plus the aggregate
-		attribute. The name of the aggregate attribute is given by
-		{name} (the default name is "max").
+MaxBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.MaxBy()*
+		Group the tuples of a relation {rel} with respect to a |list|
+		of attributes {groupby}, and determine the maximum value of
+		attribute {attr} in each group. When grouping by a single
+		attribute, {groupby} can also be a |string|. The schema of the
+		output relation consists of the grouping attributes plus the
+		aggregate attribute. The name of the aggregate attribute is
+		given by {name} (the default name is "max").
 
 		For instance:
 >
@@ -1411,7 +1418,7 @@ MaxBy({rel}, {list}, {attr} [, {name}])		*librelalg.MaxBy()*
 		    {A: 100, B: 4},
 		    {A: 200, B: 3}
 		]
-		const result = From(r)->MaxBy(['A'], 'B')
+		const result = From(r)->MaxBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -1424,13 +1431,14 @@ MaxBy({rel}, {list}, {attr} [, {name}])		*librelalg.MaxBy()*
 <
 		This is a leaf operator, returning a relation instance.
 
-MinBy({rel}, {list}, {attr} [, {name}])		*librelalg.MinBy()*
-		Group the tuples of a relation {rel} with respect to a {list}
-		of attributes, and determine the minimum value of attribute
-		{attr} in each group. The schema of the output relation
-		consists of the grouping attributes plus the aggregate
-		attribute. The name of the aggregate attribute is given by
-		{name} (the default name is "min").
+MinBy({rel}, {groupby}, {attr} [, {name}]	*librelalg.MinBy()*
+		Group the tuples of a relation {rel} with respect to a |list|
+		of attributes {groupby}, and determine the minimum value of
+		attribute {attr} in each group. When grouping by a single
+		attribute, {groupby} can also be a |string|. The schema of the
+		output relation consists of the grouping attributes plus the
+		aggregate attribute. The name of the aggregate attribute is
+		given by {name} (the default name is "min").
 
 		For instance:
 >
@@ -1439,7 +1447,7 @@ MinBy({rel}, {list}, {attr} [, {name}])		*librelalg.MinBy()*
 		    {A: 100, B: 4},
 		    {A: 200, B: 3}
 		]
-		const result = From(r)->MinBy(['A'], 'B')
+		const result = From(r)->MinBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -1840,13 +1848,14 @@ SortBy({rel}, {attrs} [, {opts}])		*librelalg.SortBy()*
 		This is a leaf operator, returning a relation instance. See
 		also |librelalg.Sort()|.
 
-SumBy({rel}, {list}, {attr} [, {name}])		*librelalg.SumBy()*
-		Group the tuples of a relation {rel} with respect to a {list}
-		of attributes, and sum the values of attribute {attr} in each
-		group. The schema of the output relation consists of the
-		grouping attributes plus the aggregate attribute. The name of
-		the aggregate attribute is given by {name} (the default name
-		is "sum").
+SumBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.SumBy()*
+		Group the tuples of a relation {rel} with respect to a list of
+		attributes {groupby}, and sum the values of attribute {attr}
+		in each group. When grouping by a single attribute, {groupby}
+		can also be a |string|. The schema of the output relation
+		consists of the grouping attributes plus the aggregate
+		attribute. The name of the aggregate attribute is given by
+		{name} (the default name is "sum").
 
 		For instance:
 >
@@ -1855,7 +1864,7 @@ SumBy({rel}, {list}, {attr} [, {name}])		*librelalg.SumBy()*
 		    {A: 100, B: 4},
 		    {A: 200, B: 3}
 		]
-		const result = From(r)->SumBy(['A'], 'B')
+		const result = From(r)->SumBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -1910,7 +1919,6 @@ can be used as normal leaf operators, as in the following example:
 	echo From([{A: 9}, {A: 4}, {A: 6}])->Count()  # 3
 <
 Aggregate functions can also be used as an argument to |librelalg.GroupBy()|
-(see also |librelalg.Bind()|).
 
 Avg({rel}, {attr})				*librelalg.Avg()*
 		Return the average value of attribute {attr} in a relation
@@ -1956,7 +1964,7 @@ ListAgg({rel}, {attr})				*librelalg.ListAgg()*
 		To return the list of tags in each buffer, sorted by buffer:
 >
 		const result = From(Tag)
-		               ->GroupBy(['BufId'], Bind(ListAgg, 'TagName'))
+		               ->GroupBy('BufId', ListAgg('TagName'))
 		               ->SortBy(['BufId'])
 		echo Table(result)
 <
@@ -2002,37 +2010,6 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 ==============================================================================
 5. Other functions				*librelalg-other*
 
-Bind({func}, {attr})				*librelalg.Bind()*
-		Bind the attribute argument of an aggregate function {func} to
-		attribute {attr}. This makes it more convenient to pass some
-		aggregate functions to |librelalg.GroupBy()|. For example:
->
-		# Number of distinct lines containing a tag, in each buffer
-		const result = Query(
-		           From(Tag)
-		           ->GroupBy(['BufId'],
-		                     Bind(CountDistinct, 'Line'), 'nLines')
-		)
-		echo Table(result)
-<
-		Output:
->
-		──────────────
-		 nLines BufId
-		──────────────
-		      3     1
-		      1     2
-		      1     3
-<
-		Without using Bind(), the query above would be written as
-		follows:
->
-		const result = Query(
-		           From(Tag)
-		           ->GroupBy(['BufId'],
-		                     (rel) => CountDistinct(rel, 'Line'), 'nLines')
-		)
-<
 EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
 		Return a predicate comparing the attributes in {list1} and the
 		attributes in {list2} for equality elementwise. The returned

@@ -7,7 +7,6 @@ librelalg-tutorial	librelalg.txt	/*librelalg-tutorial*
 librelalg.AntiJoin()	librelalg.txt	/*librelalg.AntiJoin()*
 librelalg.Avg()	librelalg.txt	/*librelalg.Avg()*
 librelalg.AvgBy()	librelalg.txt	/*librelalg.AvgBy()*
-librelalg.Bind()	librelalg.txt	/*librelalg.Bind()*
 librelalg.Build()	librelalg.txt	/*librelalg.Build()*
 librelalg.CoddDivide()	librelalg.txt	/*librelalg.CoddDivide()*
 librelalg.Count()	librelalg.txt	/*librelalg.Count()*

@@ -1255,6 +1255,13 @@ enddef
 
 export const ListAgg = Curry(ListAgg_)
 
+def StringAgg_(Arg: any, attr: string, sep: string, How: any): string
+  var agg = ListAgg_(Arg, attr)
+  return sort(agg, How)->join(sep)
+enddef
+
+export const StringAgg = Curry(StringAgg_)
+
 export def Count(Arg: any): number
   var count = 0
   const Cont = From(Arg)

@@ -52,6 +52,7 @@ const SemiJoin             = ra.SemiJoin
 const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
 const Str                  = ra.Str
+const StringAgg            = ra.StringAgg
 const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
@@ -1255,6 +1256,37 @@ def Test_RA_ListAgg()
   assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A'))
   assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B'))
   assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B'))->SortBy('A'))
+enddef
+
+def Test_RA_StringAgg()
+  const r = [
+    {id: 0, A: 0, B: 'a'},
+    {id: 1, A: 2, B: 'c'},
+    {id: 2, A: 2, B: 'f'},
+    {id: 3, A: 2, B: 'p'},
+    {id: 4, A: 4, B: 'b'},
+    {id: 5, A: 4, B: 'm'},
+  ]
+
+  assert_equal('', From([])->StringAgg('A', '', ''))
+  assert_equal('0.2.2.2.4.4', r->StringAgg('A', '.', ''))
+  assert_equal('a, b, c, f, m, p', r->StringAgg('B', ', ', ''))
+
+  const result = From(r)
+                 ->GroupBy('A',
+                     StringAgg('B',
+                               ',',
+                               (x, y) => x == y ? 0 : x > y ? -1 : 1)
+                     )
+                 ->SortBy('A')
+
+  const expected = [
+    {A: 0, aggrValue: 'a'},
+    {A: 2, aggrValue: 'p,f,c'},
+    {A: 4, aggrValue: 'm,b'},
+  ]
+
+  assert_equal(expected, result)
 enddef
 
 def Test_RA_SumBy()

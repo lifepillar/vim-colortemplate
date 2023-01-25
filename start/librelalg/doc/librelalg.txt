@@ -1997,6 +1997,33 @@ Max({rel}, {attr})				*librelalg.Max()*
 >
 		const maxCol = From(Tag)->Max('Column')         # 15
 <
+StringAgg({rel}, {attr}, {sep}, {how})		*librelalg.StringAgg()*
+		Return the values of attribute {attr} in a relation {rel}
+		joined into a |string|. The values in the string are separated
+		by string {sep}. The items are sorted using |sort()|. {how} is
+		defined as in |sort()|. Note: all the arguments are mandatory!
+		Examples:
+>
+		echo From([{A: 9}, {A: 7}, {A: 11}])
+			->StringAgg('A', ', ', 'n')  # '7, 9, 11'
+<
+		To return the tags in each buffer joined into a string, sorted
+		by buffer:
+>
+		const result = From(Tag)
+		               ->GroupBy('BufId', StringAgg('TagName', ',', ''))
+		               ->SortBy(['BufId'])
+		echo Table(result)
+<
+		Output:
+>
+		───────────────────────
+		       aggrValue BufId
+		───────────────────────
+		 abc,lll,xyz,zzz     1
+		             abc     2
+		             abc     3
+<
 Sum({rel}, {attr})				*librelalg.Sum()*
 		Return the sum of the values of attribute {attr} in a relation
 		{rel}. Examples:

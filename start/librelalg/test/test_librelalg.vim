@@ -12,7 +12,6 @@ import 'libtinytest.vim' as tt
 const AntiJoin             = ra.AntiJoin
 const Avg                  = ra.Avg
 const AvgBy                = ra.AvgBy
-const Bind                 = ra.Bind
 const Bool                 = ra.Bool
 const Build                = ra.Build
 const CoddDivide           = ra.CoddDivide
@@ -1255,7 +1254,7 @@ def Test_RA_ListAgg()
   assert_equal([], From([])->ListAgg('A'))
   assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A'))
   assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B'))
-  assert_equal(expected, From(r)->GroupBy(['A'], Bind(ListAgg, 'B'))->SortBy('A'))
+  assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B'))->SortBy('A'))
 enddef
 
 def Test_RA_SumBy()
@@ -1273,7 +1272,7 @@ def Test_RA_SumBy()
   ]
 
   assert_equal([{sum: 8}],   From(r)->SumBy([], 'A'))
-  assert_equal([{sum: 13.5}], From(r)->SumBy([], 'B'))
+  assert_equal(13.5, From(r)->SumBy([], 'B')[0].sum)
   assert_equal([
     {A: 0, sum: 10.0},
     {A: 1, sum: -0.5},
@@ -1422,29 +1421,74 @@ def Test_RA_Frame()
 enddef
 
 def Test_RA_GroupBy()
-  var R = Rel.new('R', {id: Int, name: Str, balance: Float}, [['id']])
+  var R = Rel.new('R', {id: Int, name: Str, balance: Float, class: Str}, 'id')
   const r = R.instance
 
   const instance = [
-    {id: 0, name: "A", balance: 10.0},
-    {id: 1, name: "A", balance:  2.5},
-    {id: 2, name: "B", balance: -3.0},
-    {id: 3, name: "A", balance:  1.5},
-    {id: 4, name: "B", balance:  2.5},
+    {id: 0, name: "A", balance: 10.0, class: "X"},
+    {id: 1, name: "A", balance:  3.5, class: "X"},
+    {id: 2, name: "B", balance: -3.0, class: "X"},
+    {id: 3, name: "A", balance:  1.5, class: "Y"},
+    {id: 4, name: "B", balance:  2.5, class: "X"},
   ]
   R.InsertMany(instance)
 
-  const result = From(r)
-               ->GroupBy(['name'], Bind(Sum, 'balance'), 'total')
+  var result = From(r)
+               ->GroupBy(['name'], Sum('balance'), 'total')
                ->SortBy('name')
 
-  const expected = [
-    {name: 'A', total: 14.0},
+  var expected = [
+    {name: 'A', total: 15.0},
     {name: 'B', total: -0.5},
   ]
 
-  assert_equal(2, len(result))
   assert_equal(expected, result)
+
+  result = r->GroupBy(['name'], Max('balance'), 'max')->SortBy('name')
+
+  expected = [
+    {name: 'A', max: 10.0},
+    {name: 'B', max: 2.5},
+  ]
+
+  assert_equal(expected, result)
+
+  result = r->GroupBy(['name'], Min('balance'), 'min')->SortBy('name')
+
+  expected = [
+    {name: 'A', min: 1.5},
+    {name: 'B', min: -3.0},
+  ]
+
+  assert_equal(expected, result)
+
+  result = r->GroupBy(['name'], Avg('balance'), 'avg')->SortBy('name')
+
+  expected = [
+    {name: 'A', avg: 5.0},
+    {name: 'B', avg: -0.25},
+  ]
+
+  assert_equal(expected, result)
+
+  result = r->GroupBy(['name'], Count, 'count')->SortBy('name')
+
+  expected = [
+    {name: 'A', count: 3},
+    {name: 'B', count: 2},
+  ]
+
+  assert_equal(expected, result)
+
+  result = r->GroupBy(['name'], CountDistinct('class'), 'num_class')->SortBy('name')
+
+  expected = [
+    {name: 'A', num_class: 2},
+    {name: 'B', num_class: 1},
+  ]
+
+  assert_equal(expected, result)
+
   assert_equal(instance, r)
 enddef
 

@@ -104,6 +104,38 @@ def Values(t: dict<any>, attrList: list<string>): list<any>
   endfor
   return values
 enddef
+
+
+def NumArgs(Fn: func): number   # Number of arguments of a function
+  return len(split(matchstr(typename(Fn), '([^)]\+)'), ','))
+enddef
+
+# Implement currying with a twist: if the last argument is a function,
+# put it at the beginning. This trick allows the following syntaxes to be
+# equivalent:
+#
+#     CurriedFunc(F, 'arg1', 'arg2')
+# and
+#     CurriedFunc('arg1', 'arg2', F)
+#
+# besides, of course, allowing partial application.
+def Curry(Fn: func, ...values: list<any>): func
+  const n = NumArgs(Fn)
+
+  return (...args: list<any>) => {
+    const totalArgs = values + args
+
+    if len(totalArgs) < n
+        return call(Curry, [Fn] + totalArgs)
+    else
+      if type(totalArgs[-1]) == v:t_func
+        return call(Fn, totalArgs[-1 : ] + totalArgs[ : -2])
+      else
+        return call(Fn, totalArgs)
+      endif
+    endif
+  }
+enddef
 # }}}
 
 # Data definition and manipulation {{{
@@ -1079,7 +1111,7 @@ enddef
 export def GroupBy(
     Arg: any,
     groupBy: list<string>,
-    AggregateFn: func(func(func(dict<any>))): any,
+    AggregateFn: func(...any): any,
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
@@ -1199,11 +1231,7 @@ def Aggregate(Arg: any, initValue: any, Fn: func(dict<any>, any): any): any
   return Res
 enddef
 
-export def Bind(AggrFn: func(func(func(dict<any>)): void, string): any, attr: string): func(func(func(dict<any>))): any
-  return (Cont: func(func(dict<any>)): void) => AggrFn(Cont, attr)
-enddef
-
-export def ListAgg(Arg: any, attr: string): list<any>
+def ListAgg_(Arg: any, attr: string): list<any>
   var agg: list<any> = []
   const Cont = From(Arg)
 
@@ -1213,6 +1241,8 @@ export def ListAgg(Arg: any, attr: string): list<any>
 
   return agg
 enddef
+
+export const ListAgg = Curry(ListAgg_)
 
 export def Count(Arg: any): number
   var count = 0
@@ -1225,7 +1255,7 @@ export def Count(Arg: any): number
   return count
 enddef
 
-export def CountDistinct(Arg: any, attr: string): number
+def CountDistinct_(Arg: any, attr: string): number
   var count = 0
   var seen: dict<bool> = {}
   const Cont = From(Arg)
@@ -1241,7 +1271,9 @@ export def CountDistinct(Arg: any, attr: string): number
   return count
 enddef
 
-export def Max(Arg: any, attr: string): any
+export const CountDistinct = Curry(CountDistinct_)
+
+def Max_(Arg: any, attr: string): any
   var first = true
   var max: any = null
   const Cont = From(Arg)
@@ -1258,7 +1290,9 @@ export def Max(Arg: any, attr: string): any
   return max
 enddef
 
-export def Min(Arg: any, attr: string): any
+export const Max = Curry(Max_)
+
+def Min_(Arg: any, attr: string): any
   var first = true
   var min: any = null
   const Cont = From(Arg)
@@ -1275,11 +1309,15 @@ export def Min(Arg: any, attr: string): any
   return min
 enddef
 
-export def Sum(Arg: any, attr: string): any
+export const Min = Curry(Min_)
+
+def Sum_(Arg: any, attr: string): any
   return Aggregate(Arg, 0, (t, sum) => sum + t[attr])
 enddef
 
-export def Avg(Arg: any, attr: string): any
+export const Sum = Curry(Sum_)
+
+def Avg_(Arg: any, attr: string): any
   var sum: float = 0.0
   var count = 0
   const Cont = From(Arg)
@@ -1290,6 +1328,8 @@ export def Avg(Arg: any, attr: string): any
   })
   return count == 0 ? null : sum / count
 enddef
+
+export const Avg = Curry(Avg_)
 # }}}
 # }}}
 

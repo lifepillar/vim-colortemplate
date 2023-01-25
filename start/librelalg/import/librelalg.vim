@@ -1382,7 +1382,7 @@ export def RelEq(R: any, S: any): bool
 enddef
 
 # Returns a textual representation of a relation
-export def Table(R: any, name = null_string, columns: any = null, sep = '─'): string
+export def Table(R: any, columns: any = null, name = null_string, sep = '─'): string
   if strchars(sep) != 1
     throw printf("A table separator must be a single character. Got %s", sep)
   endif

@@ -2072,7 +2072,7 @@ RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		set of tuples (the order of the tuples does not matter);
 		return |false| otherwise.
 
-Table({rel} [, {name}, {columns}, {sep})	*librelalg.Table()*
+Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		Return a tabular representation of a base or derived relation
 		{rel} as a |string|. The title of the table may be specified
 		with {name}: the default is to use the relation name for base
@@ -2094,8 +2094,8 @@ Table({rel} [, {name}, {columns}, {sep})	*librelalg.Table()*
 		]
 
 		echo Table(r) "\n"
-		echo Table(r, 'A table', ['Y', 'X'], '~') "\n"
-		echo Table(r, null_string, 'Y')
+		echo Table(r, ['Y', 'X'], 'A table', '~') "\n"
+		echo Table(r, 'Y')
 <
 		Output:
 >

@@ -1094,9 +1094,14 @@ enddef
 
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
-export def Frame(Arg: any, attrList: list<string>, name: string = 'fid'): func(func(dict<any>))
+export def Frame(
+    Arg: any,
+    attrs: any,
+    name: string = 'fid'
+): func(func(dict<any>))
   var fid = 0  # Frame identifier
   var seen: dict<number> = {}
+  const attrList: list<string> = Listify(attrs)
   const Cont = From(Arg)
 
   return (Emit: func(dict<any>)) => {

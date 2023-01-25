@@ -32,7 +32,7 @@ def Listify(item: any): list<string>
   return type(item) == v:t_list ? item : [item]
 enddef
 
-def NormalizeKeys(keys: any): list<list<string>>
+def ListifyKeys(keys: any): list<list<string>>
   if type(keys) == v:t_string
     return [[keys]]  # One single-attribute key
   endif
@@ -389,7 +389,7 @@ export class Rel
       throw ErrNoKey(this.name)
     endif
 
-    const keys_: list<list<string>> = NormalizeKeys(keys)
+    const keys_: list<list<string>> = ListifyKeys(keys)
 
     this.attributes = keys(this.schema)->sort()
     this.keyAttributes = flattennew(keys_)->sort()->uniq()

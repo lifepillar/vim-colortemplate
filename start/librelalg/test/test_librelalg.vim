@@ -322,7 +322,7 @@ def Test_RA_Delete()
   assert_equal([], R.instance)
 enddef
 
-def Test_RA_DeletionViolatingReferentialIntegrity()
+def Test_RA_ReferentialIntegrity()
   RR = Rel.new('R', {A: Int}, ['A'])
   SS = Rel.new('S', {X: Str, Y: Int}, ['X'])
   ForeignKey(SS, 'references', RR, ['Y'], ['A'])

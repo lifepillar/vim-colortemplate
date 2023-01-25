@@ -28,7 +28,7 @@ def IsFunc(X: any): bool
   return type(X) == v:t_func
 enddef
 
-def NormalizeList(item: any): list<string>
+def Listify(item: any): list<string>
   return type(item) == v:t_list ? item : [item]
 enddef
 
@@ -45,7 +45,7 @@ def NormalizeKeys(keys: any): list<list<string>>
     return [keys]  # One composite key
   endif
 
-  return mapnew(keys, (_, v) => NormalizeList(v))  # Many keys
+  return mapnew(keys, (_, v) => Listify(v))  # Many keys
 enddef
 
 # v1 and v2 must have the same type
@@ -405,7 +405,7 @@ export class Rel
   enddef
 
   def Key(key: any)
-    const key_: list<string> = NormalizeList(key)
+    const key_: list<string> = Listify(key)
 
     if index(this.keys, key_) != -1
       throw ErrKeyAlreadyDefined(this.name, key_)
@@ -437,7 +437,7 @@ export class Rel
   enddef
 
   def Index(key: any): KeyIndex
-    return this._indexes[string(NormalizeList(key))]
+    return this._indexes[string(Listify(key))]
   enddef
 
   def Insert(t: dict<any>): any
@@ -610,8 +610,8 @@ export def ForeignKey(
   fkey:       any,
   key:        any = null
 ): void
-  const fkey_: list<string> = NormalizeList(fkey)
-  const key_:  list<string> = key == null ? fkey_ : NormalizeList(key)
+  const fkey_: list<string> = Listify(fkey)
+  const key_:  list<string> = key == null ? fkey_ : Listify(key)
 
   fkey_->SameSize(key_,  ErrForeignKeySize(Child.name, fkey_, Parent.name, key_))
   fkey_->Conforms(Child, ErrForeignKeySource(Child.name, fkey_, Parent.name, key_))
@@ -703,7 +703,7 @@ enddef
 
 export def SortBy(Arg: any, attrs: any, opts: list<string> = []): list<dict<any>>
   const invert: list<bool> = mapnew(opts, (_, v) => v == 'd')
-  const attrList: list<string> = NormalizeList(attrs)
+  const attrList: list<string> = Listify(attrs)
   const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList, invert)
   return Sort(Arg, SortAttrPred)
 enddef
@@ -728,7 +728,7 @@ export def SumBy(
     aggrName = 'sum'
 ): list<dict<any>>
   var   aggr: dict<dict<any>> = {}
-  const groupBy_: list<string> = NormalizeList(groupBy)
+  const groupBy_: list<string> = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
@@ -751,7 +751,7 @@ export def CountBy(
 ): list<dict<any>>
   var   aggrCount: dict<dict<any>> = {}
   var   aggrDistinct: dict<dict<bool>> = {}
-  const groupBy_: list<string> = NormalizeList(groupBy)
+  const groupBy_: list<string> = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
@@ -779,7 +779,7 @@ export def MaxBy(
     aggrName = 'max'
 ): list<dict<any>>
   var   aggr: dict<dict<any>> = {}  # Map group => tuple
-  const groupBy_: list<string> = NormalizeList(groupBy)
+  const groupBy_: list<string> = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
@@ -803,7 +803,7 @@ export def MinBy(
     aggrName = 'min'
 ): list<dict<any>>
   var   aggr: dict<dict<any>> = {}  # Map group => tuple
-  const groupBy_: list<string> = NormalizeList(groupBy)
+  const groupBy_: list<string> = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
@@ -828,7 +828,7 @@ export def AvgBy(
 ): list<dict<any>>
   var   aggrAvg: dict<dict<any>> = {}
   var   aggrCnt: dict<number> = {}
-  const groupBy_: list<string> = NormalizeList(groupBy)
+  const groupBy_: list<string> = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
   Cont((t: dict<any>) => {
@@ -884,7 +884,7 @@ enddef
 
 export def Project(Arg: any, attrs: any): func(func(dict<any>))
   const Cont = From(Arg)
-  const attrList = NormalizeList(attrs)
+  const attrList = Listify(attrs)
 
   return (Emit: func(dict<any>)) => {
     var seen: dict<bool> = {}
@@ -1120,7 +1120,7 @@ export def GroupBy(
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
   var fid: dict<list<dict<any>>> = {}
-  const groupBy_: list<string> = NormalizeList(groupBy)
+  const groupBy_: list<string> = Listify(groupBy)
   const Cont = From(Arg)
 
   Cont((t) => {

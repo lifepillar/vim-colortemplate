@@ -124,6 +124,13 @@ export def Regex(pattern: string): func(Context): Result
     endif
   }
 enddef
+
+export def Call(Fn: func(): void): func(Context): Result
+  return (ctx: Context): Result => {
+    Fn()
+    return Success()
+  }
+enddef
 # }}}
 
 # Parser combinators {{{

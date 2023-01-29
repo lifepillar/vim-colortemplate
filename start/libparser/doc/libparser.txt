@@ -423,6 +423,41 @@ Space({ctx})					*libparser.Space()*
 
 Parser generators are functions that build and return a parser.
 
+Call({func})					*libparser.Call()*
+		Return a parser that calls {func} and always succeeds. The
+		parsed value is always |null|. {func} is a function that takes
+		no arguments and returns no value. This parser generator can
+		be used for side effects. For examples:
+>
+		def Start()
+		    echo 'Parsing started...'
+		enddef
+
+		def Stop()
+		    echo 'Finished!'
+		enddef
+
+		def Consume(v: string)
+		    echo "Parsed value: " .. v
+		enddef
+
+		var ctx = Context.new('abc')
+		const Parser = Seq(
+		    Call(Start),
+		    Text('ab')->Apply(Consume),
+		    Call(Stop)
+		)
+		const result = Parser(ctx)
+<
+		Output:
+>
+		Parsing started...
+		Parsed value: ab
+		Finished!
+<
+		Note that |libparser.Apply()| should be used if the parsed
+		value must be made available to the function.
+
 Fail({msg})					*libparser.Fail()*
 		Return a parser that always fails with a failure labelled by
 		{msg}, preventing backtracking. Therefore, this parser is

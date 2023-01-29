@@ -13,6 +13,7 @@ const Context      = parser.Context
 const Eof          = parser.Eof
 const Eol          = parser.Eol
 const Eps          = parser.Eps
+const Call         = parser.Call
 const FAIL         = parser.FAIL
 const Lab          = parser.Lab
 const Lexeme       = parser.Lexeme
@@ -238,6 +239,16 @@ def Test_LP_ParseRegex002()
   assert_false(result.success)
   assert_true(result.label is FAIL)
   assert_equal(0, ctx.index)
+enddef
+
+def Test_LP_Call()
+  var n = 0
+  const F = () => {
+    ++n
+  }
+  var ctx = Context.new('ab')
+  const result = Call(F)(ctx)
+  assert_equal(1, n)
 enddef
 
 def Test_LP_ParseOneOf001()

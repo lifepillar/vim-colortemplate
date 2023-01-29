@@ -7,6 +7,7 @@ libparser-quickstart	libparser.txt	/*libparser-quickstart*
 libparser-tutorial	libparser.txt	/*libparser-tutorial*
 libparser.Apply()	libparser.txt	/*libparser.Apply()*
 libparser.Bol()	libparser.txt	/*libparser.Bol()*
+libparser.Call()	libparser.txt	/*libparser.Call()*
 libparser.Context	libparser.txt	/*libparser.Context*
 libparser.Eof()	libparser.txt	/*libparser.Eof()*
 libparser.Eol()	libparser.txt	/*libparser.Eol()*

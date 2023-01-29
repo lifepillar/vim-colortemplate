@@ -282,11 +282,11 @@ export def Map(
   }
 enddef
 
-export def Apply(Parser: func(Context): Result, Fn: func(Context, any): void): func(Context): Result
+export def Apply(Parser: func(Context): Result, Fn: func(any): void): func(Context): Result
   return (ctx: Context): Result => {
     const result = Parser(ctx)
     if result.success
-      Fn(ctx, result.value)
+      Fn(result.value)
       return Success()
     endif
     return result

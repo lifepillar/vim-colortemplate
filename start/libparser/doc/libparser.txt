@@ -775,6 +775,44 @@ OneOf(...{parser})				*libparser.OneOf()*
 		also the second choice `Text("ax")` fails. The position of the
 		farthest failure is returned.
 
+OneOrMore(...{parser})				*libparser.OneOrMore()*
+		Apply a parser one or more times, as many as possible, and
+		accumulate the parsed results into a |list|.
+
+		An example in which the parser succeeds:
+>
+		var ctx = Context.new('ababcd', 0)
+		const Parser = OneOrMore(Text('ab'))
+		const result = Parser(ctx)
+
+		echo result.success
+		echo "Value:" result.value
+		echo "Index:" ctx.index
+<
+		Output:
+>
+		true
+		Value: ['ab', 'ab']
+		Index: 4
+<
+		An example in which the parser fails:
+>
+		var ctx = Context.new('acac', 0)
+		const Parser = OneOrMore(Text('ab'))
+		const result = Parser(ctx)
+
+		echo result.success
+		echo "Label:" result.label
+		echo "Errpos:" result.errpos
+		echo "Index:" ctx.index
+<
+		Output:
+>
+		false
+		Label: ''
+		Errpos: 0
+		Index: 0
+<
 Opt({parser})					*libparser.Opt()*
 		Apply {parser} and return its result in case of success; if
 		{parser} fails, succeed without consuming any input. That is,

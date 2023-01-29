@@ -178,6 +178,12 @@ export def OneOf(
   }
 enddef
 
+export def OneOrMore(
+    Parser: func(Context): Result
+): func(Context): Result
+  return Seq(Parser, Many(Parser))->Map((v) => flattennew(v, 1))
+enddef
+
 export def Opt(
     Parser: func(Context): Result
 ): func(Context): Result

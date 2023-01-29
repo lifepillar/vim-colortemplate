@@ -18,6 +18,7 @@ const Lexeme       = parser.Lexeme
 const Many         = parser.Many
 const Map          = parser.Map
 const OneOf        = parser.OneOf
+const OneOrMore    = parser.OneOrMore
 const Opt          = parser.Opt
 const LookAhead    = parser.LookAhead
 const NegLookAhead = parser.NegLookAhead
@@ -242,6 +243,38 @@ def Test_LP_ParseOneOf004()
   assert_false(result.success)
   assert_true(result.label is FAIL)
   assert_equal(0, ctx.index)
+enddef
+
+def Test_LP_ParseOneOrMore000()
+  var ctx = Context.new("+z")
+  const result = OneOrMore(Text('+x'))(ctx)
+  assert_false(result.success)
+  assert_true(result.label is FAIL)
+  assert_equal(0, ctx.index)
+enddef
+
+def Test_LP_ParseOneOrMore001()
+  var ctx = Context.new("+x+z")
+  const result = OneOrMore(Text('+x'))(ctx)
+  assert_true(result.success)
+  assert_equal(['+x'], result.value)
+  assert_equal(2, ctx.index)
+enddef
+
+def Test_LP_ParseOneOrMore002()
+  var ctx = Context.new("+x+x+z")
+  const result = OneOrMore(Text('+x'))(ctx)
+  assert_true(result.success)
+  assert_equal(['+x', '+x'], result.value)
+  assert_equal(4, ctx.index)
+enddef
+
+def Test_LP_ParseOneOrMore003()
+  var ctx = Context.new("+x+x+x+z")
+  const result = OneOrMore(Text('+x'))(ctx)
+  assert_true(result.success)
+  assert_equal(['+x', '+x', '+x'], result.value)
+  assert_equal(6, ctx.index)
 enddef
 
 def Test_LP_ParseOptional001()

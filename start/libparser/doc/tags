@@ -19,6 +19,7 @@ libparser.Map()	libparser.txt	/*libparser.Map()*
 libparser.NegLookAhead()	libparser.txt	/*libparser.NegLookAhead()*
 libparser.Null()	libparser.txt	/*libparser.Null()*
 libparser.OneOf()	libparser.txt	/*libparser.OneOf()*
+libparser.OneOrMore()	libparser.txt	/*libparser.OneOrMore()*
 libparser.Opt()	libparser.txt	/*libparser.Opt()*
 libparser.R()	libparser.txt	/*libparser.R()*
 libparser.Regex()	libparser.txt	/*libparser.Regex()*

@@ -328,9 +328,9 @@ Eol({ctx})					*libparser.Eol()*
 		Current index: 1
 <
 Eof({ctx})					*libparser.Eof()*
-		A parser that matches at the end of the text, without
-		consuming any input. The returned value upon success is
-		|null|. For example:
+		A parser that matches at the end of the text without consuming
+		any input. The returned value upon success is |null|. For
+		example:
 >
 		var ctx = Context.new("abc", 0)
 		var result = Eof(ctx)

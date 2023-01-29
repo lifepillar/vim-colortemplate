@@ -291,6 +291,24 @@ Now, `exp2` can be evaluated, too:
 ==============================================================================
 2. Basic parsers				*libparser-basic*
 
+Bol({ctx})					*libparser.Bol()*
+		A parser that matches at the beginning of a line without
+		consuming any input. The parsed value is always |null|. For
+		example:
+>
+		var ctx = Context.new("X\nY", 2)
+		var result = Bol(ctx)
+
+		echo result.success
+		echo "Value:" result.value
+		echo "Current index: " .. ctx.index
+<
+		Output:
+>
+		true
+		Value: null
+		Current index: 2
+<
 Eol({ctx})					*libparser.Eol()*
 		A parser that matches an end-of-line character. The returned
 		value is the actual new line character (`\n` or `\r`). For

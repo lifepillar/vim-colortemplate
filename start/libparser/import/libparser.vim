@@ -62,6 +62,14 @@ enddef
 # }}}
 
 # Basic parsers {{{
+export def Bol(ctx: Context): Result
+  if ctx.index <= 0 || ctx.text[ctx.index - 1] =~ '[\n\r]'
+    return Success(null)
+  else
+    return Failure(ctx)
+  endif
+enddef
+
 export def Eps(ctx: Context): Result
   return Success('')
 enddef

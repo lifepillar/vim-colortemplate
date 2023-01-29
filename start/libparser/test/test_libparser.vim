@@ -8,6 +8,7 @@ vim9script
 import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
+const Bol          = parser.Bol
 const Context      = parser.Context
 const Eof          = parser.Eof
 const Eol          = parser.Eol
@@ -134,6 +135,34 @@ def Test_LP_NotEof()
   assert_false(result.success)
   assert_true(result.label is FAIL)
   assert_equal(2, ctx.index)
+enddef
+
+def Test_LP_Bol()
+  var ctx = Context.new("ab")
+  var result = Bol(ctx)
+  assert_true(result.success)
+  assert_equal(null, result.value)
+  assert_equal(0, ctx.index)
+
+  ctx.index = 1
+  result = Bol(ctx)
+
+  assert_false(result.success)
+  assert_true(result.label is FAIL)
+  assert_equal(1, ctx.index)
+
+  ctx = Context.new("ab\ncd", 3)
+  result = Bol(ctx)
+
+  assert_true(result.success)
+  assert_equal(null, result.value)
+  assert_equal(3, ctx.index)
+
+  for i in [1, 2, 4, 5]
+    ctx.index = i
+    result = Bol(ctx)
+    assert_false(result.success)
+  endfor
 enddef
 
 def Test_LP_ParseEmptyText001()

@@ -8,6 +8,7 @@ vim9script
 import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
+const Apply        = parser.Apply
 const Bol          = parser.Bol
 const Context      = parser.Context
 const Eof          = parser.Eof
@@ -554,5 +555,20 @@ def Test_LP_ManyWithOptionalInfiniteLoop()
   assert_equal('no infinite loop', result.label)
   assert_equal(0, ctx.index)
 enddef
+
+def Test_LP_Apply()
+  var ctx = Context.new('ab')
+  var s = ''
+
+  def F(c: Context, v: string)
+    s = v
+  enddef
+
+  const Parse = Text('ab')->Apply(F)
+  const result = Parse(ctx)
+  assert_equal(null, result.value)
+  assert_equal('ab', s)
+enddef
+
 
 tt.Run('_LP_')

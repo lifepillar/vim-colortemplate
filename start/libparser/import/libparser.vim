@@ -64,7 +64,7 @@ enddef
 # Basic parsers {{{
 export def Bol(ctx: Context): Result
   if ctx.index <= 0 || ctx.text[ctx.index - 1] =~ '[\n\r]'
-    return Success(null)
+    return Success()
   else
     return Failure(ctx)
   endif
@@ -278,13 +278,22 @@ export def Map(
 ): func(Context): Result
   return (ctx: Context): Result => {
     const result = Parser(ctx)
-    return result.success ? Success(Fn(result.value)) : result
+
+    if result.success
+      return Success(Fn(result.value))
+    else
+      return result
+    endif
   }
 enddef
 
-export def Apply(Parser: func(Context): Result, Fn: func(any): void): func(Context): Result
+export def Apply(
+    Parser: func(Context): Result,
+    Fn: func(any): void
+): func(Context): Result
   return (ctx: Context): Result => {
     const result = Parser(ctx)
+
     if result.success
       Fn(result.value)
       return Success()

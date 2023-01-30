@@ -169,7 +169,7 @@ export def Seq(
       endif
     endfor
 
-    return empty(values) ? Success() : Success(values)
+    return Success(values)
   }
 enddef
 
@@ -234,7 +234,7 @@ export def Many(Parser: func(Context): Result): func(Context): Result
       endif
     endwhile
 
-    return empty(values) ? Success() : Success(values)
+    return Success(values)
   }
 enddef
 

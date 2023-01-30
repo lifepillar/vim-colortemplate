@@ -354,7 +354,7 @@ def Test_LP_ParseMany002()
   var ctx = Context.new("xyxyxyz")
   const result = Many(Text("xz"))(ctx)
   assert_true(result.success)
-  assert_equal(null, result.value)
+  assert_equal([], result.value)
   assert_equal(0, ctx.index)
 enddef
 
@@ -363,6 +363,15 @@ def Test_LP_ParseManyInfiniteLoop()
   const result = Many(Text(""))(ctx)
   assert_false(result.success)
   assert_equal("no infinite loop", result.label)
+  assert_equal(0, ctx.index)
+enddef
+
+def Test_LP_ParseSeqOpt()
+  var ctx = Context.new("xyabuv")
+  const Parse = Seq(Opt(Text('z')))
+  const result = Parse(ctx)
+  assert_true(result.success)
+  assert_equal([], result.value)
   assert_equal(0, ctx.index)
 enddef
 
@@ -523,7 +532,7 @@ def Test_LP_ParseExpectedColon001()
   const Parser = Many(OneOf(S, T("Tsk")))
   const result = Parser(ctx)
   assert_true(result.success)
-  assert_equal(null, result.value)
+  assert_equal([], result.value)
   assert_equal(0, ctx.index)
 enddef
 

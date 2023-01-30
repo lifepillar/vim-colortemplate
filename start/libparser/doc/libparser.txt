@@ -888,8 +888,9 @@ Opt({parser})					*libparser.Opt()*
 <
 Seq(...{parser})				*libparser.Seq()*
 		Compose the given parsers sequentially, and succeed if and
-		only if every parser in the sequence succeeds. If a parser
-		fails, return its failure. Examples:
+		only if every parser in the sequence succeeds. Collect the
+		result of the parser sequence into a |list|. If a parser
+		fails, report its failure. Examples:
 >
 		var ctx = Context.new('abcd', 0)
 		const Parser = Seq(Text('a'), Text('b'), Text('cd'))

@@ -9,29 +9,29 @@ import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
 const Bol          = parser.Bol
+const Call         = parser.Call
 const Context      = parser.Context
 const Eof          = parser.Eof
 const Eol          = parser.Eol
 const Eps          = parser.Eps
-const Call         = parser.Call
 const FAIL         = parser.FAIL
 const Lab          = parser.Lab
 const Lexeme       = parser.Lexeme
+const LookAhead    = parser.LookAhead
 const Many         = parser.Many
 const Map          = parser.Map
+const NegLookAhead = parser.NegLookAhead
 const OneOf        = parser.OneOf
 const OneOrMore    = parser.OneOrMore
 const Opt          = parser.Opt
-const LookAhead    = parser.LookAhead
-const NegLookAhead = parser.NegLookAhead
+const R            = parser.R
 const Regex        = parser.Regex
+const Result       = parser.Result
 const Seq          = parser.Seq
 const Skip         = parser.Skip
-const Text         = parser.Text
-const R            = parser.R
-const Result       = parser.Result
 const Space        = parser.Space
 const T            = parser.T
+const Text         = parser.Text
 const Token        = parser.Token
 const Integer      = Regex('\d\+')->Map((x) => str2nr(x))
 

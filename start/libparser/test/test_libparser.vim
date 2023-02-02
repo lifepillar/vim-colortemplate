@@ -564,4 +564,24 @@ def Test_LP_ManyWithOptionalInfiniteLoop()
   assert_equal(0, ctx.index)
 enddef
 
+def Test_LP_CustomTokenizer()
+  const Spaces         = Regex('\%(\s\|\n\|\r\)\+')
+  const Comment        = Regex('#[^\n]*')
+  const SpaceOrComment = Many(OneOf(Spaces, Comment))
+  const MyToken        = Lexeme(SpaceOrComment)
+  var   ctx            = Context.new("abc # XY\n ok")
+  var   Parser         = MyToken(Text("abc"))
+  var   result         = Parser(ctx)
+  assert_true(result.success)
+  assert_equal('abc', result.value)
+  assert_equal(10, ctx.index)
+
+  ctx    = Context.new("abc#XY")
+  Parser = MyToken(Text("abc"))
+  result = Parser(ctx)
+  assert_true(result.success)
+  assert_equal('abc', result.value)
+  assert_equal(6, ctx.index)
+enddef
+
 tt.Run('_LP_')

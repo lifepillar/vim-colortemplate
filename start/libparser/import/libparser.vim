@@ -311,7 +311,7 @@ export def Lexeme(
 enddef
 
 export const Eol   = Regex('[\r\n]')
-export const Space = Regex('\%(\r\|\n\|\s\)*')
+export const Space = Regex('\%(\s\|\r\|\n\)*')
 export const Token = Lexeme(Space)
 
 export def T(token: string): func(Context): Result

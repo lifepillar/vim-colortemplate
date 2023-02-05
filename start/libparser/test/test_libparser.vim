@@ -8,6 +8,7 @@ vim9script
 import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
+const Blank        = parser.Blank
 const Bol          = parser.Bol
 const Call         = parser.Call
 const Context      = parser.Context
@@ -24,15 +25,14 @@ const NegLookAhead = parser.NegLookAhead
 const OneOf        = parser.OneOf
 const OneOrMore    = parser.OneOrMore
 const Opt          = parser.Opt
-const R            = parser.R
 const Regex        = parser.Regex
+const RegexToken   = parser.RegexToken
 const Result       = parser.Result
 const Seq          = parser.Seq
 const Skip         = parser.Skip
 const Space        = parser.Space
-const T            = parser.T
 const Text         = parser.Text
-const Token        = parser.Token
+const TextToken    = parser.TextToken
 const Integer      = Regex('\d\+')->Map((x) => str2nr(x))
 
 
@@ -241,6 +241,26 @@ def Test_LP_ParseRegex002()
   assert_equal(0, ctx.index)
 enddef
 
+def Test_LP_ParseDefaultRegexToken()
+  var ctx = Context.new("x012 \n abc", 1)
+  const R = RegexToken()
+  const result = R('\d\+')(ctx)
+  assert_true(result.success)
+  assert_equal("012", result.value)
+  assert_equal(7, ctx.index)
+enddef
+
+def Test_LP_ParseCustomRegexToken()
+  var ctx = Context.new("x012 #x\n abc", 1)
+  const Comment = Regex('#[^\n]*')
+  const SpaceOrComment = Many(OneOf(Space, Comment))
+  const R = RegexToken(SpaceOrComment)
+  const result = R('\d\+')(ctx)
+  assert_true(result.success)
+  assert_equal("012", result.value)
+  assert_equal(9, ctx.index)
+enddef
+
 def Test_LP_Call()
   var n = 0
   const F = () => {
@@ -394,7 +414,7 @@ enddef
 
 def Test_LP_ParseSequence003()
   var ctx = Context.new("X=:")
-  const Parse = Seq(T('X'), Lab(T(':'), ':'))
+  const Parse = Seq(Text('X'), Lab(Text(':'), ':'))
   const result = Parse(ctx)
   assert_false(result.success)
   assert_equal(':', result.label)
@@ -482,7 +502,7 @@ def Test_LP_Lexeme()
   assert_equal(3, ctx.index)
 enddef
 
-def Test_LP_ParseSpace001()
+def Test_LP_ParseSpace()
   var ctx = Context.new(" \t\nx")
   const result = Space(ctx)
   assert_true(result.success)
@@ -490,24 +510,40 @@ def Test_LP_ParseSpace001()
   assert_equal(3, ctx.index)
 enddef
 
-def Test_LP_ParseSpace002()
-  var ctx = Context.new("a")
-  const result = Space(ctx)
+def Test_LP_ParseBlank()
+  var ctx = Context.new(" \t\nx")
+  var result = Blank(ctx)
+  assert_true(result.success)
+  assert_equal(" \t\n", result.value)
+  assert_equal(3, ctx.index)
+  result = Blank(ctx)
   assert_true(result.success)
   assert_equal("", result.value)
-  assert_equal(0, ctx.index)
+  assert_equal(3, ctx.index)
 enddef
 
-def Test_LP_ParseToken()
+def Test_LP_ParseDefaultTextToken()
   var ctx = Context.new("hello  \tworld  ")
-  const result = Token(Text("hello"))(ctx)
+  const T = TextToken()
+  const result = T("hello")(ctx)
   assert_true(result.success)
   assert_equal("hello", result.value)
   assert_equal(8, ctx.index)
-  const result2 = Token(Text("world"))(ctx)
+  const result2 = T("world")(ctx)
   assert_true(result2.success)
   assert_equal("world", result2.value)
   assert_equal(15, ctx.index)
+enddef
+
+def Test_LP_ParseCustomTextToken()
+  var ctx = Context.new("abc  # x\n\n y")
+  const Comment = Regex('#[^\n]*')
+  const SpaceOrComment = Many(OneOf(Space, Comment))
+  const T = TextToken(SpaceOrComment)
+  const result = T('abc')(ctx)
+  assert_true(result.success)
+  assert_equal('abc', result.value)
+  assert_equal(11, ctx.index)
 enddef
 
 def Test_LP_ParseInteger001()
@@ -528,8 +564,8 @@ enddef
 
 def Test_LP_ParseExpectedColon001()
   var ctx = Context.new("Author=:")
-  const S = Seq(OneOf(T('Author'), T('XYZ')), Skip(T(':')))
-  const Parser = Many(OneOf(S, T("Tsk")))
+  const S = Seq(OneOf(Text('Author'), Text('XYZ')), Skip(Text(':')))
+  const Parser = Many(OneOf(S, Text("Tsk")))
   const result = Parser(ctx)
   assert_true(result.success)
   assert_equal([], result.value)
@@ -538,8 +574,8 @@ enddef
 
 def Test_LP_ParseExpectedColon002()
   var ctx = Context.new("Author=:")
-  const Dir = OneOf(T('Foo'), Seq(T('Author'), Lab(T(':'), 'colon')))
-  const Parser = Many(OneOf(Dir, T("Tsk")))
+  const Dir = OneOf(Text('Foo'), Seq(Text('Author'), Lab(Text(':'), 'colon')))
+  const Parser = Many(OneOf(Dir, Text("Tsk")))
   const result = Parser(ctx)
   assert_false(result.success)
   assert_equal('colon', result.label)

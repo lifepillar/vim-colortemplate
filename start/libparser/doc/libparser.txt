@@ -291,6 +291,33 @@ Now, `exp2` can be evaluated, too:
 ==============================================================================
 2. Basic parsers				*libparser-basic*
 
+Blank({ctx})					*libparser.Blank()*
+		A parser that matches optional whitespace, including newlines.
+		This parser is equivalent to Opt(Space). For example:
+>
+		var ctx = Context.new('   abc', 0)
+		var result = Blank(ctx)
+
+		echo result.success
+		echo "Value: '" .. result.value .. "'"
+		echo "Index:" ctx.index
+
+		result = Blank(ctx)
+
+		echo result.success
+		echo "Index:" ctx.index
+<
+		Output:
+>
+		true
+		Value: '   '
+		Index: 3
+
+		true
+		Index: 3
+<
+		See also |libparser.Space()| and |libparser.Opt()|.
+
 Bol({ctx})					*libparser.Bol()*
 		A parser that matches at the beginning of a line without
 		consuming any input. The parsed value is always |null|. For
@@ -402,22 +429,30 @@ Null({ctx})					*libparser.Null()*
 		Index: 0
 <
 Space({ctx})					*libparser.Space()*
-		A parser that matches whitespace, including newlines. For
-		example:
+		A parser that matches non-empty whitespace, including
+		newlines. For example:
 >
 		var ctx = Context.new('   abc', 0)
-		const result = Space(ctx)
+		var result = Space(ctx)
 
 		echo result.success
 		echo "Value: '" .. result.value .. "'"
 		echo "Index:" ctx.index
+
+		result = Space(ctx)
+
+		echo result.success
 <
 		Output:
 >
 		true
 		Value: '   '
 		Index: 3
+
+		false
 <
+		See also |libparser.Blank()|.
+
 ==============================================================================
 3. Parser generators				*libparser-generators*
 
@@ -498,27 +533,6 @@ Regex({pat})					*libparser.Regex()*
 		Value: aaaa
 		Index: 4
 
-R({pat})					*libparser.R()*
-		Return a parser that matches regular expression {pat}, then
-		skips whitespace (including newlines). Pattern matching
-		follows the rules of |match()|. Example:
->
-		var ctx = Context.new('ab  c', 0)
-		const Parser = R('\w\+')
-		const result = Parser(ctx)
-
-		echo result.success
-		echo "Value:" result.value
-		echo "Index:" ctx.index
-<
-		Output:
->
-		true
-		Value: ab
-		Index: 4
-<
-		The index now points at character `c` in the text.
-
 Text({string})					*libparser.Text()*
 		Return a parser that matches {string} case-sensitively. Note:
 		for case-insensitive match, use |libparser.Regex()| with |\c|.
@@ -537,27 +551,6 @@ Text({string})					*libparser.Text()*
 		Value: ab
 		Index: 2
 <
-T({string})					*libparser.T()*
-		Return a parser that matches {string} case-sensitively, then
-		skips whitespace (including newlines). Note: for
-		case-insensitive match, use |libparser.R()| with |\c|.
->
-		var ctx = Context.new('a  b c', 0)
-		const Parser = T('a')
-		const result = Parser(ctx)
-
-		echo result.success
-		echo "Value:" result.value
-		echo "Index:" ctx.index
-<
-		Output:
->
-		true
-		Value: a
-		Index: 3
-<
-		The index now points at character `b` in the text.
-
 ==============================================================================
 4. Parser combinators				*libparser-combinators*
 
@@ -942,26 +935,6 @@ Skip({parser})					*libparser.Skip()*
 		Value: null
 		Index: 2
 <
-Token({parser})				*libparser.Token()*
-		Apply {parser} then skip whitespace, including newlines.
->
-		var ctx = Context.new('ab   cd', 0)
-		const Parser = Token(Text('ab'))
-		const result = Parser(ctx)
-
-		echo result.success
-		echo "Value:" "'" .. result.value .. "'"
-		echo "Index:" ctx.index
-<
-		Output:
->
-		true
-		Value: 'ab'
-		Index: 5
-<
-		The index now points at character `c`. If only `Text('ab')`
-		had been used then the index would be at position 2.
-
 ==============================================================================
 5. Other functions				*libparser-other*
 
@@ -969,11 +942,68 @@ Lexeme({parser})				*libparser.Lexeme()*
 		Return a function that transforms a parser P into another
 		parser that first applies P and then uses {parser} to skip
 		stuff (e.g., whitespace, comments). Return the result of P.
-		For example, |libparser.Token()| is defined as follows:
+		For example, |libparser.TextToken()|('abc') is essentially the
+		same as Lexeme(Blank)(Text('abc')), and
+		|libparser.RegexToken()|('\w') is essentially the same as
+		Lexeme(Blank)(Regex('\w')).
+
+RegexToken([{parser}])				*libparser.RegexToken()*
+		Return a |libparser.Regex()| parser generator that matches
+		a given regular expression, then skips the text matched by
+		{parser}. When {parser} is not provided, |libparser.Blank()|
+		is used to skip optional whitespace.
+
+		Pattern matching follows the rules of |match()|. Example:
 >
-		const Token = Lexeme(Space)
+		var ctx = Context.new('ab  c', 0)
+		const R = RegexToken()
+		const Parser = R('\w\+')
+		const result = Parser(ctx)
+
+		echo result.success
+		echo "Value:" result.value
+		echo "Index:" ctx.index
 <
-==============================================================================
+		Output:
+>
+		true
+		Value: ab
+		Index: 4
+<
+		The index now points at character `c` in the text. If
+		|libparser.Regex()| had been used then the index would have
+		been at position 2.
+
+		See also |libparser.Lexeme()|.
+
+TextToken([{parser}])				*libparser.TextToken()*
+		Return a |libparser.Text()| parser generator that matches
+		a given text, then skips the text matched by {parser}. When
+		{parser} is not provided, |libparser.Blank()| is used to skip
+		optional whitespace.
+>
+		var ctx = Context.new('a  b c', 0)
+		const T = TextToken()
+		const Parser = T('a')
+		const result = Parser(ctx)
+
+		echo result.success
+		echo "Value:" result.value
+		echo "Index:" ctx.index
+<
+		Output:
+>
+		true
+		Value: a
+		Index: 3
+<
+		The index now points at character `b` in the text. If
+		|libparser.Text()| had been used then the index would have
+		been at position 1.
+
+		See also |libparser.Lexeme()|.
+
+=============================================================================
 6. Classes					*libparser-classes*
 
 						*libparser.Context*

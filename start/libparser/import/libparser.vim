@@ -272,6 +272,10 @@ enddef
 # }}}
 
 # Derived parsers and other functions {{{
+export const Eol   = Regex('[\r\n]')
+export const Space = Regex('\%(\s\|\r\|\n\)\+')
+export const Blank = Regex('\%(\s\|\r\|\n\)*')
+
 export def Map(
     Parser: func(Context): Result,
     Fn: func(any): any
@@ -310,15 +314,11 @@ export def Lexeme(
   }
 enddef
 
-export const Eol   = Regex('[\r\n]')
-export const Space = Regex('\%(\s\|\r\|\n\)*')
-export const Token = Lexeme(Space)
-
-export def T(token: string): func(Context): Result
-  return Token(Text(token))
+export def TextToken(SkipParser: func(Context): Result = Blank): func(string): func(Context): Result
+  return (token: string): func(Context): Result => Lexeme(SkipParser)(Text(token))
 enddef
 
-export def R(pattern: string): func(Context): Result
-  return Token(Regex(pattern))
+export def RegexToken(SkipParser: func(Context): Result = Blank): func(string): func(Context): Result
+  return (pattern: string): func(Context): Result => Lexeme(SkipParser)(Regex(pattern))
 enddef
 # }}}

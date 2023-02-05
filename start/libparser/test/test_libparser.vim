@@ -378,11 +378,15 @@ def Test_LP_ParseMany002()
   assert_equal(0, ctx.index)
 enddef
 
-def Test_LP_ParseManyInfiniteLoop()
+def Test_LP_ParseMany003()
   var ctx = Context.new("xyxyxyz")
-  const result = Many(Text(""))(ctx)
-  assert_false(result.success)
-  assert_equal("no infinite loop", result.label)
+  var result = Many(Eps)(ctx)
+  assert_true(result.success)
+  assert_equal([''], result.value)
+  assert_equal(0, ctx.index)
+  result = Many(Text(""))(ctx)
+  assert_true(result.success)
+  assert_equal([''], result.value)
   assert_equal(0, ctx.index)
 enddef
 
@@ -591,13 +595,13 @@ def Test_LP_ParseExpectedColon003()
   assert_equal(2, ctx.index)
 enddef
 
-def Test_LP_ManyWithOptionalInfiniteLoop()
+def Test_LP_ManyWithOptional()
   var ctx = Context.new("\n")
   const Parse = Many(Opt(Eol))
   const result = Parse(ctx)
-  assert_false(result.success)
-  assert_equal('no infinite loop', result.label)
-  assert_equal(0, ctx.index)
+  assert_true(result.success)
+  assert_equal(["\n"], result.value)
+  assert_equal(1, ctx.index)
 enddef
 
 def Test_LP_CustomTokenizer()

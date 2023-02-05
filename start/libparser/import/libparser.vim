@@ -215,13 +215,12 @@ export def Many(Parser: func(Context): Result): func(Context): Result
       const result = Parser(ctx)
 
       if result.success
-        if ctx.index <= currIndex # Guard against infinite loops
-          ctx.index = startIndex
-          return Failure(ctx, currIndex, 'no infinite loop')
-        endif
-
         if result.value != null
           values->add(result.value)
+        endif
+
+        if ctx.index <= currIndex # Guard against infinite loops
+          break
         endif
       else
         if result.label isnot FAIL

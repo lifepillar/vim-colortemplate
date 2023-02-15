@@ -241,6 +241,22 @@ def Test_RA_InsertMany()
   assert_equal(instance, RR.instance)
 enddef
 
+def Test_RA_InsertManyDuplicateKey()
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, ['A', 'B', 'C'])
+
+  const statement =<< trim END
+    RR.InsertMany([
+      {A: 0, B: 'b0', C: true, D: 1.2},
+      {A: 0, B: 'b0', C: true, D: 0.4},
+    ])
+  END
+
+  AssertFails(join(statement),
+    "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
+
+  assert_true(RR.IsEmpty())
+enddef
+
 def Test_RA_Update()
   RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
   const rr = RR.instance
@@ -320,6 +336,46 @@ def Test_RA_Delete()
   R.Delete()
 
   assert_equal([], R.instance)
+enddef
+
+def Test_RA_NonTransactionalDelete()
+  RR = Rel.new('R', {A: Int, B: Str}, ['A'])
+
+  RR.Check((t) => {
+    if len(RR.instance) <= 2
+      throw 'Too few tuples'
+    endif
+  }, ['D'])
+
+  const instance = [
+    {A: 0, B: 'X'},
+    {A: 1, B: 'Y'},
+  ]
+  RR.InsertMany(instance)
+
+  assert_equal(2, len(RR.instance))
+  AssertFails("RR.Delete((t) => t.A == 0)", "Too few tuples")
+  assert_equal([], RR.instance)
+enddef
+
+def Test_RA_TransactionalDelete()
+  RR = Rel.new('R', {A: Int, B: Str}, ['A'])
+
+  RR.Check((t) => {
+    if len(RR.instance) <= 2
+      throw 'Too few tuples'
+    endif
+  }, ['D'])
+
+  const instance = [
+    {A: 0, B: 'X'},
+    {A: 1, B: 'Y'},
+  ]
+  RR.InsertMany(instance)
+
+  assert_equal(2, len(RR.instance))
+  AssertFails("RR.Delete((t) => t.A == 0, true)", "Too few tuples")
+  assert_equal(instance, RR.instance)
 enddef
 
 def Test_RA_ReferentialIntegrity()

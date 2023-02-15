@@ -505,7 +505,10 @@ export class Rel
     return this
   enddef
 
-  def Delete(Pred: func(dict<any>): bool = (t) => true): any
+  def Delete(
+      Pred: func(dict<any>): bool = (t) => true,
+      transactional: bool = false
+  ): any
     const DeletePred = (i: number, t: dict<any>): bool => {
       if Pred(t)
         for CheckConstraint in this._constraints.D
@@ -523,7 +526,11 @@ export class Rel
       return true
     }
 
-    filter(this.instance, DeletePred)
+    if transactional
+      this.instance = filter(copy(this.instance), DeletePred)
+    else
+      filter(this.instance, DeletePred)
+    endif
 
     return this
   enddef

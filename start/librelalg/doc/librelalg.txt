@@ -549,12 +549,20 @@ Check({func}[, {opts}])
 		default (when {opts} is not given), a constraint is checked
 		before each insertion and update, but not upon deletion.
 
-Delete([, {func}])
+Delete([, {func}, {flag}])
 		Delete all the tuples of this base relation satisfying
 		predicate {func}, which is a function that takes as an input
 		a tuple t and returns |true| if t must be deleted, |false|
 		otherwise. When {func} is not provided, all the tuples are
 		deleted unconditionally, so the relation object becomes empty.
+
+		When {flag} is passed and it is |true| the deletion happens in
+		a transactional way: if a constraint is violated while
+		deleting some tuple, the relation is not modified at all. The
+		default is to delete in a non-transactional way: this is
+		faster, but if an error occurs while deletion is executing,
+		there is no guarantee on how the resulting instance will look
+		like.
 
 Key({key})
 		Add a {key} to this base relation.

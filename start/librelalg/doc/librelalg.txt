@@ -556,13 +556,12 @@ Delete([, {func}, {flag}])
 		otherwise. When {func} is not provided, all the tuples are
 		deleted unconditionally, so the relation object becomes empty.
 
-		When {flag} is passed and it is |true| the deletion happens in
-		a transactional way: if a constraint is violated while
-		deleting some tuple, the relation is not modified at all. The
-		default is to delete in a non-transactional way: this is
-		faster, but if an error occurs while deletion is executing,
-		there is no guarantee on how the resulting instance will look
-		like.
+		When {flag} is passed and it is |true| the deletion is an
+		atomic operation: if a constraint is violated while deleting
+		some tuple, the relation is not modified at all. The default
+		is to delete in a non-atomic way: this is faster, but if an
+		error occurs while deletion is executing, there is no
+		guarantee on how the resulting instance will look like.
 
 Key({key})
 		Add a {key} to this base relation.
@@ -582,9 +581,18 @@ Insert({tuple})
 		Insert a {tuple} into this base relation. Return the updated
 		relation object.
 
-InsertMany({list})
+InsertMany({list}[, {flag}])
 		Insert a {list} of tuples into this base relation. Return the
 		updated relation object.
+
+		When {flag} is passed and it is |true| the insertion is an
+		atomic operation: if a constraint is violated while inserting
+		some tuple, the relation is not modified at all. So, either
+		all tuples are inserted, or none. The default is to insert in
+		a non-atomic way: this is faster, but if an error occurs while
+		insertion is executing, then the resulting instance will
+		contain some, but not all, the tuples that should have been
+		inserted.
 
 IsEmpty()
 		Return |true| if this relation is empty, |false| otherwise.

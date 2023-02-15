@@ -337,7 +337,7 @@ class KeyIndex
   enddef
 
   def Remove_(index: dict<any>, theKey: list<any>, i: number)
-    const value = theKey[i]
+    const value: string = String(theKey[i])
 
     if i + 1 == len(this.key)
       index->remove(value)
@@ -445,31 +445,52 @@ export class Rel
       CheckConstraint(t)
     endfor
 
-    this.DoInsert_(t)
-
-    return this
-  enddef
-
-  def InsertMany(tuples: list<dict<any>>): any
-    for CheckConstraint in this._constraints.I
-      for t in tuples
-        CheckConstraint(t)
-      endfor
-    endfor
-
-    for t in tuples
-      this.DoInsert_(t)
-    endfor
-
-    return this
-  enddef
-
-  def DoInsert_(t: dict<any>)
     this.instance->add(t)
 
     for idx in values(this._indexes)
       idx.Add(t)
     endfor
+
+    return this
+  enddef
+
+  def InsertMany(tuples: list<dict<any>>, transactional: bool = false): any
+    if transactional
+      var inserted: list<dict<any>> = []
+
+      for t in tuples
+        try
+          this.Insert(t)
+          inserted->add(t)
+        catch
+          this.RollbackInsertion_(inserted)
+          throw v:exception
+        endtry
+      endfor
+    else
+      for t in tuples
+        this.Insert(t)
+      endfor
+    endif
+
+    return this
+  enddef
+
+  def RollbackInsertion_(tuples: list<dict<any>>)
+    const DeletePred = (i: number, t: dict<any>): bool => {
+      if t->In(tuples)
+        for index in values(this._indexes)
+          const keyValue = Values(t, index.key)
+          index.Remove(keyValue)
+        endfor
+
+        return false
+      endif
+
+      return true
+    }
+
+    filter(this.instance, DeletePred)
   enddef
 
   def Update(t: dict<any>, upsert = false): any

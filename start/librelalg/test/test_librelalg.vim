@@ -225,9 +225,18 @@ def Test_RA_InsertMany()
   RR.InsertMany(instance)
 
   assert_equal(instance, RR.instance)
+enddef
 
-  # InsertMany() should work in a transactional way: if a tuple cannot be
-  # inserted then the relation should not be modified at all.
+def Test_RA_NonTransactionalInsertMany()
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  const instance = [
+    {A: 0, B: 'b0', C: true, D: 1.2},
+    {A: 1, B: 'b1', C: true, D: 3.4},
+  ]
+  RR.InsertMany(instance)
+
+  assert_equal(instance, RR.instance)
+
   const statement =<< trim END
     RR.InsertMany([
       {A: 2, B: 'b2', C: false, D: 1.0},
@@ -235,26 +244,73 @@ def Test_RA_InsertMany()
     ])
   END
 
+  const expected = [
+    {A: 0, B: 'b0', C: true, D: 1.2},
+    {A: 1, B: 'b1', C: true, D: 3.4},
+    {A: 2, B: 'b2', C: false, D: 1.0},
+  ]
+
   AssertFails(join(statement),
     "Duplicate key value: ['A', 'C'] = (1, true) already exists")
 
+  assert_equal(expected, RR.instance)
+enddef
+
+def Test_RA_TransactionalInsertMany()
+  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  const instance = [
+    {A: 0, B: 'b0', C: true, D: 1.2},
+    {A: 1, B: 'b1', C: true, D: 3.4},
+  ]
+  RR.InsertMany(instance, true)
+
   assert_equal(instance, RR.instance)
+
+  const statement =<< trim END
+    RR.InsertMany([
+      {A: 2, B: 'b2', C: false, D: 1.0},
+      {A: 1, B: 'b3', C: true,  D: 3.4},
+    ], true)
+  END
+
+  const expected = instance
+
+  AssertFails(join(statement),
+    "Duplicate key value: ['A', 'C'] = (1, true) already exists")
+
+  assert_equal(expected, RR.instance)
 enddef
 
 def Test_RA_InsertManyDuplicateKey()
   RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, ['A', 'B', 'C'])
 
-  const statement =<< trim END
+  const transactionalInsert =<< trim END
     RR.InsertMany([
       {A: 0, B: 'b0', C: true, D: 1.2},
       {A: 0, B: 'b0', C: true, D: 0.4},
-    ])
+    ], true)
   END
 
-  AssertFails(join(statement),
+  AssertFails(join(transactionalInsert),
     "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
 
   assert_true(RR.IsEmpty())
+
+  const nonTransactionalInsert =<< trim END
+    RR.InsertMany([
+      {A: 0, B: 'b0', C: true, D: 1.2},
+      {A: 0, B: 'b0', C: true, D: 0.4},
+    ], false)
+  END
+
+  const expected = [
+      {A: 0, B: 'b0', C: true, D: 1.2},
+  ]
+
+  AssertFails(join(nonTransactionalInsert),
+    "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
+
+  assert_equal(expected, RR.instance)
 enddef
 
 def Test_RA_Update()

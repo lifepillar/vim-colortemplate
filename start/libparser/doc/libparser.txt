@@ -85,10 +85,11 @@ This grammar can be translated into Vim 9 script as follows:
 	const Lab     = parser.Lab
 	const Many    = parser.Many
 	const OneOf   = parser.OneOf
-	const R       = parser.R
 	const Result  = parser.Result
 	const Seq     = parser.Seq
-	const T       = parser.T
+	const R       = parser.RegexToken(parser.Blank)
+	const T       = parser.TextToken(parser.Blank)
+
 
 	const DIV      = T('/')
 	const EQ       = T('=')
@@ -115,12 +116,11 @@ This grammar can be translated into Vim 9 script as follows:
 	const ParseExp = Seq(Exp, Eof)
 <
 The translation is straightforward enough, except for a couple of details,
-explained below. Each terminal symbol is a parser:
-
-- |libparser.T()| defines a parser that matches a given string literally;
-- |libparser.R()| defines a parser that matches a given regular expression.
-
-Whitespace is skipped automatically by those parsers.
+explained below. Each terminal symbol is a parser defined using one of two
+functions `T()` and `R()`: `T()` is a parser that matches a given string
+literally; `R()` is a parser that matches a given regular expression. Those
+parsers are defined so that whitespace is skipped automatically. See
+|libparser.TextToken()| and |libparser.RegexToken()| for the details.
 
 Each operator corresponds to a "parser combinator", which is a function that
 takes as input one or more parsers and returns another parser. The
@@ -136,10 +136,10 @@ respects: first, the rules are given in reversed order with respect to the
 symbol must be defined before it can be used in another rule. Second, when
 this is not possible due to the recursive nature of some rules, a "trick" must
 be used: a function must be defined that allows a rule to refer to a symbol
-that has not been declared yet. This is the purpose of the Ref() function
-above. Unfortunately, Ref() cannot be defined by the library, because |eval()|
-is evaluated in the script context where it appears. You may just copy and
-paste the Ref() function above in your scripts if you need it.
+that has not been declared yet. This is the purpose of the `Ref()` function
+above. Unfortunately, `Ref()` cannot be defined by the library, because
+|eval()| is evaluated in the script context where it appears. You may just
+copy and paste the `Ref()` function above in your scripts if you need it.
 
 Another minor difference is that a `ParseExp` rule has been added to make sure
 that a string is parsed from beginning to end (as opposed to just parsing

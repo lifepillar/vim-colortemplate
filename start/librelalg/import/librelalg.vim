@@ -454,8 +454,8 @@ export class Rel
     return this
   enddef
 
-  def InsertMany(tuples: list<dict<any>>, transactional: bool = false): any
-    if transactional
+  def InsertMany(tuples: list<dict<any>>, atomic: bool = false): any
+    if atomic
       var inserted: list<dict<any>> = []
 
       for t in tuples
@@ -528,7 +528,7 @@ export class Rel
 
   def Delete(
       Pred: func(dict<any>): bool = (t) => true,
-      transactional: bool = false
+      atomic: bool = false
   ): any
     const DeletePred = (i: number, t: dict<any>): bool => {
       if Pred(t)
@@ -547,7 +547,7 @@ export class Rel
       return true
     }
 
-    if transactional
+    if atomic
       this.instance = filter(copy(this.instance), DeletePred)
     else
       filter(this.instance, DeletePred)

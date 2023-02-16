@@ -338,7 +338,7 @@ def Test_LP_ParseOneOrMore003()
   assert_equal(6, ctx.index)
 enddef
 
-def Test_LP_ParseOptional001()
+def Test_LP_OptionalTextSuccess()
   var ctx = Context.new("AB: v")
   const result = Opt(Text('AB'))(ctx)
   assert_true(result.success)
@@ -346,20 +346,28 @@ def Test_LP_ParseOptional001()
   assert_equal(2, ctx.index)
 enddef
 
-def Test_LP_ParseOptional002()
-  var ctx = Context.new("AB: v")
-  const result = Opt(Text('AC'))(ctx)
+def Test_LP_OptEps()
+  var ctx = Context.new("xy")
+  const result = Opt(Eps)(ctx)
   assert_true(result.success)
-  assert_equal(null, result.value)
+  assert_equal("", result.value)
   assert_equal(0, ctx.index)
 enddef
 
-def Test_LP_ParseOptional003()
+def Test_LP_OptionalTextFail()
+  var ctx = Context.new("AB: v")
+  const result = Opt(Text('AC'))(ctx)
+  assert_true(result.success)
+  assert_equal('', result.value)
+  assert_equal(0, ctx.index)
+enddef
+
+def Test_LP_ParseOptionalSequence()
   var ctx = Context.new("abcd")
   const Parse = Opt(Seq(Text('abc'), Text('x')))
   const result = Parse(ctx)
   assert_true(result.success)
-  assert_equal(null, result.value)
+  assert_equal('', result.value)
   assert_equal(0, ctx.index)
 enddef
 
@@ -396,7 +404,7 @@ def Test_LP_ParseSeqOpt()
   const Parse = Seq(Opt(Text('z')))
   const result = Parse(ctx)
   assert_true(result.success)
-  assert_equal([], result.value)
+  assert_equal([''], result.value)
   assert_equal(0, ctx.index)
 enddef
 
@@ -597,12 +605,12 @@ def Test_LP_ParseExpectedColon003()
 enddef
 
 def Test_LP_ManyWithOptional()
-  var ctx = Context.new("\n")
+  var ctx = Context.new("\n\n\n")
   const Parse = Many(Opt(Eol))
   const result = Parse(ctx)
   assert_true(result.success)
-  assert_equal(["\n"], result.value)
-  assert_equal(1, ctx.index)
+  assert_equal(["\n", "\n", "\n", ""], result.value)
+  assert_equal(3, ctx.index)
 enddef
 
 def Test_LP_CustomTokenizer()

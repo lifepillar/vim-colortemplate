@@ -861,22 +861,22 @@ OneOrMore(...{parser})				*libparser.OneOrMore()*
 <
 Opt({parser})					*libparser.Opt()*
 		Apply {parser} and return its result in case of success; if
-		{parser} fails, succeed without consuming any input. That is,
-		this parser is equivalent to OneOf({parser}, Null). This
-		parser can fail only if {parser} returns a labelled failure.
+		{parser} fails, succeed without consuming any input. This
+		parser is equivalent to OneOf({parser}, Eps). This parser can
+		fail only if {parser} returns a labelled failure.
 >
 		var ctx = Context.new('abcd', 0)
 		const Parser = Opt(Text('abx'))
 		const result = Parser(ctx)
 
 		echo result.success
-		echo "Value:" result.value
+		echo printf("Value: '%s'", result.value)
 		echo "Index:" ctx.index
 <
 		Output:
 >
 		true
-		Value: null
+		Value: ''
 		Index: 0
 <
 Seq(...{parser})				*libparser.Seq()*

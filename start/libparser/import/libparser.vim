@@ -202,7 +202,7 @@ enddef
 export def Opt(
     Parser: func(Context): Result
 ): func(Context): Result
-  return OneOf(Parser, Null)
+  return OneOf(Parser, Eps)
 enddef
 
 export def Many(Parser: func(Context): Result): func(Context): Result

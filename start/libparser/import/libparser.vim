@@ -298,8 +298,12 @@ export def Apply(
     const result = Parser(ctx)
 
     if result.success
-      Fn(result.value)
-      return Success()
+      try
+        Fn(result.value)
+        return Success()
+      catch
+        return Failure(ctx, ctx.index, v:exception)
+      endtry
     endif
     return result
   }

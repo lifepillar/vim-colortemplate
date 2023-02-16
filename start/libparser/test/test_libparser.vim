@@ -8,6 +8,7 @@ vim9script
 import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
+const Apply        = parser.Apply
 const Blank        = parser.Blank
 const Bol          = parser.Bol
 const Call         = parser.Call
@@ -623,5 +624,37 @@ def Test_LP_CustomTokenizer()
   assert_equal('abc', result.value)
   assert_equal(6, ctx.index)
 enddef
+
+def Test_LP_Apply()
+  var ctx = Context.new("12")
+  var expected: number
+
+  const Parser = Text("12")->Apply((v) => {
+    expected = str2nr(v)
+  })
+
+  const result = Parser(ctx)
+
+  assert_true(result.success)
+  assert_equal(null, result.value)
+  assert_equal(12, expected)
+  assert_equal(2, ctx.index)
+enddef
+
+def Test_LP_ApplyThrows()
+  var ctx = Context.new("12")
+  var expected: number
+
+  const Parser = Text("12")->Apply((v) => {
+    throw 'Tsk'
+  })
+
+  const result = Parser(ctx)
+
+  assert_false(result.success)
+  assert_equal('Tsk', result.label)
+  assert_equal(2, ctx.index)
+enddef
+
 
 tt.Run('_LP_')

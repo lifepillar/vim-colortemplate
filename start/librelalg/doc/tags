@@ -49,6 +49,7 @@ librelalg.StringAgg()	librelalg.txt	/*librelalg.StringAgg()*
 librelalg.Sum()	librelalg.txt	/*librelalg.Sum()*
 librelalg.SumBy()	librelalg.txt	/*librelalg.SumBy()*
 librelalg.Table()	librelalg.txt	/*librelalg.Table()*
+librelalg.Transform()	librelalg.txt	/*librelalg.Transform()*
 librelalg.Union()	librelalg.txt	/*librelalg.Union()*
 librelalg.Zip()	librelalg.txt	/*librelalg.Zip()*
 librelalg.txt	librelalg.txt	/*librelalg.txt*

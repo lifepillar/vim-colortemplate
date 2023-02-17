@@ -56,6 +56,7 @@ const StringAgg            = ra.StringAgg
 const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
+const Transform            = ra.Transform
 const Union                = ra.Union
 const Zip                  = ra.Zip
 # }}}
@@ -1866,6 +1867,18 @@ def Test_RA_DeeDum()
   # Todd's division returns [] whenever the divisor is empty
   assert_equal([],           From(dee)->Divide(dum)->Build(),               "dee ÷ dum")
   assert_equal([{}],         From(dee)->Divide(dee)->Build(),               "dee ÷ dee")
+enddef
+
+def Test_RA_Transform()
+  const r = [{X: 3, Y: 6}, {X: 5, Y: 2}]
+  const expected1 = [18, 10]
+
+  assert_equal(expected1, Transform(r, (t) => t.X * t.Y))
+
+  const s = [{when: "now", where: "here", how: "fast"}]
+  const expected2 = ["nowhere"]
+
+  assert_equal(expected2, Transform(s, (t) => t.when .. t.where))
 enddef
 
 def Test_RA_Zip()

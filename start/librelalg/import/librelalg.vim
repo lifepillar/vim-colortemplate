@@ -1391,6 +1391,17 @@ export def NotIn(t: dict<any>, R: any): bool
   return !(t->In(R))
 enddef
 
+export def Transform(R: any, F: func(dict<any>): any): list<any>
+  const rel: list<dict<any>> = Instance(R)
+  var result = []
+
+  for t in rel
+    result->add(F(t))
+  endfor
+
+  return result
+enddef
+
 # NOTE: l2 may be longer than l1 (extra elements are simply ignored)
 export def Zip(l1: list<any>, l2: list<any>): dict<any>
   const n = len(l1)

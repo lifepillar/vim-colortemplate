@@ -2134,6 +2134,22 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		    ten
 		 twenty
 <
+Transform({rel}, {func})				*librelalg.Transform()*
+		Transform a base or derived relation {rel} into a list of
+		objects, one for each tuple of the relation. This is similar
+		to |map()|, but the result does not need to have the same type
+		as the input. Note that the result is NOT a relation, in
+		general!
+
+		Example:
+>
+		const r = [{X: 3, Y: 6}, {X: 5, Y: 2}]
+		echo Transform(r, (t) => t.X * t.Y))
+<
+		Output:
+>
+		[18, 10]
+<
 Zip({list1}, {list2})				*librelalg.Zip()*
 		Build a tuple by "zipping" the attributes in {list1} with the
 		values in {list2}. For example:

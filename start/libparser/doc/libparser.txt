@@ -151,9 +151,9 @@ a complete parser by itself. This makes it very easy to test each parser
 separately (a bit less trivially in this example, due to the recursive rules).
 For instance:
 >
-	echo NAME(Context.new('xyz is a name')).value      # "xyz"
-	echo NUMBER(Context.new('123 is a number')).value  # 123
-	echo AtomExp(Context.new('42 * 36')).value         # 42
+	echo NAME(Context.new('xyz ...')).value    # "xyz"
+	echo NUMBER(Context.new('123 ...')).value  # "123"
+	echo AtomExp(Context.new('42 * 36')).value # "42"
 <
 Let us now define a function to parse some expressions:
 >
@@ -228,31 +228,42 @@ reports a much better error for `exp3`:
 The complete annotated grammar, following the annotation strategy described
 above, looks as follows:
 >
-	const AtomExp  = OneOf(Seq(LPAR,
-	                           Lab(Ref('Exp'), 'expr in parentheses'),
-	                           Lab(RPAR,       'closed parenthesis')
-	                          ),
-	                       NUMBER,
-	                       NAME)
+	const AtomExp  = OneOf(
+	                   Seq(
+	                     LPAR,
+	                     Lab(Ref('Exp'), 'expr in parentheses'),
+	                     Lab(RPAR,       'closed parenthesis')
+	                   ),
+	                   NUMBER,
+	                   NAME)
 
-	const MulExp   = Seq(AtomExp,
-	                     Many(Seq(OneOf(TIMES, DIV),
-	                              Lab(AtomExp, 'rhs of * or /'))))
+	const MulExp   = Seq(
+	                   AtomExp,
+	                   Many(Seq(
+	                          OneOf(TIMES, DIV),
+	                          Lab(AtomExp, 'rhs of * or /'))))
 
-	const AddExp   = Seq(MulExp,
-	                     Many(Seq(OneOf(PLUS, MINUS),
-	                              Lab(MulExp,  'rhs of + or -'))))
+	const AddExp   = Seq(
+	                   MulExp,
+	                   Many(Seq(
+	                          OneOf(PLUS, MINUS),
+	                          Lab(MulExp,  'rhs of + or -'))))
 
-	const RelExp   = Seq(AddExp,
-	                     Many(Seq(LT,
-	                              Lab(AddExp, 'rhs of <'))))
+	const RelExp   = Seq(
+	                   AddExp,
+	                   Many(Seq(
+	                          LT,
+	                          Lab(AddExp,  'rhs of <'))))
 
-	const Exp      = Seq(RelExp,
-	                     Many(Seq(EQ,
-	                             Lab(RelExp,  'rhs of equality'))))
+	const Exp      = Seq(
+	                   RelExp,
+	                   Many(Seq(
+	                          EQ,
+	                          Lab(RelExp,  'rhs of equality'))))
 
-	const ParseExp = Seq(Exp,
-	                     Lab(Eof, 'end of input'))
+	const ParseExp = Seq(
+	                   Exp,
+	                   Lab(Eof, 'end of input'))
 <
 So far, we have written code to recognize well-formed expressions. But
 probably we also want to evaluate them. This is typically done by appending
@@ -261,8 +272,9 @@ semantic actions to some rules, using |libparser.Map()| or
 the evaluation may be done when the whole expression has been parsed, so we
 update the `ParseExp` rule:
 >
-	const ParseExp = Seq(Exp,
-	                     Lab(Eof, 'end of input'))
+	const ParseExp = Seq(
+	                   Exp,
+	                   Lab(Eof, 'end of input'))
 	                 ->Map((v, _) => eval(join(flattennew(v))))
 <
 This is enough to evaluate numerical expressions, such as `exp1`:
@@ -272,25 +284,26 @@ This is enough to evaluate numerical expressions, such as `exp1`:
 <
 To evaluate expressions with variables, a value must be assigned to such
 variables, which is normally done by maintaining a lookup table. The context's
-`state` dictionary is a good place to put such lookup table (see
+`state` dictionary is a good place to put such lookup tables (see
 |libparser.Context|). Since the grammar of the running example does not define
 assignment rules, to keep the example simple we pre-populate the state after
 initializing the context:
 >
 	def Parse(e: string): Result
 	  var ctx = Context.new(e)
-	  ctx.state.x = 42  # Arbitrary state
+	  ctx.state = {x: 42, foo: 0}
 	  const result = ParseExp(ctx)
 	  # The rest of the function is defined as before
 <
-The `AtomExp` rule can be updated as follows:
+Then, the `AtomExp` rule can be updated as follows:
 >
-	const AtomExp  = OneOf(Seq(Skip(LPAR),
-	                           Lab(Ref('Exp'), 'expression in parentheses'),
-	                           Lab(Skip(RPAR), 'closed parenthesis')
-	                          ),
-	                       NUMBER,
-	                       NAME->Map((v, c: Context): number => c.state[v])
+	const AtomExp  = OneOf(
+	                   Seq(
+	                     LPAR,
+	                     Lab(Ref('Exp'), 'expression in parentheses'),
+	                     Lab(RPAR, 'closed parenthesis')),
+	                   NUMBER,
+	                   NAME->Map((v, c: Context): number => c.state[v])
 	                      )
 <
 Now, `exp2` can be evaluated, too:

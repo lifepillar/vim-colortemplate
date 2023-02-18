@@ -1,8 +1,8 @@
-*libparser.txt*	For Vim version 9.0	Last change: 2023 Jan 16
+*libparser.txt*	For Vim version 9.0	Last change: 2023 Feb 18
 
 A library to write simple parsers.
 
-Note: Vim 9.0.1207 or later is required.
+Note: Vim 9.0.1321 or later is required.
 
 0. Quick start				|libparser-quickstart|
 1. Tutorial				|libparser-tutorial|
@@ -255,7 +255,7 @@ above, looks as follows:
 	                     Lab(Eof, 'end of input'))
 <
 So far, we have written code to recognize well-formed expressions. But
-probably we also want to evaluate them. A possibility is to append some
+probably we also want to evaluate them. This is typically done by appending
 semantic actions to some rules, using |libparser.Map()| or
 |libparser.Apply()|, in order to process the parsed text. For this example,
 the evaluation may be done when the whole expression has been parsed, so we
@@ -263,7 +263,7 @@ update the `ParseExp` rule:
 >
 	const ParseExp = Seq(Exp,
 	                     Lab(Eof, 'end of input'))
-	                 ->Map((v) => eval(join(flattennew(v))))
+	                 ->Map((v, _) => eval(join(flattennew(v))))
 <
 This is enough to evaluate numerical expressions, such as `exp1`:
 >
@@ -271,16 +271,26 @@ This is enough to evaluate numerical expressions, such as `exp1`:
 	Parse(exp1)  # 8
 <
 To evaluate expressions with variables, a value must be assigned to such
-variables, which is normally done by maintaining some kind of lookup table. To
-keep this example simple, we assume that each name has value `42`, and we
-update the `AtomExp` rule accordingly:
+variables, which is normally done by maintaining a lookup table. The context's
+`state` dictionary is a good place to put such lookup table (see
+|libparser.Context|). Since the grammar of the running example does not define
+assignment rules, to keep the example simple we pre-populate the state after
+initializing the context:
+>
+	def Parse(e: string): Result
+	  var ctx = Context.new(e)
+	  ctx.state.x = 42  # Arbitrary state
+	  const result = ParseExp(ctx)
+	  # The rest of the function is defined as before
+<
+The `AtomExp` rule can be updated as follows:
 >
 	const AtomExp  = OneOf(Seq(Skip(LPAR),
 	                           Lab(Ref('Exp'), 'expression in parentheses'),
 	                           Lab(Skip(RPAR), 'closed parenthesis')
 	                          ),
 	                       NUMBER,
-	                       NAME->Map((v): number => 42)
+	                       NAME->Map((v, c: Context): number => c.state[v])
 	                      )
 <
 Now, `exp2` can be evaluated, too:
@@ -462,7 +472,8 @@ Call({func})					*libparser.Call()*
 		Return a parser that calls {func} and always succeeds. The
 		parsed value is always |null|. {func} is a function that takes
 		no arguments and returns no value. This parser generator can
-		be used for side effects. For examples:
+		be used for side effects that do not depend on the parsed
+		value or on the parser's context. For examples:
 >
 		def Start()
 		    echo 'Parsing started...'
@@ -472,8 +483,8 @@ Call({func})					*libparser.Call()*
 		    echo 'Finished!'
 		enddef
 
-		def Consume(v: string)
-		    echo "Parsed value: " .. v
+		def Consume(value: string, _: Context)
+		    echo "Parsed value: " .. value
 		enddef
 
 		var ctx = Context.new('abc')
@@ -490,8 +501,9 @@ Call({func})					*libparser.Call()*
 		Parsed value: ab
 		Finished!
 <
-		Note that |libparser.Apply()| should be used if the parsed
-		value must be made available to the function.
+		Note that |libparser.Apply()| or |libparser.Map()| should be
+		used if the parsed value an/or the context must be made
+		available to the called function.
 
 Fail({msg})					*libparser.Fail()*
 		Return a parser that always fails with a failure labelled by
@@ -559,24 +571,24 @@ build and return a new parser.
 
 Apply({parser}, {func})				*libparser.Apply()*
 		Apply {parser} and, upon success, consume the parsed value by
-		applying {func}. The value of this parser is always |null|.
-		{func} is a function that takes as input the parsed value and
-		does not return anything. Example:
+		applying a function {func}. The value of this parser is always
+		|null|. {func} receives two arguments: the first is the value
+		parsed by {parser}, and the second is the current
+		|libparser.Context|. The function must not return anything.
+		Example:
 >
-		var n: number
-
-		def StoreNumber(v: string)
-		    n = str2nr(v)
+		def StoreNumber(value: string, context: Context)
+		    ctx.state.storedNumber = str2nr(value)
 		enddef
 
-		var   ctx    = Context.new('42', 0)
-		const Parser = Regex('\d\+')->Apply((v) => StoreNumber(v))
+		var   ctx    = Context.new('42 is the answer')
+		const Parser = Regex('\d\+')->Apply(StoreNumber)
 		const result = Parser(ctx)
 
 		echo result.success
 		echo "Value:" result.value
 		echo "Index:" ctx.index
-		echo printf("Parsed number: %d", n)
+		echo printf("Parsed number: %d", ctx.state.storedNumber)
 <
 		Output:
 >
@@ -682,11 +694,13 @@ Many({parser})					*libparser.Many()*
 <
 Map({parser}, {func})				*libparser.Map()*
 		Apply {parser} and map a successful result to a callback
-		{func}. {func} is a function that takes as input the parsed
-		value and returns another value. Example:
+		{func}. {func} receives two arguments: the first is the value
+		parsed by {parser}, and the second is the current
+		|libparser.Context|.  The function must return another value.
+		Example:
 >
 		var ctx = Context.new('42', 0)
-		const Parser = Regex('\d\+')->Map((v) => str2nr(v))
+		const Parser = Regex('\d\+')->Map((v, _) => str2nr(v))
 		const result = Parser(ctx)
 
 		echo result.success
@@ -1017,6 +1031,13 @@ new({string}[, {index}])
 		- "text" (read-only): the text to be parsed.
 		- "index": the next position in the text yet to be parsed.
 		- "farthest": The position of the farthest failure.
+		- "state": a dictionary of arbitrary values.
+
+		While "index" and "farthest" are automatically updated as
+		parsing proceeds, the content of "state" is under the complete
+		control of the user. During parsing |libparser.Apply()| and
+		|libparser.Map()| can be used to access and update the
+		parser's state.
 
 Reset([{index}])
 		Reset this context by positioning the index at the given

@@ -11,12 +11,14 @@ vim9script
 # type TResult  TSuccess | TFailure
 # type TContext dict<any>
 # type TParser  func(TContext): TResult
+# type TParserState dict<any>
 
 # Context and result {{{
 export class Context
-  this.text:            string      # The text to be parsed
-  public this.index:    number = 0  # Next position yet to be parsed
-  public this.farthest: number = -1 # Position of farthest failure
+  this.text:            string         # The text to be parsed
+  public this.index:    number    = 0  # Next position yet to be parsed
+  public this.farthest: number    = -1 # Position of farthest failure
+  public this.state:    dict<any> = {} # Arbitrary parser's state
 
   def new(this.text, this.index = v:none)
   enddef
@@ -196,7 +198,7 @@ enddef
 export def OneOrMore(
     Parser: func(Context): Result
 ): func(Context): Result
-  return Seq(Parser, Many(Parser))->Map((v) => flattennew(v, 1))
+  return Seq(Parser, Many(Parser))->Map((v, _) => flattennew(v, 1))
 enddef
 
 export def Opt(
@@ -277,13 +279,13 @@ export const Blank = Regex('\%(\s\|\r\|\n\)*')
 
 export def Map(
     Parser: func(Context): Result,
-    Fn: func(any): any
+    Fn: func(any, Context): any
 ): func(Context): Result
   return (ctx: Context): Result => {
     const result = Parser(ctx)
 
     if result.success
-      return Success(Fn(result.value))
+      return Success(Fn(result.value, ctx))
     else
       return result
     endif
@@ -292,14 +294,14 @@ enddef
 
 export def Apply(
     Parser: func(Context): Result,
-    Fn: func(any): void
+    Fn: func(any, Context): void
 ): func(Context): Result
   return (ctx: Context): Result => {
     const result = Parser(ctx)
 
     if result.success
       try
-        Fn(result.value)
+        Fn(result.value, ctx)
         return Success()
       catch
         return Failure(ctx, ctx.index, v:exception)
@@ -313,7 +315,7 @@ export def Lexeme(
     SkipParser: func(Context): Result
 ): func(func(Context): Result): func(Context): Result
   return (Parser: func(Context): Result): func(Context): Result => {
-    return Seq(Parser, SkipParser)->Map((x) => x[0])
+    return Seq(Parser, SkipParser)->Map((x, _) => x[0])
   }
 enddef
 

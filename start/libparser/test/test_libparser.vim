@@ -34,7 +34,7 @@ const Skip         = parser.Skip
 const Space        = parser.Space
 const Text         = parser.Text
 const TextToken    = parser.TextToken
-const Integer      = Regex('\d\+')->Map((x) => str2nr(x))
+const Integer      = Regex('\d\+')->Map((x, _) => str2nr(x))
 
 
 def Test_LP_Context()
@@ -474,7 +474,7 @@ enddef
 
 def Test_LP_ParseAndMap()
   var ctx = Context.new("xyabuuuuv")
-  def F(L: list<string>): number
+  def F(L: list<string>, _: Context): number
     return len(L[2]) + 38
   enddef
   const Parser = Seq(Text("x"), Text("yab"), Regex("u*"))
@@ -486,7 +486,7 @@ enddef
 
 def Test_LP_ParseAndMapFails()
   var ctx = Context.new("xyabuuuuv")
-  def F(L: list<string>): number
+  def F(L: list<string>, _: Context): number
     return len(L[2]) + 38
   enddef
   const Parser = Seq(Text("x"), Text("yab"), Regex('v\+'))
@@ -633,30 +633,38 @@ def Test_LP_CustomTokenizer()
   assert_equal(6, ctx.index)
 enddef
 
+# class TestState
+#   this.expected = 0
+# endclass
+#
+# class TestContext extends Context
+#   public this.state = TestState.new(1)
+# endclass
+
 def Test_LP_Apply()
   var ctx = Context.new("12")
-  var expected: number
+  ctx.state.expected = 0
 
-  const Parser = Text("12")->Apply((v) => {
-    expected = str2nr(v)
+  const Parser = Text("12")->Apply((v, c: Context) => {
+    # const st: TestState = ctxt.state
+    # st.expected = str2nr(v)
+    c.state.expected = 12
   })
 
   const result = Parser(ctx)
 
   assert_true(result.success)
   assert_equal(null, result.value)
-  assert_equal(12, expected)
+  assert_equal(12, ctx.state.expected)
   assert_equal(2, ctx.index)
 enddef
 
 def Test_LP_ApplyThrows()
   var ctx = Context.new("12")
-  var expected: number
 
-  const Parser = Text("12")->Apply((v) => {
+  const Parser = Text("12")->Apply((v, _) => {
     throw 'Tsk'
   })
-
   const result = Parser(ctx)
 
   assert_false(result.success)

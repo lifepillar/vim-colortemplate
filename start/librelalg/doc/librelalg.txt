@@ -1382,7 +1382,7 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 		Perform the left natural join of two relations {rel1} and
 		{rel2}. {filler} is an arbitrary relation defined on the
-		attributes of {rel} minus the join attributes. The result is
+		attributes of {rel2} minus the join attributes. The result is
 		the natural join between the input relations extended (by
 		union) with the cross-product of {filler} and the set of
 		tuples in {rel1} that do not match any tuple in {rel2}.

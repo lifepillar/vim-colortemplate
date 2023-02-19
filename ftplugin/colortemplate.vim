@@ -5,6 +5,8 @@ vim9script
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # License:     Vim license (see `:help license`)
 
+import autoload '../autoload/v3/colortemplate.vim' as colortemplate
+
 if exists("b:did_ftplugin")
   finish
 endif
@@ -48,7 +50,8 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   endif
 endif
 
-command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate silent call colortemplate#make(<q-args>, "<bang>")
+# FIXME: make silent?
+command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate colortemplate.Make(bufnr(), <q-args>, "<bang>")
 command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll silent call colortemplate#build_dir(<q-args>, "<bang>")
 command! -buffer -nargs=0 -bar                     ColortemplateCheck call colortemplate#validate()
 command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#askoutdir()

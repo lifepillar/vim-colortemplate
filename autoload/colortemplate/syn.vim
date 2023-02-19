@@ -56,7 +56,6 @@ endf
 hi clear ColortemplateInfoFg
 hi clear ColortemplateInfoBg
 hi clear ColortemplateInfoSp
-hi ColortemplateInfoBlack ctermbg=16 guibg=#000000
 
 let s:cached_higroup = { 'synid': -1 }
 

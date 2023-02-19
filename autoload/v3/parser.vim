@@ -177,14 +177,44 @@ def SetAuthor(v: list<string>, ctx: Context)
   meta.author->add(v[2])
 enddef
 
+def SetMaintainer(v: list<string>, ctx: Context)
+  var meta: Metadata = ctx.state.meta
+  meta.maintainer->add(v[2])
+enddef
+
 def SetDescription(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
   meta.description->add(v[2])
 enddef
 
+def SetVersion(v: list<string>, ctx: Context)
+  var meta: Metadata = ctx.state.meta
+  if !empty(meta.version)
+    throw printf(
+      "Version already defined ('%s')", meta.version
+    )
+  endif
+  meta.version = v[2]
+enddef
+
+def SetURL(v: list<string>, ctx: Context)
+  var meta: Metadata = ctx.state.meta
+  if !empty(meta.url)
+    throw printf(
+      "URL already defined ('%s')", meta.url
+    )
+  endif
+  meta.url = v[2]
+enddef
+
 def SetWebsite(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  meta.url->add(v[2])
+  if !empty(meta.website)
+    throw printf(
+      "Website already defined ('%s')", meta.website
+    )
+  endif
+  meta.website = v[2]
 enddef
 
 def SetTermColors(v: list<string>, ctx: Context)
@@ -506,12 +536,15 @@ const K_DESCRIPTION = T('Description')
 const K_FULL        = T('Full')
 const K_INCLUDE     = T('Include')
 const K_LICENSE     = T('License')
+const K_MAINTAINER  = T('Maintainer')
 const K_NAME        = R('[Nn]ame')
 const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\%[pecial\]\>')
 const K_TERM        = R('Term\%[inal\]')
+const K_URL         = T('URL')
 const K_VARIANT     = R('\(gui\|termgui\|256\|88\|16\|8\|bw\|0\)\>')
 const K_VARIANTS    = T('Variants')
+const K_VERSION     = T('Version')
 const K_WEBSITE     = T('Website')
 
 const BAR           = T('/')
@@ -633,16 +666,19 @@ const VariantList   = Lab(
                         "Expected one of: gui, 256, 88, 16, 8, bw, 0"
                       )                                             ->Apply(SetSupportedVariants)
 
-const TermColors    = Seq(K_TERM, L_COLORS, L_COLON, TermColorList)
 const Website       = Seq(K_WEBSITE,        L_COLON, L_TEXTLINE)    ->Apply(SetWebsite)
+const Version       = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
+const Variants      = Seq(K_VARIANTS,       L_COLON, VariantList)
+const URL           = Seq(K_URL,            L_COLON, L_TEXTLINE)    ->Apply(SetURL)
+const TermColors    = Seq(K_TERM, L_COLORS, L_COLON, TermColorList)
+const Shortname     = Seq(K_SHORT, L_NAME,  L_COLON, L_THEMENAME)   ->Apply(SetShortName)
+const Maintainer    = Seq(K_MAINTAINER,     L_COLON, L_TEXTLINE)    ->Apply(SetMaintainer)
+const License       = Seq(K_LICENSE,        L_COLON, L_TEXTLINE)    ->Apply(SetLicense)
+const Fullname      = Seq(K_FULL,  L_NAME,  L_COLON, L_TEXTLINE)    ->Apply(SetFullName)
 const Description   = Seq(K_DESCRIPTION,    L_COLON, L_TEXTLINE)    ->Apply(SetDescription)
 const Author        = Seq(K_AUTHOR,         L_COLON, L_TEXTLINE)    ->Apply(SetAuthor)
-const License       = Seq(K_LICENSE,        L_COLON, L_TEXTLINE)    ->Apply(SetLicense)
-const Shortname     = Seq(K_SHORT, L_NAME,  L_COLON, L_THEMENAME)   ->Apply(SetShortName)
-const Fullname      = Seq(K_FULL,  L_NAME,  L_COLON, L_TEXTLINE)    ->Apply(SetFullName)
-const Variants      = Seq(K_VARIANTS,       L_COLON, VariantList)
-const Include       = Seq(K_INCLUDE,        L_COLON, L_PATH)        #->Apply(ParseInclude)
 const Background    = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveBackground)
+const Include       = Seq(K_INCLUDE,        L_COLON, L_PATH)        #->Apply(ParseInclude)
 const ColorDef      = Seq(
                         K_COLOR,
                         L_COLON,
@@ -654,16 +690,19 @@ const ColorDef      = Seq(
 
 const Directive     = OneOf(
                         ColorDef,
-                        Background,
                         Include,
-                        Variants,
-                        Fullname,
-                        Shortname,
-                        License,
+                        Background,
                         Author,
                         Description,
-                        Website,
-                        TermColors
+                        Fullname,
+                        License,
+                        Maintainer,
+                        Shortname,
+                        TermColors,
+                        URL,
+                        Variants,
+                        Version,
+                        Website
                       )
 
 const Declaration   = OneOf(Directive, HiGroupDecl)

@@ -3,8 +3,6 @@ vim9script
 import './parser.vim'    as parser
 import './generator.vim' as generator
 
-const VERSION = '3.0.0-dev' # FIXME: export constant
-
 class Config
   public this.creator = true
   public this.useTabs = false

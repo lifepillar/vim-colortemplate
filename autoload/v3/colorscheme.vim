@@ -14,13 +14,14 @@ const Str        = ra.Str
 export class Metadata
   public this.author:      list<string> = []
   public this.description: list<string> = []
-  public this.fullname:    string       = null_string
-  public this.license:     string       = null_string
+  public this.fullname:    string       = ''
+  public this.license:     string       = ''
   public this.maintainer:  list<string> = []
-  public this.pathname:    string       = null_string
-  public this.shortname:   string       = null_string
+  public this.pathname:    string       = ''
+  public this.shortname:   string       = ''
   public this.url:         list<string> = []
   public this.variants:    list<string> = []
+  public this.backgrounds: dict<bool>   = {'dark': false, 'light': false}
   public this.termcolors:  list<string> = []
 endclass
 

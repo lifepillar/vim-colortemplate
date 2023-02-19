@@ -28,13 +28,24 @@ const T              = parser.TextToken(SpaceOrComment)
 # Main {{{
 const DEFAULT_DISCR_VALUE = '__DfLt__'
 
+def GetDatabase(ctx: Context): func(): Database
+  const state = ctx.state
+
+  return (): Database => {
+    if empty(state.background)
+      throw 'Please set the background first'
+    endif
+    return state[state.background]
+  }
+enddef
+
 export def Parse(text: string, Parser: func(Context): Result = Template): dict<any>
   var ctx                          = Context.new(text)
   ctx.state.meta                   = Metadata.new()
   ctx.state.dark                   = Database.new('dark')
   ctx.state.light                  = Database.new('light')
-  ctx.state.background             = 'dark'
-  ctx.state.Db                     = (): Database => ctx.state[ctx.state.background]
+  ctx.state.background             = ''
+  ctx.state.Db                     = GetDatabase(ctx)
   ctx.state.hiGroupName            = ''
   ctx.state.isDefault              = true
   ctx.state.variants               = []
@@ -114,7 +125,11 @@ def SetActiveBackground(v: list<string>, ctx: Context)
       "Invalid background: %s. Valid values are 'dark' and 'light'.", bg
     )
   endif
-  ctx.state.background = v[2]
+
+  const state = ctx.state
+  var meta: Metadata = state.meta
+  state.background = v[2]
+  meta.backgrounds[state.background] = true
 enddef
 
 def SetSupportedVariants(v: list<string>, ctx: Context)
@@ -129,7 +144,7 @@ enddef
 
 def SetFullName(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  if meta.fullname != null
+  if !empty(meta.fullname)
     throw printf(
       'Full name already defined (%s)', meta.fullname
     )
@@ -139,7 +154,7 @@ enddef
 
 def SetShortName(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  if meta.shortname != null
+  if !empty(meta.shortname)
     throw printf(
       'Short name already defined (%s)', meta.shortname
     )
@@ -149,7 +164,7 @@ enddef
 
 def SetLicense(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  if meta.license != null
+  if !empty(meta.license)
     throw printf(
       "License already defined ('%s')", meta.license
     )

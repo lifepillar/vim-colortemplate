@@ -28,7 +28,7 @@ const T              = parser.TextToken(SpaceOrComment)
 # Main {{{
 const DEFAULT_DISCR_VALUE = '__DfLt__'
 
-export def Parse(text: string, Parser: func(Context): Result = Template): any
+export def Parse(text: string, Parser: func(Context): Result = Template): dict<any>
   var ctx                          = Context.new(text)
   ctx.state.meta                   = Metadata.new()
   ctx.state.dark                   = Database.new('dark')

@@ -240,6 +240,11 @@ def DefineColor(v: list<string>, ctx: Context)
   const v16:       string   = v[5]
   const delta:     float    = 0.0  # FIXME
   const dbase:     Database = ctx.state.Db()
+  const meta:      Metadata = ctx.state.meta
+
+  if empty(meta.variants)
+    throw "Missing Variants directive: please define the supported variants first"
+  endif
 
   dbase.Color.Insert({
     ColorName:    colorName,
@@ -248,14 +253,27 @@ def DefineColor(v: list<string>, ctx: Context)
     Base16Value:  v16,
     Delta:        delta,
   })
+
+  for variant in meta.variants
+    const t = dbase.Variant.Lookup(['Variant'], [variant])
+
+    if t.NumColors == 0
+      continue
+    endif
+
+    const value = t.NumColors <= 16 ? v16 : t.NumColors <= 256 ? string(v256) : vGUI
+
+    dbase.ColorVariant.Insert({
+      ColorName:  colorName,
+      Variant:    variant,
+      ColorValue: value,
+    })
+  endfor
 enddef
 
 def SetHiGroupName(v: list<string>, ctx: Context)
   const state          = ctx.state
   const meta: Metadata = state.meta
-  if empty(meta.variants)
-    throw "Missing Variants directive: please define the supported variants first"
-  endif
   const hiGroup = v[0]
   state.Reset()
   state.hiGroupName = hiGroup

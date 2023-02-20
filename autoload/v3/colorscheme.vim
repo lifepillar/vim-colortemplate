@@ -112,6 +112,13 @@ export class Database
         \   ['GUIValue', 'Base256Value', 'Base16Value']
         \ ])
 
+  this.ColorVariant = Rel.new('Color Variant', {
+        \ ColorName:  Str,
+        \ Variant:    Str,
+        \ ColorValue: Str,
+        \ },
+        \ ['ColorName', 'Variant'])
+
   this.HighlightGroup = Rel.new('Highlight Group', {
         \   HiGroupName: Str,
         \   DiscrName:   Str,
@@ -233,6 +240,8 @@ export class Database
     this.Color.Check(IsValidColorName)
     this.Color.Check(IsValidBase256Value)
 
+    ForeignKey(this.ColorVariant,   'must instantiate a',     this.Color,            ['ColorName'])
+    ForeignKey(this.ColorVariant,   'must refer to a',        this.Variant,          ['Variant'])
     ForeignKey(this.HiGroupVersion, 'must be a version of a', this.HighlightGroup,   ['HiGroupName'])
     ForeignKey(this.HiGroupVersion, 'must apply to a',        this.Variant,          ['Variant'])
     ForeignKey(this.LinkedGroup,    'must be a',              this.HiGroupVersion,   ['HiGroupName', 'Variant', 'DiscrValue'])
@@ -241,6 +250,6 @@ export class Database
     ForeignKey(this.Attribute,      'must use a',             this.VariantAttribute, ['Variant', 'AttrKey'])
     ForeignKey(this.ColorAttribute, 'must describe a',        this.BaseGroup,        ['HiGroupName', 'Variant', 'DiscrValue'])
     ForeignKey(this.ColorAttribute, 'must use a',             this.VariantAttribute, ['Variant', 'ColorKey'], ['Variant', 'AttrKey'])
-    ForeignKey(this.ColorAttribute, 'must use a',             this.Color,            ['ColorName'])
+    ForeignKey(this.ColorAttribute, 'must be assigned a',     this.ColorVariant,     ['ColorName', 'Variant'])
   enddef
 endclass

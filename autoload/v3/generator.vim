@@ -170,8 +170,25 @@ enddef
 # }}}
 
 # Variant generation {{{
+def Cmp(s1: string, s2: string): number
+  return s1 < s2 ? -1 : 1
+enddef
 
-const HiGroupKey = EquiJoinPred(['HiGroupName', 'Variant', 'DiscrValue'])
+def SortPredicate(t: dict<any>, u: dict<any>): number
+  if t.DiscrName == u.DiscrName
+    if t.DiscrValue == u.DiscrValue
+      if t.HiGroupName == u.HiGroupName
+        return 0
+      else
+        return Cmp(t.HiGroupName, u.HiGroupName)
+      endif
+    else
+      return t.DiscrValue == '__DfLt__' ? 1 : Cmp(t.DiscrValue, u.DiscrValue)
+    endif
+  else
+    return Cmp(t.DiscrName, u.DiscrName)
+  endif
+enddef
 
 def Variant(db: Database, variant: string): dict<list<dict<any>>>
   var linkedGroups = Query(

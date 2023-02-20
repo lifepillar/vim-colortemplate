@@ -92,9 +92,10 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
   endif
 
   const output: list<string> = generator.Generate(
-    parseResult.meta,
-    parseResult.dark,
-    parseResult.light
+    parseResult.meta, {
+      'dark':  parseResult.dark,
+      'light': parseResult.light,
+    }
   )
 
   const nr = NewBuffer('OutputColorscheme.vim', output)

@@ -4,10 +4,69 @@ import './colorscheme.vim'
 import './version.vim'
 import 'librelalg.vim' as ra
 
+# Aliases {{{
+const AntiJoin             = ra.AntiJoin
+const Avg                  = ra.Avg
+const AvgBy                = ra.AvgBy
+const Bool                 = ra.Bool
+const Build                = ra.Build
+const CoddDivide           = ra.CoddDivide
+const Count                = ra.Count
+const CountBy              = ra.CountBy
+const CountDistinct        = ra.CountDistinct
+const Divide               = ra.Divide
+const Extend               = ra.Extend
+const EquiJoin             = ra.EquiJoin
+const EquiJoinPred         = ra.EquiJoinPred
+const Filter               = ra.Filter
+const Float                = ra.Float
+const ForeignKey           = ra.ForeignKey
+const Frame                = ra.Frame
+const From                 = ra.From
+const GroupBy              = ra.GroupBy
+const Int                  = ra.Int
+const Intersect            = ra.Intersect
+const Join                 = ra.Join
+const LeftNatJoin          = ra.LeftNatJoin
+const ListAgg              = ra.ListAgg
+const Max                  = ra.Max
+const MaxBy                = ra.MaxBy
+const Min                  = ra.Min
+const MinBy                = ra.MinBy
+const Minus                = ra.Minus
+const NatJoin              = ra.NatJoin
+const NotIn                = ra.NotIn
+const Product              = ra.Product
+const Project              = ra.Project
+const Query                = ra.Query
+const Rel                  = ra.Rel
+const RelEq                = ra.RelEq
+const Rename               = ra.Rename
+const Select               = ra.Select
+const SemiJoin             = ra.SemiJoin
+const Sort                 = ra.Sort
+const SortBy               = ra.SortBy
+const Str                  = ra.Str
+const StringAgg            = ra.StringAgg
+const Sum                  = ra.Sum
+const SumBy                = ra.SumBy
+const Table                = ra.Table
+const Transform            = ra.Transform
+const Union                = ra.Union
+const Zip                  = ra.Zip
+# }}}
+
 const VERSION  = version.VERSION
 const Database = colorscheme.Database
 const Metadata = colorscheme.Metadata
 
+# Helper functions {{{
+def In(item: string, collection: list<string>): bool
+  return index(collection, item) != -1
+enddef
+# }}}
+
+# Integrity checks {{{
 def CheckMetadata(meta: Metadata)
   if empty(meta.fullname)
     throw 'Please define the full name of the color scheme'
@@ -22,6 +81,36 @@ def CheckMetadata(meta: Metadata)
   endif
 enddef
 
+def CheckMissingGroups(db: Database)
+  const missing = Query(
+    db.HighlightGroup->AntiJoin(db.HiGroupVersion,
+                                (t, u) => t.HiGroupName == u.HiGroupName)
+  )
+
+  if !empty(missing)
+    const names = missing->Transform((t) => t.HiGroupName)
+    echomsg printf(
+      "Missing %s definitions for %s", db.background, join(names, ', ')
+    )
+  endif
+enddef
+
+def CheckMissingDefaultDefinitions(db: Database)
+  const missingDefault = Query(
+    db.HiGroupVersion->AntiJoin((db.HiGroupVersion->Select((t): bool => t.IsDefault)),
+                                (t, u) => t.HiGroupName == u.HiGroupName)
+  )
+
+  if !empty(missingDefault)
+    const names = missingDefault->Transform((t) => t.HiGroupName)
+    throw printf(
+      "Missing %s default definition for %s", db.background, join(names, ', ')
+    )
+  endif
+enddef
+# }}}
+
+# Header {{{
 def AddMeta(header: list<string>, text: string, value: string): list<string>
   if !empty(value)
     header->add(printf(text, value))
@@ -77,12 +166,29 @@ def Header(meta: Metadata): list<string>
 
   return header
 enddef
+# }}}
 
-
-export def Generate(meta: Metadata, darkDB: Database, lightDB: Database): list<string>
+# Main {{{
+export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
   CheckMetadata(meta)
 
-  var theme = Header(meta)
+  for [bg, dbValue] in items(dbase)
+    if meta.backgrounds[bg]
+      const db: Database = dbValue
+      CheckMissingGroups(db)
+      CheckMissingDefaultDefinitions(db)
+    endif
+  endfor
+
+  var   theme    = Header(meta)
+  const variants = meta.variants
+
+  for variant in meta.variants
+    # TODO: generate variant
+  endfor
 
   return theme
 enddef
+# }}}
+
+# vim: foldmethod=marker nowrap et ts=2 sw=2

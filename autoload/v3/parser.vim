@@ -490,7 +490,7 @@ def InsertBaseGroup(
           HiGroupName: hiGroup,
           Variant:     variant,
           DiscrValue:  discriminator,
-          AttrKey:     t.AttrKey,
+          ColorKey:    t.AttrKey,
           ColorName:   colorName,
         })
       endif

@@ -224,10 +224,10 @@ export class Database
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
-        \   AttrKey:     Str,
+        \   ColorKey:    Str,
         \   ColorName:   Str,
         \ },
-        \ ['HiGroupName', 'Variant', 'DiscrValue', 'AttrKey'])
+        \ ['HiGroupName', 'Variant', 'DiscrValue', 'ColorKey'])
 
   def new(this.background)
     this.Color.Check(IsValidColorName)
@@ -240,7 +240,7 @@ export class Database
     ForeignKey(this.Attribute,      'must describe a',        this.BaseGroup,        ['HiGroupName', 'Variant', 'DiscrValue'])
     ForeignKey(this.Attribute,      'must use a',             this.VariantAttribute, ['Variant', 'AttrKey'])
     ForeignKey(this.ColorAttribute, 'must describe a',        this.BaseGroup,        ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.ColorAttribute, 'must use a',             this.VariantAttribute, ['Variant', 'AttrKey'])
+    ForeignKey(this.ColorAttribute, 'must use a',             this.VariantAttribute, ['Variant', 'ColorKey'], ['Variant', 'AttrKey'])
     ForeignKey(this.ColorAttribute, 'must use a',             this.Color,            ['ColorName'])
   enddef
 endclass

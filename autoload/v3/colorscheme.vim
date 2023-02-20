@@ -76,7 +76,7 @@ export class Database
         \   {Variant: 'termgui', AttrType: 'fg',    AttrKey: 'guifg'  },
         \   {Variant: 'termgui', AttrType: 'bg',    AttrKey: 'guibg'  },
         \   {Variant: 'termgui', AttrType: 'sp',    AttrKey: 'guisp'  },
-        \   {Variant: 'termgui', AttrType: 'style', AttrKey: 'gui'    },
+        \   {Variant: 'termgui', AttrType: 'style', AttrKey: 'cterm'  },
         \   {Variant: '256',     AttrType: 'fg',    AttrKey: 'ctermfg'},
         \   {Variant: '256',     AttrType: 'bg',    AttrKey: 'ctermbg'},
         \   {Variant: '256',     AttrType: 'sp',    AttrKey: 'ctermul'},

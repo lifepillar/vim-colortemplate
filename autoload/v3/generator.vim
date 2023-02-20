@@ -168,6 +168,41 @@ def Header(meta: Metadata): list<string>
 enddef
 # }}}
 
+# Variant generation {{{
+
+const HiGroupKey = EquiJoinPred(['HiGroupName', 'Variant', 'DiscrValue'])
+
+def Variant(db: Database, variant: string): dict<list<dict<any>>>
+  const linkedGroups = Query(
+    db.LinkedGroup
+    ->Select((t) => t.Variant == variant)
+  )
+
+  const baseGroups = Query(
+    db.BaseGroup
+    ->Select((t) => t.Variant == variant)
+
+    ->LeftNatJoin(
+      db.ColorAttribute
+      ->NatJoin(db.ColorVariant)
+      ->Extend((t): dict<any> => {
+        return {ColorAttrs: t.ColorKey .. '=' .. t.ColorValue}
+      })->GroupBy(['HiGroupName', 'Variant', 'DiscrValue'],
+                  StringAgg('ColorAttrs', ' ', ''), 'ColorAttrs'),
+      [{ColorAttrs: ''}])
+
+    ->LeftNatJoin(
+      db.Attribute->Extend((t): dict<any> => {
+        return {StyleAttrs: t.AttrKey .. '=' .. t.AttrValue}
+      })->GroupBy(['HiGroupName', 'Variant', 'DiscrValue'],
+                  StringAgg('StyleAttrs', ' ', ''), 'StyleAttrs'),
+      [{StyleAttrs: ''}])
+  )
+
+  return {'linked': linkedGroups, 'base': baseGroups}
+enddef
+# }}}
+
 # Main {{{
 export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
   CheckMetadata(meta)
@@ -182,6 +217,10 @@ export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
 
   var   theme    = Header(meta)
   const variants = meta.variants
+
+  var darkGuiVariant = Variant(dbase['dark'], 'gui')
+  popup_create(split(Table(darkGuiVariant['base']), "\n"),
+    {drag: true, dragall: true, close: "button", border: [1, 1, 1, 1]})
 
   for variant in meta.variants
     # TODO: generate variant

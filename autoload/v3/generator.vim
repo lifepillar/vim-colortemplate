@@ -163,6 +163,7 @@ def Header(meta: Metadata): list<string>
   header->add('hi clear')
   header->AddMeta("g:colors_name = '%s'", meta.shortname)->add('')
   header->add("const t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1")
+  header->add('')
 
   return header
 enddef
@@ -173,12 +174,13 @@ enddef
 const HiGroupKey = EquiJoinPred(['HiGroupName', 'Variant', 'DiscrValue'])
 
 def Variant(db: Database, variant: string): dict<list<dict<any>>>
-  const linkedGroups = Query(
+  var linkedGroups = Query(
     db.LinkedGroup
     ->Select((t) => t.Variant == variant)
+    ->NatJoin(db.HighlightGroup)
   )
 
-  const baseGroups = Query(
+  var baseGroups = Query(
     db.BaseGroup
     ->Select((t) => t.Variant == variant)
 
@@ -197,6 +199,8 @@ def Variant(db: Database, variant: string): dict<list<dict<any>>>
       })->GroupBy(['HiGroupName', 'Variant', 'DiscrValue'],
                   StringAgg('StyleAttrs', ' ', ''), 'StyleAttrs'),
       [{StyleAttrs: ''}])
+
+    ->NatJoin(db.HighlightGroup)
   )
 
   return {'linked': linkedGroups, 'base': baseGroups}

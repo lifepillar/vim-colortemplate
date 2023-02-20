@@ -672,7 +672,7 @@ This section uses the following terminology:
 - A "tuple" is a |dict| mapping attributes to values. Values can be strings,
   integers, booleans, or floats.
 - A "relation" instance (or simply an "instance") is a |list| of tuples.
-- A "base relation" is a |librelalg.Rel| object. 
+- A "base relation" is a |librelalg.Rel| object.
 - A "derived relation" is a relation instance obtained as the result of
   a query.
 - A "relation" is a base relation or a relation instance.
@@ -2059,7 +2059,7 @@ EquiJoinPred({list1}[, {list2}])		*librelalg.EquiJoinPred()*
 		{list2} of the second tuple. The comparison is elementwise
 		equality. When {list2} is not provided, {list1} is used for
 		the second tuple, too. The returned function can be used as an
-		argument to the various join operators. 
+		argument to the various join operators.
 
 		For example, to find the tag names that are also buffer names:
 >
@@ -2123,7 +2123,7 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		───────────
 		 10    ten
 		 20 twenty
-		
+
 		 A table
 		~~~~~~~~~~~
 		      Y  X
@@ -2139,12 +2139,11 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 <
 Transform({rel}, {func})				*librelalg.Transform()*
 		Transform a base or derived relation {rel} into a list of
-		objects, one for each tuple of the relation. This is similar
-		to |map()|, but the result does not need to have the same type
-		as the input. Note that the result is NOT a relation, in
-		general!
+		objects. This is similar to |map()|, but (a) the result does
+		not need to have the same type as the input, and (b) each
+		tuple can be mapped into more than one value.
 
-		Example:
+		For example, this turns each tuple into an integer:
 >
 		const r = [{X: 3, Y: 6}, {X: 5, Y: 2}]
 		echo Transform(r, (t) => t.X * t.Y))
@@ -2153,6 +2152,28 @@ Transform({rel}, {func})				*librelalg.Transform()*
 >
 		[18, 10]
 <
+		In the following example, each tuple is transformed into
+		a list of integers. Each list returned by the function is
+		automatically flattened in the result:
+>
+		const r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
+		echo Transform(r, (t) => [t.X * 2, t.Y * 3, t.X + t.Y])
+<
+		Output:
+>
+		[6, 18, 9, 10, 12, 9]
+<
+		If you do want to return a nested list, do so in the function:
+>
+		const r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
+		echo Transform(r, (t) => [[t.X + t.Y]])
+<
+		Output:
+>
+		[[9], [9]]
+<
+		Note that the result is NOT a relation, in general!
+
 Zip({list1}, {list2})				*librelalg.Zip()*
 		Build a tuple by "zipping" the attributes in {list1} with the
 		values in {list2}. For example:

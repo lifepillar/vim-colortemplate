@@ -1893,6 +1893,17 @@ def Test_RA_Transform()
   assert_equal(expected2, Transform(s, (t) => t.when .. t.where))
 enddef
 
+def Test_RA_TransformReturnsList()
+  const r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
+  const expected1 = [6, 18, 9, 10, 12, 9]
+
+  assert_equal(expected1, Transform(r, (t) => [t.X * 2, t.Y * 3, t.X + t.Y]))
+
+  const expected2 = [[9], [9]]
+
+  assert_equal(expected2, Transform(r, (t) => [[t.X + t.Y]]))
+enddef
+
 def Test_RA_Zip()
   assert_equal({A: 7, B: 'v'}, Zip(['A', 'B'], [7, 'v']))
   # If the second list is longer than the first items in excess are ignored:

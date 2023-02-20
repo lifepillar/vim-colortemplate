@@ -1397,7 +1397,12 @@ export def Transform(R: any, F: func(dict<any>): any): list<any>
   var result = []
 
   for t in rel
-    result->add(F(t))
+    const value = F(t)
+    if type(value) == v:t_list
+      result += value
+    else
+      result->add(value)
+    endif
   endfor
 
   return result

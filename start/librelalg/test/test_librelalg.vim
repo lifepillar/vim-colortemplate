@@ -809,6 +809,18 @@ def Test_RA_EquiJoinPred()
   assert_false(Pred({X: 3, Y: 4}, {W: 3, Z: 5}), "Equi-join predicate 4 succeeded")
 enddef
 
+def Test_RA_EquiJoinPredSameAttrs()
+  var Pred = EquiJoinPred(['X'])
+
+  assert_true(Pred({X: 1, W: 2}, {X: 1, Z: 3}), "Equi-join predicate 1 failed")
+  assert_false(Pred({X: 2, W: 2}, {X: 1, Z: 3}), "Equi-join predicate 2 succeeded")
+
+  Pred = EquiJoinPred(['X', 'Y'])
+
+  assert_true(Pred({X: 1, Y: 2}, {X: 1, Y: 2}), "Equi-join predicate 3 failed")
+  assert_false(Pred({X: 3, Y: 4}, {X: 3, Y: 5}), "Equi-join predicate 4 succeeded")
+enddef
+
 def Test_RA_Join()
   var R = Rel.new('R', {A: Int, B: Str}, [['A']])
   const r = R.instance

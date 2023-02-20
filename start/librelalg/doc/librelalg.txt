@@ -2053,12 +2053,15 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 ==============================================================================
 5. Other functions				*librelalg-other*
 
-EquiJoinPred({list1}, {list2})			*librelalg.EquiJoinPred()*
-		Return a predicate comparing the attributes in {list1} and the
-		attributes in {list2} for equality elementwise. The returned
-		function can be used as an argument to the various join
-		operators. For example, to find the tag names that are also
-		buffer names:
+EquiJoinPred({list1}[, {list2}])		*librelalg.EquiJoinPred()*
+		Return a predicate for comparing two tuples using the
+		attributes {list1} of the first tuple and the attributes
+		{list2} of the second tuple. The comparison is elementwise
+		equality. When {list2} is not provided, {list1} is used for
+		the second tuple, too. The returned function can be used as an
+		argument to the various join operators. 
+
+		For example, to find the tag names that are also buffer names:
 >
 		const Pred = EquiJoinPred(['BufName'], ['TagName'])
 		const result = Query(SemiJoin(Buffer, Tag, Pred))

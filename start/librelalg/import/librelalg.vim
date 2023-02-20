@@ -956,17 +956,18 @@ export def Join(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, pr
   }
 enddef
 
-export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string>): func(dict<any>, dict<any>): bool
+export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string> = null_list): func(dict<any>, dict<any>): bool
   const n = len(lftAttrList)
+  const rgt = rgtAttrList == null ? lftAttrList : rgtAttrList
 
-  if n != len(rgtAttrList)
-    throw ErrEquiJoinAttributes(lftAttrList, rgtAttrList)
+  if n != len(rgt)
+    throw ErrEquiJoinAttributes(lftAttrList, rgt)
   endif
 
   return (t: dict<any>, u: dict<any>): bool => {
     var i = 0
     while i < n
-      if t[lftAttrList[i]] != u[rgtAttrList[i]]
+      if t[lftAttrList[i]] != u[rgt[i]]
         return false
       endif
       i += 1

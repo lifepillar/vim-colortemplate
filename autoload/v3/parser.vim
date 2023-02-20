@@ -363,11 +363,11 @@ def DefineDefaultLinkedGroup(v: list<string>, ctx: Context)
 enddef
 
 def DefineNonDefaultLinkedGroup(v: list<string>, ctx: Context)
-  const state         = ctx.state
-  const dbase         = state.Db()
-  const targetGroup   = v[1]
-  const hiGroup       = state.hiGroupName
-  const discriminator = state.discrValue
+  const state           = ctx.state
+  const dbase: Database = state.Db()
+  const targetGroup     = v[1]
+  const hiGroup         = state.hiGroupName
+  const discriminator   = state.discrValue
 
   for variant in state.variants
     const t = dbase.HiGroupVersion.Lookup(
@@ -599,7 +599,7 @@ const ATTRIBUTE     = R(printf('\%(%s\)',
 const COL16         = R('\%(\d\+\)\|\w\+\|omit') # FIXME: match only colors from g:colortemplate#colorspace#ansi_colors
 const NUM256        = R('\d\{1,3}\>')
 const NUMBER        = R('-\=\d\+\%(\.\d*\)\=')
-const BACKGROUND    = R('dark\|light')
+const BACKGROUND    = R('dark\>\|light\>')
 const HEXCOL        = R('#[A-Fa-f0-9]\{6}')
 const STRING        = R('"[^"]*"')
 const TEXTLINE      = R('[^\r\n]\+')

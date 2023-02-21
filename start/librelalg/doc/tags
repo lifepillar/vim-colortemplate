@@ -45,6 +45,7 @@ librelalg.Select()	librelalg.txt	/*librelalg.Select()*
 librelalg.SemiJoin()	librelalg.txt	/*librelalg.SemiJoin()*
 librelalg.Sort()	librelalg.txt	/*librelalg.Sort()*
 librelalg.SortBy()	librelalg.txt	/*librelalg.SortBy()*
+librelalg.Split()	librelalg.txt	/*librelalg.Split()*
 librelalg.StringAgg()	librelalg.txt	/*librelalg.StringAgg()*
 librelalg.Sum()	librelalg.txt	/*librelalg.Sum()*
 librelalg.SumBy()	librelalg.txt	/*librelalg.SumBy()*

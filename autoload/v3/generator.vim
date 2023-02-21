@@ -46,6 +46,7 @@ const Select               = ra.Select
 const SemiJoin             = ra.SemiJoin
 const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
+const Split                = ra.Split
 const Str                  = ra.Str
 const StringAgg            = ra.StringAgg
 const Sum                  = ra.Sum
@@ -57,6 +58,7 @@ const Zip                  = ra.Zip
 # }}}
 
 const VERSION  = version.VERSION
+const NO_DISCR = colorscheme.DEFAULT_DISCR_VALUE
 const Database = colorscheme.Database
 const Metadata = colorscheme.Metadata
 
@@ -83,7 +85,7 @@ enddef
 
 def CheckMissingGroups(db: Database)
   const missing = Query(
-    db.HighlightGroup
+    db.HiGroup
     ->AntiJoin(db.HiGroupVersion,
                (t, u) => t.HiGroupName == u.HiGroupName)
   )
@@ -179,16 +181,22 @@ def Cmp(s1: string, s2: string): number
   return s1 < s2 ? -1 : 1
 enddef
 
-def SortPredicate(t: dict<any>, u: dict<any>): number
-  if t.DiscrName == u.DiscrName
-    if t.DiscrValue == u.DiscrValue
-      if t.HiGroupName == u.HiGroupName
-        return 0
-      else
-        return Cmp(t.HiGroupName, u.HiGroupName)
-      endif
+def SortByHiGroupName(t: dict<any>, u: dict<any>): number
+  if t.HiGroupName == 'Normal'
+    return u.HiGroupName == 'Normal' ? 0 : -1
+  elseif u.HiGroupName == 'Normal'
+    return 1
+  else
+    return Cmp(t.HiGroupName, u.HiGroupName)
+  endif
+enddef
+
+def SortByDiscrValueAndHiGroupName(t: dict<any>, u: dict<any>): number
+  if t.DiscrValue == u.DiscrValue
+    if t.HiGroupName == u.HiGroupName
+      return 0
     else
-      return t.DiscrValue == '__DfLt__' ? 1 : Cmp(t.DiscrValue, u.DiscrValue)
+      return SortByHiGroupName(t, u)
     endif
   else
     return Cmp(t.DiscrName, u.DiscrName)
@@ -199,12 +207,18 @@ def Variant(db: Database, variant: string): dict<list<dict<any>>>
   var linkedGroups = Query(
     db.LinkedGroup
     ->Select((t) => t.Variant == variant)
-    ->NatJoin(db.HighlightGroup)
+    ->NatJoin(db.HiGroup)
   )
 
   var baseGroups = Query(
     db.BaseGroup
     ->Select((t) => t.Variant == variant)
+
+    ->NatJoin(
+      db.Attribute->Extend((t): dict<any> => {
+        return {StyleAttrs: t.AttrKey .. '=' .. t.AttrValue}
+      })->GroupBy(['HiGroupName', 'Variant', 'DiscrValue'],
+                  StringAgg('StyleAttrs', ' ', ''), 'StyleAttrs'))
 
     ->LeftNatJoin(
       db.ColorAttribute
@@ -215,19 +229,75 @@ def Variant(db: Database, variant: string): dict<list<dict<any>>>
                   StringAgg('ColorAttrs', ' ', ''), 'ColorAttrs'),
       [{ColorAttrs: ''}])
 
-    ->LeftNatJoin(
-      db.Attribute->Extend((t): dict<any> => {
-        return {StyleAttrs: t.AttrKey .. '=' .. t.AttrValue}
-      })->GroupBy(['HiGroupName', 'Variant', 'DiscrValue'],
-                  StringAgg('StyleAttrs', ' ', ''), 'StyleAttrs'),
-      [{StyleAttrs: ''}])
-
-    ->NatJoin(db.HighlightGroup)
+    ->NatJoin(db.HiGroup)
   )
 
   return {'linked': linkedGroups, 'base': baseGroups}
 enddef
 # }}}
+
+def LinkedGroupToString(t: dict<any>): string
+  return printf("hi! link %s %s", t.HiGroupName, t.TargetGroup)
+enddef
+
+def BaseGroupToString(t: dict<any>): string
+  return printf("hi %s %s %s", t.HiGroupName, t.ColorAttrs, t.StyleAttrs)
+enddef
+
+# groups is a list of highlight groups definitions sharing the same DiscrName
+def Override(
+    theme: list<string>, groups: list<dict<any>>, ToString: func(dict<any>): string
+): list<string>
+  sort(groups, SortByDiscrValueAndHiGroupName)
+  const discrName  = groups[0].DiscrName
+  var   discrValue = groups[0].DiscrValue
+
+  theme->add(printf("if %s == %s", discrName, discrValue))
+
+  for g in groups
+    if g.DiscrValue != discrValue
+      discrValue = g.DiscrValue
+      theme->add(printf("elseif %s == %s", discrName, discrValue))
+    endif
+    theme->add(ToString(g))
+  endfor
+
+  theme->add("endif")
+
+  return theme
+enddef
+
+def ProcessOverrides(theme: list<string>, override: dict<list<dict<any>>>, ToString: func(dict<any>): string): list<string>
+  for groups in values(override)
+    Override(theme, groups, ToString)
+  endfor
+
+  return theme
+enddef
+
+def ProcessDefaults(theme: list<string>, defaults: list<dict<any>>, ToString: func(dict<any>): string): list<string>
+  sort(defaults, SortByHiGroupName)
+
+  for g in defaults
+    theme->add(ToString(g))
+  endfor
+
+  return theme
+enddef
+
+def Partition(groups: list<dict<any>>): dict<list<dict<any>>>
+  var partition = {}
+
+  for g in groups
+    const name = g.DiscrName
+    if !partition->has_key(name)
+      partition[name] = []
+    endif
+    partition[name]->add(g)
+  endfor
+
+  return partition
+enddef
 
 # Main {{{
 export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
@@ -244,12 +314,29 @@ export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
   var   theme    = Header(meta)
   const variants = meta.variants
 
-  var darkGuiVariant = Variant(dbase['dark'], 'gui')
-  popup_create(split(Table(darkGuiVariant['base']), "\n"),
-    {drag: true, dragall: true, close: "button", border: [1, 1, 1, 1]})
-
   for variant in meta.variants
-    # TODO: generate variant
+    theme->add(printf("if # is variant %s", variant))
+
+    for [bg, dbValue] in items(dbase)
+      if !meta.backgrounds[bg]
+        continue
+      endif
+
+      theme->add(printf("# [TODO] Background: %s", bg))
+
+      const db: Database = dbValue
+      var   groups       = Variant(db, variant)
+
+      for kind in ['linked', 'base']
+        const ToString = kind == 'linked' ? LinkedGroupToString : BaseGroupToString
+        var [default, override] = Split(groups[kind], (t) => t.DiscrValue == NO_DISCR)
+        var partition = Partition(override)
+        ProcessDefaults(theme, default, ToString)
+        ProcessOverrides(theme, partition, ToString)
+      endfor
+    endfor
+
+    theme->add('')->add("finish")->add('endif')->add('')
   endfor
 
   return theme

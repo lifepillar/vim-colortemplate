@@ -83,28 +83,33 @@ enddef
 
 def CheckMissingGroups(db: Database)
   const missing = Query(
-    db.HighlightGroup->AntiJoin(db.HiGroupVersion,
-                                (t, u) => t.HiGroupName == u.HiGroupName)
+    db.HighlightGroup
+    ->AntiJoin(db.HiGroupVersion,
+               (t, u) => t.HiGroupName == u.HiGroupName)
   )
 
   if !empty(missing)
-    const names = missing->Transform((t) => t.HiGroupName)
+    const names = mapnew(missing, (_, t) => t.HiGroupName)
     echomsg printf(
-      "Missing %s definitions for %s", db.background, join(names, ', ')
+      "Missing %s definitions for %s", db.background,
+      join(names, ', ')
     )
   endif
 enddef
 
 def CheckMissingDefaultDefinitions(db: Database)
   const missingDefault = Query(
-    db.HiGroupVersion->AntiJoin((db.HiGroupVersion->Select((t): bool => t.IsDefault)),
-                                (t, u) => t.HiGroupName == u.HiGroupName)
+    db.HiGroupVersion
+    ->AntiJoin((db.HiGroupVersion->Select((t): bool => t.IsDefault)),
+               (t, u) => t.HiGroupName == u.HiGroupName)
+    ->Project('HiGroupName')
   )
 
   if !empty(missingDefault)
-    const names = missingDefault->Transform((t) => t.HiGroupName)
+    const names = mapnew(missingDefault, (_, t) => t.HiGroupName)
     throw printf(
-      "Missing %s default definition for %s", db.background, join(names, ', ')
+      "Missing %s default definition for %s", db.background,
+      join(names, ', ')
     )
   endif
 enddef

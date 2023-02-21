@@ -11,6 +11,8 @@ const Rel        = ra.Rel
 const Str        = ra.Str
 # }}}
 
+export const DEFAULT_DISCR_VALUE = '__DfLt__'
+
 export class Metadata
   public this.author:      list<string> = []
   public this.description: list<string> = []

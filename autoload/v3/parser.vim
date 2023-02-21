@@ -26,7 +26,7 @@ const T              = parser.TextToken(SpaceOrComment)
 # }}}
 
 # Main {{{
-const DEFAULT_DISCR_VALUE = '__DfLt__'
+const DEFAULT_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
 
 def GetDatabase(ctx: Context): func(): Database
   const state = ctx.state

@@ -111,6 +111,10 @@ export class Database
         \ }, [
         \   ['ColorName'],
         \   ['GUIValue', 'Base256Value', 'Base16Value']
+        \ ]).InsertMany([
+        \   {ColorName: 'none', GUIValue: '', Base256Value: -1, Base16Value: '', Delta: 0.0},
+        \   {ColorName: 'fg',   GUIValue: '', Base256Value: -2, Base16Value: '', Delta: 0.0},
+        \   {ColorName: 'bg',   GUIValue: '', Base256Value: -3, Base16Value: '', Delta: 0.0}
         \ ])
 
   this.ColorVariant = Rel.new('Color Variant', {
@@ -251,6 +255,30 @@ export class Database
     ForeignKey(this.Attribute,      'must use a',             this.VariantAttribute, ['Variant', 'AttrKey'])
     ForeignKey(this.ColorAttribute, 'must describe a',        this.BaseGroup,        ['HiGroupName', 'Variant', 'DiscrValue'])
     ForeignKey(this.ColorAttribute, 'must use a',             this.VariantAttribute, ['Variant', 'ColorKey'], ['Variant', 'AttrKey'])
-    ForeignKey(this.ColorAttribute, 'must be assigned a',     this.ColorVariant,     ['ColorName', 'Variant'])
+    ForeignKey(this.ColorAttribute, 'must refer to a',        this.ColorVariant,     ['ColorName', 'Variant'])
+
+    this.ColorVariant.InsertMany([
+      {ColorName: 'none', Variant: 'gui',     ColorValue: 'NONE'},
+      {ColorName: 'none', Variant: 'termgui', ColorValue: 'NONE'},
+      {ColorName: 'none', Variant: '256',     ColorValue: 'NONE'},
+      {ColorName: 'none', Variant: '88',      ColorValue: 'NONE'},
+      {ColorName: 'none', Variant: '16',      ColorValue: 'NONE'},
+      {ColorName: 'none', Variant: '8',       ColorValue: 'NONE'},
+      {ColorName: 'none', Variant: '0',       ColorValue: 'NONE'},
+      {ColorName:   'fg', Variant: 'gui',     ColorValue:   'fg'},
+      {ColorName:   'fg', Variant: 'termgui', ColorValue:   'fg'},
+      {ColorName:   'fg', Variant: '256',     ColorValue:   'fg'},
+      {ColorName:   'fg', Variant: '88',      ColorValue:   'fg'},
+      {ColorName:   'fg', Variant: '16',      ColorValue:   'fg'},
+      {ColorName:   'fg', Variant: '8',       ColorValue:   'fg'},
+      {ColorName:   'fg', Variant: '0',       ColorValue:   'fg'},
+      {ColorName:   'bg', Variant: 'gui',     ColorValue:   'bg'},
+      {ColorName:   'bg', Variant: 'termgui', ColorValue:   'bg'},
+      {ColorName:   'bg', Variant: '256',     ColorValue:   'bg'},
+      {ColorName:   'bg', Variant: '88',      ColorValue:   'bg'},
+      {ColorName:   'bg', Variant: '16',      ColorValue:   'bg'},
+      {ColorName:   'bg', Variant: '8',       ColorValue:   'bg'},
+      {ColorName:   'bg', Variant: '0',       ColorValue:   'bg'},
+    ])
   enddef
 endclass

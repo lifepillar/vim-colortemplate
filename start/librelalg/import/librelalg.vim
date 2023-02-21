@@ -1392,8 +1392,12 @@ export def NotIn(t: dict<any>, R: any): bool
   return !(t->In(R))
 enddef
 
-export def Transform(R: any, F: func(dict<any>): any): list<any>
-  const rel: list<dict<any>> = Instance(R)
+export def Split(Arg: any, Pred: func(dict<any>): bool)
+  var rel = Query(Arg)
+enddef
+
+export def Transform(Arg: any, F: func(dict<any>): any): list<any>
+  const rel = Query(Arg)
   var result = []
 
   for t in rel

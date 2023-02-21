@@ -545,7 +545,7 @@ const K_LICENSE     = T('License')
 const K_MAINTAINER  = T('Maintainer')
 const K_NAME        = R('[Nn]ame')
 const K_SHORT       = T('Short')
-const K_SPECIAL     = R('s\%[pecial\]\>')
+const K_SPECIAL     = R('s\|sp\>')
 const K_TERM        = R('Term\%[inal\]')
 const K_URL         = R('URL\|Website')
 const K_VARIANT     = R('\(gui\|termgui\|256\|88\|16\|8\|bw\|0\)\>')
@@ -569,7 +569,7 @@ const DISCRNAME     = IDENTIFIER
 const COLORNAME     = IDENTIFIER
 const FGCOLOR       = COLORNAME
 const BGCOLOR       = COLORNAME
-const ATTRIBUTE     = R(printf('\%(%s\)',
+const ATTRIBUTE     = R(printf('\%(%s\)\>',
                       join(['bold',
                         'italic',
                         'underline',
@@ -614,7 +614,7 @@ const Attributes    = Seq(
                         ATTRIBUTE,
                         Many(Seq(Skip(COMMA), L_ATTRIBUTE))
                       )                                             ->Map((v, _) => flattennew(v))
-const SpecialColor  = Seq(K_SPECIAL, L_EQ, L_SPCOLOR)               ->Map((v, _) => v[2])
+const SpecialColor  = Seq(K_SPECIAL, EQ, L_SPCOLOR)                 ->Map((v, _) => v[2])
 const BaseGroup     = Seq(
                         FGCOLOR,
                         L_BGCOLOR,

@@ -325,6 +325,7 @@ def SetDiscrName(v: list<string>, ctx: Context)
     )
   endif
   state.discrName = discrName
+  state.isDefault = false
 enddef
 
 def SetDiscrValue(discrValue: string, ctx: Context)

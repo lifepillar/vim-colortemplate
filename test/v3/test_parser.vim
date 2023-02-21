@@ -39,4 +39,5 @@ def Test_Parser_LinkedGroup()
   assert_equal('Conditional', r[0]['TargetGroup'])
 enddef
 
-tt.Run('_Parser')
+
+tt.Run('_Parser_')

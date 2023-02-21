@@ -143,8 +143,6 @@ def AddList(header: list<string>, text: string, items: list<string>): list<strin
 enddef
 
 def Header(meta: Metadata): list<string>
-  # const authors     = join(meta.author, ', ')
-  # const maintainers = join(meta.maintainer, ', ')
   const license     = empty(meta.license) ? 'Vim License (see `:help license`)' : meta.license
   var   header      = ['vim9script', '']
 
@@ -153,8 +151,7 @@ def Header(meta: Metadata): list<string>
   header->AddList('# Description:    %s', meta.description)
   header->AddList('# Author(s):      %s', meta.author)
   header->AddList('# Maintainers(s): %s', meta.maintainer)
-  header->AddMeta('# URL:            %s', meta.url)
-  header->AddMeta('# Website:        %s', meta.website)
+  header->AddList('# URL(s):         %s', meta.url)
   header->AddMeta('# License:        %s', meta.license)
   header->AddMeta('# Last Updated:   %s', strftime("%c"))
   header->add('')

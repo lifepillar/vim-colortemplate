@@ -199,22 +199,7 @@ enddef
 
 def SetURL(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  if !empty(meta.url)
-    throw printf(
-      "URL already defined ('%s')", meta.url
-    )
-  endif
-  meta.url = v[2]
-enddef
-
-def SetWebsite(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  if !empty(meta.website)
-    throw printf(
-      "Website already defined ('%s')", meta.website
-    )
-  endif
-  meta.website = v[2]
+  meta.url->add(v[2])
 enddef
 
 def SetTermColors(v: list<string>, ctx: Context)
@@ -560,11 +545,10 @@ const K_NAME        = R('[Nn]ame')
 const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\%[pecial\]\>')
 const K_TERM        = R('Term\%[inal\]')
-const K_URL         = T('URL')
+const K_URL         = R('URL\|Website')
 const K_VARIANT     = R('\(gui\|termgui\|256\|88\|16\|8\|bw\|0\)\>')
 const K_VARIANTS    = T('Variants')
 const K_VERSION     = T('Version')
-const K_WEBSITE     = T('Website')
 
 const BAR           = T('/')
 const COLON         = T(':')
@@ -685,7 +669,6 @@ const VariantList   = Lab(
                         "Expected one of: gui, 256, 88, 16, 8, bw, 0"
                       )                                             ->Apply(SetSupportedVariants)
 
-const Website       = Seq(K_WEBSITE,        L_COLON, L_TEXTLINE)    ->Apply(SetWebsite)
 const Version       = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
 const Variants      = Seq(K_VARIANTS,       L_COLON, VariantList)
 const URL           = Seq(K_URL,            L_COLON, L_TEXTLINE)    ->Apply(SetURL)
@@ -720,8 +703,7 @@ const Directive     = OneOf(
                         TermColors,
                         URL,
                         Variants,
-                        Version,
-                        Website
+                        Version
                       )
 
 const Declaration   = OneOf(Directive, HiGroupDecl)

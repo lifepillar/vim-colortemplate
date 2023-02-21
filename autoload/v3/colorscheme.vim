@@ -21,9 +21,8 @@ export class Metadata
   public this.maintainer:  list<string> = []
   public this.pathname:    string       = ''
   public this.shortname:   string       = ''
-  public this.url:         string       = ''
+  public this.url:         list<string> = []
   public this.version:     string       = ''
-  public this.website:     string       = ''
   public this.variants:    list<string> = []
   public this.backgrounds: dict<bool>   = {'dark': false, 'light': false}
   public this.termcolors:  list<string> = []

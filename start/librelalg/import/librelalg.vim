@@ -1273,7 +1273,7 @@ def Aggregate(Arg: any, initValue: any, Fn: func(dict<any>, any): any): any
   return Res
 enddef
 
-def ListAgg_(Arg: any, attr: string): list<any>
+def ListAgg_(Arg: any, attr: string, How: any): list<any>
   var agg: list<any> = []
   const Cont = From(Arg)
 
@@ -1281,14 +1281,13 @@ def ListAgg_(Arg: any, attr: string): list<any>
     agg->add(t[attr])
   })
 
-  return agg
+  return How == null ? agg : sort(agg, How)
 enddef
 
 export const ListAgg = Curry(ListAgg_)
 
 def StringAgg_(Arg: any, attr: string, sep: string, How: any): string
-  var agg = ListAgg_(Arg, attr)
-  return sort(agg, How)->join(sep)
+  return ListAgg_(Arg, attr, How)->join(sep)
 enddef
 
 export const StringAgg = Curry(StringAgg_)

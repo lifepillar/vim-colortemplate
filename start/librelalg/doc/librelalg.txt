@@ -291,7 +291,7 @@ relation schema. Let us insert some data:
 	])
 
 	Tag.InsertMany([
-	  {BufId: 1, TagName: 'zzz', Line: 1,  Column: 5},
+	  {BufId: 1, TagName: 'kkk', Line: 1,  Column: 5},
 	  {BufId: 1, TagName: 'zzz', Line: 2,  Column: 1},
 	  {BufId: 1, TagName: 'abc', Line: 3,  Column: 9},
 	  {BufId: 1, TagName: 'xyz', Line: 4,  Column: 1},
@@ -319,6 +319,7 @@ The output looks as follows (note that the columns are in an arbitrary order):
 	───────────────────────────
 	 TagName Column Line BufId
 	───────────────────────────
+	     kkk      5    1     1
 	     zzz      1    2     1
 	     abc      9    3     1
 	     xyz      1    4     1
@@ -1970,17 +1971,26 @@ CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 >
 		const nDistinctTags = From(Tag)->CountDistinct('TagName')  # 4
 <
-ListAgg({rel}, {attr})				*librelalg.ListAgg()*
+ListAgg({rel}, {attr}, {how})			*librelalg.ListAgg()*
 		Return the values of attribute {attr} in a relation {rel} as
-		a |list|. Examples:
+		a |list|, sorted using the method specified by {how}. For the
+		possible values of {how}, see |sort()|. If you want the lists
+		to remain unsorted, pass |null|. Examples:
 >
 		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A')  # [9, 7, 11]
+			->ListAgg('A', null)  # [9, 7, 11]
+
+		echo From([{A: 9}, {A: 7}, {A: 11}])
+			->ListAgg('A', 'f')  # [7, 9, 11]
+
+		echo From([{A: 9}, {A: 7}, {A: 11}])
+			->ListAgg('A', '')  # [11, 7, 9]
 <
-		To return the list of tags in each buffer, sorted by buffer:
+		To build the sorted lists of tags in each buffer, sorted by
+		buffer:
 >
 		const result = From(Tag)
-		               ->GroupBy('BufId', ListAgg('TagName'))
+		               ->GroupBy('BufId', ListAgg('TagName', ''))
 		               ->SortBy(['BufId'])
 		echo Table(result)
 <
@@ -1989,7 +1999,7 @@ ListAgg({rel}, {attr})				*librelalg.ListAgg()*
 		────────────────────────────────────
 		                    aggrValue BufId
 		────────────────────────────────────
-		 ['zzz', 'abc', 'xyz', 'lll']     1
+		 ['abc', 'lll', 'xyz', 'zzz']     1
 		                      ['abc']     2
 		                      ['abc']     3
 <

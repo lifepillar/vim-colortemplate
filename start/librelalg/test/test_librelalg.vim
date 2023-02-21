@@ -1386,10 +1386,11 @@ def Test_RA_ListAgg()
     {A: 4, aggrValue: [2.5, 2.5]},
   ]
 
-  assert_equal([], From([])->ListAgg('A'))
-  assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A'))
-  assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B'))
-  assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B'))->SortBy('A'))
+  assert_equal([], From([])->ListAgg('A', ''))
+  assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A', ''))
+  assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B', null))
+  assert_equal([-3.0, 1.5, 2.5, 2.5, 2.5, 10.0], From(r)->ListAgg('B', 'f'))
+  assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B', null))->SortBy('A'))
 enddef
 
 def Test_RA_StringAgg()

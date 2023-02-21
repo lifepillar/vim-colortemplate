@@ -84,6 +84,7 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
 
   const startTime = reltime()
   const parseResult = parser.Parse(text)
+  const elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
   const result: parser.Result = parseResult.result
 
   if !result.success
@@ -105,7 +106,8 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
   const outputPath = fnamemodify(inputPath, ":p")  # FIXME
 
   Notice(printf(
-    'Success! [%s created in %.00fms]', fnamemodify(outputPath, ':t'), elapsed
+    'Success! [%s created in %.00fms (parsing: %.00fms]',
+    fnamemodify(outputPath, ':t'), elapsed, elapsedParse
   ))
 
   return Success()

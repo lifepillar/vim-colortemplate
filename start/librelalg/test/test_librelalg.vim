@@ -51,6 +51,7 @@ const Select               = ra.Select
 const SemiJoin             = ra.SemiJoin
 const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
+const Split                = ra.Split
 const Str                  = ra.Str
 const StringAgg            = ra.StringAgg
 const Sum                  = ra.Sum
@@ -1910,6 +1911,16 @@ def Test_RA_TransformReturnsList()
   const expected2 = [[9], [9]]
 
   assert_equal(expected2, Transform(r, (t) => [[t.X + t.Y]]))
+enddef
+
+def Test_RA_Split()
+  const r = [{A: 1}, {A: 3}, {A: 5}, {A: 2}, {A: 7}]
+  const expected1 = [{A: 1}, {A: 2}, {A: 3}]
+  const expected2 = [{A: 5}, {A: 7}]
+  const [result1, result2] = r->Split((t) => t.A <= 4)
+
+  assert_true(RelEq(expected1, result1))
+  assert_true(RelEq(expected2, result2))
 enddef
 
 def Test_RA_Zip()

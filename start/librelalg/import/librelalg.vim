@@ -1392,8 +1392,20 @@ export def NotIn(t: dict<any>, R: any): bool
   return !(t->In(R))
 enddef
 
-export def Split(Arg: any, Pred: func(dict<any>): bool)
-  var rel = Query(Arg)
+export def Split(Arg: any, Pred: func(dict<any>): bool): list<list<dict<any>>>
+  const Cont = From(Arg)
+  var ok:  list<dict<any>> = []
+  var tsk: list<dict<any>> = []
+
+  Cont((t) => {
+    if Pred(t)
+      ok->add(t)
+    else
+      tsk->add(t)
+    endif
+  })
+
+  return [ok, tsk]
 enddef
 
 export def Transform(Arg: any, F: func(dict<any>): any): list<any>

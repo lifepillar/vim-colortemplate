@@ -12,6 +12,7 @@ const Bol            = parser.Bol
 const Context        = parser.Context
 const Eof            = parser.Eof
 const Lab            = parser.Lab
+const LookAhead      = parser.LookAhead
 const Many           = parser.Many
 const Map            = parser.Map
 const OneOf          = parser.OneOf
@@ -21,6 +22,7 @@ const Result         = parser.Result
 const Seq            = parser.Seq
 const Skip           = parser.Skip
 const SpaceOrComment = parser.Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
+const Regex          = parser.Regex
 const R              = parser.RegexToken(SpaceOrComment)
 const T              = parser.TextToken(SpaceOrComment)
 # }}}
@@ -690,20 +692,22 @@ const ColorDef      = Seq(
                         Opt(COL16)
                       )                                            ->Apply(DefineColor)
 
-const Directive     = OneOf(
-                        ColorDef,
-                        Include,
-                        Background,
-                        Author,
-                        Description,
-                        Fullname,
-                        License,
-                        Maintainer,
-                        Shortname,
-                        TermColors,
-                        URL,
-                        Variants,
-                        Version
+const Directive     = Seq(LookAhead(Regex('[^\n\r]*:')),
+                        Lab(OneOf(
+                          ColorDef,
+                          Include,
+                          Background,
+                          Author,
+                          Description,
+                          Fullname,
+                          License,
+                          Maintainer,
+                          Shortname,
+                          TermColors,
+                          URL,
+                          Variants,
+                          Version
+                        ), 'Expected a metadata directive: spurious colon?')
                       )
 
 const Declaration   = OneOf(Directive, HiGroupDecl)

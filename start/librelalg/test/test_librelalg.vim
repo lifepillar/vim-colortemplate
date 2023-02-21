@@ -1171,6 +1171,14 @@ def Test_RA_AntiJoin()
   assert_equal(instanceS, s)
 enddef
 
+def Test_RA_AntiJoinEmptyOperand()
+  const r = [{A: 1}]
+  const s = []
+  const result = Query(AntiJoin(r, s, (t, u) => t.A == u.A))
+
+  assert_equal(r, result)
+enddef
+
 def Test_RA_LeftNatJoin()
   var Buffer = Rel.new('Buffer', {
       BufId:   Int,

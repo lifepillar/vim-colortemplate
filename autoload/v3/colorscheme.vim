@@ -121,7 +121,7 @@ export class Database
         \ },
         \ ['ColorName', 'Variant'])
 
-  this.HighlightGroup = Rel.new('Highlight Group', {
+  this.HiGroup = Rel.new('Hi Group', {
         \   HiGroupName: Str,
         \   DiscrName:   Str,
         \ },
@@ -196,7 +196,7 @@ export class Database
         \ {HiGroupName: 'WildMenu',          DiscrName: ''},
         \ ])
 
-  this.HiGroupVersion = Rel.new('Highlight Group Version', {
+  this.HiGroupVersion = Rel.new('Hi Group Version', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
@@ -244,7 +244,7 @@ export class Database
 
     ForeignKey(this.ColorVariant,   'must instantiate a',     this.Color,            ['ColorName'])
     ForeignKey(this.ColorVariant,   'must refer to a',        this.Variant,          ['Variant'])
-    ForeignKey(this.HiGroupVersion, 'must be a version of a', this.HighlightGroup,   ['HiGroupName'])
+    ForeignKey(this.HiGroupVersion, 'must be a version of a', this.HiGroup,          ['HiGroupName'])
     ForeignKey(this.HiGroupVersion, 'must apply to a',        this.Variant,          ['Variant'])
     ForeignKey(this.LinkedGroup,    'must be a',              this.HiGroupVersion,   ['HiGroupName', 'Variant', 'DiscrValue'])
     ForeignKey(this.BaseGroup,      'must be a',              this.HiGroupVersion,   ['HiGroupName', 'Variant', 'DiscrValue'])

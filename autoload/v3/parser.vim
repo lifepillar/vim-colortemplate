@@ -280,7 +280,7 @@ def SetHiGroupName(v: list<string>, ctx: Context)
 
   const dbase: Database = state.Db()
   try
-    dbase.HighlightGroup.Insert({
+    dbase.HiGroup.Insert({
       HiGroupName: hiGroup,
       DiscrName: '',
     })
@@ -309,7 +309,7 @@ def SetDiscrName(v: list<string>, ctx: Context)
   const dbase: Database = state.Db()
   const discrName       = v[1]
   const hiGroup         = state.hiGroupName
-  const t               = dbase.HighlightGroup.Lookup(['HiGroupName'], [hiGroup])
+  const t               = dbase.HiGroup.Lookup(['HiGroupName'], [hiGroup])
 
   if empty(t)  # This should never happen
     throw printf(
@@ -318,7 +318,7 @@ def SetDiscrName(v: list<string>, ctx: Context)
   endif
 
   if empty(t.DiscrName)
-    dbase.HighlightGroup.Update({HiGroupName: hiGroup, DiscrName: discrName})
+    dbase.HiGroup.Update({HiGroupName: hiGroup, DiscrName: discrName})
   elseif t.DiscrName != discrName
     throw printf(
       "Inconsistent discriminator: '%s' ('%s' already uses '%s')", discrName, hiGroup, t.DiscrName

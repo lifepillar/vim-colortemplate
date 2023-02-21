@@ -7,16 +7,19 @@ Short name:    dark
 Author:        Myself <myself@somewhere.org>
 ; Optional
 Maintainer:    Myself <myself@somewhere.org>
-Website:       https://me.org
+URL:           https://me.org
 Description:   Template for dark colorscheme
-License:       Public domain
+License:       Same as Vim
 ; Prefix for options: short name is used if this key is not present:
-Option Prefix: dark
+; Option Prefix: dark
 ; }}}
 
 ; Documentation {{{
-Include: _help.colortemplate
+; Include: _help.colortemplate
 ; }}}
+
+Background: dark
+Variants:   gui termgui 256 8
 
 ; Common linked groups {{{
 Boolean           -> Constant
@@ -56,46 +59,44 @@ Typedef           -> Type
 lCursor           -> Cursor
 ; }}}
 
-Background: dark
-
 ; Color palette {{{
-; Color name         GUI                     Base256     Base16 (optional)
-Color: black         rgb( 57,  71,  89)        ~         Black
-Color: red           rgb(255,   0,   0)        ~         DarkRed
-Color: green         rgb(  0, 255,   0)        ~         DarkGreen
-Color: yellow        rgb(255, 255,   0)        ~         DarkYellow
-Color: blue          rgb(  0,   0, 255)        ~         DarkBlue
-Color: magenta       rgb(255,   0, 255)        ~         DarkMagenta
-Color: cyan          rgb(  0, 255, 255)        ~         DarkCyan
-Color: white         rgb(235, 235, 235)        ~         LightGrey
-Color: brightblack   rgb(210, 210, 210)        ~         DarkGrey
-Color: brightred     rgb(255, 100,   0)        ~         LightRed
-Color: brightgreen   rgb(100, 255,   0)        ~         LightGreen
-Color: brightyellow  rgb(255, 255, 100)        ~         LightYellow
-Color: brightblue    rgb(  0, 100, 255)        ~         LightBlue
-Color: brightmagenta rgb(255, 100, 255)        ~         LightMagenta
-Color: brightcyan    rgb(100, 255, 255)        ~         LightCyan
-; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
-Color: brightwhite   #e0e0ed                  231        White
+; Color name         GUI         Base256  Base16 (optional)
+Color: black         #394759     238      Black
+Color: red           #ff0000     196      DarkRed
+Color: green         #00ff00     46       DarkGreen
+Color: yellow        #ffff00     226      DarkYellow
+Color: blue          #0000ff     196      DarkBlue
+Color: magenta       #ff00ff     196      DarkMagenta
+Color: cyan          #00ffff     51       DarkCyan
+Color: white         #ebebeb     255      LightGrey
+Color: brightblack   #d2d2d2     252      DarkGrey
+Color: brightred     #ff6400     202      LightRed
+Color: brightgreen   #64ff00     82       LightGreen
+Color: brightyellow  #ffff64     227      LightYellow
+Color: brightblue    #0064ff     27       LightBlue
+Color: brightmagenta #ff64ff     207      LightMagenta
+Color: brightcyan    #64ffff     87       LightCyan
+Color: brightwhite   #e0e0ed     231      White
 ; }}}
 ; Terminal colors {{{
 Term colors: black red green yellow blue magenta cyan white
-Term colors: brightblack brightred brightgreen brightyellow
-Term colors: brightblue brightmagenta brightcyan brightwhite
+             brightblack brightred brightgreen brightyellow
+             brightblue brightmagenta brightcyan brightwhite
 ; }}}
 
 ; Default highlight groups {{{
-Variant: gui
-#if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
-Variant: 256 8
-#if get(g:, '@optionprefix_transp_bg', 0)
-Variant: gui 256 8
-    Normal           white             none
-    Terminal         white             none
-#else
-    Normal           white             black
-    Terminal         white             black
-#endif
+Normal               white             black
+Terminal             white             black
+
+Normal
+  /termgui/256/8
+    +transp_bg
+             1       white             none
+
+Terminal
+  /termgui/256/8
+    +transp_bg
+             1       white             none
 
 ; Group              Foreground        Background        Attributes
 ColorColumn          fg                black
@@ -113,7 +114,8 @@ EndOfBuffer          white             black
 ErrorMsg             white             black             reverse
 FoldColumn           white             black
 Folded               white             black             italic
-IncSearch            white             black             t=reverse g=standout
+IncSearch            white             black             reverse
+IncSearch/gui        white             black             standout
 LineNr               white             black
 MatchParen           white             black
 ModeMsg              white             black
@@ -166,5 +168,5 @@ ToolbarButton        white             black             bold
 ; }}}
 
 ; B/W variant {{{
-Include: _bw.colortemplate
+;Include: _bw.colortemplate
 ; }}}

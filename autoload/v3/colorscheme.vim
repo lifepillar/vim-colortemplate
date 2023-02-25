@@ -48,6 +48,80 @@ enddef
 export class Database
   public this.background:  string
 
+  this.VimHiGroup = Rel.new('Vim Hi Group', {
+        \ HiGroupName: Str,
+        \ },
+        \ 'HiGroupName').InsertMany([
+        \ {HiGroupName: 'ColorColumn',       },
+        \ {HiGroupName: 'Comment',           },
+        \ {HiGroupName: 'Conceal',           },
+        \ {HiGroupName: 'Constant',          },
+        \ {HiGroupName: 'Cursor',            },
+        \ {HiGroupName: 'CursorColumn',      },
+        \ {HiGroupName: 'CursorLine',        },
+        \ {HiGroupName: 'CursorLineFold',    },
+        \ {HiGroupName: 'CursorLineNr',      },
+        \ {HiGroupName: 'CursorLineSign',    },
+        \ {HiGroupName: 'DiffAdd',           },
+        \ {HiGroupName: 'DiffChange',        },
+        \ {HiGroupName: 'DiffDelete',        },
+        \ {HiGroupName: 'DiffText',          },
+        \ {HiGroupName: 'Directory',         },
+        \ {HiGroupName: 'EndOfBuffer',       },
+        \ {HiGroupName: 'Error',             },
+        \ {HiGroupName: 'ErrorMsg',          },
+        \ {HiGroupName: 'FoldColumn',        },
+        \ {HiGroupName: 'Folded',            },
+        \ {HiGroupName: 'Identifier',        },
+        \ {HiGroupName: 'Ignore',            },
+        \ {HiGroupName: 'IncSearch',         },
+        \ {HiGroupName: 'LineNr',            },
+        \ {HiGroupName: 'LineNrAbove',       },
+        \ {HiGroupName: 'LineNrBelow',       },
+        \ {HiGroupName: 'MatchParen',        },
+        \ {HiGroupName: 'MessageWindow',     },
+        \ {HiGroupName: 'ModeMsg',           },
+        \ {HiGroupName: 'MoreMsg',           },
+        \ {HiGroupName: 'NonText',           },
+        \ {HiGroupName: 'Normal',            },
+        \ {HiGroupName: 'Pmenu',             },
+        \ {HiGroupName: 'PmenuSbar',         },
+        \ {HiGroupName: 'PmenuSel',          },
+        \ {HiGroupName: 'PmenuThumb',        },
+        \ {HiGroupName: 'PopupNotification', },
+        \ {HiGroupName: 'PopupSelected',     },
+        \ {HiGroupName: 'PreProc',           },
+        \ {HiGroupName: 'Question',          },
+        \ {HiGroupName: 'QuickFixLine',      },
+        \ {HiGroupName: 'Search',            },
+        \ {HiGroupName: 'SignColumn',        },
+        \ {HiGroupName: 'Special',           },
+        \ {HiGroupName: 'SpecialKey',        },
+        \ {HiGroupName: 'SpellBad',          },
+        \ {HiGroupName: 'SpellCap',          },
+        \ {HiGroupName: 'SpellLocal',        },
+        \ {HiGroupName: 'SpellRare',         },
+        \ {HiGroupName: 'Statement',         },
+        \ {HiGroupName: 'StatusLine',        },
+        \ {HiGroupName: 'StatusLineNC',      },
+        \ {HiGroupName: 'StatusLineTerm',    },
+        \ {HiGroupName: 'StatusLineTermNC',  },
+        \ {HiGroupName: 'TabLine',           },
+        \ {HiGroupName: 'TabLineFill',       },
+        \ {HiGroupName: 'TabLineSel',        },
+        \ {HiGroupName: 'Title',             },
+        \ {HiGroupName: 'Todo',              },
+        \ {HiGroupName: 'ToolbarButton',     },
+        \ {HiGroupName: 'ToolbarLine',       },
+        \ {HiGroupName: 'Type',              },
+        \ {HiGroupName: 'Underlined',        },
+        \ {HiGroupName: 'VertSplit',         },
+        \ {HiGroupName: 'Visual',            },
+        \ {HiGroupName: 'VisualNOS',         },
+        \ {HiGroupName: 'WarningMsg',        },
+        \ {HiGroupName: 'WildMenu',          },
+        \ ])
+
   this.Variant: Rel = Rel.new('Variant', {
         \   Variant:   Str,
         \   NumColors: Int,
@@ -112,103 +186,46 @@ export class Database
         \   ['ColorName'],
         \   ['GUIValue', 'Base256Value', 'Base16Value']
         \ ]).InsertMany([
-        \   {ColorName: 'none', GUIValue: '', Base256Value: -1, Base16Value: '', Delta: 0.0},
-        \   {ColorName: 'fg',   GUIValue: '', Base256Value: -2, Base16Value: '', Delta: 0.0},
-        \   {ColorName: 'bg',   GUIValue: '', Base256Value: -3, Base16Value: '', Delta: 0.0}
+        \   {ColorName: '',     GUIValue: '', Base256Value: -1, Base16Value: '', Delta: 0.0},
+        \   {ColorName: 'none', GUIValue: '', Base256Value: -2, Base16Value: '', Delta: 0.0},
+        \   {ColorName: 'fg',   GUIValue: '', Base256Value: -3, Base16Value: '', Delta: 0.0},
+        \   {ColorName: 'bg',   GUIValue: '', Base256Value: -4, Base16Value: '', Delta: 0.0}
         \ ])
-
-  this.ColorVariant = Rel.new('Color Variant', {
-        \ ColorName:  Str,
-        \ Variant:    Str,
-        \ ColorValue: Str,
-        \ },
-        \ ['ColorName', 'Variant'])
 
   this.HiGroup = Rel.new('Hi Group', {
         \   HiGroupName: Str,
         \   DiscrName:   Str,
+        \   IsLinked:    Bool,
         \ },
-        \ 'HiGroupName').InsertMany([
-        \ {HiGroupName: 'ColorColumn',       DiscrName: ''},
-        \ {HiGroupName: 'Comment',           DiscrName: ''},
-        \ {HiGroupName: 'Conceal',           DiscrName: ''},
-        \ {HiGroupName: 'Constant',          DiscrName: ''},
-        \ {HiGroupName: 'Cursor',            DiscrName: ''},
-        \ {HiGroupName: 'CursorColumn',      DiscrName: ''},
-        \ {HiGroupName: 'CursorLine',        DiscrName: ''},
-        \ {HiGroupName: 'CursorLineFold',    DiscrName: ''},
-        \ {HiGroupName: 'CursorLineNr',      DiscrName: ''},
-        \ {HiGroupName: 'CursorLineSign',    DiscrName: ''},
-        \ {HiGroupName: 'DiffAdd',           DiscrName: ''},
-        \ {HiGroupName: 'DiffChange',        DiscrName: ''},
-        \ {HiGroupName: 'DiffDelete',        DiscrName: ''},
-        \ {HiGroupName: 'DiffText',          DiscrName: ''},
-        \ {HiGroupName: 'Directory',         DiscrName: ''},
-        \ {HiGroupName: 'EndOfBuffer',       DiscrName: ''},
-        \ {HiGroupName: 'Error',             DiscrName: ''},
-        \ {HiGroupName: 'ErrorMsg',          DiscrName: ''},
-        \ {HiGroupName: 'FoldColumn',        DiscrName: ''},
-        \ {HiGroupName: 'Folded',            DiscrName: ''},
-        \ {HiGroupName: 'Identifier',        DiscrName: ''},
-        \ {HiGroupName: 'Ignore',            DiscrName: ''},
-        \ {HiGroupName: 'IncSearch',         DiscrName: ''},
-        \ {HiGroupName: 'LineNr',            DiscrName: ''},
-        \ {HiGroupName: 'LineNrAbove',       DiscrName: ''},
-        \ {HiGroupName: 'LineNrBelow',       DiscrName: ''},
-        \ {HiGroupName: 'MatchParen',        DiscrName: ''},
-        \ {HiGroupName: 'MessageWindow',     DiscrName: ''},
-        \ {HiGroupName: 'ModeMsg',           DiscrName: ''},
-        \ {HiGroupName: 'MoreMsg',           DiscrName: ''},
-        \ {HiGroupName: 'NonText',           DiscrName: ''},
-        \ {HiGroupName: 'Normal',            DiscrName: ''},
-        \ {HiGroupName: 'Pmenu',             DiscrName: ''},
-        \ {HiGroupName: 'PmenuSbar',         DiscrName: ''},
-        \ {HiGroupName: 'PmenuSel',          DiscrName: ''},
-        \ {HiGroupName: 'PmenuThumb',        DiscrName: ''},
-        \ {HiGroupName: 'PopupNotification', DiscrName: ''},
-        \ {HiGroupName: 'PopupSelected',     DiscrName: ''},
-        \ {HiGroupName: 'PreProc',           DiscrName: ''},
-        \ {HiGroupName: 'Question',          DiscrName: ''},
-        \ {HiGroupName: 'QuickFixLine',      DiscrName: ''},
-        \ {HiGroupName: 'Search',            DiscrName: ''},
-        \ {HiGroupName: 'SignColumn',        DiscrName: ''},
-        \ {HiGroupName: 'Special',           DiscrName: ''},
-        \ {HiGroupName: 'SpecialKey',        DiscrName: ''},
-        \ {HiGroupName: 'SpellBad',          DiscrName: ''},
-        \ {HiGroupName: 'SpellCap',          DiscrName: ''},
-        \ {HiGroupName: 'SpellLocal',        DiscrName: ''},
-        \ {HiGroupName: 'SpellRare',         DiscrName: ''},
-        \ {HiGroupName: 'Statement',         DiscrName: ''},
-        \ {HiGroupName: 'StatusLine',        DiscrName: ''},
-        \ {HiGroupName: 'StatusLineNC',      DiscrName: ''},
-        \ {HiGroupName: 'StatusLineTerm',    DiscrName: ''},
-        \ {HiGroupName: 'StatusLineTermNC',  DiscrName: ''},
-        \ {HiGroupName: 'TabLine',           DiscrName: ''},
-        \ {HiGroupName: 'TabLineFill',       DiscrName: ''},
-        \ {HiGroupName: 'TabLineSel',        DiscrName: ''},
-        \ {HiGroupName: 'Title',             DiscrName: ''},
-        \ {HiGroupName: 'Todo',              DiscrName: ''},
-        \ {HiGroupName: 'ToolbarButton',     DiscrName: ''},
-        \ {HiGroupName: 'ToolbarLine',       DiscrName: ''},
-        \ {HiGroupName: 'Type',              DiscrName: ''},
-        \ {HiGroupName: 'Underlined',        DiscrName: ''},
-        \ {HiGroupName: 'VertSplit',         DiscrName: ''},
-        \ {HiGroupName: 'Visual',            DiscrName: ''},
-        \ {HiGroupName: 'VisualNOS',         DiscrName: ''},
-        \ {HiGroupName: 'WarningMsg',        DiscrName: ''},
-        \ {HiGroupName: 'WildMenu',          DiscrName: ''},
-        \ ])
+        \ 'HiGroupName')
 
-  this.HiGroupVersion = Rel.new('Hi Group Version', {
+  this.LinkedGroup = Rel.new('Linked Group', {
+        \   HiGroupName: Str,
+        \   TargetGroup: Str,
+        \ },
+        \ ['HiGroupName'])
+
+  this.BaseGroup = Rel.new('Base Group', {
+        \   HiGroupName: Str,
+        \   Fg:          Str,
+        \   Bg:          Str,
+        \   Special:     Str,
+        \   Attr:        Str,
+        \   Font:        Str,
+        \   Start:       Str,
+        \   Stop:        Str,
+        \ },
+        \ ['HiGroupName'])
+
+  this.HiGroupOverride = Rel.new('Hi Group Override', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
         \   IsLinked:    Bool,
-        \   IsDefault:   Bool,
         \ },
         \ ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.LinkedGroup = Rel.new('Linked Group', {
+  this.LinkedGroupOverride = Rel.new('Linked Group Override', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
@@ -216,69 +233,35 @@ export class Database
         \ },
         \ ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.BaseGroup = Rel.new('Base Group', {
+  this.BaseGroupOverride = Rel.new('Base Group', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
+        \   Fg:          Str,
+        \   Bg:          Str,
+        \   Special:     Str,
+        \   Attr:        Str,
+        \   Font:        Str,
+        \   Start:       Str,
+        \   Stop:        Str,
         \ },
         \ ['HiGroupName', 'Variant', 'DiscrValue'])
-
-  this.Attribute = Rel.new('Attribute', {
-        \   HiGroupName: Str,
-        \   Variant:     Str,
-        \   DiscrValue:  Str,
-        \   AttrKey:     Str,
-        \   AttrValue:   Str,
-        \ },
-        \ ['HiGroupName', 'Variant', 'DiscrValue', 'AttrKey'])
-
-  this.ColorAttribute = Rel.new('Color Attribute', {
-        \   HiGroupName: Str,
-        \   Variant:     Str,
-        \   DiscrValue:  Str,
-        \   ColorKey:    Str,
-        \   ColorName:   Str,
-        \ },
-        \ ['HiGroupName', 'Variant', 'DiscrValue', 'ColorKey'])
 
   def new(this.background)
     this.Color.Check(IsValidColorName)
     this.Color.Check(IsValidBase256Value)
 
-    ForeignKey(this.ColorVariant,   'must instantiate a',     this.Color,            ['ColorName'])
-    ForeignKey(this.ColorVariant,   'must refer to a',        this.Variant,          ['Variant'])
-    ForeignKey(this.HiGroupVersion, 'must be a version of a', this.HiGroup,          ['HiGroupName'])
-    ForeignKey(this.HiGroupVersion, 'must apply to a',        this.Variant,          ['Variant'])
-    ForeignKey(this.LinkedGroup,    'must be a',              this.HiGroupVersion,   ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.BaseGroup,      'must be a',              this.HiGroupVersion,   ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.Attribute,      'must describe a',        this.BaseGroup,        ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.Attribute,      'must use a',             this.VariantAttribute, ['Variant', 'AttrKey'])
-    ForeignKey(this.ColorAttribute, 'must describe a',        this.BaseGroup,        ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.ColorAttribute, 'must use a',             this.VariantAttribute, ['Variant', 'ColorKey'], ['Variant', 'AttrKey'])
-    ForeignKey(this.ColorAttribute, 'must refer to a',        this.ColorVariant,     ['ColorName', 'Variant'])
-
-    this.ColorVariant.InsertMany([
-      {ColorName: 'none', Variant: 'gui',     ColorValue: 'NONE'},
-      {ColorName: 'none', Variant: 'termgui', ColorValue: 'NONE'},
-      {ColorName: 'none', Variant: '256',     ColorValue: 'NONE'},
-      {ColorName: 'none', Variant: '88',      ColorValue: 'NONE'},
-      {ColorName: 'none', Variant: '16',      ColorValue: 'NONE'},
-      {ColorName: 'none', Variant: '8',       ColorValue: 'NONE'},
-      {ColorName: 'none', Variant: '0',       ColorValue: 'NONE'},
-      {ColorName:   'fg', Variant: 'gui',     ColorValue:   'fg'},
-      {ColorName:   'fg', Variant: 'termgui', ColorValue:   'fg'},
-      {ColorName:   'fg', Variant: '256',     ColorValue:   'fg'},
-      {ColorName:   'fg', Variant: '88',      ColorValue:   'fg'},
-      {ColorName:   'fg', Variant: '16',      ColorValue:   'fg'},
-      {ColorName:   'fg', Variant: '8',       ColorValue:   'fg'},
-      {ColorName:   'fg', Variant: '0',       ColorValue:   'fg'},
-      {ColorName:   'bg', Variant: 'gui',     ColorValue:   'bg'},
-      {ColorName:   'bg', Variant: 'termgui', ColorValue:   'bg'},
-      {ColorName:   'bg', Variant: '256',     ColorValue:   'bg'},
-      {ColorName:   'bg', Variant: '88',      ColorValue:   'bg'},
-      {ColorName:   'bg', Variant: '16',      ColorValue:   'bg'},
-      {ColorName:   'bg', Variant: '8',       ColorValue:   'bg'},
-      {ColorName:   'bg', Variant: '0',       ColorValue:   'bg'},
-    ])
+    ForeignKey(this.LinkedGroup,         'must be a',                         this.HiGroup,          ['HiGroupName'])
+    ForeignKey(this.BaseGroup,           'must be a',                         this.HiGroup,          ['HiGroupName'])
+    ForeignKey(this.BaseGroup,           'must use as foreground a',          this.Color,            ['Fg'], ['ColorName'])
+    ForeignKey(this.BaseGroup,           'must use as background a',          this.Color,            ['Bg'], ['ColorName'])
+    ForeignKey(this.BaseGroup,           'must use as special color a',       this.Color,            ['Special'], ['ColorName'])
+    ForeignKey(this.HiGroupOverride,     'must override an existing',         this.HiGroup,          ['HiGroupName'])
+    ForeignKey(this.HiGroupOverride,     'must refer to a valid',             this.Variant,          ['Variant'])
+    ForeignKey(this.LinkedGroupOverride, 'must be a',                         this.HiGroupOverride,  ['HiGroupName', 'Variant', 'DiscrValue'])
+    ForeignKey(this.BaseGroupOverride,   'must be a',                         this.HiGroupOverride,  ['HiGroupName', 'Variant', 'DiscrValue'])
+    ForeignKey(this.BaseGroupOverride,   'must use as foreground a valid',    this.Color,            ['Fg'], ['ColorName'])
+    ForeignKey(this.BaseGroupOverride,   'must use as background a valid',    this.Color,            ['Bg'], ['ColorName'])
+    ForeignKey(this.BaseGroupOverride,   'must use as special color a valid', this.Color,            ['Special'], ['ColorName'])
   enddef
 endclass

@@ -80,45 +80,6 @@ export def Parse(text: string, Parser: func(Context): Result = Template): dict<a
 enddef
 # }}}
 
-# Colortemplate grammar {{{
-# Template                  ::= (VerbatimBlock | Declaration | Comment)*
-# VerbatimBlock             ::= OneLiner | ResetBlock | HelpBlock
-# OneLiner                  ::= ('#if' | '#else[if]' | '#endif' | '#let' | '#unlet[!]' | '#call[!]') '[^\r\n]*'
-# ResetBlock                ::= 'reset' '.*' 'endreset'
-# HelpBlock                 ::= 'help' '.*' 'endhelp'
-# Declaration               ::= [Directive | HiGroupDef]
-# Comment                   ::= ';' '[^\r\n]*'
-
-# Directive                 ::= ColorDef | Key ':' DirectiveValue
-# Key                       ::= 'Include' | 'Full name' | 'Short name' | 'Author' | 'Background' | ...
-# DirectiveValue            ::= '[^\r\n]+'
-
-# ColorDef                  ::= 'Color' ':' ColorName GUIValue Base256Value [Base16Value]
-# ColorName                 ::= '[A-Za-z][A-Za-z0-9_]*'
-# GUIValue                  ::= HexValue | RGBValue
-# HexValue                  ::= '#[A-Fa-f0-9]{6}'
-# RGBValue                  ::= 'rgb' '(' Num256 ',' Num256 ',' Num256 ')'
-# Base256Value              ::= '~' | Num256
-# Num256                    ::= '0' | '1' | ... | '255'
-# Base16Value               ::= '0' | '1' | ... | '15' | 'Black' | 'DarkRed' | ...
-
-# HiGroupDecl               ::= ^HiGroupName (HiGroupDef HiGroupVersion* | HiGroupVersion+)
-# HiGroupVersion            ::= HiGroupVariant | HiGroupDiscr
-# HiGroupVariant            ::= ('/' Variant)+ (HiGroupDiscr | HiGroupDef)
-# HiGroupDiscr              ::= ('+' | '-') DiscrName (DiscrValue HiGroupDef)+
-# DiscrName                 ::= '[A-z_0-9]+'
-# DiscrValue                ::= '[0-9]+ | ''' .+ ''' | true | false
-# Variant                   ::= 'gui' | 'termgui' | '256' | '88' | '16' | '8' | '0' | 'bw'
-# HiGroupDef                ::= '->' HiGroupName | BaseGroup
-# BaseGroup                 ::= FgColor BgColor Attributes?
-# HiGroupName               ::= '[A-z][A-z0-9]*'
-# FgColor                   ::= ColorName
-# BgColor                   ::= ColorName
-# Attributes                ::= Attribute (',' Attribute)* | SpecialColor
-# Attribute                 ::= 'bold | 'italic' | ...
-# SpecialColor              ::= 's' '=' ColorName
-# }}}
-
 # Semantic actions {{{
 def SetActiveBackground(v: list<string>, ctx: Context)
   const bg = v[2]
@@ -240,39 +201,14 @@ def DefineColor(v: list<string>, ctx: Context)
     Base16Value:  v16,
     Delta:        delta,
   })
-
-  for variant in meta.variants
-    const t = dbase.Variant.Lookup(['Variant'], [variant])
-
-    if t.NumColors == 0
-      continue
-    endif
-
-    const value = t.NumColors <= 16 ? v16 : t.NumColors <= 256 ? string(v256) : vGUI
-
-    dbase.ColorVariant.Insert({
-      ColorName:  colorName,
-      Variant:    variant,
-      ColorValue: value,
-    })
-  endfor
 enddef
 
 def SetHiGroupName(v: list<string>, ctx: Context)
-  const state          = ctx.state
-  const meta: Metadata = state.meta
+  const state   = ctx.state
   const hiGroup = v[0]
+
   state.Reset()
   state.hiGroupName = hiGroup
-
-  const dbase: Database = state.Db()
-  try
-    dbase.HiGroup.Insert({
-      HiGroupName: hiGroup,
-      DiscrName: '',
-    })
-  catch /Duplicate/
-  endtry
 enddef
 
 def SetVariants(v: list<any>, ctx: Context)
@@ -292,25 +228,18 @@ def SetVariants(v: list<any>, ctx: Context)
 enddef
 
 def SetDiscrName(v: list<string>, ctx: Context)
+  const discrName       = v[1]
   const state           = ctx.state
   const dbase: Database = state.Db()
-  const discrName       = v[1]
-  const hiGroup         = state.hiGroupName
-  const t               = dbase.HiGroup.Lookup(['HiGroupName'], [hiGroup])
+  const t               = dbase.HiGroup.Lookup(['HiGroupName'], [state.hiGroupName])
 
-  if empty(t)  # This should never happen
+  if !empty(t) && !empty(t.DiscrName) && t.DiscrName != discrName
     throw printf(
-      "Highlight group '%s' not in database: please report this bug", hiGroup
+      "Inconsistent discriminator: '%s' ('%s' already uses '%s')",
+      discrName, state.hiGroupName, t.DiscrName
     )
   endif
 
-  if empty(t.DiscrName)
-    dbase.HiGroup.Update({HiGroupName: hiGroup, DiscrName: discrName})
-  elseif t.DiscrName != discrName
-    throw printf(
-      "Inconsistent discriminator: '%s' ('%s' already uses '%s')", discrName, hiGroup, t.DiscrName
-    )
-  endif
   state.discrName = discrName
   state.isDefault = false
 enddef
@@ -320,214 +249,86 @@ def SetDiscrValue(discrValue: string, ctx: Context)
 enddef
 
 def DefineLinkedGroup(v: list<string>, ctx: Context)
-  if ctx.state.isDefault
-    DefineDefaultLinkedGroup(v, ctx)
+  const state           = ctx.state
+  const dbase: Database = state.Db()
+  const hiGroupName     = state.hiGroupName
+  const targetGroup     = v[1]
+
+  if state.isDefault
+    dbase.HiGroup.Insert({
+      HiGroupName: hiGroupName,
+      DiscrName:   '',
+      IsLinked:    true,
+    })
+    dbase.LinkedGroup.Insert({
+      HiGroupName: hiGroupName,
+      TargetGroup: targetGroup,
+    })
   else
-    DefineNonDefaultLinkedGroup(v, ctx)
+    for variant in state.variants
+      dbase.HiGroupOverride.Insert({
+        HiGroupName: hiGroupName,
+        Variant:     variant,
+        DiscrValue:  state.discrValue,
+        IsLinked:    true,
+      })
+      dbase.LinkedGroupOverride.Insert({
+        HiGroupName: hiGroupName,
+        Variant:     variant,
+        DiscrValue:  state.discrValue,
+        TargetGroup: targetGroup,
+      })
+    endfor
   endif
-enddef
-
-def DefineDefaultLinkedGroup(v: list<string>, ctx: Context)
-  const state           = ctx.state
-  const dbase: Database = state.Db()
-  const targetGroup     = v[1]
-  const hiGroup         = state.hiGroupName
-  const discriminator   = state.discrValue
-
-  for variant in state.variants
-    const t = dbase.HiGroupVersion.Lookup(
-      ['HiGroupName', 'Variant', 'DiscrValue'],
-      [hiGroup, variant, discriminator]
-    )
-
-    if empty(t)
-      InsertLinkedGroup(dbase, hiGroup, variant, discriminator, targetGroup, true)
-    elseif t.IsDefault
-      throw printf(
-        "A default definition already exists for '%s'", hiGroup
-      )
-    endif
-  endfor
-enddef
-
-def DefineNonDefaultLinkedGroup(v: list<string>, ctx: Context)
-  const state           = ctx.state
-  const dbase: Database = state.Db()
-  const targetGroup     = v[1]
-  const hiGroup         = state.hiGroupName
-  const discriminator   = state.discrValue
-
-  for variant in state.variants
-    const t = dbase.HiGroupVersion.Lookup(
-      ['HiGroupName', 'Variant', 'DiscrValue'],
-      [hiGroup, variant, discriminator]
-    )
-
-    if !empty(t)
-      if t.IsDefault
-        DeleteHiGroupVersion(dbase, hiGroup, variant, discriminator)
-      else
-        const discrPhrase = empty(discriminator) ? '' : printf(" and discriminator '%s'", discriminator)
-        throw printf(
-          "An override for variant '%s'%s already exists for '%s'", variant, discrPhrase, hiGroup
-        )
-      endif
-    endif
-
-    InsertLinkedGroup(dbase, hiGroup, variant, discriminator, targetGroup, false)
-  endfor
-enddef
-
-def InsertLinkedGroup(
-    dbase:         Database,
-    hiGroup:       string,
-    variant:       string,
-    discriminator: string,
-    targetGroup:   string,
-    default:       bool
-)
-  dbase.HiGroupVersion.Insert({
-    HiGroupName: hiGroup,
-    Variant:     variant,
-    DiscrValue:  discriminator,
-    IsLinked:    true,
-    IsDefault:   default,
-  })
-  dbase.LinkedGroup.Insert({
-    HiGroupName: hiGroup,
-    Variant:     variant,
-    DiscrValue:  discriminator,
-    TargetGroup: targetGroup,
-  })
 enddef
 
 def DefineBaseGroup(v: list<any>, ctx: Context)
-  if ctx.state.isDefault
-    DefineDefaultBaseGroup(v, ctx)
-  else
-    DefineNonDefaultBaseGroup(v, ctx)
-  endif
-enddef
-
-def DefineDefaultBaseGroup(v: list<any>, ctx: Context)
   const state           = ctx.state
   const dbase: Database = state.Db()
-  const hiGroup         = state.hiGroupName
-  const discriminator   = state.discrValue
+  const hiGroupName     = state.hiGroupName
+  const fgColor         = v[0]
+  const bgColor         = v[1]
+  const spColor         = v[2]
+  const attributes      = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
 
-  for variant in state.variants
-    const t = dbase.HiGroupVersion.Lookup(
-      ['HiGroupName', 'Variant', 'DiscrValue'],
-      [hiGroup, variant, discriminator]
-    )
-
-    if empty(t)
-      InsertBaseGroup(dbase, hiGroup, variant, discriminator, v[0], v[1], v[2], v[3], true)
-    elseif t.IsDefault
-      throw printf(
-        "A default definition already exists for '%s'", hiGroup
-      )
-    endif
-  endfor
-enddef
-
-def DefineNonDefaultBaseGroup(v: list<any>, ctx: Context)
-  const state           = ctx.state
-  const dbase: Database = state.Db()
-  const hiGroup         = state.hiGroupName
-  const discriminator   = state.discrValue
-
-  for variant in state.variants
-    const t = dbase.HiGroupVersion.Lookup(
-      ['HiGroupName', 'Variant', 'DiscrValue'],
-      [hiGroup, variant, discriminator]
-    )
-
-    if !empty(t)
-      if t.IsDefault
-        DeleteHiGroupVersion(dbase, hiGroup, variant, discriminator)
-      else
-        const discrPhrase = empty(discriminator) ? '' : printf(" and discriminator '%s'", discriminator)
-        throw printf(
-          "An override of '%s' for variant '%s'%s already exists", hiGroup, variant, discrPhrase
-        )
-      endif
-    endif
-    InsertBaseGroup(dbase, hiGroup, variant, discriminator, v[0], v[1], v[2], v[3], false)
-  endfor
-enddef
-
-def InsertBaseGroup(
-    dbase:         Database,
-    hiGroup:       string,
-    variant:       string,
-    discriminator: string,
-    fg:            string,
-    bg:            string,
-    sp:            string,
-    attrs:         any,
-    default:       bool
-)
-  const colorMap: dict<string> = {'fg': fg, 'bg': bg, 'sp': sp}
-  const style                  = empty(attrs) ? 'NONE' : join(sort(attrs), ',')
-
-  dbase.HiGroupVersion.Insert({
-    HiGroupName: hiGroup,
-    Variant:     variant,
-    DiscrValue:  discriminator,
-    IsLinked:    false,
-    IsDefault:   default,
-  })
-
-  dbase.BaseGroup.Insert({
-    HiGroupName: hiGroup,
-    Variant:     variant,
-    DiscrValue:  discriminator,
-  })
-
-  for colorType in keys(colorMap)
-    const colorName = colorMap[colorType]
-
-    if !empty(colorName) && colorName != 'omit'
-      const t = dbase.VariantAttribute.Lookup(['Variant', 'AttrType'], [variant, colorType])
-
-      if !empty(t)
-        dbase.ColorAttribute.Insert({
-          HiGroupName: hiGroup,
-          Variant:     variant,
-          DiscrValue:  discriminator,
-          ColorKey:    t.AttrKey,
-          ColorName:   colorName,
-        })
-      endif
-    endif
-  endfor
-
-  const t = dbase.VariantAttribute.Lookup(['Variant', 'AttrType'], [variant, 'style'])
-
-  if !empty(t)
-    dbase.Attribute.Insert({
-      HiGroupName: hiGroup,
-      Variant:     variant,
-      DiscrValue:  discriminator,
-      AttrKey:     t.AttrKey,
-      AttrValue:   style,
+  if state.isDefault
+    dbase.HiGroup.Insert({
+      HiGroupName: hiGroupName,
+      DiscrName:   '',
+      IsLinked:    false,
     })
+    dbase.BaseGroup.Insert({
+      HiGroupName: hiGroupName,
+      Fg:          fgColor,
+      Bg:          bgColor,
+      Special:     spColor,
+      Attr:        attributes,
+      Font:        '',
+      Start:       '',
+      Stop:        '',
+    })
+  else
+    for variant in state.variants
+      dbase.HiGroupOverride.Insert({
+        HiGroupName: hiGroupName,
+        Variant:     variant,
+        DiscrValue:  state.discrValue,
+        IsLinked:    false,
+      })
+      dbase.BaseGroupOverride.Insert({
+        HiGroupName: hiGroupName,
+        Variant:     variant,
+        DiscrValue:  state.discrValue,
+        Fg:          fgColor,
+        Bg:          bgColor,
+        Special:     spColor,
+        Attr:        attributes,
+        Font:        '',
+        Start:       '',
+        Stop:        '',
+      })
+    endfor
   endif
-enddef
-
-def DeleteHiGroupVersion(
-    dbase: Database,
-    hiGroup: string,
-    variant: string,
-    discriminator: string
-)
-  const Pred = (t) => t.HiGroupName == hiGroup && t.Variant == variant && t.DiscrValue == discriminator
-  dbase.ColorAttribute.Delete(Pred)
-  dbase.Attribute.Delete(Pred)
-  dbase.BaseGroup.Delete(Pred)
-  dbase.LinkedGroup.Delete(Pred)
-  dbase.HiGroupVersion.Delete(Pred)
 enddef
 # }}}
 
@@ -718,3 +519,43 @@ const Template      = Seq(
                         Lab(Eof, "Unexpected token")
                       )
 # }}}
+
+# Colortemplate grammar {{{
+# Template                  ::= (VerbatimBlock | Declaration | Comment)*
+# VerbatimBlock             ::= OneLiner | ResetBlock | HelpBlock
+# OneLiner                  ::= ('#if' | '#else[if]' | '#endif' | '#let' | '#unlet[!]' | '#call[!]') '[^\r\n]*'
+# ResetBlock                ::= 'reset' '.*' 'endreset'
+# HelpBlock                 ::= 'help' '.*' 'endhelp'
+# Declaration               ::= [Directive | HiGroupDef]
+# Comment                   ::= ';' '[^\r\n]*'
+
+# Directive                 ::= ColorDef | Key ':' DirectiveValue
+# Key                       ::= 'Include' | 'Full name' | 'Short name' | 'Author' | 'Background' | ...
+# DirectiveValue            ::= '[^\r\n]+'
+
+# ColorDef                  ::= 'Color' ':' ColorName GUIValue Base256Value [Base16Value]
+# ColorName                 ::= '[A-Za-z][A-Za-z0-9_]*'
+# GUIValue                  ::= HexValue | RGBValue
+# HexValue                  ::= '#[A-Fa-f0-9]{6}'
+# RGBValue                  ::= 'rgb' '(' Num256 ',' Num256 ',' Num256 ')'
+# Base256Value              ::= '~' | Num256
+# Num256                    ::= '0' | '1' | ... | '255'
+# Base16Value               ::= '0' | '1' | ... | '15' | 'Black' | 'DarkRed' | ...
+
+# HiGroupDecl               ::= ^HiGroupName (HiGroupDef HiGroupVersion* | HiGroupVersion+)
+# HiGroupVersion            ::= HiGroupVariant | HiGroupDiscr
+# HiGroupVariant            ::= ('/' Variant)+ (HiGroupDiscr | HiGroupDef)
+# HiGroupDiscr              ::= ('+' | '-') DiscrName (DiscrValue HiGroupDef)+
+# DiscrName                 ::= '[A-z_0-9]+'
+# DiscrValue                ::= '[0-9]+ | ''' .+ ''' | true | false
+# Variant                   ::= 'gui' | 'termgui' | '256' | '88' | '16' | '8' | '0' | 'bw'
+# HiGroupDef                ::= '->' HiGroupName | BaseGroup
+# BaseGroup                 ::= FgColor BgColor Attributes?
+# HiGroupName               ::= '[A-z][A-z0-9]*'
+# FgColor                   ::= ColorName
+# BgColor                   ::= ColorName
+# Attributes                ::= Attribute (',' Attribute)* | SpecialColor
+# Attribute                 ::= 'bold | 'italic' | ...
+# SpecialColor              ::= 's' '=' ColorName
+# }}}
+

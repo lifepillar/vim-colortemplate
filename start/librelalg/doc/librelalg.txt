@@ -2177,9 +2177,8 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 <
 Transform({rel}, {func})			*librelalg.Transform()*
 		Transform a base or derived relation {rel} into a list of
-		objects. This is similar to |map()|, but (a) the result does
-		not need to have the same type as the input, and (b) each
-		tuple can be mapped into more than one value.
+		objects. This is similar to |map()|, but each tuple can be
+		mapped into more than one value.
 
 		For example, this turns each tuple into an integer:
 >

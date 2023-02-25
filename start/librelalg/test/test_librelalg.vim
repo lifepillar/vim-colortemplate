@@ -41,6 +41,7 @@ const MinBy                = ra.MinBy
 const Minus                = ra.Minus
 const NatJoin              = ra.NatJoin
 const NotIn                = ra.NotIn
+const Partition            = ra.Partition
 const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
@@ -1922,6 +1923,52 @@ def Test_RA_Split()
 
   assert_true(RelEq(expected1, result1))
   assert_true(RelEq(expected2, result2))
+enddef
+
+def Test_RA_Partition()
+  var R = Rel.new('R', {id: Int, name: Str, balance: Float, class: Str}, 'id')
+  const r = R.instance
+
+  const instance = [
+    {id: 0, name: "A", balance: 10.0, class: "X"},
+    {id: 1, name: "A", balance:  3.5, class: "X"},
+    {id: 2, name: "B", balance: -3.0, class: "X"},
+    {id: 3, name: "A", balance:  1.5, class: "Y"},
+    {id: 4, name: "B", balance:  2.5, class: "X"},
+  ]
+  R.InsertMany(instance)
+
+  const result1 = r->Partition('name')
+  const expected1 = {
+    A: [
+      {id: 0, name: "A", balance: 10.0, class: "X"},
+      {id: 1, name: "A", balance:  3.5, class: "X"},
+      {id: 3, name: "A", balance:  1.5, class: "Y"},
+    ],
+    B: [
+      {id: 2, name: "B", balance: -3.0, class: "X"},
+      {id: 4, name: "B", balance:  2.5, class: "X"},
+    ],
+  }
+
+  assert_equal(expected1, result1)
+
+  const result2 = r->Partition(['name', 'class'])
+  const expected2 = {
+    "['A', 'X']": [
+      {id: 0, name: "A", balance: 10.0, class: "X"},
+      {id: 1, name: "A", balance:  3.5, class: "X"},
+    ],
+    "['A', 'Y']": [
+      {id: 3, name: "A", balance:  1.5, class: "Y"},
+    ],
+    "['B', 'X']": [
+      {id: 2, name: "B", balance: -3.0, class: "X"},
+      {id: 4, name: "B", balance:  2.5, class: "X"},
+    ],
+  }
+
+  assert_equal(expected2, result2)
 enddef
 
 def Test_RA_Zip()

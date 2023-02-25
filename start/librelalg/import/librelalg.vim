@@ -1163,9 +1163,11 @@ export def GroupBy(
     # Materialize into subrelations
     const groupValue = mapnew(groupBy_, (_, attr) => t[attr])
     const groupKey = string(groupValue)
+
     if !fid->has_key(groupKey)
       fid[groupKey] = []
     endif
+
     fid[groupKey]->add(t)
   })
 
@@ -1405,6 +1407,39 @@ export def Split(Arg: any, Pred: func(dict<any>): bool): list<list<dict<any>>>
   })
 
   return [ok, tsk]
+enddef
+
+export def Partition(
+    Arg: any,
+    groupBy: any
+): dict<list<dict<any>>>
+  var   fid: dict<list<dict<any>>> = {}
+  const Cont = From(Arg)
+
+  if type(groupBy) == v:t_string
+    Cont((t) => {
+      const groupKey = String(t[groupBy])
+
+      if !fid->has_key(groupKey)
+        fid[groupKey] = []
+      endif
+
+      fid[groupKey]->add(t)
+    })
+  else
+    Cont((t) => {
+      const groupValue = mapnew(groupBy, (_, attr) => t[attr])
+      const groupKey = string(groupValue)
+
+      if !fid->has_key(groupKey)
+        fid[groupKey] = []
+      endif
+
+      fid[groupKey]->add(t)
+    })
+  endif
+
+  return fid
 enddef
 
 export def Transform(Arg: any, F: func(dict<any>): any): list<any>

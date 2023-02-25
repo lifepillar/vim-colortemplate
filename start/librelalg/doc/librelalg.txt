@@ -2095,6 +2095,39 @@ NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		Return |true| if {tuple} is not in base or derived relation
 		{rel}, otherwise return |false|.
 
+Partition({rel}, {groupby})			*librelalg.Partition()*
+		Partition a relation {rel} into several relations by forming
+		groups of records with the same value of the {groupby}
+		attribute(s). {groupby} may be a |string| or a |list| of
+		attributes. The result is a |dict| mapping the values of the
+		{groupby} attributes to the corresponding subrelation. For
+		example:
+>
+		const r = [
+		    {id: 0, name: "A", balance: 10.0},
+		    {id: 1, name: "A", balance:  3.5},
+		    {id: 2, name: "B", balance: -3.0},
+		    {id: 3, name: "A", balance:  1.5},
+		    {id: 4, name: "B", balance:  2.5},
+		  ]
+		echo r->Partition('name')
+<
+		Output:
+>
+		{
+		    A: [
+		      {id: 0, name: "A", balance: 10.0, class: "X"},
+		      {id: 1, name: "A", balance:  3.5, class: "X"},
+		      {id: 3, name: "A", balance:  1.5, class: "Y"},
+		    ],
+		    B: [
+		      {id: 2, name: "B", balance: -3.0, class: "X"},
+		      {id: 4, name: "B", balance:  2.5, class: "X"},
+		    ],
+		  }
+<
+		Note that the result is *not* a relation!
+
 RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		Compare two base or derived relations for equality. Return
 		|true| if the relations are equal, that is, they are the same

@@ -2361,7 +2361,7 @@ fun! s:print_header(bufnr)
     endfor
   endif
   call s:put(a:bufnr,   ''                                                                         )
-  if s:supports_neovim()
+  if s:supports_neovim() || s:getopt('backward_compatible')
     call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !has('gui_running') ? +&t_Co : -1"      )
   else
     call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1")

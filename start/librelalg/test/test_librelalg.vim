@@ -845,35 +845,42 @@ def Test_RA_Join()
 
 
   const expected1 = [
-    {r_A: 1, r_B: 'one', B: 'one', C: 1},
-    {r_A: 2, r_B: 'one', B: 'one', C: 1},
+    {A: 1, r_B: 'one', B: 'one', C: 1},
+    {A: 2, r_B: 'one', B: 'one', C: 1},
   ]
   const expected2 = [
-    {A: 1, B: 'one', s_B: 'one', s_C: 1},
-    {A: 2, B: 'one', s_B: 'one', s_C: 1},
+    {A: 1, B: 'one', s_B: 'one', C: 1},
+    {A: 2, B: 'one', s_B: 'one', C: 1},
   ]
   const expected3 = [
-    {r_A: 0, r_B: 'zero',  B: 'one',   C: 1},
-    {r_A: 0, r_B: 'zero',  B: 'three', C: 0},
-    {r_A: 1, r_B: 'one',   B: 'one',   C: 1},
+    {A: 0, r_B: 'zero',  B: 'one',   C: 1},
+    {A: 0, r_B: 'zero',  B: 'three', C: 0},
+    {A: 1, r_B: 'one',   B: 'one',   C: 1},
   ]
   const expected4 = [
-    {A: 0, B: 'zero',  s_B: 'three', s_C: 0},
-    {A: 0, B: 'zero',  s_B: 'one',   s_C: 1},
-    {A: 1, B: 'one',   s_B: 'one',   s_C: 1},
+    {A: 0, B: 'zero',  s_B: 'three', C: 0},
+    {A: 0, B: 'zero',  s_B: 'one',   C: 1},
+    {A: 1, B: 'one',   s_B: 'one',   C: 1},
   ]
   const expected5 = [
     {s_B: 'one',   s_C: 1, B: 'three', C: 0},
     {s_B: 'three', s_C: 0, B: 'three', C: 0},
   ]
 
-  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy('r_A'))
-  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy('A'))
-  assert_equal(expected3, From(R)->Join(S, (rt, st) => rt.A <= st.C, 'r_')->SortBy(['r_A', 'B']))
-  assert_equal(expected4, From(S)->Join(R, (st, rt) => rt.A <= st.C, 's_')->SortBy(['s_C', 'A']))
-  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy('B'))
+  const expected6 = [
+    {_B: 'one',   _C: 1, B: 'three', C: 0},
+    {_B: 'three', _C: 0, B: 'three', C: 0},
+  ]
 
-  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('r_A'))
+
+  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy('A'))
+  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy('A'))
+  assert_equal(expected3, From(R)->Join(S, (rt, st) => rt.A <= st.C, 'r_')->SortBy(['A', 'B']))
+  assert_equal(expected4, From(S)->Join(R, (st, rt) => rt.A <= st.C, 's_')->SortBy(['C', 'A']))
+  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy('B'))
+  assert_equal(expected6, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)->SortBy('B'))
+
+  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('A'))
   assert_equal(expected2, From(S)->EquiJoin(R, 'B', 'B', 's_')->SortBy('A'))
 
   assert_equal(instanceR, r)
@@ -980,6 +987,21 @@ def Test_RA_Product()
   assert_equal(expected, From(S)->Product(R)->SortBy(['A', 'C']))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
+enddef
+
+def Test_RA_SelfProduct()
+  const r = [
+    {A: 0, B: 'zero'},
+    {A: 1, B: 'one'},
+  ]
+  const expected = [
+    {_A: 0, _B: 'zero', A: 0, B: 'zero'},
+    {_A: 0, _B: 'zero', A: 1, B: 'one'},
+    {_A: 1, _B: 'one',  A: 0, B: 'zero'},
+    {_A: 1, _B: 'one',  A: 1, B: 'one'},
+  ]
+
+  assert_equal(expected, Query(Product(r, r)))
 enddef
 
 def Test_RA_Intersect()

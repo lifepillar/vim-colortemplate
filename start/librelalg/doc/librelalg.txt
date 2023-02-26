@@ -1311,11 +1311,14 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 		input two tuples t1 and t2 and returns |true| if t1 and t2
 		should be joined, and returns |false| otherwise.
 
-		{prefix} is a string that is added to each attribute name of
-		{rel1} in the output relation. The prefix is mandatory if the
-		relations to be joined have some attributes in common, because
-		the attributes in a relation must be all distinct. The prefix
-		must not be used inside {func}. Examples:
+		{prefix} is a string that is added in the output to each
+		attribute of {rel1} that is also an attribute of {rel2}. The
+		default prefix is an underscore. A non-empty prefix is
+		mandatory if the relations to be joined have some attributes
+		in common, because the attributes in a relation must be all
+		distinct. The prefix must not be used inside {func}.
+
+		Examples:
 >
 		var r = [
 		  {A: 1, B: 6},
@@ -1360,18 +1363,17 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 <
 		Output:
 >
-		─────────────────────────────────────────────
-		 TagName Column Line t_BufId BufId t_BufName
-		─────────────────────────────────────────────
-		     zzz      1    2       1     1       foo
-		     abc     12    7       1     1       foo
-		     xyz      1    4       1     1       foo
-		     lll      8    4       1     1       foo
-		     abc     15   14       2     2       bar
-		     abc      3    6       3     3       xyz
+		 Column TagName BufName Line t_BufId BufId                                                                                                                             
+		───────────────────────────────────────────
+		      1     zzz     foo    2       1     1
+		     12     abc     foo    7       1     1
+		      1     xyz     foo    4       1     1
+		      8     lll     foo    4       1     1
+		     15     abc     bar   14       2     2
+		      3     abc     xyz    6       3     3
 <
-		Failing to add a prefix in the query above will result in an
-		error:
+		If the prefix in the query above were empty then the query
+		would produce an error:
 >
 		Key already exists: BufId
 <

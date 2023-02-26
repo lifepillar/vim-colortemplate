@@ -934,13 +934,14 @@ def MakeTupleMerger(prefix: string): func(dict<any>, dict<any>): dict<any>
   return (t: dict<any>, u: dict<any>): dict<any> => {
     var tnew: dict<any> = {}
     for attr in keys(t)
-      tnew[prefix .. attr] = t[attr]
+      const newAttr = u->has_key(attr) ? prefix .. attr : attr
+      tnew[newAttr] = t[attr]
     endfor
     return tnew->extend(u, 'error')
   }
 enddef
 
-export def Join(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, prefix = ''): func(func(dict<any>))
+export def Join(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, prefix = '_'): func(func(dict<any>))
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
@@ -976,7 +977,7 @@ export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string> = n
   }
 enddef
 
-export def EquiJoin(Arg1: any, Arg2: any, lftAttrs: any, rgtAttrs: any, prefix = ''): func(func(dict<any>))
+export def EquiJoin(Arg1: any, Arg2: any, lftAttrs: any, rgtAttrs: any, prefix = '_'): func(func(dict<any>))
   const lftAttrList = Listify(lftAttrs)
   const rgtAttrList = Listify(rgtAttrs)
   return Join(Arg1, Arg2, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
@@ -1008,7 +1009,7 @@ export def NatJoin(Arg1: any, Arg2: any): func(func(dict<any>))
   }
 enddef
 
-export def Product(Arg1: any, Arg2: any, prefix = ''): func(func(dict<any>))
+export def Product(Arg1: any, Arg2: any, prefix = '_'): func(func(dict<any>))
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
   const rel  = Query(Arg2)
   const Cont = From(Arg1)

@@ -2095,7 +2095,7 @@ NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		Return |true| if {tuple} is not in base or derived relation
 		{rel}, otherwise return |false|.
 
-Partition({rel}, {groupby})			*librelalg.Partition()*
+PartitionBy({rel}, {groupby})			*librelalg.PartitionBy()*
 		Partition a relation {rel} into several relations by forming
 		groups of records with the same value of the {groupby}
 		attribute(s). {groupby} may be a |string| or a |list| of
@@ -2110,7 +2110,7 @@ Partition({rel}, {groupby})			*librelalg.Partition()*
 		    {id: 3, name: "A", balance:  1.5},
 		    {id: 4, name: "B", balance:  2.5},
 		  ]
-		echo r->Partition('name')
+		echo r->PartitionBy('name')
 <
 		Output:
 >
@@ -2126,7 +2126,7 @@ Partition({rel}, {groupby})			*librelalg.Partition()*
 		    ],
 		  }
 <
-		Note that the result is *not* a relation!
+		Note that the result is obviously *not* a relation!
 
 RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		Compare two base or derived relations for equality. Return

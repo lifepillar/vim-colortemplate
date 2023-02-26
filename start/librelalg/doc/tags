@@ -34,7 +34,7 @@ librelalg.MinBy()	librelalg.txt	/*librelalg.MinBy()*
 librelalg.Minus()	librelalg.txt	/*librelalg.Minus()*
 librelalg.NatJoin()	librelalg.txt	/*librelalg.NatJoin()*
 librelalg.NotIn()	librelalg.txt	/*librelalg.NotIn()*
-librelalg.Partition()	librelalg.txt	/*librelalg.Partition()*
+librelalg.PartitionBy()	librelalg.txt	/*librelalg.PartitionBy()*
 librelalg.Product()	librelalg.txt	/*librelalg.Product()*
 librelalg.Project()	librelalg.txt	/*librelalg.Project()*
 librelalg.Query()	librelalg.txt	/*librelalg.Query()*

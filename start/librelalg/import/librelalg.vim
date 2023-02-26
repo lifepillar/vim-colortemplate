@@ -1409,7 +1409,7 @@ export def Split(Arg: any, Pred: func(dict<any>): bool): list<list<dict<any>>>
   return [ok, tsk]
 enddef
 
-export def Partition(
+export def PartitionBy(
     Arg: any,
     groupBy: any
 ): dict<list<dict<any>>>

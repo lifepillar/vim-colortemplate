@@ -41,7 +41,7 @@ const MinBy                = ra.MinBy
 const Minus                = ra.Minus
 const NatJoin              = ra.NatJoin
 const NotIn                = ra.NotIn
-const Partition            = ra.Partition
+const PartitionBy          = ra.PartitionBy
 const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
@@ -1925,7 +1925,7 @@ def Test_RA_Split()
   assert_true(RelEq(expected2, result2))
 enddef
 
-def Test_RA_Partition()
+def Test_RA_PartitionBy()
   var R = Rel.new('R', {id: Int, name: Str, balance: Float, class: Str}, 'id')
   const r = R.instance
 
@@ -1938,7 +1938,7 @@ def Test_RA_Partition()
   ]
   R.InsertMany(instance)
 
-  const result1 = r->Partition('name')
+  const result1 = r->PartitionBy('name')
   const expected1 = {
     A: [
       {id: 0, name: "A", balance: 10.0, class: "X"},
@@ -1953,7 +1953,7 @@ def Test_RA_Partition()
 
   assert_equal(expected1, result1)
 
-  const result2 = r->Partition(['name', 'class'])
+  const result2 = r->PartitionBy(['name', 'class'])
   const expected2 = {
     "['A', 'X']": [
       {id: 0, name: "A", balance: 10.0, class: "X"},

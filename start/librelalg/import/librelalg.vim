@@ -277,9 +277,9 @@ export const KEY_NOT_FOUND: dict<bool> = {}
 
 class KeyIndex
   this.key: list<string> = []
-  this._index: dict<any> = {}
+  this._index: dict<dict<any>> = {}
 
-  def GetRawIndex(): dict<any>
+  def GetRawIndex(): dict<dict<any>>
     return this._index
   enddef
 
@@ -292,12 +292,12 @@ class KeyIndex
     this._index[keyValues] = t
   enddef
 
-  def Remove(theKey: list<any>)
-    this._index->remove(string(theKey))
+  def Remove(keyValue: list<any>)
+    this._index->remove(string(keyValue))
   enddef
 
-  def Search(theKey: list<any>): dict<any>
-    return get(this._index, string(theKey), KEY_NOT_FOUND)
+  def Search(keyValue: list<any>): dict<any>
+    return get(this._index, string(keyValue), KEY_NOT_FOUND)
   enddef
 endclass
 # }}}

@@ -275,7 +275,7 @@ enddef
 # Indexes {{{
 export const KEY_NOT_FOUND: dict<bool> = {}
 
-class KeyIndex
+class UniqueIndex
   this.key: list<string> = []
   this._index: dict<dict<any>> = {}
 
@@ -312,7 +312,7 @@ export class Rel
   this.keyAttributes: list<string>
   this.descriptors:   list<string>
   this._attrtype:     list<number> = []
-  this._indexes:      dict<KeyIndex> = {}
+  this._indexes:      dict<UniqueIndex> = {}
   this._constraints:  dict<list<func(dict<any>): void>> = {'I': [], 'U': [], 'D': []}
 
   def new(this.name, this.schema, keys: any, checkType = true)
@@ -354,7 +354,7 @@ export class Rel
 
     this.keys->add(key_)
 
-    var index = KeyIndex.new(key_)
+    var index = UniqueIndex.new(key_)
 
     this._indexes[string(key_)] = index
 
@@ -371,7 +371,7 @@ export class Rel
     return empty(this.instance)
   enddef
 
-  def Index(key: any): KeyIndex
+  def Index(key: any): UniqueIndex
     return this._indexes[string(Listify(key))]
   enddef
 

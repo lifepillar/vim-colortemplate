@@ -535,7 +535,7 @@ enddef
 # }}}
 
 # Indexes {{{
-def Test_RA_Index()
+def Test_RA_UniqueIndex()
   const key = ['A', 'B']
   const keyStr = string(key)
   var R = Rel.new('R', {A: Int, B: Str}, key)
@@ -545,7 +545,7 @@ def Test_RA_Index()
   const I = R.Index(key)
 
   assert_equal(v:t_object, type(I))
-  assert_equal('object<KeyIndex>', typename(I))
+  assert_equal('object<UniqueIndex>', typename(I))
 
   assert_true(I.IsEmpty(), 'Index must be initially empty')
 
@@ -583,7 +583,7 @@ def Test_RA_Index()
   assert_equal({}, index)
 enddef
 # }}}
-#
+
 def Test_RA_In()
   const R = Rel.new('R', {A: Str, B: Int}, [['A']])
   R.InsertMany([

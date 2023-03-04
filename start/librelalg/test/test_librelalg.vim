@@ -887,9 +887,6 @@ def Test_RA_Join()
   assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy('B'))
   assert_equal(expected6, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)->SortBy('B'))
 
-  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('A'))
-  assert_equal(expected2, From(S)->EquiJoin(R, 'B', 'B', 's_')->SortBy('A'))
-
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -954,6 +951,54 @@ def Test_RA_NatJoin()
   assert_equal(instanceS, s)
   assert_equal(instanceT, t)
   assert_equal(instanceU, u)
+enddef
+
+def Test_RA_EquiJoin()
+  var R = Rel.new('R', {A: Int, B: Str}, [['A']])
+  const r = R.instance
+
+  const instanceR = [
+    {A: 0, B: 'zero'},
+    {A: 1, B: 'one'},
+    {A: 2, B: 'one'},
+    ]
+  R.InsertMany(instanceR)
+
+  var S = Rel.new('S', {B: Str, C: Int}, [['C']])
+  const s = S.instance
+
+  const instanceS = [
+    {B: 'one', C: 1},
+    {B: 'three', C: 0},
+  ]
+  S.InsertMany(instanceS)
+
+
+  const expected1 = [
+    {A: 1, r_B: 'one', B: 'one', C: 1},
+    {A: 2, r_B: 'one', B: 'one', C: 1},
+  ]
+  const expected2 = [
+    {A: 1, B: 'one', s_B: 'one', C: 1},
+    {A: 2, B: 'one', s_B: 'one', C: 1},
+  ]
+  const expected3 = [
+    {A: 0, r_B: 'zero', B: 'three', C: 0},
+    {A: 1, r_B: 'one',  B: 'one',   C: 1},
+  ]
+  const expected4 = [
+    {A: 0, B: 'zero', s_B: 'three', C: 0},
+    {A: 1, B: 'one',  s_B: 'one',   C: 1},
+  ]
+
+
+  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('A'))
+  assert_equal(expected2, From(S)->EquiJoin(R, 'B', 'B', 's_')->SortBy('A'))
+  assert_equal(expected3, From(R)->EquiJoin(S, ['A'], ['C'], 'r_')->SortBy('A'))
+  assert_equal(expected4, From(S)->EquiJoin(R, 'C', 'A', 's_')->SortBy('A'))
+
+  assert_equal(instanceR, r)
+  assert_equal(instanceS, s)
 enddef
 
 def Test_RA_Product()

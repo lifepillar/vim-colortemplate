@@ -542,6 +542,10 @@ enddef
 def Instance(R: any): list<dict<any>>
   return type(R) == v:t_object ? AsRel(R).instance : R
 enddef
+
+def IsKeyOf(attrs: list<string>, R: Rel): bool
+  return index(R.keys, attrs) != -1
+enddef
 # }}}
 
 # Integrity constraints {{{
@@ -876,7 +880,9 @@ def MakeTupleMerger(prefix: string): func(dict<any>, dict<any>): dict<any>
   }
 enddef
 
-export def Join(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, prefix = '_'): func(func(dict<any>))
+export def Join(
+    Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, prefix = '_'
+): func(func(dict<any>))
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
@@ -892,7 +898,9 @@ export def Join(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, pr
   }
 enddef
 
-export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string> = null_list): func(dict<any>, dict<any>): bool
+export def EquiJoinPred(
+    lftAttrList: list<string>, rgtAttrList: list<string> = null_list
+): func(dict<any>, dict<any>): bool
   const n = len(lftAttrList)
   const rgt = rgtAttrList == null ? lftAttrList : rgtAttrList
 
@@ -912,10 +920,29 @@ export def EquiJoinPred(lftAttrList: list<string>, rgtAttrList: list<string> = n
   }
 enddef
 
-export def EquiJoin(Arg1: any, Arg2: any, lftAttrs: any, rgtAttrs: any, prefix = '_'): func(func(dict<any>))
+export def EquiJoin(
+    Arg1: any, Arg2: any, lftAttrs: any, rgtAttrs: any, prefix = '_'
+): func(func(dict<any>))
   const lftAttrList = Listify(lftAttrs)
   const rgtAttrList = Listify(rgtAttrs)
-  return Join(Arg1, Arg2, EquiJoinPred(lftAttrList, rgtAttrList), prefix)
+  const Pred        = EquiJoinPred(lftAttrList, rgtAttrList)
+
+  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2)
+    const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+    const Cont = From(Arg1)
+    const rel: Rel = Arg2
+
+    return (Emit: func(dict<any>)) => {
+      Cont((t: dict<any>) => {
+        const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
+        if u isnot KEY_NOT_FOUND && Pred(t, u)
+          Emit(MergeTuples(t, u))
+        endif
+      })
+    }
+  endif
+
+  return Join(Arg1, Arg2, Pred, prefix)
 enddef
 
 def NatJoinPred(t: dict<any>, u: dict<any>): bool

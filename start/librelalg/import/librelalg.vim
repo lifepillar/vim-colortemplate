@@ -288,81 +288,16 @@ class KeyIndex
   enddef
 
   def Add(t: dict<any>)
-    if empty(this.key)
-      this._index[''] = t
-      return
-    endif
-
-    this.Add_(this._index, t, 0)
+    const keyValues = string(Values(t, this.key))
+    this._index[keyValues] = t
   enddef
 
   def Remove(theKey: list<any>)
-    if len(theKey) != len(this.key)
-      throw 'Mismatch'
-    endif
-
-    if empty(this.key)
-      this._index->remove('')
-      return
-    endif
-
-    this.Remove_(this._index, theKey, 0)
+    this._index->remove(string(theKey))
   enddef
 
   def Search(theKey: list<any>): dict<any>
-    if len(theKey) != len(this.key)
-      throw 'Mismatch'
-    endif
-
-    if empty(this.key)
-      return get(this._index, '', KEY_NOT_FOUND)
-    endif
-
-    return this.Search_(this._index, theKey, 0)
-  enddef
-
-  def Add_(index: dict<any>, t: dict<any>, i: number)
-    const value = t[this.key[i]]
-
-    if i + 1 == len(this.key)
-      index[value] = t
-      return
-    endif
-
-    if !index->has_key(String(value))
-      index[value] = {}
-    endif
-
-    this.Add_(index[value], t, i + 1)
-  enddef
-
-  def Remove_(index: dict<any>, theKey: list<any>, i: number)
-    const value: string = String(theKey[i])
-
-    if i + 1 == len(this.key)
-      index->remove(value)
-      return
-    endif
-
-    this.Remove_(index[value], theKey, i + 1)
-
-    if empty(index[value])
-      index->remove(value)
-    endif
-  enddef
-
-  def Search_(index: dict<any>, theKey: list<any>, i: number): dict<any>
-    const value = theKey[i]
-
-    if index->has_key(String(value))
-      if i + 1 == len(this.key)
-        return index[value]
-      else
-        return this.Search_(index[value], theKey, i + 1)
-      endif
-    endif
-
-    return KEY_NOT_FOUND
+    return get(this._index, string(theKey), KEY_NOT_FOUND)
   enddef
 endclass
 # }}}

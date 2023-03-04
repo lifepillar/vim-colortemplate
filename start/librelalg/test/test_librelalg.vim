@@ -555,21 +555,28 @@ def Test_RA_Index()
   R.InsertMany([t0, t1, t2])
   const index = I.GetRawIndex()
 
-  assert_equal({'3': { 'vici': t1 },
-                '9': { 'veni': t0, 'vidi': t2 }}, index)
+  assert_equal({
+    "[9, 'veni']": t0,
+    "[3, 'vici']": t1,
+    "[9, 'vidi']": t2,
+  }, index)
 
-  assert_true(index[3]['vici'] is t1)
-  assert_true(index[9]['veni'] is t0)
-  assert_true(index[9]['vidi'] is t2)
+  assert_true(index[string([9, 'veni'])] is t0)
+  assert_true(index[string([3, 'vici'])] is t1)
+  assert_true(index[string([9, 'vidi'])] is t2)
 
   R.Delete((t) => t.A == 9 && t.B == 'veni')
 
-  assert_equal({'3': { 'vici': t1 },
-                '9': { 'vidi': t2 }}, index)
+  assert_equal({
+    "[3, 'vici']": t1,
+    "[9, 'vidi']": t2,
+  }, index)
 
   R.Delete((t) => t.B == 'vici')
 
-  assert_equal({'9': { 'vidi': t2 }}, index)
+  assert_equal({
+    "[9, 'vidi']": t2,
+  }, index)
 
   R.Delete()
 

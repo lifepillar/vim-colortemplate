@@ -341,6 +341,36 @@ def Test_RA_Update()
               "Tuple with ['A'] = [2] not found in RR")
 enddef
 
+def Test_RA_UpdateDiscriminator()
+  var HiGroup = Rel.new('Highlight Group', {
+    HiGroupName: Str,
+    DiscrName:   Str,
+    IsLinked:    Bool,
+  }, 'HiGroupName')
+
+  HiGroup.Insert({
+    HiGroupName: 'Normal',
+    DiscrName:   '',
+    IsLinked:    false,
+  })
+
+  const t = HiGroup.Lookup(['HiGroupName'], ['Normal'])
+
+  HiGroup.Update({
+      HiGroupName: t.HiGroupName,
+      DiscrName:   'foobar',
+      IsLinked:    t.IsLinked,
+    })
+
+  const expected = [{
+    HiGroupName: 'Normal',
+    DiscrName:   'foobar',
+    IsLinked:    false,
+  }]
+
+  assert_equal(expected, HiGroup.instance)
+enddef
+
 def Test_RA_Upsert()
   RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
   const rr = RR.instance

@@ -1448,17 +1448,17 @@ export def PartitionBy(
 enddef
 
 export def Transform(Arg: any, F: func(dict<any>): any): list<any>
-  const rel = Query(Arg)
+  const Cont = From(Arg)
   var result = []
 
-  for t in rel
+  Cont((t) => {
     const value = F(t)
     if type(value) == v:t_list
       result += value
     else
       result->add(value)
     endif
-  endfor
+  })
 
   return result
 enddef
@@ -1475,12 +1475,12 @@ enddef
 export def DictTransform(
     Arg: any, F: func(dict<any>): dict<any>, flatten = false
 ): dict<any>
-  const rel = Query(Arg)
+  const Cont = From(Arg)
   var result: dict<any> = {}
 
-  for t in rel
+  Cont((t) => {
     ExtendByMerging(result, F(t))
-  endfor
+  })
 
   if flatten
     for [k, v] in items(result)

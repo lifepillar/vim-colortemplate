@@ -1173,21 +1173,8 @@ export def GroupBy(
     AggregateFn: func(...any): any,
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
-  var fid: dict<list<dict<any>>> = {}
-  const groupBy_: list<string> = Listify(groupBy)
-  const Cont = From(Arg)
-
-  Cont((t) => {
-    # Materialize into subrelations
-    const groupValue = mapnew(groupBy_, (_, attr) => t[attr])
-    const groupKey = string(groupValue)
-
-    if !fid->has_key(groupKey)
-      fid[groupKey] = []
-    endif
-
-    fid[groupKey]->add(t)
-  })
+  var   fid:      dict<list<dict<any>>> = PartitionBy(Arg, groupBy)
+  const groupBy_: list<string>          = Listify(groupBy)
 
   return (Emit: func(dict<any>)) => {
     # Apply aggregate function to each subrelation

@@ -1077,6 +1077,60 @@ export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): func(func(dict<any>))
   }
 enddef
 
+export def LeftEquiJoin(
+  Arg1:     any,
+  Arg2:     any,
+  lftAttrs: any,
+  rgtAttrs: any,
+  Filler:   any,
+  prefix = '_',
+): func(func(dict<any>))
+  const lftAttrList = Listify(lftAttrs)
+  const rgtAttrList = Listify(rgtAttrs)
+  const Cont        = From(Arg1)
+  const filler      = Query(Filler)
+  const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+
+  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2) # Fast path
+    const rel: Rel = Arg2
+
+    return (Emit: func(dict<any>)) => {
+      Cont((t: dict<any>) => {
+        const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
+        if u isnot KEY_NOT_FOUND
+          Emit(MergeTuples(t, u))
+        else
+          for v in filler
+            Emit(MergeTuples(t, v))
+          endfor
+        endif
+      })
+    }
+  endif
+
+  const rel  = Query(Arg2)
+  const Pred = EquiJoinPred(lftAttrList, rgtAttrList)
+
+  return (Emit: func(dict<any>)) => {
+    Cont((t: dict<any>) => {
+      var joined: bool = false
+
+      for u in rel
+        if Pred(t, u)
+          Emit(MergeTuples(t, u))
+          joined = true
+        endif
+      endfor
+
+      if !joined
+        for v in filler
+          Emit(MergeTuples(t, v))
+        endfor
+      endif
+    })
+  }
+enddef
+
 export def Extend(Arg: any, Fn: func(dict<any>): dict<any>): func(func(dict<any>))
   const Cont = From(Arg)
 

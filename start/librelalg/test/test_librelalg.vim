@@ -32,6 +32,7 @@ const In                   = ra.In
 const Int                  = ra.Int
 const Intersect            = ra.Intersect
 const Join                 = ra.Join
+const LeftEquiJoin         = ra.LeftEquiJoin
 const LeftNatJoin          = ra.LeftNatJoin
 const ListAgg              = ra.ListAgg
 const Max                  = ra.Max
@@ -1293,6 +1294,54 @@ def Test_RA_LeftNatJoin()
     {BufId: 3, BufName: 'xyz', num_tags: 0},
   ]
 
+  assert_true(RelEq(result, expected))
+enddef
+
+def Test_RA_LeftEquiJoin()
+  var r = [
+    {A: 1, B: 'x'},
+    {A: 2, B: 'x'},
+    {A: 3, B: 'y'},
+    {A: 4, B: 'z'},
+    {A: 5, B: 'w'},
+  ]
+  var s = [
+    {C: 'x', A: 10},
+    {C: 'z', A: 20},
+    {C: 'z', A: 30},
+  ]
+  const result = Query(LeftEquiJoin(r, s, 'B', 'C', [{C: 'NA', A: 0}]))
+  const expected = [
+    {_A: 1, B: 'x', C:  'x', A: 10},
+    {_A: 2, B: 'x', C:  'x', A: 10},
+    {_A: 3, B: 'y', C: 'NA', A:  0},
+    {_A: 4, B: 'z', C:  'z', A: 20},
+    {_A: 4, B: 'z', C:  'z', A: 30},
+    {_A: 5, B: 'w', C: 'NA', A:  0},
+  ]
+
+  assert_equal(expected, result)
+enddef
+
+def Test_RA_LeftEquiJoinFastPath()
+  var R = Rel.new('R', {A: Int, B: Str}, 'A').InsertMany([
+    {A: 0, B: 'zero'},
+    {A: 1, B: 'one'},
+    {A: 2, B: 'two'},
+  ])
+  var S = Rel.new('S', {A: Int, C: Float}, 'A').InsertMany([
+    {A: 1, C: 1.0},
+    {A: 0, C: 0.0},
+    {A: 3, C: 3.0},
+  ])
+  const result = Query(LeftEquiJoin(R, S, 'A', 'A', [{A: -1, C: -1.0}]))
+  const expected = [
+    {_A: 0, B: 'zero', A:  0, C:  0.0},
+    {_A: 1, B: 'one',  A:  1, C:  1.0},
+    {_A: 2, B: 'two',  A: -1, C: -1.0},
+  ]
+
+  assert_equal(expected, result)
   assert_true(RelEq(result, expected))
 enddef
 

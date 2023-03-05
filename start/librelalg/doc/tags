@@ -25,6 +25,7 @@ librelalg.GroupBy()	librelalg.txt	/*librelalg.GroupBy()*
 librelalg.In()	librelalg.txt	/*librelalg.In()*
 librelalg.Intersect()	librelalg.txt	/*librelalg.Intersect()*
 librelalg.Join()	librelalg.txt	/*librelalg.Join()*
+librelalg.LeftEquiJoin()	librelalg.txt	/*librelalg.LeftEquiJoin()*
 librelalg.LeftNatJoin()	librelalg.txt	/*librelalg.LeftNatJoin()*
 librelalg.ListAgg()	librelalg.txt	/*librelalg.ListAgg()*
 librelalg.Max()	librelalg.txt	/*librelalg.Max()*

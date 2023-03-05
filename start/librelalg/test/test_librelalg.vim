@@ -18,6 +18,7 @@ const CoddDivide           = ra.CoddDivide
 const Count                = ra.Count
 const CountBy              = ra.CountBy
 const CountDistinct        = ra.CountDistinct
+const DictTransform        = ra.DictTransform
 const Divide               = ra.Divide
 const Extend               = ra.Extend
 const EquiJoin             = ra.EquiJoin
@@ -2025,6 +2026,29 @@ def Test_RA_Transform()
   const expected2 = ["nowhere"]
 
   assert_equal(expected2, Transform(s, (t) => t.when .. t.where))
+enddef
+
+def Test_RA_DictTransform()
+  const s = [
+    {X: 'a', Y: 6},
+    {X: 'b', Y: 2},
+    {X: 'a', Y: -1}
+  ]
+  const expected1 = {a: [6, -1], b: [2]}
+  const expected2 = {a: [6, -1], b: 2}
+
+  assert_equal(expected1, DictTransform(s, (t) => ({[t.X]: t.Y})))
+  assert_equal(expected2, DictTransform(s, (t) => ({[t.X]: t.Y}), true))
+
+  const r = [
+    {X: 'a', Y: 6},
+    {X: 'b', Y: 2}
+  ]
+  const expected3 = {a: [6], b: [2]}
+  const expected4 = {a: 6, b: 2}
+
+  assert_equal(expected3, DictTransform(r, (t) => ({[t.X]: t.Y})))
+  assert_equal(expected4, DictTransform(r, (t) => ({[t.X]: t.Y}), true))
 enddef
 
 def Test_RA_TransformReturnsList()

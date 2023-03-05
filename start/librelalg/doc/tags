@@ -12,6 +12,7 @@ librelalg.CoddDivide()	librelalg.txt	/*librelalg.CoddDivide()*
 librelalg.Count()	librelalg.txt	/*librelalg.Count()*
 librelalg.CountBy()	librelalg.txt	/*librelalg.CountBy()*
 librelalg.CountDistinct()	librelalg.txt	/*librelalg.CountDistinct()*
+librelalg.DictTransform()	librelalg.txt	/*librelalg.DictTransform()*
 librelalg.Divide()	librelalg.txt	/*librelalg.Divide()*
 librelalg.EquiJoin()	librelalg.txt	/*librelalg.EquiJoin()*
 librelalg.EquiJoinPred()	librelalg.txt	/*librelalg.EquiJoinPred()*

@@ -2112,6 +2112,39 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 ==============================================================================
 5. Other functions				*librelalg-other*
 
+DictTransform({rel}, {func}[, {flatten}])	*librelalg.DictTransform()*
+		Transform a base or derived relation {rel} into a |dict|
+		object. {func} is a function that receives a tuple and returns
+		an arbitrary |dict|: the returned dictionary is merged into
+		the result, so that items sharing the same dictionary key are
+		appended together into a list. For example:
+>
+		const r = [
+		  {X: 'a', Y: 6},
+		  {X: 'b', Y: 2},
+		  {X: 'a', Y: 4},
+		]
+		echo DictTransform(r, (t) => ({[t.X]: t.Y}))
+<
+		Output:
+>
+		{a: [6, 4], b: [2]}
+<
+		Note that the order of the items in the lists is arbitrary.
+
+		When {flatten} is |true|, singleton lists are replaced by
+		their only item. For instance:
+>
+		const r = [
+		  {X: 'a', Y: 6},
+		  {X: 'b', Y: 2}
+		]
+		echo DictTransform(r, (t) => ({[t.X]: t.Y}), true)
+<
+		Output:
+>
+		{a: 6, b: 2}
+<
 EquiJoinPred({list1}[, {list2}])		*librelalg.EquiJoinPred()*
 		Return a predicate for comparing two tuples using the
 		attributes {list1} of the first tuple and the attributes
@@ -2258,8 +2291,8 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		 twenty
 <
 Transform({rel}, {func})			*librelalg.Transform()*
-		Transform a base or derived relation {rel} into a list of
-		objects. This is similar to |map()|, but each tuple can be
+		Transform a base or derived relation {rel} into a |list|
+		object. This is similar to |map()|, but each tuple can be
 		mapped into more than one value.
 
 		For example, this turns each tuple into an integer:

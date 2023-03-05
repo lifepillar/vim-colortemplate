@@ -1463,6 +1463,36 @@ export def Transform(Arg: any, F: func(dict<any>): any): list<any>
   return result
 enddef
 
+def ExtendByMerging(d1: dict<any>, d2: dict<any>)
+  for k in keys(d2)
+    if !d1->has_key(k)
+      d1[k] = []
+    endif
+    d1[k]->add(d2[k])
+  endfor
+enddef
+
+export def DictTransform(
+    Arg: any, F: func(dict<any>): dict<any>, flatten = false
+): dict<any>
+  const rel = Query(Arg)
+  var result: dict<any> = {}
+
+  for t in rel
+    ExtendByMerging(result, F(t))
+  endfor
+
+  if flatten
+    for [k, v] in items(result)
+      if len(v) == 1
+        result[k] = v[0]
+      endif
+    endfor
+  endif
+
+  return result
+enddef
+
 # NOTE: l2 may be longer than l1 (extra elements are simply ignored)
 export def Zip(l1: list<any>, l2: list<any>): dict<any>
   const n = len(l1)

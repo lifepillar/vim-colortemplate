@@ -39,8 +39,9 @@ def IsValidColorName(t: dict<any>)
 enddef
 
 def IsValidBase256Value(t: dict<any>)
-  if t.Base256Value > 255 || t.Base256Value < 0
-    throw 'Base-256 value must be in [0,255]'
+  const n = str2nr(t.Base256Value)
+  if n > 255 || n < 0
+    throw printf('Base-256 value must be in [0,255]: %s is invalid', t.Base256Value)
   endif
 enddef
 # }}}
@@ -48,7 +49,7 @@ enddef
 export class Database
   public this.background:  string
 
-  this.VimHiGroup = Rel.new('Vim Hi Group', {
+  this.VimHiGroup = Rel.new('Vim Highlight Group', {
         \ HiGroupName: Str,
         \ },
         \ 'HiGroupName').InsertMany([
@@ -133,66 +134,71 @@ export class Database
         \   {Variant:      '88', NumColors:       88},
         \   {Variant:      '16', NumColors:       16},
         \   {Variant:       '8', NumColors:        8},
-        \   {Variant:      'bw', NumColors:        0},
         \   {Variant:       '0', NumColors:        0},
         \ ])
 
-  this.VariantAttribute = Rel.new("Variant Attribute", {
+  this.VariantAttribute = Rel.new("Variant's Attribute", {
         \   Variant:  Str,
         \   AttrType: Str,
         \   AttrKey:  Str,
         \ },
         \ [['Variant', 'AttrKey'], ['Variant', 'AttrType']]).InsertMany([
-        \   {Variant: 'gui',     AttrType: 'fg',    AttrKey: 'guifg'  },
-        \   {Variant: 'gui',     AttrType: 'bg',    AttrKey: 'guibg'  },
-        \   {Variant: 'gui',     AttrType: 'sp',    AttrKey: 'guisp'  },
-        \   {Variant: 'gui',     AttrType: 'style', AttrKey: 'gui'    },
-        \   {Variant: 'gui',     AttrType: 'font',  AttrKey: 'font'   },
-        \   {Variant: 'termgui', AttrType: 'fg',    AttrKey: 'guifg'  },
-        \   {Variant: 'termgui', AttrType: 'bg',    AttrKey: 'guibg'  },
-        \   {Variant: 'termgui', AttrType: 'sp',    AttrKey: 'guisp'  },
-        \   {Variant: 'termgui', AttrType: 'style', AttrKey: 'cterm'  },
-        \   {Variant: '256',     AttrType: 'fg',    AttrKey: 'ctermfg'},
-        \   {Variant: '256',     AttrType: 'bg',    AttrKey: 'ctermbg'},
-        \   {Variant: '256',     AttrType: 'sp',    AttrKey: 'ctermul'},
-        \   {Variant: '256',     AttrType: 'style', AttrKey: 'cterm'  },
-        \   {Variant:  '88',     AttrType: 'fg',    AttrKey: 'ctermfg'},
-        \   {Variant:  '88',     AttrType: 'bg',    AttrKey: 'ctermbg'},
-        \   {Variant:  '88',     AttrType: 'sp',    AttrKey: 'ctermul'},
-        \   {Variant:  '88',     AttrType: 'style', AttrKey: 'cterm'  },
-        \   {Variant:  '16',     AttrType: 'fg',    AttrKey: 'ctermfg'},
-        \   {Variant:  '16',     AttrType: 'bg',    AttrKey: 'ctermbg'},
-        \   {Variant:  '16',     AttrType: 'sp',    AttrKey: 'ctermul'},
-        \   {Variant:  '16',     AttrType: 'style', AttrKey: 'cterm'  },
-        \   {Variant:   '8',     AttrType: 'fg',    AttrKey: 'ctermfg'},
-        \   {Variant:   '8',     AttrType: 'bg',    AttrKey: 'ctermbg'},
-        \   {Variant:   '8',     AttrType: 'sp',    AttrKey: 'ctermul'},
-        \   {Variant:   '8',     AttrType: 'style', AttrKey: 'cterm'  },
-        \   {Variant:  'bw',     AttrType: 'style', AttrKey: 'term'   },
-        \   {Variant:  'bw',     AttrType: 'start', AttrKey: 'start'  },
-        \   {Variant:  'bw',     AttrType: 'stop',  AttrKey: 'stop'   },
-        \   {Variant:   '0',     AttrType: 'style', AttrKey: 'term'   },
-        \   {Variant:   '0',     AttrType: 'start', AttrKey: 'start'  },
-        \   {Variant:   '0',     AttrType: 'stop',  AttrKey: 'stop'   },
+        \   {Variant: 'gui',     AttrType: 'Fg',      AttrKey: 'guifg'  },
+        \   {Variant: 'gui',     AttrType: 'Bg',      AttrKey: 'guibg'  },
+        \   {Variant: 'gui',     AttrType: 'Special', AttrKey: 'guisp'  },
+        \   {Variant: 'gui',     AttrType: 'Style',   AttrKey: 'gui'    },
+        \   {Variant: 'gui',     AttrType: 'Font',    AttrKey: 'font'   },
+        \   {Variant: 'termgui', AttrType: 'Fg',      AttrKey: 'guifg'  },
+        \   {Variant: 'termgui', AttrType: 'Bg',      AttrKey: 'guibg'  },
+        \   {Variant: 'termgui', AttrType: 'Special', AttrKey: 'guisp'  },
+        \   {Variant: 'termgui', AttrType: 'Style',   AttrKey: 'cterm'  },
+        \   {Variant: '256',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+        \   {Variant: '256',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+        \   {Variant: '256',     AttrType: 'Special', AttrKey: 'ctermul'},
+        \   {Variant: '256',     AttrType: 'Style',   AttrKey: 'cterm'  },
+        \   {Variant:  '88',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+        \   {Variant:  '88',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+        \   {Variant:  '88',     AttrType: 'Special', AttrKey: 'ctermul'},
+        \   {Variant:  '88',     AttrType: 'Style',   AttrKey: 'cterm'  },
+        \   {Variant:  '16',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+        \   {Variant:  '16',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+        \   {Variant:  '16',     AttrType: 'Special', AttrKey: 'ctermul'},
+        \   {Variant:  '16',     AttrType: 'Style',   AttrKey: 'cterm'  },
+        \   {Variant:   '8',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+        \   {Variant:   '8',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+        \   {Variant:   '8',     AttrType: 'Special', AttrKey: 'ctermul'},
+        \   {Variant:   '8',     AttrType: 'Style',   AttrKey: 'cterm'  },
+        \   {Variant:   '0',     AttrType: 'Style',   AttrKey: 'term'   },
+        \   {Variant:   '0',     AttrType: 'Start',   AttrKey: 'start'  },
+        \   {Variant:   '0',     AttrType: 'Stop',    AttrKey: 'stop'   },
         \ ])
 
   this.Color = Rel.new('Color', {
         \   ColorName:    Str,
         \   GUIValue:     Str,
-        \   Base256Value: Int,
+        \   Base256Value: Str,
         \   Base16Value:  Str,
         \   Delta:        Float,
         \ }, [
         \   ['ColorName'],
         \   ['GUIValue', 'Base256Value', 'Base16Value']
         \ ]).InsertMany([
-        \   {ColorName: '',     GUIValue: '', Base256Value: -1, Base16Value: '', Delta: 0.0},
-        \   {ColorName: 'none', GUIValue: '', Base256Value: -2, Base16Value: '', Delta: 0.0},
-        \   {ColorName: 'fg',   GUIValue: '', Base256Value: -3, Base16Value: '', Delta: 0.0},
-        \   {ColorName: 'bg',   GUIValue: '', Base256Value: -4, Base16Value: '', Delta: 0.0}
+        \   {ColorName: '',     GUIValue: '',     Base256Value: '',     Base16Value: '',     Delta: 0.0},
+        \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base16Value: 'NONE', Delta: 0.0},
+        \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base16Value: 'fg',   Delta: 0.0},
+        \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base16Value: 'bg',   Delta: 0.0}
         \ ])
 
-  this.HiGroup = Rel.new('Hi Group', {
+  this.Discriminator = Rel.new('Discriminator', {
+        \ DiscrName:  Str,
+        \ Definition: Str,
+        \ },
+        \ 'DiscrName').InsertMany([
+        \   {DiscrName: '',     Definition: ''},
+        \   {DiscrName: 't_Co', Definition: ''},
+        \ ])
+
+  this.HiGroup = Rel.new('Highlight Group', {
         \   HiGroupName: Str,
         \   DiscrName:   Str,
         \   IsLinked:    Bool,
@@ -210,7 +216,7 @@ export class Database
         \   Fg:          Str,
         \   Bg:          Str,
         \   Special:     Str,
-        \   Attr:        Str,
+        \   Style:       Str,
         \   Font:        Str,
         \   Start:       Str,
         \   Stop:        Str,
@@ -233,14 +239,14 @@ export class Database
         \ },
         \ ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.BaseGroupOverride = Rel.new('Base Group', {
+  this.BaseGroupOverride = Rel.new('Base Group Override', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
         \   Fg:          Str,
         \   Bg:          Str,
         \   Special:     Str,
-        \   Attr:        Str,
+        \   Style:       Str,
         \   Font:        Str,
         \   Start:       Str,
         \   Stop:        Str,
@@ -251,6 +257,7 @@ export class Database
     this.Color.Check(IsValidColorName)
     this.Color.Check(IsValidBase256Value)
 
+    ForeignKey(this.HiGroup,             'must be classified by a',           this.Discriminator,    ['DiscrName'])
     ForeignKey(this.LinkedGroup,         'must be a',                         this.HiGroup,          ['HiGroupName'])
     ForeignKey(this.BaseGroup,           'must be a',                         this.HiGroup,          ['HiGroupName'])
     ForeignKey(this.BaseGroup,           'must use as foreground a',          this.Color,            ['Fg'], ['ColorName'])
@@ -263,5 +270,227 @@ export class Database
     ForeignKey(this.BaseGroupOverride,   'must use as foreground a valid',    this.Color,            ['Fg'], ['ColorName'])
     ForeignKey(this.BaseGroupOverride,   'must use as background a valid',    this.Color,            ['Bg'], ['ColorName'])
     ForeignKey(this.BaseGroupOverride,   'must use as special color a valid', this.Color,            ['Special'], ['ColorName'])
+  enddef
+
+  def InsertDefaultLinkedGroup(
+    hiGroupName: string,
+    targetGroup: string
+  )
+    this.HiGroup.Insert({
+      HiGroupName: hiGroupName,
+      DiscrName:   '',
+      IsLinked:    true,
+    })
+    this.LinkedGroup.Insert({
+      HiGroupName: hiGroupName,
+      TargetGroup: targetGroup,
+    })
+  enddef
+
+  def InsertLinkedGroupOverride(
+    variant:     string,
+    discrValue:  string,
+    hiGroupName: string,
+    targetGroup: string,
+  )
+    this.HiGroupOverride.Insert({
+      HiGroupName: hiGroupName,
+      Variant:     variant,
+      DiscrValue:  discrValue,
+      IsLinked:    true,
+    })
+    this.LinkedGroupOverride.Insert({
+      HiGroupName: hiGroupName,
+      Variant:     variant,
+      DiscrValue:  discrValue,
+      TargetGroup: targetGroup,
+    })
+  enddef
+
+  def InsertDefaultBaseGroup(
+    hiGroupName: string,
+    fgColor:     string,
+    bgColor:     string,
+    spColor:     string,
+    attributes:  string,
+    font:        string = '',
+    start:       string = '',
+    stop:        string = ''
+  )
+    this.HiGroup.Insert({
+      HiGroupName: hiGroupName,
+      DiscrName:   '',
+      IsLinked:    false,
+    })
+    this.BaseGroup.Insert({
+      HiGroupName: hiGroupName,
+      Fg:          fgColor,
+      Bg:          bgColor,
+      Special:     spColor,
+      Style:       attributes,
+      Font:        font,
+      Start:       start,
+      Stop:        stop,
+    })
+  enddef
+
+  def InsertBaseGroupOverride(
+    variant:     string,
+    discrValue:  string,
+    hiGroupName: string,
+    fgColor:     string,
+    bgColor:     string,
+    spColor:     string,
+    attributes:  string,
+    font:        string = '',
+    start:       string = '',
+    stop:        string = ''
+
+  )
+    this.HiGroupOverride.Insert({
+      HiGroupName: hiGroupName,
+      Variant:     variant,
+      DiscrValue:  discrValue,
+      IsLinked:    false,
+    })
+    this.BaseGroupOverride.Insert({
+      HiGroupName: hiGroupName,
+      Variant:     variant,
+      DiscrValue:  discrValue,
+      Fg:          fgColor,
+      Bg:          bgColor,
+      Special:     spColor,
+      Style:       attributes,
+      Font:        font,
+      Start:       start,
+      Stop:        stop,
+    })
+  enddef
+
+  def GetVariantMetadata(variant: string): dict<string>
+    # Retrieve the relevant metadata for the given variant, including the
+    # names of the attributes for the current variant. An empty string
+    # indicates that the variant does not support the corresponding attribute.
+    # For example, for the 'gui' variant, this would be:
+    #
+    #    {
+    #      variant:   'gui',
+    #      numColors: '16777216',
+    #      ColorAttr: 'GUIValue',
+    #      Fg:        'guifg',
+    #      Bg:        'guibg',
+    #      Sp:        'guisp',
+    #      Style:     'gui',
+    #      Font:      'font',
+    #      Start:     '',
+    #      Stop:      '',
+    #    }
+    const numColors = this.Variant.Lookup(['Variant'], [variant]).NumColors
+    const colorAttr = numColors <= 16 ? 'Base16Value' : numColors <= 256 ? 'Base256Value' : 'GUIValue'
+    metadata = {variant: variant, numColors: string(numColors), ColorAttr: colorAttr}
+
+    for key in ['Fg', 'Bg', 'Sp', 'Style', 'Font', 'Start', 'Stop']
+      metadata[key] = get(
+        this.VariantAttribute.Lookup(['Variant', 'AttrType'], [variant, key]),
+        'AttrKey',
+        ''
+      )
+    endfor
+
+    return metadata
+  enddef
+
+  def HiGroupDef(
+      hiGroupName: string, variant: string, discrValue: string = DEFAULT_DISCR_VALUE
+  ): dict<any>
+    # Return the tuple corresponding to the correct definition for the
+    # specified highlight group, variant, and discriminator value. To
+    # distinguish a linked group from a base group, you may check whether the
+    # returned tuple `has_key('TargetGroup')`.
+    #
+    # Parameters:
+    #
+    # hiGroupName  The name of a highlight group (e.g., 'Normal')
+    # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
+    # discrValue   [optional] The value of the discriminator associated to the
+    #              highlight group.
+    #
+    # Returns:
+    #   a tuple containing the pieces of information that are needed to build
+    #   the requested highlight group definition. The caller should always
+    #   check whether the result is empty, which may happen if the input
+    #   values are invalid or if no overriding definition exists for a given
+    #   non-default discriminator value.
+    if discrValue == DEFAULT_DISCR_VALUE
+      return this.GetDefaultDef(hiGroupName, variant)
+    endif
+
+    return this.GetOverrideDef(hiGroupName, variant, discrValue)
+  enddef
+
+  def GetDefaultDef(hiGroupName: string, variant: string): dict<any>
+    # Return the tuple corresponding to the default definition for the given
+    # variant. This may be the global default definition or a variant-specific
+    # override if it exists (e.g., `Comment/256 fgColor bgColor`).
+    #
+    # Parameters:
+    #
+    # hiGroupName  The name of a highlight group (e.g., 'Normal')
+    # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
+    #
+    # Returns:
+    #   a tuple containing the pieces of information that are needed to build
+    #   the requested highlight group definition.
+    var t = this.GetOverrideDef(hiGroupName, variant, DEFAULT_DISCR_VALUE)
+
+    if empty(t)  # Look for the global default definition
+      t = this.BaseGroup.Lookup(['HiGroupName'], [hiGroupName])
+
+      if empty(t)
+        t = this.LinkedGroup.Lookup(['HiGroupName'], [hiGroupName])
+      endif
+    endif
+
+    return t
+  enddef
+
+  def GetOverrideDef(
+      hiGroupName: string, variant: string, discrValue: string
+  ): dict<any>
+    # Return the tuple corresponding to an overriding definition for the given
+    # variant and discriminator value.
+    #
+    # Parameters:
+    #
+    # hiGroupName  The name of a highlight group (e.g., 'Normal')
+    # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
+    # discrValue   The value of the discriminator associated to the highlight
+    #              group.
+    #
+    # Returns:
+    #   a tuple containing the pieces of information that are needed to build
+    #   the requested highlight group definition. When an overriding
+    #   definition matching the input cannot be found, an empty tuple is
+    #   returned.
+    const t = this.HiGroupOverride.Lookup(
+      ['HiGroupName', 'Variant', 'DiscrValue'],
+      [hiGroupName, variant, discrValue]
+    )
+
+    if empty(t)
+      return t
+    endif
+
+    if t.IsLinked
+      return this.LinkedGroupOverride.Lookup(
+        ['HiGroupName', 'Variant', 'DiscrValue'],
+        [hiGroupName, variant, discrValue]
+      )
+    endif
+
+    return this.BaseGroupOverride.Lookup(
+        ['HiGroupName', 'Variant', 'DiscrValue'],
+        [hiGroupName, variant, discrValue]
+      )
   enddef
 endclass

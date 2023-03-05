@@ -925,9 +925,8 @@ export def EquiJoin(
 ): func(func(dict<any>))
   const lftAttrList = Listify(lftAttrs)
   const rgtAttrList = Listify(rgtAttrs)
-  const Pred        = EquiJoinPred(lftAttrList, rgtAttrList)
 
-  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2)
+  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2) # Fast path
     const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
     const Cont = From(Arg1)
     const rel: Rel = Arg2
@@ -935,12 +934,14 @@ export def EquiJoin(
     return (Emit: func(dict<any>)) => {
       Cont((t: dict<any>) => {
         const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
-        if u isnot KEY_NOT_FOUND && Pred(t, u)
+        if u isnot KEY_NOT_FOUND
           Emit(MergeTuples(t, u))
         endif
       })
     }
   endif
+
+  const Pred = EquiJoinPred(lftAttrList, rgtAttrList)
 
   return Join(Arg1, Arg2, Pred, prefix)
 enddef

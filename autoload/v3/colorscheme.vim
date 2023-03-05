@@ -387,7 +387,7 @@ export class Database
     #    }
     const numColors = this.Variant.Lookup(['Variant'], [variant]).NumColors
     const colorAttr = numColors <= 16 ? 'Base16Value' : numColors <= 256 ? 'Base256Value' : 'GUIValue'
-    metadata = {variant: variant, numColors: string(numColors), ColorAttr: colorAttr}
+    var   metadata  = {variant: variant, numColors: string(numColors), ColorAttr: colorAttr}
 
     for key in ['Fg', 'Bg', 'Sp', 'Style', 'Font', 'Start', 'Stop']
       metadata[key] = get(

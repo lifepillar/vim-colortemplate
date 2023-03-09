@@ -4,7 +4,6 @@
 :ColortemplateStats	colortemplate.txt	/*:ColortemplateStats*
 :ColortemplateStyle	colortemplate.txt	/*:ColortemplateStyle*
 :Colortemplate[!]	colortemplate.txt	/*:Colortemplate[!]*
-@shortname-options	colortemplate.txt	/*@shortname-options*
 b:colortemplate_outdir	colortemplate.txt	/*b:colortemplate_outdir*
 colortemplate#format_palette()	colortemplate.txt	/*colortemplate#format_palette()*
 colortemplate#import#run()	colortemplate.txt	/*colortemplate#import#run()*
@@ -42,10 +41,7 @@ colortemplate-toolbar	colortemplate.txt	/*colortemplate-toolbar*
 colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
-dark.txt	dark.txt	/*dark.txt*
-dark_and_light.txt	dark_and_light.txt	/*dark_and_light.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
-g:@shortname_transp_bg	colortemplate.txt	/*g:@shortname_transp_bg*
 g:colortemplate_backward_compatible	colortemplate.txt	/*g:colortemplate_backward_compatible*
 g:colortemplate_creator	colortemplate.txt	/*g:colortemplate_creator*
 g:colortemplate_fancy_import	colortemplate.txt	/*g:colortemplate_fancy_import*
@@ -76,7 +72,3 @@ g:colortemplate_toolbar_actions	colortemplate.txt	/*g:colortemplate_toolbar_acti
 g:colortemplate_toolbar_items	colortemplate.txt	/*g:colortemplate_toolbar_items*
 g:colortemplate_use_tabs	colortemplate.txt	/*g:colortemplate_use_tabs*
 g:colortemplate_warnings	colortemplate.txt	/*g:colortemplate_warnings*
-g:dark_and_light_transp_bg	dark_and_light.txt	/*g:dark_and_light_transp_bg*
-g:dark_transp_bg	dark.txt	/*g:dark_transp_bg*
-g:light_transp_bg	light.txt	/*g:light_transp_bg*
-light.txt	light.txt	/*light.txt*

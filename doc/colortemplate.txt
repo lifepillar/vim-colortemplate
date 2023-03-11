@@ -1,4 +1,4 @@
-*colortemplate.txt*	For Vim version 8.2	Last change: 2021 Oct 20
+*colortemplate.txt*	For Vim version 9.0	Last change: 2023 Mar 11
 
 	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
 	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~
@@ -65,9 +65,9 @@ located in colortemplate's plugin folder, and type:
 >
 	:Colortemplate ~/.vim
 <
-If you use Vim 8.0.1123 or later, you may also execute commands by clicking on
-a window toolbar. Click on "OutDir" and set the output directory to `~/.vim`,
-then click on "Build!" to create the color scheme.
+You may also execute commands by clicking on a window toolbar. Click on
+"OutDir" and set the output directory to `~/.vim`, then click on "Build!" to
+create the color scheme.
 
 Note: |Colortemplate| and other plugin's commands are filetype-specific. That
 means that they are available only if the filetype is set to `colortemplate`.
@@ -79,9 +79,8 @@ the given location (`~/.vim/colors` in the example above): use
 `:Colortemplate!` to overwrite existing files. Vice versa, the "Build!" menu
 silently overwrites any existing file.
 
-If there are errors in your template, they are shown in the quickfix window.
-If the template builds successfully, Colortemplate tells you so with a message
-in the command line.
+If the template builds successfully or if it contains an error, Colortemplate
+tells you so with a message in the command line.
 
 To enable the generated color scheme, you may use |:colorscheme| or (better)
 click on "Show" in the toolbar (the dark template uses only two colors out of
@@ -132,86 +131,22 @@ A template consists of:
 
 1. metadata;
 2. `Color` and `Term colors` definitions;
-3. `Background` and `Variant` directives;
+3. `Background` and `Variants` directives;
 4. `Include` directives;
-5. verbatim blocks (`verbatim`/`auxfile`/`documentation`, `#if`, `#let`, ...);
+5. verbatim blocks (`verbatim`/`auxfile`/`help`);
 6. highlight group definitions;
 7. line comments (starting with `;`), which are ignored by Colortemplate.
 
-Each template has one global section and one or more local sections. The
-global section starts at the beginning of the file and lasts until the first
-`Background` or `Variant` directive is encountered. The global section may
-contain anything except highlight group definitions (linked group definitions
-are allowed, though). When translated, linked group definitions and verbatim
-blocks in the global section appear at the start of the generated color
-scheme. This is useful if you need to set up your color scheme in some way or
-override some variables. For example, Colortemplate defines two script
-variables inside color schemes, called `s:t_Co` and `s:italics`. If you want
-to override their default value, you may do so in the global section.
+Each template must contain some mandatory metadata: the name of the
+color scheme and its author. Additional metadata may be optionally specified.
+See |colortemplate-meta| for more details.
 
-A local section starts when a `Background` or `Variant` directive is
-encountered and lasts until the next `Background` or `Variant` directive. Each
-local section contains the highlight group definitions and `verbatim` blocks
-that apply to the current backgrounds and variants. A local section may also
-contain `Color` definitions that apply to the current backgrounds. For
-instance, if a template contains these two lines:
->
-	Variant: gui 256
-	Background: dark
-<
-anything following such directives and until the next `Variant` or
-`Background` directive will be applied to the dark version of GUI and
-256-color variants of your color scheme. `Variant` and `Background` may appear
-several times in the same template. Combining them gives you great
-flexibility, e.g.:
->
-	Variant: gui
-	Background: any
-	  ; Defs. for both backgrounds, apply only to GUI
-	Background: dark
-	  ; Defs. for dark background, apply only to GUI
-	Variant: gui 256 16
-	  ; Defs. for dark background, apply to GUI/256/16 colors
-	Background: any
-	  ; Defs. for both backgrounds, apply to GUI/256/16 colors
-	Background: light
-	Variant: 16
-	  ; Defs. for light background, apply only to 16 colors
-<
-A template like the above will generate code with the following structure:
->
-	let s:t_Co = ...
-	if [has termguicolors set or is GUI vim]
-	  " Defs. for both backgrounds, apply only to GUI
-	  " Defs. for both backgrounds, apply to GUI/256/16 colors
-	  if &background ==# 'dark'
-	    " Defs. for dark background, apply only to GUI
-	    " Defs. for dark background, apply to GUI/256/16 colors
-	    finish
-	  endif
-	  finish
-	endif
-	if s:t_Co >= 256
-	  " Defs. for both backgrounds, apply to GUI/256/16 colors
-	  if &background ==# 'dark'
-	    " Defs. for dark background, apply to GUI/256/16 colors
-	    finish
-	  endif
-	  finish
-	endif
-	if s:t_Co >= 16
-	  " Defs. for both backgrounds, apply to GUI/256/16 colors
-	  if &background ==# 'dark'
-	    " Defs. for dark background, apply to GUI/256/16 colors
-	    finish
-	  endif
-	  " Defs. for light background, apply only to 16 colors
-	  finish
-	endif
-<
-Note how the code is reordered. In particular, code in the scope of `any`
-background is put before the background is checked, for each variant to which
-it applies (the "local preamble" of each variant).
+Before any other definition, the supported variants and the background should
+be defined.
+
+Highlight group definitions may appear in any order: the only constraint is
+that a default definition must appear before any variant-specific or
+discriminator-specific definitions.
 
 ==============================================================================
 Metadata block					*colortemplate-meta*
@@ -222,25 +157,21 @@ optional fields, usually appearing at the top of your template:
 	; Mandatory information
 	Full name:       A unique and attractive name
 	Short name:      all_lowercase_with_no_spaces
-	Author:          Myself <myself@somewhere.org>
+	Author:          Myself <myself@somewhere.org>     (+)
 
 	; Optional information
-	Maintainer:      [Uses Author's value by default]
-	Description:     [Empty]
-        URL:             [Empty]
-	Website:         [Empty]
+	Maintainer:      [Uses Author's value by default]  (+)
+	Description:     [Empty]                           (+)
+        URL:             [Empty]                           (+)
 	License:         [Vim license]
         Version:         [Empty]
-	Option Prefix:   [Uses Short name's value by default]
-	Neovim:          [No]
 	Colortemplate Options: []
 <
 Each metadata field must fit in one line. The default values for optional
-fields in shown in square brackets. All the fields should be self-descriptive
-except for the last two.
-
-When `Neovim` is set to `yes` or `1` then additional code is generated to
-support Neovim.
+fields in shown in square brackets. Fields annotated with `(+)` may be
+repeated: this allows you, for example, to provide more than one maintainer or
+more than one URL. All the fields should be self-descriptive, except for the
+last.
 
 `Colortemplate Options` allows you to set some options for the current
 template, overriding the corresponding global options (see
@@ -259,12 +190,11 @@ The options that can be set in this way are `backward_compatible`, `creator`,
 Color scheme background				*colortemplate-background*
 
 You must specify whether color definitions and highlight group definitions
-apply to a dark background, to a light background or to any background. You do
+apply to a dark background or to a light background. You do
 so with a `Background` directive, which may have one of three values:
 >
 	Background: dark
 	Background: light
-	Background: any
 <
 All definitions appearing after a `Background` directive until the end of the
 file or until another `Background` directive apply to the specified
@@ -276,66 +206,31 @@ scheme will have a command to set it accordingly, e.g.:
 	set background=dark
 <
 If the template uses both backgrounds then the generated color scheme will
-adapt to the current background, e.g., the generated code will be equivalent
-to:
+have this structure:
 >
-	" Local preamble here
 	if &background ==# 'dark'
 	  " Dark variant of the color scheme
 	else
 	  " Light variant of the color scheme
 	endif
 <
-Template code in the scope of `any` background will be put in the "local
-preamble", i.e., before checking the value of |background|.
-
 ==============================================================================
 Variants						*colortemplate-variants*
 
-A `Variant` directive declares to which environments the subsequent
-definitions apply. All definitions appearing after a `Variant` directive until
-the end of the file or until another `Variant` directive apply to the
-specified variant(s).
+The `Variants` directive, which must appear before any color or highlight
+group can be defined, declares which environments a color scheme supports.
+Every color scheme generated by Colortemplate always implicitly supports GUI
+colors (also in the terminal when |termguicolors| is set). `Variants` can be
+used to define the less capable alternatives that the color scheme should
+support.
 
-The allowed values are `gui` (for gVim or when |termguicolors| is set) or
-a number between `0` and `256` specifying the minimum |t_Co| required for the
-following definitions. Multiple values in the same directive are allowed,
-separated by spaces.
-
-For example, consider the following snippet:
+The allowed values are `256`, `88`, `16`, `8`, `0`. Each value specifies
+a value for |t_Co| that the color scheme will support. The values must be
+separated by spaces. For example, to generate code for 256-color and 16-color
+variants, put this near the top of your template:
 >
-	Color: white #ffffff 231 White
-	Color: black #000000 16 Black
-	Color: ivory #ebebeb 255 LightGray
-	Color: dust  #343436 236 Brown
-
-	Variant: gui 8
-	Normal ivory dust
-	Variant: 256
-	Normal white black
+	Variants: 256 16
 <
-This will be translated into something similar to this:
->
-	if (has('termguicolors') && &termguicolors) || has('gui_running')
-	  hi Normal guifg=#ebebeb guibg=#343436 gui=NONE cterm=NONE
-	  finish
-	endif
-
-	if &t_Co >= 256
-	  hi Normal ctermfg=231 ctermbg=16 cterm=NONE
-	  finish
-	endif
-
-	if &t_Co >= 8
-	  hi Normal ctermfg=LightGray ctermbg=Brown cterm=NONE
-	  finish
-	endif
-
-Text before the first `Variant` directive, but after a `Background` directive,
-applies by default to `gui` and `256` color variants. This rule exists mostly
-for backward compatibility: it is recommended to always use `Variant`
-explicitly before specifying the background.
-
 ==============================================================================
 Color definitions					*colortemplate-colors*
 
@@ -366,19 +261,7 @@ used as well, although their use is discouraged. For instance:
 The `<Base-256 spec>` and `<Base-16 spec>` fields are used for terminals that
 do not support more than 256 colors, or when |termguicolors| is not set. For
 variants with at least 16 colors, the base-256 values are used; base-16 values
-are used for variants with no more than 16 colors. The color numbers must not
-exceed the limits imposed by the current variants. For example, if you
-declare:
->
-	Variant: 256 88
-<
-then you may use only base-256 colors between `0` and `87`. On the other hand,
-if you declare:
->
-	Variant: 256 8 4
-<
-you will be able to use all base-256 colors, but only the first four base-16
-colors.
+are used for variants with no more than 16 colors.
 
 In general, only the GUI value of a color specification is necessary. Base-256
 values may be replaced by a `~` symbol, which means that the color should be
@@ -395,80 +278,68 @@ The 16 ASCII colors for Vim terminal windows should be specified using
 a `Term Colors` directive:
 >
 	Term Colors: mydarkblack  mydarkred      mydarkgreen  mydarkyellow
-	Term Colors: mydarkblue   mydarkmagenta  mydarkcyan   mydarkwhite
-	Term Colors: mylightblack mylightred     mylightgreen mylightyellow
-	Term Colors: mylightblue  mylightmagenta mylightcyan  mylightwhite
+	             mydarkblue   mydarkmagenta  mydarkcyan   mydarkwhite
+	             mylightblack mylightred     mylightgreen mylightyellow
+	             mylightblue  mylightmagenta mylightcyan  mylightwhite
 <
-The directive may be repeated on several lines, but it must define 16 colors
-in total, in the order in which they should be assigned to the terminal. The
-used color names must have been previously defined with the `Color` directive.
+The value of the directive, which may span several lines, must be a list of 16
+colors, in the order in which they should be assigned to the terminal. The
+used color names must have been previously defined with `Color` directives.
 
 ==============================================================================
 Highlight group definitions			*colortemplate-hi-groups*
 
-Highlight group definitions consist of lines having the following syntax:
+Default highlight group definitions consist of lines having the following
+syntax:
 >
-	<Group name> <foreground color> <background color> <style attributes>
+	<Group name> <fg color> <bg color> [<sp color> <style attributes>]
 <
+In the order:
+
+- the name of a highlight group;
+- the foreground color;
+- the background color;
+- (optional) the special color: see |highlight-guisp| and |highlight-ctermul|;
+- (optional) style attributes: see |attr-list|.
+
 For example:
 >
-	SpellRare  white  black  bold,reverse guisp=cyan
+	Normal     white   black
+	SpellRare  white   black  s=cyan  bold,reverse 
+	DiffAdd    orange  blue   reverse
+	SpellBad   white   black  s=red underline
 <
 Colors must be specified using the color names defined by the `Color`
 directives.
 
-The <style attributes> part of a highlight group definition is used to specify
-comma-separated lists of attributes (see |attr-list|) and the special color to
-use in the GUI (|highlight-guisp|). The following are examples of valid
-highlight group specifications:
->
-	Normal    white   black
-	DiffAdd   orange  blue   reverse
-	SpellBad  white   black  guisp=red underline
-<
 The foreground and background colors must always be present: if you want to
 skip a color, you may use the special keyword `omit` (see below). You may use
 the special values `fg`, `bg`, and `none` for the default foreground color,
 the default background color and for disabling the corresponding highlighting,
 respectively.
 
-Attributes specified as above are used for both |cterm| and |gui|
-highlighting. If you want to use different values for the terminal and the
-GUI, you must prepend `term=` or `gui=`, respectively, as is done in Vim color
-schemes. For example:
->
-	IncSearch  white  black  term=bold,reverse  gui=bold,standout
-<
-`term=` may be abbreviated `t=`, and `gui=` may be abbreviated `g=`. Instead
-of `guisp=`, you may also use `s=`.
-
 The special keyword `omit` may be used when you want to inherit a color or an
 attribute from Vim's default color scheme. For instance, this directive:
 >
-	CursorLine  white  omit   t=underline g=omit
+	CursorLine  white  omit  omit
 <
-may generate something like this for the GUI:
+may generate something like this (considering only GUI attributes for
+simplicity):
 >
 	hi CursorLine guifg=#ffffff
-
-and for the terminal:
->
-	hi CursorLine ctermfg=255 cterm=underline
 <
-In both definitions, the background color is missing; additionally, for the
-GUI the special color and attributes are not specified either. Note that
-`omit` is the default for the special color, if the `guisp` attribute is not
-specified.
+Compare with this definition:
+>
+	CursorLine white black
+>
+which may be become:
+>
+	hi CursorLine guifg=#ffffff guibg=#000000 gui=NONE
+<
+Note that `omit` is the default for the special color.
 
 Colortemplate also supports |highlight-start| and |highlight-stop|: the syntax
 is the same as in Vim color schemes.
-
-Note: variants also determine which attributes are used. For example, if this
-definition:
->
-	IncSearch white black term=underline
-<
-is in the scope of `Variant: gui`, the `term` attribute will be ignored.
 
 Linked groups are defined using the following syntax:
 >
@@ -478,6 +349,9 @@ For example:
 >
 	QuickFixLine  ->  Search
 <
+TODO 
+Non-default definitions (`/` and `+` syntaxes).
+
 ==============================================================================
 Verbatim blocks					*colortemplate-verbatim*
 

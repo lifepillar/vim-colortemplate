@@ -10,37 +10,37 @@ endif
 
 syn case    match
 
-syn match   colortemplateAttrs        "\<\%(te\?r\?m\?\|gu\?i\?\)=\S\+" contains=colortemplateAttr,colortemplateSpecial
-syn match   colortemplateGuisp        "\<\%(guisp\|sp\?\)="
+syn match   colortemplateDiscrName    "+\h\w*\>"
+syn match   colortemplateVariant      "/\d\+\|/gui\>"
+syn match   colortemplateSpecial        "\<sp\?="
 syn match   colortemplateTermCode     "\<st\%(art\|op\)="
-syn match   colortemplateHiGroup      "\<Conceal\>"
-syn match   colortemplateHiGroup      "\<Include\>"
-syn match   colortemplateHiGroup      "\<Terminal\>"
-syn keyword colortemplateHiGroup      Boolean Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
-syn keyword colortemplateHiGroup      CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
-syn keyword colortemplateHiGroup      EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
-syn keyword colortemplateHiGroup      IncSearch Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
-syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuSbar PmenuSel PmenuThumb
-syn keyword colortemplateHiGroup      PopupNotification PopupSelected PreCondit PreProc Question
-syn keyword colortemplateHiGroup      QuickFixLine Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
-syn keyword colortemplateHiGroup      SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
-syn keyword colortemplateHiGroup      Structure TabLine TabLineFill TabLineSel Tag Title Todo Type Typedef Underlined VertSplit
-syn keyword colortemplateHiGroup      debugPC debugBreakpoint ToolbarLine ToolbarButton
-syn keyword colortemplateHiGroup      Visual VisualNOS WarningMsg WildMenu lCursor
-syn keyword colortemplateHiGroup      Menu Scrollbar Tooltip User1 User2 User3 User4 User5 User6 User7 User8 User9
-syn keyword colortemplateHiGroup      vimAuSyntax vimAugroup vimAutoCmdSfxList vimAutoCmdSpace vimAutoEventList vimBracket vimClusterName vimCmdSep
-syn keyword colortemplateHiGroup      vimCollClass vimCollection vimCommentTitle vimCommentTitleLeader vimEcho vimEscapeBrace vimExecute vimExtCmd
-syn keyword colortemplateHiGroup      vimFiletype vimFilter vimFuncBlank vimFuncBody vimFunction vimGlobal vimGroupList vimHiBang
-syn keyword colortemplateHiGroup      vimHiCtermColor vimHiFontname vimHiGuiFontname vimHiKeyList vimHiLink vimHiTermcap vimIf vimIsCommand
-syn keyword colortemplateHiGroup      vimIskList vimMapLhs vimMapMod vimMapModKey vimMapRhs vimMapRhsExtend vimMenuBang vimMenuMap
-syn keyword colortemplateHiGroup      vimMenuPriority vimMenuRhs vimNormCmds vimNotation vimOperParen vimPatRegion vimRegion vimSet
-syn keyword colortemplateHiGroup      vimSetEqual vimStdPlugin vimSubstPat vimSubstRange vimSubstRep vimSubstRep4 vimSynKeyRegion vimSynLine
-syn keyword colortemplateHiGroup      vimSynMatchRegion vimSynMtchCchar vimSynMtchGroup vimSynPatMod vimSynRegion vimSyncLinebreak vimSyncLinecont vimSyncLines
-syn keyword colortemplateHiGroup      vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
+syn match   colortemplateHiGroupDef   "^\h\w*\>" contains=colortemplateHiGroup
+syn match   colortemplateHiGroup      contained "\<Conceal\>"
+syn keyword colortemplateHiGroup      contained Boolean Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
+syn keyword colortemplateHiGroup      contained CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
+syn keyword colortemplateHiGroup      contained EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
+syn keyword colortemplateHiGroup      contained IncSearch Include Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
+syn keyword colortemplateHiGroup      contained Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuSbar PmenuSel PmenuThumb
+syn keyword colortemplateHiGroup      contained PopupNotification PopupSelected PreCondit PreProc Question
+syn keyword colortemplateHiGroup      contained QuickFixLine Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
+syn keyword colortemplateHiGroup      contained SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
+syn keyword colortemplateHiGroup      contained Structure TabLine TabLineFill TabLineSel Tag Terminal Title Todo Type Typedef Underlined VertSplit
+syn keyword colortemplateHiGroup      contained debugPC debugBreakpoint ToolbarLine ToolbarButton
+syn keyword colortemplateHiGroup      contained Visual VisualNOS WarningMsg WildMenu lCursor
+syn keyword colortemplateHiGroup      contained Menu Scrollbar Tooltip User1 User2 User3 User4 User5 User6 User7 User8 User9
+syn keyword colortemplateHiGroup      contained vimAuSyntax vimAugroup vimAutoCmdSfxList vimAutoCmdSpace vimAutoEventList vimBracket vimClusterName vimCmdSep
+syn keyword colortemplateHiGroup      contained vimCollClass vimCollection vimCommentTitle vimCommentTitleLeader vimEcho vimEscapeBrace vimExecute vimExtCmd
+syn keyword colortemplateHiGroup      contained vimFiletype vimFilter vimFuncBlank vimFuncBody vimFunction vimGlobal vimGroupList vimHiBang
+syn keyword colortemplateHiGroup      contained vimHiCtermColor vimHiFontname vimHiGuiFontname vimHiKeyList vimHiLink vimHiTermcap vimIf vimIsCommand
+syn keyword colortemplateHiGroup      contained vimIskList vimMapLhs vimMapMod vimMapModKey vimMapRhs vimMapRhsExtend vimMenuBang vimMenuMap
+syn keyword colortemplateHiGroup      contained vimMenuPriority vimMenuRhs vimNormCmds vimNotation vimOperParen vimPatRegion vimRegion vimSet
+syn keyword colortemplateHiGroup      contained vimSetEqual vimStdPlugin vimSubstPat vimSubstRange vimSubstRep vimSubstRep4 vimSynKeyRegion vimSynLine
+syn keyword colortemplateHiGroup      contained vimSynMatchRegion vimSynMtchCchar vimSynMtchGroup vimSynPatMod vimSynRegion vimSyncLinebreak vimSyncLinecont vimSyncLines
+syn keyword colortemplateHiGroup      contained vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
 syn keyword colortemplateAttr         bold underline undercurl underdouble underdotted underdashed strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial      fg bg none omit
 syn match   colortemplateComment      ";.*$" contains=colortemplateTodo,@Spell
-syn match   colortemplateKey          "^\s*\(\w[^:]*\):"
+syn match   colortemplateKey          "\%(Color\|Background\|Variants\|Include\|\%(Full\|Short\)\s\+[Nn]ame\|Author\|Maintainer\|URL\|Description\|License\|Term\s\+[Cc]olors\):"
 syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortemplateKey nextgroup=colortemplateColorDef
 syn match   colortemplateColorDef     ".\+$" contained contains=colortemplateNumber,colortemplateHexColor,colortemplateFunction,colortemplateConstant,colortemplateCompound,colortemplateComment
 syn match   colortemplateNumber       "\<\d\+\>" contained
@@ -153,7 +153,7 @@ unlet b:current_syntax
 syn region colortemplateVim matchgroup=colortemplateVerb start=/^\s*verbatim\>/ end=/^\s*endverbatim\>/ keepend contains=@colortemplatevim
 syn region colortemplateReset matchgroup=colortemplateVerb start=/^\s*reset\>/ end=/^\s*endreset\>/ keepend contains=@colortemplatevim
 syn region colortemplateAux   matchgroup=colortemplateVerb start=/^\s*auxfile\s\+.*$/ end=/^\s*endauxfile\>/ keepend contains=@colortemplatevim
-syn region colortemplateCommand matchgroup=colortemplateCommand start=/^\s*#\%(if\|else\%[if]\|endif\|\%[un]let\|call\)\>/ end=/$/ keepend contains=@colortemplatevim
+syn region colortemplateConst matchgroup=colortemplateConst start=/#const\>/ end=/$/ keepend contains=@colortemplatevim
 
 syn include @colortemplatehelp syntax/help.vim
 unlet b:current_syntax
@@ -161,20 +161,22 @@ syn region colortemplateHelp matchgroup=colortemplateVerb start=/documentation/ 
 
 hi def link colortemplateArrow        Delimiter
 hi def link colortemplateAttr         Label
-hi def link colortemplateAttrs        String
-hi def link colortemplateCommand      PreProc
+hi def link colortemplateConst        PreProc
 hi def link colortemplateConstant     Type
 hi def link colortemplateComment      Comment
+hi def link colortemplateDiscrName    Keyword
 hi def link colortemplateFunction     Function
-hi def link colortemplateGuisp        String
+hi def link colortemplateSpecial      String
 hi def link colortemplateHexColor     Constant
-hi def link colortemplateHiGroup      Identifier
+hi def link colortemplateHiGroup      Constant
+hi def link colortemplateHiGroupDef   Identifier
 hi def link colortemplateNumber       Number
 hi def link colortemplateKey          Special
 hi def link colortemplateKeyword      Keyword
 hi def link colortemplateSpecial      Boolean
 hi def link colortemplateTermCode     String
 hi def link colortemplateTodo         Todo
+hi def link colortemplateVariant      PreProc
 hi def link colortemplateVerb         Title
 
 b:current_syntax = "colortemplate"

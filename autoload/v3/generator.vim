@@ -6,57 +6,13 @@ import 'librelalg.vim' as ra
 
 # Aliases {{{
 const AntiJoin             = ra.AntiJoin
-const Avg                  = ra.Avg
-const AvgBy                = ra.AvgBy
-const Bool                 = ra.Bool
-const Build                = ra.Build
-const CoddDivide           = ra.CoddDivide
-const Count                = ra.Count
-const CountBy              = ra.CountBy
-const CountDistinct        = ra.CountDistinct
-const Divide               = ra.Divide
-const Extend               = ra.Extend
 const EquiJoin             = ra.EquiJoin
-const EquiJoinPred         = ra.EquiJoinPred
-const Filter               = ra.Filter
-const Float                = ra.Float
-const ForeignKey           = ra.ForeignKey
-const Frame                = ra.Frame
-const From                 = ra.From
-const GroupBy              = ra.GroupBy
-const Int                  = ra.Int
-const Intersect            = ra.Intersect
-const Join                 = ra.Join
 const LeftEquiJoin         = ra.LeftEquiJoin
-const LeftNatJoin          = ra.LeftNatJoin
-const ListAgg              = ra.ListAgg
-const Max                  = ra.Max
-const MaxBy                = ra.MaxBy
-const Min                  = ra.Min
-const MinBy                = ra.MinBy
-const Minus                = ra.Minus
-const NatJoin              = ra.NatJoin
-const NotIn                = ra.NotIn
 const PartitionBy          = ra.PartitionBy
-const Product              = ra.Product
-const Project              = ra.Project
 const Query                = ra.Query
-const Rel                  = ra.Rel
-const RelEq                = ra.RelEq
-const Rename               = ra.Rename
 const Select               = ra.Select
-const SemiJoin             = ra.SemiJoin
 const Sort                 = ra.Sort
-const SortBy               = ra.SortBy
-const Split                = ra.Split
-const Str                  = ra.Str
-const StringAgg            = ra.StringAgg
-const Sum                  = ra.Sum
-const SumBy                = ra.SumBy
-const Table                = ra.Table
 const Transform            = ra.Transform
-const Union                = ra.Union
-const Zip                  = ra.Zip
 # }}}
 
 const VERSION        = version.VERSION

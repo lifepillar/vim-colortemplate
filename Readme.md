@@ -30,8 +30,9 @@ colortemplate.txt`.
 
 ## Quick Start
 
-Installing this plugin does not require anything special. If you need help,
-please first check the
+The plugin requires [vim-devel](https://github.com/lifepillar/vim-devel).
+
+If you need help, please first check the
 [FAQ](https://github.com/lifepillar/vim-colortemplate/wiki/FAQs).
 
 ```vim

@@ -330,7 +330,7 @@ const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\|sp\>')
 const K_TERM        = R('Term\%[inal\]')
 const K_URL         = R('URL\|Website')
-const K_VARIANT     = R('\(gui\|termgui\|256\|88\|16\|8\|0\)\>')
+const K_VARIANT     = R('\(gui\|256\|88\|16\|8\|0\)\>')
 const K_VARIANTS    = T('Variants')
 const K_VERSION     = T('Version')
 
@@ -540,7 +540,7 @@ const Template      = Seq(
 # HiGroupDiscr              ::= ('+' | '-') DiscrName (DiscrValue HiGroupDef)+
 # DiscrName                 ::= '[A-z_0-9]+'
 # DiscrValue                ::= '[0-9]+ | ''' .+ ''' | true | false
-# Variant                   ::= 'gui' | 'termgui' | '256' | '88' | '16' | '8' | '0' | 'bw'
+# Variant                   ::= 'gui' | '256' | '88' | '16' | '8' | '0' | 'bw'
 # HiGroupDef                ::= '->' HiGroupName | BaseGroup
 # BaseGroup                 ::= FgColor BgColor Attributes?
 # HiGroupName               ::= '[A-z][A-z0-9]*'

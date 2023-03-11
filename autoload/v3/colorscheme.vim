@@ -27,6 +27,14 @@ export class Metadata
   public this.variants:    list<string> = []
   public this.backgrounds: dict<bool>   = {'dark': false, 'light': false}
   public this.termcolors:  list<string> = []
+
+  def IsLightAndDark(): bool
+    return this.backgrounds['dark'] && this.backgrounds['light']
+  enddef
+
+  def HasBackground(background: string): bool
+    return this.backgrounds[background]
+  enddef
 endclass
 
 # Integrity constraints {{{
@@ -134,7 +142,6 @@ export class Database
         \ },
         \ 'Variant').InsertMany([
         \   {Variant:     'gui', NumColors: 16777216},
-        \   {Variant: 'termgui', NumColors: 16777216},
         \   {Variant:     '256', NumColors:      256},
         \   {Variant:      '88', NumColors:       88},
         \   {Variant:      '16', NumColors:       16},
@@ -153,10 +160,6 @@ export class Database
         \   {Variant: 'gui',     AttrType: 'Special', AttrKey: 'guisp'  },
         \   {Variant: 'gui',     AttrType: 'Style',   AttrKey: 'gui'    },
         \   {Variant: 'gui',     AttrType: 'Font',    AttrKey: 'font'   },
-        \   {Variant: 'termgui', AttrType: 'Fg',      AttrKey: 'guifg'  },
-        \   {Variant: 'termgui', AttrType: 'Bg',      AttrKey: 'guibg'  },
-        \   {Variant: 'termgui', AttrType: 'Special', AttrKey: 'guisp'  },
-        \   {Variant: 'termgui', AttrType: 'Style',   AttrKey: 'cterm'  },
         \   {Variant: '256',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
         \   {Variant: '256',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
         \   {Variant: '256',     AttrType: 'Special', AttrKey: 'ctermul'},

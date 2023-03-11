@@ -21,7 +21,7 @@ License:       Same as Vim
 ; }}}
 
 Background: dark
-Variants:   gui termgui 256 8
+Variants:   gui 256 8
 
 ; Common linked groups {{{
 Character         -> Constant
@@ -98,12 +98,12 @@ Terminal             white             black
 #const pippo     = get(g:, 'foo', 0)
 
 Normal
-  /termgui/256/8
+  /256/8
     +transp_bg
              1       white             none
 
 Terminal
-  /termgui/256/8
+  /256/8
     +transp_bg
              1       white             none
 

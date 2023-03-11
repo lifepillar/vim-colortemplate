@@ -63,8 +63,8 @@ const VERSION        = version.VERSION
 const NO_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
 const Database       = colorscheme.Database
 const Metadata       = colorscheme.Metadata
-const baseFiller     = [{Fg: '', Bg: '', Special: '', Style: '', Font: '', Start: '', Stop: ''}]
-const linkFiller     = [{TargetGroup: ''}]
+const BASE_FILLER    = [{Fg: '', Bg: '', Special: '', Style: '', Font: '', Start: '', Stop: ''}]
+const LINK_FILLER    = [{TargetGroup: ''}]
 
 # Helper functions {{{
 def CompareDistinct(s1: string, s2: string): number
@@ -96,7 +96,7 @@ def CompareByDiscrName(t: dict<any>, u: dict<any>): number
 
 enddef
 
-def SortByDiscrValueAndHiGroupName(t: dict<any>, u: dict<any>): number
+def CompareByDiscrValueAndHiGroupName(t: dict<any>, u: dict<any>): number
   if t.DiscrValue == u.DiscrValue
     return CompareByHiGroupName(t, u)
   elseif t.DiscrValue == NO_DISCR_VALUE
@@ -112,45 +112,49 @@ def LinkedGroupToString(t: dict<any>): string
   return printf("hi! link %s %s", t.HiGroupName, t.TargetGroup)
 enddef
 
-def BaseGroupToString(t: dict<any>, meta: dict<any>, termgui = false): string
-  var hiGroupDef = ['hi', t.HiGroupName]
+def AttributesToString(t: dict<any>, meta: dict<any>): list<string>
+  var attributes = []
 
   # If the variant supports color attribute `key`, and if the highlight group
   # has a value for it, map the color and add it to the definition
   for key in ['Fg', 'Bg', 'Special']
     if !empty(meta[key]) && !empty(t[key])
       const colorName: string = t[key]
-      hiGroupDef->add(meta[key] .. '=' .. meta.Colors[colorName])
+      attributes->add(meta[key] .. '=' .. meta.Colors[colorName])
     endif
   endfor
 
   # Do the same for the other (non-color) attributes (no mapping needed)
   for key in ['Style', 'Font', 'Start', 'Stop']
     if !empty(meta[key]) && !empty(t[key])
-      hiGroupDef->add(meta[key] .. '=' .. t[key])
+      attributes->add(meta[key] .. '=' .. t[key])
     endif
   endfor
 
-  if termgui && !empty(meta.Style) && !empty(t.Style)
-    hiGroupDef->add('cterm=' .. t.Style)
+  return attributes
+enddef
+
+def BaseGroupToString(t: dict<any>, meta: dict<any>, metaAlt: dict<any> = null_dict): string
+  var hiGroupDef = ['hi', t.HiGroupName] + AttributesToString(t, meta)
+
+  if metaAlt != null
+    hiGroupDef += AttributesToString(t, metaAlt)
   endif
 
   return join(hiGroupDef, ' ')
 enddef
 
-def HiGroupToString(t: dict<any>, meta: dict<any>, termgui = false): string
+def HiGroupToString(t: dict<any>, meta: dict<any>): string
   # Convert a higlight group tuple into a string.
   #
   # t       A tuple with enough information to generate a highlight group
   #         definition (for example, a tuple from Database.BaseGroup).
   # meta    Variant metadata from Database.GetVariantMetadata()
-  # termgui When true, add cterm=... to the definition of a base group, where
-  #         ... is copied from the Style attribute.
   if t->has_key('TargetGroup') && !empty(t.TargetGroup)
     return LinkedGroupToString(t)
   endif
 
-  return BaseGroupToString(t, meta, termgui)
+  return BaseGroupToString(t, meta)
 enddef
 
 def GenerateDiscriminators(db: Database): list<string>
@@ -162,7 +166,9 @@ def GenerateDiscriminators(db: Database): list<string>
   return defs
 enddef
 
-def GenerateOverrides(hiGroups: list<dict<any>>, meta: dict<any>): list<string>
+def GenerateOverridingDefinitions(
+    hiGroups: list<dict<any>>, meta: dict<any>
+): list<string>
   # Generate overriding definition based on discriminators.
   #
   # hiGroups  A list of tuples sharing the same discriminator's name and
@@ -172,8 +178,6 @@ def GenerateOverrides(hiGroups: list<dict<any>>, meta: dict<any>): list<string>
   if empty(hiGroups)
     return []
   endif
-
-  sort(hiGroups, SortByDiscrValueAndHiGroupName)
 
   const discrName = hiGroups[0].DiscrName
   var discrValue = hiGroups[0].DiscrValue
@@ -194,6 +198,37 @@ def GenerateOverrides(hiGroups: list<dict<any>>, meta: dict<any>): list<string>
 
   return defs
 enddef
+
+def StartColorscheme(meta: Metadata, background: string): list<string>
+  if meta.IsLightAndDark()
+    return [printf("if &background == '%s'", background)]
+  endif
+
+  return []
+enddef
+
+def EndColorscheme(meta: Metadata): list<string>
+  if meta.IsLightAndDark()
+    return ['endif']
+  endif
+
+  return []
+enddef
+
+def StartVariant(meta: dict<any>): list<string>
+  const variant = meta.Variant
+
+  if variant == 'gui'
+    return ["if has('gui_running')"]
+  endif
+
+  return [printf('if t_Co >= %d', meta.NumColors)]
+enddef
+
+def EndVariant(meta: dict<any>): list<string>
+  return ['finish', 'endif']
+enddef
+
 # }}}
 
 # Integrity checks {{{
@@ -225,82 +260,6 @@ export def CheckMissingGroups(db: Database)
     )
   endif
 enddef
-# }}}
-
-# Variant {{{
-class Variant
-  this.variant:            string       = null_string
-  this.db:                 Database     = null_object
-  this.metadata:           dict<any>    = null_dict
-  this.generate_defaults:  bool         = true
-  this.generate_overrides: bool         = true
-  this.generate_linked:    bool
-  this._start:             list<string> = []
-  this._end:               list<string> = ['']
-  this._startOverride:     list<string> = []
-  this._endOverride:       list<string> = []
-
-  def new(this.variant, this.db)
-    this.metadata = this.db.GetVariantMetadata(this.variant)
-
-    if this.variant == 'gui'
-      this._startOverride = ["if has('gui_running')"]
-      this._endOverride = ['endif', '']
-    elseif this.variant == 'termgui'
-      this._startOverride = ["if has('termguicolors') && &termguicolors"]
-      this._endOverride = ['', 'finish', 'endif', '']
-    else
-      this._start = [printf('if t_Co >= %d', this.metadata.NumColors)]
-      this._end = ['', 'finish', 'endif', '']
-    endif
-  enddef
-
-  def Generate(hiGroups: list<dict<any>>): list<string>
-    var theme: list<string> = []
-
-    if this.generate_defaults
-      theme += this._start
-      var defaultDefs = hiGroups->Transform((t) => this.db.GetDefaultDef(t.HiGroupName, this.variant))
-      # Remove default linked groups because they have been added globally
-      filter(defaultDefs, (_, t) => t->has_key('Fg') || t->has_key('Variant'))
-      theme += defaultDefs->mapnew((_, t) => HiGroupToString(t, this.metadata))
-    endif
-
-    if !this.generate_overrides
-      return theme
-    endif
-
-    # Overrides
-    var overrides = this.db.HiGroupOverride
-      ->Select((t) => t.Variant == this.variant && t.DiscrValue != NO_DISCR_VALUE)
-      ->LeftEquiJoin(this.db.LinkedGroupOverride,
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        ['HiGroupName', 'Variant', 'DiscrValue'], linkFiller
-      )
-      ->LeftEquiJoin(this.db.BaseGroupOverride,
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        ['HiGroupName', 'Variant', 'DiscrValue'], baseFiller
-      )
-      ->ra.EquiJoin(this.db.HiGroup, ['HiGroupName'], ['HiGroupName'])
-      ->ra.PartitionBy('DiscrName')
-
-    theme += this._startOverride
-
-    const discrNames = sort(keys(overrides))
-
-    for discrName in discrNames
-      theme += GenerateOverrides(overrides[discrName], this.metadata)
-    endfor
-
-    theme += this._endOverride
-
-    if this.variant != 'gui' && this.variant != 'termgui'
-      theme += this._end
-    endif
-
-    return theme
-  enddef
-endclass
 # }}}
 
 # Header {{{
@@ -350,8 +309,9 @@ def Header(meta: Metadata): list<string>
     header->add('set background=light')->add('')
   endif
 
-  header->add('hi clear')
+  header->add('hi clear')->add('')
   header->AddMeta("g:colors_name = '%s'", meta.shortname)
+  header->AddMeta("g:terminal_ansi_colors = %s", string(meta.termcolors))
 
   return header
 enddef
@@ -362,42 +322,91 @@ export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
   var theme = Header(meta)->add('')
 
   for [bg, dbValue] in items(dbase)
-    if !meta.backgrounds[bg]
+    if !meta.HasBackground(bg)
       continue
     endif
 
     const db: Database = dbValue
 
+    theme += StartColorscheme(meta, bg)
     theme += GenerateDiscriminators(db)
     theme->add('')
 
-    # Add global default definitions, generated for the 'gui' variant, with
-    # support for termgui.
     const metaGUI      = db.GetVariantMetadata('gui')
+    const meta256      = db.GetVariantMetadata('256')
+    const hiGroups     = db.HiGroup->Sort(CompareByHiGroupName)
     const globalLinked = db.LinkedGroup->Sort(CompareByHiGroupName)
     const globalBaseGr = db.BaseGroup  ->Sort(CompareByHiGroupName)
+    const overrides    = db.HiGroupOverride
+                       ->Select((t) => t.DiscrValue != NO_DISCR_VALUE)
+                       ->EquiJoin(db.HiGroup, ['HiGroupName'], ['HiGroupName'])
+                       ->PartitionBy('DiscrName')
+    const discrNames   = sort(keys(overrides))
 
+    # Add combined global default definitions for GUI and 256-color variants
     theme += globalLinked->Transform((t) => LinkedGroupToString(t))
     theme->add('')
-    theme += globalBaseGr->Transform((t) => BaseGroupToString(t, metaGUI, true))
+    theme += globalBaseGr->Transform((t) => BaseGroupToString(t, metaGUI, meta256))
     theme->add('')
-
-    const hiGroups = db.HiGroup->Sort(CompareByHiGroupName)
 
     # Add variant-specific definitions and overrides
     for variant in meta.variants
-      const variantGenerator = Variant.new(variant, db)
+      # Get variant's metadata
+      const variantMeta = db.GetVariantMetadata(variant)
 
-      if variant == 'gui' || variant == 'termgui'
-        variantGenerator.generate_defaults = false
+      # Generate default definitions
+      var defs: list<dict<any>>
+
+      if variant == 'gui' || variant == 'termgui' || variant == '256' # Generate only if overriding default
+        defs = db.HiGroupOverride
+          ->Select((t) => t.DiscrValue == NO_DISCR_VALUE && t.Variant == variant)
+          ->LeftEquiJoin(db.LinkedGroupOverride,
+            ['HiGroupName', 'Variant', 'DiscrValue'],
+            ['HiGroupName', 'Variant', 'DiscrValue'], LINK_FILLER
+          )
+          ->LeftEquiJoin(db.BaseGroupOverride,
+            ['HiGroupName', 'Variant', 'DiscrValue'],
+            ['HiGroupName', 'Variant', 'DiscrValue'], BASE_FILLER
+            )
+          ->Sort(CompareByHiGroupName)
+      else
+        defs = hiGroups->Transform((t) => db.GetDefaultDef(t.HiGroupName, variant))
+        # Remove default linked groups because they have been added globally
+        filter(defs, (_, t) => t->has_key('Fg') || t->has_key('Variant'))
       endif
-      theme += variantGenerator.Generate(hiGroups)
+
+      const defaultDefs = defs->mapnew((_, t) => HiGroupToString(t, variantMeta))
+
+      # Generate discriminator-based definitions
+      var overridingDefs: list<string> = []
+
+      for discrName in discrNames
+        const variantOverrides = overrides[discrName]
+          ->Select((t) => t.Variant == variant)
+          ->LeftEquiJoin(db.LinkedGroupOverride,
+            ['HiGroupName', 'Variant', 'DiscrValue'],
+            ['HiGroupName', 'Variant', 'DiscrValue'], LINK_FILLER
+          )
+          ->LeftEquiJoin(db.BaseGroupOverride,
+            ['HiGroupName', 'Variant', 'DiscrValue'],
+            ['HiGroupName', 'Variant', 'DiscrValue'], BASE_FILLER
+            )
+          ->Sort(CompareByDiscrValueAndHiGroupName)
+
+        overridingDefs += GenerateOverridingDefinitions(variantOverrides, variantMeta)
+      endfor
+
+      theme += StartVariant(variantMeta)
+      theme += defaultDefs
+      theme += overridingDefs
+      theme += EndVariant(variantMeta)
+      theme->add('')
     endfor
+    theme += EndColorscheme(meta)
   endfor
 
   return theme
 enddef
 # }}}
 
-defcompile
 # vim: foldmethod=marker nowrap et ts=2 sw=2

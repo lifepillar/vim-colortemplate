@@ -184,7 +184,7 @@ enddef
 def DefineColor(v: list<string>, ctx: Context)
   const colorName: string   = v[2]
   const vGUI:      string   = v[3]
-  const v256:      number   = str2nr(v[4])  # FIXME: convert ~
+  const v256:      string   = v[4]  # FIXME: convert ~
   const v16:       string   = v[5]
   const delta:     float    = 0.0  # FIXME
   const dbase:     Database = ctx.state.Db()
@@ -200,6 +200,17 @@ def DefineColor(v: list<string>, ctx: Context)
     Base256Value: v256,
     Base16Value:  v16,
     Delta:        delta,
+  })
+enddef
+
+def DefineDiscriminator(v: list<string>, ctx: Context)
+  const discrName:  string   = v[2]
+  const definition: string   = v[4]
+  const dbase:      Database = ctx.state.Db()
+
+  dbase.Discriminator.Insert({
+    DiscrName:  discrName,
+    Definition: definition,
   })
 enddef
 
@@ -233,7 +244,20 @@ def SetDiscrName(v: list<string>, ctx: Context)
   const dbase: Database = state.Db()
   const t               = dbase.HiGroup.Lookup(['HiGroupName'], [state.hiGroupName])
 
-  if !empty(t) && !empty(t.DiscrName) && t.DiscrName != discrName
+  if empty(t)
+    throw printf(
+      "Missing default definition for highlight group: %s",
+      state.hiGroupName
+    )
+  endif
+
+  if empty(t.DiscrName)  # First override: set the discriminator's name
+    dbase.HiGroup.Update({
+      HiGroupName: t.HiGroupName,
+      DiscrName:   discrName,
+      IsLinked:    t.IsLinked,
+    })
+  elseif t.DiscrName != discrName
     throw printf(
       "Inconsistent discriminator: '%s' ('%s' already uses '%s')",
       discrName, state.hiGroupName, t.DiscrName
@@ -255,29 +279,10 @@ def DefineLinkedGroup(v: list<string>, ctx: Context)
   const targetGroup     = v[1]
 
   if state.isDefault
-    dbase.HiGroup.Insert({
-      HiGroupName: hiGroupName,
-      DiscrName:   '',
-      IsLinked:    true,
-    })
-    dbase.LinkedGroup.Insert({
-      HiGroupName: hiGroupName,
-      TargetGroup: targetGroup,
-    })
+    dbase.InsertDefaultLinkedGroup(hiGroupName, targetGroup)
   else
     for variant in state.variants
-      dbase.HiGroupOverride.Insert({
-        HiGroupName: hiGroupName,
-        Variant:     variant,
-        DiscrValue:  state.discrValue,
-        IsLinked:    true,
-      })
-      dbase.LinkedGroupOverride.Insert({
-        HiGroupName: hiGroupName,
-        Variant:     variant,
-        DiscrValue:  state.discrValue,
-        TargetGroup: targetGroup,
-      })
+      dbase.InsertLinkedGroupOverride(variant, state.discrValue, hiGroupName, targetGroup)
     endfor
   endif
 enddef
@@ -288,45 +293,20 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
   const hiGroupName     = state.hiGroupName
   const fgColor         = v[0]
   const bgColor         = v[1]
-  const spColor         = v[2]
+  const spColor         = v[2]  # may be an empty string
   const attributes      = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
 
   if state.isDefault
-    dbase.HiGroup.Insert({
-      HiGroupName: hiGroupName,
-      DiscrName:   '',
-      IsLinked:    false,
-    })
-    dbase.BaseGroup.Insert({
-      HiGroupName: hiGroupName,
-      Fg:          fgColor,
-      Bg:          bgColor,
-      Special:     spColor,
-      Attr:        attributes,
-      Font:        '',
-      Start:       '',
-      Stop:        '',
-    })
+    dbase.InsertDefaultBaseGroup(
+      hiGroupName,
+      fgColor, bgColor, spColor, attributes, '', '', ''
+    )
   else
     for variant in state.variants
-      dbase.HiGroupOverride.Insert({
-        HiGroupName: hiGroupName,
-        Variant:     variant,
-        DiscrValue:  state.discrValue,
-        IsLinked:    false,
-      })
-      dbase.BaseGroupOverride.Insert({
-        HiGroupName: hiGroupName,
-        Variant:     variant,
-        DiscrValue:  state.discrValue,
-        Fg:          fgColor,
-        Bg:          bgColor,
-        Special:     spColor,
-        Attr:        attributes,
-        Font:        '',
-        Start:       '',
-        Stop:        '',
-      })
+      dbase.InsertBaseGroupOverride(
+        variant, state.discrValue, hiGroupName,
+        fgColor, bgColor, spColor, attributes, '', '', ''
+      )
     endfor
   endif
 enddef
@@ -339,6 +319,7 @@ const K_AUTHOR      = T('Author')
 const K_BACKGROUND  = T('Background')
 const K_COLOR       = T('Color')
 const K_COLORS      = R('[Cc]olors')
+const K_CONST       = T('const')
 const K_DESCRIPTION = T('Description')
 const K_FULL        = T('Full')
 const K_INCLUDE     = T('Include')
@@ -349,7 +330,7 @@ const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\|sp\>')
 const K_TERM        = R('Term\%[inal\]')
 const K_URL         = R('URL\|Website')
-const K_VARIANT     = R('\(gui\|termgui\|256\|88\|16\|8\|bw\|0\)\>')
+const K_VARIANT     = R('\(gui\|termgui\|256\|88\|16\|8\|0\)\>')
 const K_VARIANTS    = T('Variants')
 const K_VERSION     = T('Version')
 
@@ -357,6 +338,7 @@ const BAR           = T('/')
 const COLON         = T(':')
 const COMMA         = T(',')
 const EQ            = T('=')
+const HASH          = T('#')
 const PLUS          = T('+')
 const RARROW        = T('->')
 const SEMICOLON     = T(';')
@@ -400,10 +382,12 @@ const L_COL256      = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or t
 const L_COLON       = Lab(COLON,                "Expected a colon")
 const L_COLORNAME   = Lab(COLORNAME,            "Expected a color name")
 const L_COLORS      = Lab(K_COLORS,             "Expected the keyword 'Colors'")
+const L_CONST       = Lab(K_CONST,              "Expected the keyword 'const'")
 const L_DISCRNAME   = Lab(DISCRNAME,            "Expected an identifier")
 const L_EQ          = Lab(EQ,                   "Expected an equal sign")
 const L_HEXCOL      = Lab(HEXCOL,               "Expected a hex color value")
 const L_HIGROUPNAME = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
+const L_IDENTIFIER  = Lab(IDENTIFIER,           "Expected an identifier")
 const L_NAME        = Lab(K_NAME,               "Expected the keyword 'Name'")
 const L_PATH        = Lab(TEXTLINE,             "Expected a relative path")
 const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the special color")
@@ -469,7 +453,7 @@ const TermColorList = Seq(
 
 const VariantList   = Lab(
                         OneOrMore(K_VARIANT),
-                        "Expected one of: gui, 256, 88, 16, 8, bw, 0"
+                        "Expected one of: gui, 256, 88, 16, 8, 0"
                       )                                             ->Apply(SetSupportedVariants)
 
 const Version       = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
@@ -493,6 +477,7 @@ const ColorDef      = Seq(
                         Opt(COL16)
                       )                                            ->Apply(DefineColor)
 
+# FIXME: better lookahead (a colon may appear in a comment)
 const Directive     = Seq(LookAhead(Regex('[^\n\r]*:')),
                         Lab(OneOf(
                           ColorDef,
@@ -511,8 +496,15 @@ const Directive     = Seq(LookAhead(Regex('[^\n\r]*:')),
                         ), 'Expected a metadata directive: spurious colon?')
                       )
 
-const Declaration   = OneOf(Directive, HiGroupDecl)
+const Statement     = Seq(
+                        HASH,
+                        L_CONST,
+                        L_IDENTIFIER,
+                        L_EQ,
+                        L_TEXTLINE
+                      )                                            ->Apply(DefineDiscriminator)
 
+const Declaration   = OneOf(Statement, Directive, HiGroupDecl)
 const Template      = Seq(
                         Skip(SpaceOrComment),
                         Many(Declaration),

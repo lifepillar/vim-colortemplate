@@ -2,10 +2,12 @@ vim9script
 
 import 'libtinytest.vim' as tt
 import 'librelalg.vim' as ra
-import '../../autoload/v3/parser.vim' as parser
+import 'libparser.vim' as parser
+import '../../autoload/v3/parser.vim' as colortemplate_parser
 import '../../autoload/v3/colorscheme.vim'
 
-const Parse = parser.Parse
+const Parse    = colortemplate_parser.Parse
+const Result   = parser.Result
 const Metadata = colorscheme.Metadata
 const Database = colorscheme.Database
 
@@ -29,8 +31,8 @@ def Test_Parser_Background()
   assert_equal(v:t_dict, type(res))
   assert_equal(['dark', 'light', 'meta', 'result'], sort(keys(res)))
 
-  const result: parser.Result = res.result
-  const meta:   Metadata      = res.meta
+  const result: Result   = res.result
+  const meta:   Metadata = res.meta
 
   assert_equal('', result.label)
   assert_true(result.success)
@@ -46,10 +48,10 @@ def Test_Parser_NoDefaultLinkedGroup()
   END
 
   const res = Parse(join(template, "\n"))
-  const result: parser.Result = res.result
+  const result: Result = res.result
 
   assert_false(result.success)
-  assert_match('must override an existing Hi Group', result.label)
+  assert_match('must override an existing Highlight Group', result.label)
 enddef
 
 def Test_Parser_LinkedGroup()
@@ -61,9 +63,9 @@ def Test_Parser_LinkedGroup()
   END
 
   const res = Parse(join(template, "\n"))
-  const result: parser.Result = res.result
-  const meta:   Metadata      = res.meta
-  const dbase:  Database      = res.dark
+  const result: Result   = res.result
+  const meta:   Metadata = res.meta
+  const dbase:  Database = res.dark
 
   assert_equal('', result.label)
   assert_true(result.success)
@@ -93,15 +95,56 @@ def Test_Parser_VariantDiscriminatorOverride()
     Background: dark
     Variants:   gui termgui 256 8
     Color:      white #fafafa 231 White
+    #const transp_bg = 0
     Normal white white
     Normal /termgui/256/8 +transp_bg 1 white none
   END
   const res = Parse(join(template, "\n"))
-  const result: parser.Result = res.result
+  const result: Result = res.result
 
   assert_equal('', result.label)
   assert_true(result.success)
 enddef
 
 
-tt.Run('_Parser_')
+def Test_Parser_DiscriminatorName()
+  const template =<< trim END
+  Background: dark
+  Variants: gui 8
+  Color: black  #394759  238  Black
+  Color: white  #ebebeb  255  LightGrey
+  #const foobar = get(g:, 'foobar', 0)
+  Conceal black white
+       /8 +foobar 1   white black reverse
+  END
+  const res = Parse(join(template, "\n"))
+  const result: Result = res.result
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
+
+def Test_Parser_MissingDefaultDef()
+  const template =<< trim END
+  Background: dark
+  Variants: gui 8
+  Color: black  #394759  238  Black
+  Color: white  #ebebeb  255  LightGrey
+  #const foobar = get(g:, 'foobar', 0)
+  ; Missing default definition for Conceal
+  Conceal/8 +foobar 1   white black reverse
+  END
+
+  parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
+
+  assert_equal(
+    'Highlight Group Override must override an existing Highlight Group',
+    result.label
+  )
+  assert_false(result.success)
+enddef
+
+
+tt.Run('_Parser_MissingDef')

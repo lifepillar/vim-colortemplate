@@ -3,12 +3,13 @@ vim9script
 import 'librelalg.vim' as ra
 
 # Aliases {{{
-const Bool       = ra.Bool
-const Float      = ra.Float
-const ForeignKey = ra.ForeignKey
-const Int        = ra.Int
-const Rel        = ra.Rel
-const Str        = ra.Str
+const Bool          = ra.Bool
+const DictTransform = ra.DictTransform
+const Float         = ra.Float
+const ForeignKey    = ra.ForeignKey
+const Int           = ra.Int
+const Rel           = ra.Rel
+const Str           = ra.Str
 # }}}
 
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
@@ -86,6 +87,10 @@ export class Database
         \ {HiGroupName: 'NonText',           },
         \ {HiGroupName: 'Normal',            },
         \ {HiGroupName: 'Pmenu',             },
+        \ {HiGroupName: 'PmenuKind',         },
+        \ {HiGroupName: 'PmenuKindSel',      },
+        \ {HiGroupName: 'PmenuExtra',        },
+        \ {HiGroupName: 'PmenuExtraSel',     },
         \ {HiGroupName: 'PmenuSbar',         },
         \ {HiGroupName: 'PmenuSel',          },
         \ {HiGroupName: 'PmenuThumb',        },
@@ -195,7 +200,7 @@ export class Database
         \ },
         \ 'DiscrName').InsertMany([
         \   {DiscrName: '',     Definition: ''},
-        \   {DiscrName: 't_Co', Definition: ''},
+        \   {DiscrName: 't_Co', Definition: "exists('&t_Co') && !has('gui_running') ? (str2nr(&t_Co) ?? 0) : -1"},
         \ ])
 
   this.HiGroup = Rel.new('Highlight Group', {
@@ -367,19 +372,20 @@ export class Database
     })
   enddef
 
-  def GetVariantMetadata(variant: string): dict<string>
+  def GetVariantMetadata(variant: string): dict<any>
     # Retrieve the relevant metadata for the given variant, including the
     # names of the attributes for the current variant. An empty string
     # indicates that the variant does not support the corresponding attribute.
     # For example, for the 'gui' variant, this would be:
     #
     #    {
-    #      variant:   'gui',
-    #      numColors: '16777216',
+    #      Variant:   'gui',
+    #      NumColors: 16777216,
     #      ColorAttr: 'GUIValue',
+    #      Colors:    {colname1: #111111, ..., colnameN: #nnnnnn},
     #      Fg:        'guifg',
     #      Bg:        'guibg',
-    #      Sp:        'guisp',
+    #      Special:   'guisp',
     #      Style:     'gui',
     #      Font:      'font',
     #      Start:     '',
@@ -387,9 +393,14 @@ export class Database
     #    }
     const numColors = this.Variant.Lookup(['Variant'], [variant]).NumColors
     const colorAttr = numColors <= 16 ? 'Base16Value' : numColors <= 256 ? 'Base256Value' : 'GUIValue'
-    var   metadata  = {variant: variant, numColors: string(numColors), ColorAttr: colorAttr}
+    var   metadata  = {
+      Variant:   variant,
+      NumColors: numColors,
+      ColorAttr: colorAttr,
+      Colors:    this.Color->DictTransform((t) => ({[t.ColorName]: t[colorAttr]}), true),
+    }
 
-    for key in ['Fg', 'Bg', 'Sp', 'Style', 'Font', 'Start', 'Stop']
+    for key in ['Fg', 'Bg', 'Special', 'Style', 'Font', 'Start', 'Stop']
       metadata[key] = get(
         this.VariantAttribute.Lookup(['Variant', 'AttrType'], [variant, key]),
         'AttrKey',

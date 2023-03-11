@@ -157,7 +157,7 @@ enddef
 
 def StartColorscheme(meta: Metadata, background: string): list<string>
   if meta.IsLightAndDark()
-    return [printf("if &background == '%s'", background)]
+    return ['', printf("if &background == '%s'", background)]
   endif
 
   return []
@@ -277,19 +277,14 @@ enddef
 
 # Main {{{
 export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
-  var theme = Header(meta)->add('')
+  var theme = Header(meta)
 
-  for [bg, dbValue] in items(dbase)
+  for [bg, db_] in items(dbase)
     if !meta.HasBackground(bg)
       continue
     endif
 
-    const db: Database = dbValue
-
-    theme += StartColorscheme(meta, bg)
-    theme += GenerateDiscriminators(db)
-    theme->add('')
-
+    const db: Database = db_
     const metaGUI      = db.GetVariantMetadata('gui')
     const meta256      = db.GetVariantMetadata('256')
     const hiGroups     = db.HiGroup->Sort(CompareByHiGroupName)
@@ -301,11 +296,13 @@ export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
                        ->PartitionBy('DiscrName')
     const discrNames   = sort(keys(overrides))
 
+    theme += StartColorscheme(meta, bg)
+    theme += GenerateDiscriminators(db)
+    theme->add('')
     # Add combined global default definitions for GUI and 256-color variants
     theme += globalLinked->Transform((t) => LinkedGroupToString(t))
     theme->add('')
     theme += globalBaseGr->Transform((t) => BaseGroupToString(t, metaGUI, meta256))
-    theme->add('')
 
     # Add variant-specific definitions and overrides
     for variant in meta.variants
@@ -354,11 +351,11 @@ export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
         overridingDefs += GenerateOverridingDefinitions(variantOverrides, variantMeta)
       endfor
 
+      theme->add('')
       theme += StartVariant(variantMeta)
       theme += defaultDefs
       theme += overridingDefs
       theme += EndVariant(variantMeta)
-      theme->add('')
     endfor
     theme += EndColorscheme(meta)
   endfor

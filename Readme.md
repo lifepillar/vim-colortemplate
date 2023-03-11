@@ -4,6 +4,8 @@ Colortemplate is a 100% VimScript plugin for Vim 8 or later, which makes it easy
 to develop color schemes. Its ambitious goal is to become *the* way to create
 new color schemes for Vim!
 
+**Note:** Colortemplate v3 only supports Vim 9 or later.
+
 <img src="https://raw.github.com/lifepillar/Resources/master/colortemplate/colortemplate.gif" width="520">
 
 ## Features
@@ -54,7 +56,7 @@ Full name:  My Gorgeous Theme
 Short name: gorgeous
 Author:     Me <me@somewhere.org>
 
-Variant:    gui 256
+Variants:   gui 256
 Background: dark
 
 ; Color palette
@@ -65,7 +67,7 @@ Color:      mywhite #fafafa ~
 Normal      mywhite myblack
 
 Term colors: mywhite mywhite mywhite mywhite mywhite mywhite mywhite mywhite
-Term colors: myblack myblack myblack myblack myblack myblack myblack myblack
+             myblack myblack myblack myblack myblack myblack myblack myblack
 ```
 
 If you want to get a flavor of how Colortemplate can be used in the real world,

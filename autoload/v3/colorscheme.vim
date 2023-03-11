@@ -197,13 +197,14 @@ export class Database
         \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base16Value: 'bg',   Delta: 0.0}
         \ ])
 
+  # The tuple with t_Co prevents overriding Colortemplate's definition
   this.Discriminator = Rel.new('Discriminator', {
         \ DiscrName:  Str,
         \ Definition: Str,
         \ },
         \ 'DiscrName').InsertMany([
         \   {DiscrName: '',     Definition: ''},
-        \   {DiscrName: 't_Co', Definition: "exists('&t_Co') && !has('gui_running') ? (str2nr(&t_Co) ?? 0) : -1"},
+        \   {DiscrName: 't_Co', Definition: ''},
         \ ])
 
   this.HiGroup = Rel.new('Highlight Group', {

@@ -159,7 +159,7 @@ enddef
 
 def GenerateDiscriminators(db: Database): list<string>
   const defs = db.Discriminator
-    ->Select((t) => !empty(t.DiscrName))
+    ->Select((t) => !empty(t.DiscrName) && t.DiscrName != 't_Co')
     ->Sort(CompareByDiscrName)
     ->Transform((t) => printf("const %s = %s", t.DiscrName, t.Definition))
 
@@ -312,6 +312,8 @@ def Header(meta: Metadata): list<string>
   header->add('hi clear')->add('')
   header->AddMeta("g:colors_name = '%s'", meta.shortname)
   header->AddMeta("g:terminal_ansi_colors = %s", string(meta.termcolors))
+  header->add('')
+  header->add("const t_Co = exists('&t_Co') && !has('gui_running') ? (str2nr(&t_Co) ?? 0) : -1")
 
   return header
 enddef

@@ -37,6 +37,10 @@ Macro                -> PreProc
 MessageWindow        -> WarningMsg
 Number               -> Constant
 Operator             -> Statement
+PmenuKind            -> Pmenu
+PmenuKindSel         -> PmenuSel
+PmenuExtra           -> Pmenu
+PmenuExtraSel        -> PmenuSel
 PopupNotification    -> WarningMsg
 PopupSelected        -> PmenuSel
 PreCondit            -> PreProc

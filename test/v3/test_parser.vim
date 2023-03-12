@@ -93,11 +93,11 @@ enddef
 def Test_Parser_VariantDiscriminatorOverride()
   const template =<< trim END
     Background: dark
-    Variants:   gui termgui 256 8
+    Variants:   gui 256 8
     Color:      white #fafafa 231 White
     #const transp_bg = 0
     Normal white white
-    Normal /termgui/256/8 +transp_bg 1 white none
+    Normal /256/8 +transp_bg 1 white none
   END
   const res = Parse(join(template, "\n"))
   const result: Result = res.result
@@ -140,11 +140,33 @@ def Test_Parser_MissingDefaultDef()
   const result: Result = res.result
 
   assert_equal(
-    'Highlight Group Override must override an existing Highlight Group',
+    'Missing default definition for highlight group: Conceal',
     result.label
   )
   assert_false(result.success)
 enddef
 
+def Test_Parser_TranspBg()
+  const template =<< trim END
+    Variants: 256 8
+    Background: light
 
-tt.Run('_Parser_MissingDef')
+    Color: black         #5f5f61     59           Black
+    Color: white         #fafafa     231          White
+
+    #const transp_bg = get(g:, 'wwdc17_transp_bg', 0)
+
+    Normal black white
+    Normal /256/8 +transp_bg 1 black white
+  END
+
+    parserInput = join(template, "\n")
+    const res = Parse(parserInput)
+    const result: Result = res.result
+
+    assert_equal('', result.label)
+    assert_true(result.success)
+  enddef
+
+
+  tt.Run('_Parser_')

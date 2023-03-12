@@ -19,25 +19,7 @@ enddef
 
 # These are defined at the script level for using with AssertFails().
 # See also: https://github.com/vim/vim/issues/6868
-var parseResult: dict<any>
-
-def Test_Generator_MissingDefaultDef()
-  const template =<< trim END
-  Full name: X
-  Short name: x
-  Author: me
-  Background: dark
-  Variants: gui
-  Debug+bar 3 -> Error
-  END
-
-  parseResult = Parse(join(template, "\n"))
-
-  AssertFails(
-    "Generate(parseResult.meta, {'dark': parseResult.dark})",
-    "Missing dark default definition for Debug"
-  )
-enddef
+var result: dict<any>
 
 
 tt.Run('_Generator_')

@@ -285,7 +285,11 @@ export def Map(
     const result = Parser(ctx)
 
     if result.success
-      return Success(Fn(result.value, ctx))
+      try
+        return Success(Fn(result.value, ctx))
+      catch
+        return Failure(ctx, ctx.index, v:exception)
+      endtry
     else
       return result
     endif

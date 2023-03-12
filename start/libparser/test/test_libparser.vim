@@ -496,6 +496,20 @@ def Test_LP_ParseAndMapFails()
   assert_equal(0, ctx.index)
 enddef
 
+def Test_LP_MapThrows()
+  var ctx = Context.new("12")
+
+  const Parser = Text("12")->Map((v, _): string => {
+    throw 'Tsk'
+    return 'ok'
+  })
+  const result = Parser(ctx)
+
+  assert_false(result.success)
+  assert_equal('Tsk', result.label)
+  assert_equal(2, ctx.index)
+enddef
+
 def Test_LP_LabelledParser()
   var ctx = Context.new('A: v')
   const Parse = OneOf(Seq(Text('A'), Lab(Text(';'), 'semicolon')), Eps)

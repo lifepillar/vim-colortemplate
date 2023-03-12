@@ -713,6 +713,9 @@ Map({parser}, {func})				*libparser.Map()*
 		{func}. {func} receives two arguments: the first is the value
 		parsed by {parser}, and the second is the current
 		|libparser.Context|.  The function must return another value.
+		If the function raises an error, then the parser returns
+		a failure labelled with the raised exception.
+
 		Example:
 >
 		var ctx = Context.new('42', 0)

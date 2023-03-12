@@ -253,7 +253,7 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
   const hiGroupName     = state.hiGroupName
   const fgColor         = v[0] == 'omit' ? ''  : v[0]
   const bgColor         = v[1] == 'omit' ? ''  : v[1]
-  const spColor         = v[2] == 'omit' ? ''  : v[2]  # v[2] may be an empty string
+  const spColor         = v[2] == 'omit' ? ''  : empty(v[2]) ? 'none' : v[2]
   const attributes      = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
 
   if state.isDefault

@@ -330,7 +330,7 @@ Vim's default color scheme. For instance, this directive:
 may generate something like this (considering only GUI attributes for
 simplicity):
 >
-	hi CursorLine guifg=#ffffff gui=NONE
+	hi CursorLine guifg=#ffffff guisp=NONE gui=NONE
 <
 Compare with this definition:
 >
@@ -338,7 +338,7 @@ Compare with this definition:
 >
 which would become:
 >
-	hi CursorLine guifg=#ffffff guibg=#000000 gui=NONE
+	hi CursorLine guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE
 
 Or with this:
 >
@@ -346,10 +346,8 @@ Or with this:
 <
 which would be translated as follows:
 >
-	hi CursorLine guifg=#ffffff guibg=NONE gui=NONE
+	hi CursorLine guifg=#ffffff guibg=NONE guisp=NONE gui=NONE
 <
-Note that `omit` is the default for the special color.
-
 Colortemplate also supports |highlight-start| and |highlight-stop|: the syntax
 is the same as in Vim color schemes.
 

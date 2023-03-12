@@ -10,8 +10,8 @@ endif
 
 syn case    match
 
-syn match   colortemplateDiscrName    "+\h\w*\>"
-syn match   colortemplateVariant      "/\d\+\|/gui\>"
+syn match   colortemplateDiscrName    "+\s*\h\w*\>"
+syn match   colortemplateVariant      "/\s*\d\+\|/gui\>"
 syn match   colortemplateSpecial        "\<sp\?="
 syn match   colortemplateTermCode     "\<st\%(art\|op\)="
 syn match   colortemplateHiGroupDef   "^\h\w*\>" contains=colortemplateHiGroup
@@ -164,12 +164,12 @@ hi def link colortemplateAttr         Label
 hi def link colortemplateConst        PreProc
 hi def link colortemplateConstant     Type
 hi def link colortemplateComment      Comment
-hi def link colortemplateDiscrName    Keyword
+hi def link colortemplateDiscrName    Identifier
 hi def link colortemplateFunction     Function
 hi def link colortemplateSpecial      String
 hi def link colortemplateHexColor     Constant
 hi def link colortemplateHiGroup      Constant
-hi def link colortemplateHiGroupDef   Identifier
+hi def link colortemplateHiGroupDef   Keyword
 hi def link colortemplateNumber       Number
 hi def link colortemplateKey          Special
 hi def link colortemplateKeyword      Keyword

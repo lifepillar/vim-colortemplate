@@ -234,6 +234,19 @@ def DefineLinkedGroup(v: list<string>, ctx: Context)
   endif
 enddef
 
+def CheckColorName(colorName: string, ctx: Context): string
+  if !empty(colorName) && colorName != 'omit'
+    const state = ctx.state
+    const db: Database = state.Db()
+
+    if empty(db.Color.Lookup(['ColorName'], [colorName]))
+      throw printf("Undefined color name: %s", colorName)
+    endif
+  endif
+
+  return colorName
+enddef
+
 def DefineBaseGroup(v: list<any>, ctx: Context)
   const state           = ctx.state
   const dbase: Database = state.Db()
@@ -260,8 +273,6 @@ enddef
 # }}}
 
 # Parser {{{
-# FIXME: Include
-
 def RefInclude(name: string): func(list<string>, Context)
   return (v: list<string>, ctx: Context) => {
     eval(name)(v, ctx)
@@ -354,9 +365,9 @@ const Attributes    = Seq(
                       )                                             ->Map((v, _) => flattennew(v))
 const SpecialColor  = Seq(K_SPECIAL, EQ, L_SPCOLOR)                 ->Map((v, _) => v[2])
 const BaseGroup     = Seq(
-                        FGCOLOR,
-                        L_BGCOLOR,
-                        Opt(SpecialColor),
+                        FGCOLOR                                     ->Map(CheckColorName),
+                        L_BGCOLOR                                   ->Map(CheckColorName),
+                        Opt(SpecialColor)                           ->Map(CheckColorName),
                         Opt(Attributes)
                       )                                             ->Apply(DefineBaseGroup)
 const LinkedGroup   = Seq(RARROW, L_HIGROUPNAME)                    ->Apply(DefineLinkedGroup)
@@ -508,14 +519,6 @@ export def Parse(
   var   ctx    = context
   const result = Parser(ctx)
 
-  if !result.success
-    echo strcharpart(text, 0, 1 + result.errpos) .. '<==='
-
-    if !empty(result.label)
-      echo result.label
-    endif
-  endif
-
   const meta:  Metadata = ctx.state.meta
   const dark:  Database = ctx.state.dark
   const light: Database = ctx.state.light
@@ -527,17 +530,20 @@ def ParseInclude(v: list<string>, ctx: Context)
   const path   = v[2]
   const text   = join(readfile(path), "\n")
   var   newCtx = ColortemplateContext.new(text)
+
   newCtx.state = deepcopy(ctx.state)
+
   const result = Parse(text, Template, newCtx)
   const parseResult: Result = result.result
 
   if !parseResult.success
-    throw printf("Error in include: %s (at pos. %d)", parseResult.label, parseResult.errpos)
+    throw printf("in %s, byte %d: %s",
+      path, parseResult.errpos, parseResult.label
+    )
   endif
 
   ctx.state = newCtx.state
 enddef
-
 # }}}
 
 # Colortemplate grammar {{{

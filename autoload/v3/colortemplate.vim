@@ -88,7 +88,12 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
   const result: parser.Result = parseResult.result
 
   if !result.success
-    Notice(printf("Build failed: %s (Position %d)", result.label, result.errpos))
+    Notice(printf(
+      "Build failed: %s (line %d, byte %d)",
+      result.label, byte2line(result.errpos), result.errpos
+    ))
+    execute ':' bufnr 'buffer'
+    execute 'goto' result.errpos
     return Failure()
   endif
 

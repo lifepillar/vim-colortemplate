@@ -1,6 +1,6 @@
 vim9script
 
-export class Palette
+export class HiGroupGenerator
   this.palette: dict<dict<string>> = {
         \  'NONE': { 'gui': 'NONE', '256': 'NONE', '16': 'NONE'},
         \  'fg':   { 'gui': 'fg',   '256': 'fg',   '16': 'fg'},

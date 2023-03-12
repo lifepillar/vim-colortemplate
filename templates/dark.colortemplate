@@ -20,8 +20,8 @@ License:       Same as Vim
 ; Include: _help.colortemplate
 ; }}}
 
+Variants:   gui 256 8 0
 Background: dark
-Variants:   gui 256 8
 
 ; Common linked groups {{{
 Character         -> Constant
@@ -178,5 +178,5 @@ ToolbarButton        white             black             bold
 ; }}}
 
 ; B/W variant {{{
-;Include: _bw.colortemplate
+Include: _bw.colortemplate
 ; }}}

@@ -27,59 +27,6 @@ const R              = parser.RegexToken(SpaceOrComment)
 const T              = parser.TextToken(SpaceOrComment)
 # }}}
 
-# Main {{{
-const DEFAULT_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
-
-def GetDatabase(ctx: Context): func(): Database
-  const state = ctx.state
-
-  return (): Database => {
-    if empty(state.background)
-      throw 'Please set the background first'
-    endif
-    return state[state.background]
-  }
-enddef
-
-export def Parse(text: string, Parser: func(Context): Result = Template): dict<any>
-  var ctx                          = Context.new(text)
-  ctx.state.meta                   = Metadata.new()
-  ctx.state.dark                   = Database.new('dark')
-  ctx.state.light                  = Database.new('light')
-  ctx.state.background             = ''
-  ctx.state.Db                     = GetDatabase(ctx)
-  ctx.state.hiGroupName            = ''
-  ctx.state.isDefault              = true
-  ctx.state.variants               = []
-  ctx.state.discrName              = ''
-  ctx.state.discrValue             = DEFAULT_DISCR_VALUE
-  ctx.state.Reset                  = () => {
-    const state          = ctx.state
-    const meta: Metadata = state.meta
-    state.variants       = meta.variants
-    state.discrName      = ''
-    state.discrValue     = DEFAULT_DISCR_VALUE
-    state.isDefault      = true
-  }
-
-  const result = Parser(ctx)
-
-  if !result.success
-    echo strcharpart(text, 0, 1 + result.errpos) .. '<==='
-
-    if !empty(result.label)
-      echo result.label
-    endif
-  endif
-
-  const meta:  Metadata = ctx.state.meta
-  const dark:  Database = ctx.state.dark
-  const light: Database = ctx.state.light
-
-  return {result: result, meta: meta, dark: dark, light: light}
-enddef
-# }}}
-
 # Semantic actions {{{
 def SetActiveBackground(v: list<string>, ctx: Context)
   const bg = v[2]
@@ -291,9 +238,9 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
   const state           = ctx.state
   const dbase: Database = state.Db()
   const hiGroupName     = state.hiGroupName
-  const fgColor         = v[0]
-  const bgColor         = v[1]
-  const spColor         = v[2]  # may be an empty string
+  const fgColor         = v[0] == 'omit' ? ''  : v[0]
+  const bgColor         = v[1] == 'omit' ? ''  : v[1]
+  const spColor         = v[2] == 'omit' ? ''  : v[2]  # v[2] may be an empty string
   const attributes      = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
 
   if state.isDefault
@@ -314,6 +261,12 @@ enddef
 
 # Parser {{{
 # FIXME: Include
+
+def RefInclude(name: string): func(list<string>, Context)
+  return (v: list<string>, ctx: Context) => {
+    eval(name)(v, ctx)
+  }
+enddef
 
 const K_AUTHOR      = T('Author')
 const K_BACKGROUND  = T('Background')
@@ -467,7 +420,7 @@ const Fullname      = Seq(K_FULL,  L_NAME,  L_COLON, L_TEXTLINE)    ->Apply(SetF
 const Description   = Seq(K_DESCRIPTION,    L_COLON, L_TEXTLINE)    ->Apply(SetDescription)
 const Author        = Seq(K_AUTHOR,         L_COLON, L_TEXTLINE)    ->Apply(SetAuthor)
 const Background    = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveBackground)
-const Include       = Seq(K_INCLUDE,        L_COLON, L_PATH)        #->Apply(ParseInclude)
+const Include       = Seq(K_INCLUDE,        L_COLON, L_PATH)        ->Apply(RefInclude('ParseInclude'))
 const ColorDef      = Seq(
                         K_COLOR,
                         L_COLON,
@@ -510,6 +463,81 @@ const Template      = Seq(
                         Many(Declaration),
                         Lab(Eof, "Unexpected token")
                       )
+# }}}
+
+# Main {{{
+const DEFAULT_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
+
+def GetDatabase(state: dict<any>): func(): Database
+  return (): Database => {
+    if empty(state.background)
+      throw 'Please set the background first'
+    endif
+    return state[state.background]
+  }
+enddef
+
+class CContext extends Context
+  def new(this.text)
+    this.state.meta                   = Metadata.new()
+    this.state.dark                   = Database.new('dark')
+    this.state.light                  = Database.new('light')
+    this.state.background             = ''
+    this.state.Db                     = GetDatabase(this.state)
+    this.state.hiGroupName            = ''
+    this.state.isDefault              = true
+    this.state.variants               = []
+    this.state.discrName              = ''
+    this.state.discrValue             = DEFAULT_DISCR_VALUE
+    this.state.Reset                  = () => {
+      const state          = this.state
+      const meta: Metadata = state.meta
+      state.variants       = meta.variants
+      state.discrName      = ''
+      state.discrValue     = DEFAULT_DISCR_VALUE
+      state.isDefault      = true
+    }
+  enddef
+endclass
+
+export def Parse(
+    text:    string,
+    Parser:  func(Context): Result = Template,
+    context: Context               = CContext.new(text)
+    ): dict<any>
+  var   ctx    = context
+  const result = Parser(ctx)
+
+  if !result.success
+    echo strcharpart(text, 0, 1 + result.errpos) .. '<==='
+
+    if !empty(result.label)
+      echo result.label
+    endif
+  endif
+
+  const meta:  Metadata = ctx.state.meta
+  const dark:  Database = ctx.state.dark
+  const light: Database = ctx.state.light
+
+  return {result: result, meta: meta, dark: dark, light: light}
+enddef
+
+def ParseInclude(v: list<string>, ctx: Context)
+  const path   = v[2]
+  const text   = join(readfile(path), "\n")
+  var   newCtx = CContext.new(text)
+  newCtx.state = deepcopy(ctx.state)
+  const result = Parse(text, Template, newCtx)
+  const parseResult: Result = result.result
+
+  if !parseResult.success
+    throw printf("Error in include: %s (at pos. %d)", parseResult.label, parseResult.errpos)
+  endif
+
+  ctx.state = newCtx.state
+enddef
+
 # }}}
 
 # Colortemplate grammar {{{

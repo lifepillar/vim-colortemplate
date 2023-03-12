@@ -294,7 +294,7 @@ syntax:
 >
 	<Group name> <fg color> <bg color> [<sp color> <style attributes>]
 <
-In the order:
+In order:
 
 - the name of a highlight group;
 - the foreground color;
@@ -309,7 +309,11 @@ For example:
 	DiffAdd    orange  blue   reverse
 	SpellBad   white   black  s=red underline
 <
-Colors must be specified using the color names defined by the `Color`
+Note: a highlight group's name must appear at the beginning of a line, without
+any leading space. Other than that, spaces do not matter, and a highlight
+group definition may span multiple lines.
+
+Colors must be specified using the color names previously defined with `Color`
 directives.
 
 The foreground and background colors must always be present: if you want to
@@ -349,8 +353,64 @@ For example:
 >
 	QuickFixLine  ->  Search
 <
-TODO 
-Non-default definitions (`/` and `+` syntaxes).
+Overriding the default definitions ~
+
+Default definitions can be overriden for some variants or based on the value
+of some variable. For example:
+>
+	Normal     white  gray
+	Normal/256 white black
+<
+The first line defines the default `Normal` highlight group, as explained
+above. The second line overrides the default definition for 256-color
+terminals. The overriding clause is a slash followed by one of the supported
+variants, as declared with `Variants` (see |colortemplate-variants|). Multiple
+overriding clauses are possible, and spaces do not matter. For example:
+>
+	Title      orange  blue
+	Title
+	  /256 /8  red     black  underline
+<
+This makes `Title` orange with a blue background by default, but red with
+a black background and underlined when only 256 or 8 colors are available. The
+two definitions can be joined into a single definition by omitting the second
+`Title`. The following is equivalent to the above:
+>
+	Title      orange  blue
+	  /256/8   red     black  underline
+<
+Highlight groups can be also overridden based on some condition. For example:
+>
+	#const transp_bg = get(g:, 'foo_transp_bg', 0)
+
+	Normal             white  black
+	Normal+transp_bg 1 white  none
+<
+The `#const` declaration defines a script-local variable. Except for the
+leading `#`, the line is just Vim 9 script's syntax (but the command must be
+on a single line). In Colortemplate, identifiers defined with `#const` are
+called "discriminators".
+
+In the example above, the discriminator is used to override `Normal` when
+`g:foo_transp_bg` is defined and set to 1. As before, the two definitions
+can be collapsed into one by omitting the second occurrence of `Normal`:
+>
+
+	Normal             white  black
+	      +transp_bg 1 white  none
+<
+Note: each highlight group can have at most one associated discriminator.
+
+Variant and discriminator-based overrides can be combined. For example:
+>
+	#const transp_bg = get(g:, 'foo_transp_bg', 0)
+
+	Normal                    white  black
+	  /256/16/8 +transp_bg 1  white none
+<
+This will make `Normal` white on black by default, but white with
+a transparent background in 256-/16-/8-color terminals if the user sets
+`g:foo_transp_bg` to 1. In GUI Vim, the setting won't have any effect.
 
 ==============================================================================
 Verbatim blocks					*colortemplate-verbatim*

@@ -587,7 +587,10 @@ Apply({parser}, {func})				*libparser.Apply()*
 		applying a function {func}. The value of this parser is always
 		|null|. {func} receives two arguments: the first is the value
 		parsed by {parser}, and the second is the current
-		|libparser.Context|. The function must not return anything.
+		|libparser.Context|. The function must not return anything. If
+		the function raises an error, then the parser returns
+		a failure labelled with the raised exception.
+
 		Example:
 >
 		def StoreNumber(value: string, context: Context)

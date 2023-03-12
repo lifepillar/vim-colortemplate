@@ -477,7 +477,7 @@ def GetDatabase(state: dict<any>): func(): Database
   }
 enddef
 
-class CContext extends Context
+class ColortemplateContext extends Context
   def new(this.text)
     this.state.meta                   = Metadata.new()
     this.state.dark                   = Database.new('dark')
@@ -503,7 +503,7 @@ endclass
 export def Parse(
     text:    string,
     Parser:  func(Context): Result = Template,
-    context: Context               = CContext.new(text)
+    context: Context               = ColortemplateContext.new(text)
     ): dict<any>
   var   ctx    = context
   const result = Parser(ctx)
@@ -526,7 +526,7 @@ enddef
 def ParseInclude(v: list<string>, ctx: Context)
   const path   = v[2]
   const text   = join(readfile(path), "\n")
-  var   newCtx = CContext.new(text)
+  var   newCtx = ColortemplateContext.new(text)
   newCtx.state = deepcopy(ctx.state)
   const result = Parse(text, Template, newCtx)
   const parseResult: Result = result.result

@@ -322,23 +322,31 @@ the special values `fg`, `bg`, and `none` for the default foreground color,
 the default background color and for disabling the corresponding highlighting,
 respectively.
 
-The special keyword `omit` may be used when you want to inherit a color or an
-attribute from Vim's default color scheme. For instance, this directive:
+The special keyword `omit` may be used when you want to inherit a color from
+Vim's default color scheme. For instance, this directive:
 >
-	CursorLine  white  omit  omit
+	CursorLine  white  omit
 <
 may generate something like this (considering only GUI attributes for
 simplicity):
 >
-	hi CursorLine guifg=#ffffff
+	hi CursorLine guifg=#ffffff gui=NONE
 <
 Compare with this definition:
 >
 	CursorLine white black
 >
-which may be become:
+which would become:
 >
 	hi CursorLine guifg=#ffffff guibg=#000000 gui=NONE
+
+Or with this:
+>
+	CursorLine white none
+<
+which would be translated as follows:
+>
+	hi CursorLine guifg=#ffffff guibg=NONE gui=NONE
 <
 Note that `omit` is the default for the special color.
 

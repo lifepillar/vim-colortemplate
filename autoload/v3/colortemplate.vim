@@ -104,10 +104,8 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
     }
   )
 
-  const nr = NewBuffer('OutputColorscheme.vim', output)
-
-  const elapsed = 1000.0 * reltimefloat(reltime(startTime))
-
+  const nr         = NewBuffer('OutputColorscheme.vim', output)
+  const elapsed    = 1000.0 * reltimefloat(reltime(startTime))
   const outputPath = fnamemodify(inputPath, ":p")  # FIXME
 
   Notice(printf(

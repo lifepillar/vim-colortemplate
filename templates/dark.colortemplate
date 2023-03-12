@@ -94,7 +94,7 @@ Term colors: black red green yellow blue magenta cyan white
 Normal               white             black
 Terminal             white             black
 
-#const transp_bg = get(g:, 'transp_bg', 0)
+#const transp_bg = get(g:, 'dark_transp_bg', 0)
 
 Normal
   /256/8

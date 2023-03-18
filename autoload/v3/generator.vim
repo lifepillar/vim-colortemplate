@@ -5,12 +5,12 @@ import './version.vim'
 import 'librelalg.vim' as ra
 
 # Aliases {{{
-const EquiJoin             = ra.EquiJoin
-const LeftEquiJoin         = ra.LeftEquiJoin
-const PartitionBy          = ra.PartitionBy
-const Select               = ra.Select
-const Sort                 = ra.Sort
-const Transform            = ra.Transform
+const EquiJoin       = ra.EquiJoin
+const LeftEquiJoin   = ra.LeftEquiJoin
+const PartitionBy    = ra.PartitionBy
+const Select         = ra.Select
+const Sort           = ra.Sort
+const Transform      = ra.Transform
 # }}}
 
 const VERSION        = version.VERSION

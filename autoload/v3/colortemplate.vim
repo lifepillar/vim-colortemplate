@@ -109,7 +109,7 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
   const outputPath = fnamemodify(inputPath, ":p")  # FIXME
 
   Notice(printf(
-    'Success! [%s created in %.00fms (parsing: %.00fms]',
+    'Success! [%s created in %.00fms (parsed in %.00fms)]',
     fnamemodify(outputPath, ':t'), elapsed, elapsedParse
   ))
 

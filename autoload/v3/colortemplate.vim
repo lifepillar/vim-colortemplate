@@ -90,7 +90,7 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
   if !result.success
     Notice(printf(
       "Build failed: %s (line %d, byte %d)",
-      result.label, byte2line(result.errpos), result.errpos
+      result.label, byte2line(result.errpos + 1), result.errpos + 1
     ))
     execute ':' bufnr 'buffer'
     execute 'goto' result.errpos

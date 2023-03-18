@@ -97,20 +97,21 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
     return Failure()
   endif
 
+  const startGen = reltime()
   const output: list<string> = generator.Generate(
     parseResult.meta, {
       'dark':  parseResult.dark,
       'light': parseResult.light,
     }
   )
-
+  const elapsedGen = 1000.0 * reltimefloat(reltime(startGen))
   const nr         = NewBuffer('OutputColorscheme.vim', output)
   const elapsed    = 1000.0 * reltimefloat(reltime(startTime))
   const outputPath = fnamemodify(inputPath, ":p")  # FIXME
 
   Notice(printf(
-    'Success! [%s created in %.00fms (parsed in %.00fms)]',
-    fnamemodify(outputPath, ':t'), elapsed, elapsedParse
+    'Success! [%s created in %.00fms (parser: %.00fms, generator: %.00fms)]',
+    fnamemodify(outputPath, ':t'), elapsed, elapsedParse, elapsedGen
   ))
 
   return Success()

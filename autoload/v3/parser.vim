@@ -49,7 +49,8 @@ def SetSupportedVariants(v: list<string>, ctx: Context)
       "Supported variants already defined ('%s')", meta.variants
     )
   endif
-  meta.variants = v
+  meta.variants = ['gui'] + v
+  meta.variants->sort()->uniq()
 enddef
 
 def SetFullName(v: list<string>, ctx: Context)
@@ -174,13 +175,6 @@ def SetVariants(v: list<any>, ctx: Context)
   const meta: Metadata         = state.meta
   const variants: list<string> = flattennew(v)
 
-  for variant in variants
-    if index(meta.variants, variant) == -1
-      throw printf(
-        "'%s' is not among the supported variants: %s", variant, meta.variants
-      )
-    endif
-  endfor
   state.variants = variants
   state.isDefault = false
 enddef
@@ -235,7 +229,7 @@ def DefineLinkedGroup(v: list<string>, ctx: Context)
 enddef
 
 def CheckColorName(colorName: string, ctx: Context): string
-  if !empty(colorName) && colorName != 'omit'
+  if !empty(colorName)
     const state = ctx.state
     const db: Database = state.Db()
 
@@ -251,9 +245,9 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
   const state           = ctx.state
   const dbase: Database = state.Db()
   const hiGroupName     = state.hiGroupName
-  const fgColor         = v[0] == 'omit' ? ''  : v[0]
-  const bgColor         = v[1] == 'omit' ? ''  : v[1]
-  const spColor         = v[2] == 'omit' ? ''  : empty(v[2]) ? 'none' : v[2]
+  const fgColor         = v[0]
+  const bgColor         = v[1]
+  const spColor         = empty(v[2]) ? 'none' : v[2]
   const attributes      = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
 
   if state.isDefault
@@ -330,7 +324,7 @@ const ATTRIBUTE     = R(printf('\%(%s\)\>',
                         'underdotted',
                         'nocombine'
                       ], '\|')))
-const COL16         = R('\%(\d\+\)\|\w\+\|omit') # FIXME: match only colors from g:colortemplate#colorspace#ansi_colors
+const COL16         = R('\%(\d\+\)\|\w\+') # FIXME: match only colors from g:colortemplate#colorspace#ansi_colors
 const NUM256        = R('\d\{1,3}\>')
 const NUMBER        = R('-\=\d\+\%(\.\d*\)\=')
 const BACKGROUND    = R('dark\>\|light\>')
@@ -357,7 +351,7 @@ const L_PATH        = Lab(TEXTLINE,             "Expected a relative path")
 const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the special color")
 const L_TEXTLINE    = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
 const L_THEMENAME   = Lab(THEMENAME,            "Expected a valid color scheme's name")
-const L_VARIANT     = Lab(K_VARIANT,            "Expected a variant (gui, 256, 16, etc.)")
+const L_VARIANT     = Lab(K_VARIANT,            "Expected a variant (gui, 256, 88, 16, 8, or 0)")
 
 const Attributes    = Seq(
                         ATTRIBUTE,

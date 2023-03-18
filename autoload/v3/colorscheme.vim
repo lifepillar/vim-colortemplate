@@ -113,7 +113,7 @@ export class Database
         \   ['ColorName'],
         \   ['GUIValue', 'Base256Value', 'Base16Value']
         \ ]).InsertMany([
-        \   {ColorName: '',     GUIValue: '',     Base256Value: '',     Base16Value: '',     Delta: 0.0},
+        \   {ColorName: 'omit', GUIValue: '',     Base256Value: '',     Base16Value: '',     Delta: 0.0},
         \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base16Value: 'NONE', Delta: 0.0},
         \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base16Value: 'fg',   Delta: 0.0},
         \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base16Value: 'bg',   Delta: 0.0}

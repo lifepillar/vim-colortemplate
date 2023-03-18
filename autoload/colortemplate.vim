@@ -2678,6 +2678,9 @@ fun! colortemplate#make(...)
     return g:colortemplate_exit_status
   endtry
 
+  let l:elapsed_parse = 1000.0 * reltimefloat(reltime(l:start_time))
+  let l:start_gen = reltime()
+
   try
     let l:outpath = s:generate_colorscheme(l:outdir, l:overwrite)
     call s:generate_aux_files(l:outdir, l:overwrite)
@@ -2692,8 +2695,12 @@ fun! colortemplate#make(...)
   finally
     call s:destroy_data_structures() " TODO: keep, may be useful information, e.g., for highlighting
   endtry
+  let l:elapsed_gen = 1000.0 * reltimefloat(reltime(l:start_gen))
   let l:elapsed = 1000.0 * reltimefloat(reltime(l:start_time))
-  call s:print_notice(printf('Success! [%s created in %.00fms]', fnamemodify(l:outpath, ':t'), l:elapsed))
+  call s:print_notice(printf(
+        \ 'Success! [%s created in %.00fms - Parser: %.00fms Generator: %.00fms]',
+        \ fnamemodify(l:outpath, ':t'), l:elapsed, l:elapsed_parse, l:elapsed_gen)
+        \ )
 endf
 
 " a:1 is the optional path to an output directory

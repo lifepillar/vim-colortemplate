@@ -5,11 +5,9 @@ import './version.vim'
 import 'librelalg.vim' as ra
 
 # Aliases {{{
-const AntiJoin             = ra.AntiJoin
 const EquiJoin             = ra.EquiJoin
 const LeftEquiJoin         = ra.LeftEquiJoin
 const PartitionBy          = ra.PartitionBy
-const Query                = ra.Query
 const Select               = ra.Select
 const Sort                 = ra.Sort
 const Transform            = ra.Transform

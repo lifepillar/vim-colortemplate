@@ -201,21 +201,6 @@ export def CheckMetadata(meta: Metadata)
     throw 'Please define the author of the color scheme'
   endif
 enddef
-
-export def CheckMissingGroups(db: Database)
-  const missing = Query(
-    db.VimHiGroup
-    ->AntiJoin(db.HiGroup, (t, u) => t.HiGroupName == u.HiGroupName)
-  )
-
-  if !empty(missing)
-    const names = mapnew(missing, (_, t) => t.HiGroupName)
-    echomsg printf(
-      "Missing %s definitions for %s", db.background,
-      join(names, ', ')
-    )
-  endif
-enddef
 # }}}
 
 # Header {{{

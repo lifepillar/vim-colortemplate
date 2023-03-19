@@ -355,11 +355,14 @@ export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
       endif
 
       const variantMeta = db.GetVariantMetadata(variant)
+      const defs = GenerateVariantDefinitions(hiGroups, variantMeta, db, discrNames, overrides)
 
-      theme->add('')
-      theme += StartVariant(variantMeta)
-      theme += GenerateVariantDefinitions(hiGroups, variantMeta, db, discrNames, overrides)
-      theme += EndVariant(variantMeta)
+      if !empty(defs)
+        theme->add('')
+        theme += StartVariant(variantMeta)
+        theme += defs
+        theme += EndVariant(variantMeta)
+      endif
     endfor
 
     theme += EndColorscheme(meta)

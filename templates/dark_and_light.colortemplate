@@ -4,10 +4,11 @@
 ; Mandatory
 Full name:     Dark and Light
 Short name:    dark_and_light
+Variants:      gui 256 8 0
 Author:        Myself <myself@somewhere.org>
 ; Optional
 Maintainer:    Myself <myself@somewhere.org>
-Website:       https://me.org
+URL:           https://me.org
 Description:   Template for a colorscheme with dark and light variants
 License:       Public domain
 ; }}}
@@ -16,51 +17,9 @@ License:       Public domain
 ; Include: _help.colortemplate
 ; }}}
 
-Variants: gui 256 8 0
-
 Background: dark
 
-; Global definitions - put at the top of the colorscheme {{{
-Boolean              -> Constant
-Character            -> Constant
-Conditional          -> Statement
-CurSearch            -> IncSearch
-CursorLineFold       -> FoldColumn
-CursorLineSign       -> SignColumn
-Debug                -> Special
-Define               -> PreProc
-Delimiter            -> Special
-Exception            -> Statement
-Float                -> Constant
-Function             -> Identifier
-Include              -> PreProc
-Keyword              -> Statement
-Label                -> Statement
-Macro                -> PreProc
-MessageWindow        -> WarningMsg
-Number               -> Constant
-Operator             -> Statement
-PmenuKind            -> Pmenu
-PmenuKindSel         -> PmenuSel
-PmenuExtra           -> Pmenu
-PmenuExtraSel        -> PmenuSel
-PopupNotification    -> WarningMsg
-PopupSelected        -> PmenuSel
-PreCondit            -> PreProc
-QuickFixLine         ->  Search
-Repeat               -> Statement
-SpecialChar          -> Special
-SpecialComment       -> Special
-StatusLineTerm       -> StatusLine
-StatusLineTermNC     -> StatusLineNC
-StorageClass         -> Type
-String               -> Constant
-Structure            -> Type
-Tag                  -> Special
-Typedef              -> Type
-; See `:help lCursor`
-lCursor              -> Cursor
-; }}}
+Include: _common.colortemplate
 
 ; Color palette for dark variant {{{
 ; Color name         GUI         Base256  Base16 (optional)
@@ -83,14 +42,12 @@ Color: brightwhite   #e0e0ed     231      White
 ; }}}
 
 ; Terminal colors for dark variant {{{
-Term colors: black red green yellow blue magenta cyan white
-             brightblack brightred brightgreen brightyellow
-             brightblue brightmagenta brightcyan brightwhite
+Term colors:
+  black       red       green       yellow       blue       magenta       cyan       white
+  brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite
 ; }}}
 
-; Definitions common to all variants {{{
-#const transp_bg = get(g:, 'transp_bg', 0)
-
+; Dark highlight group definitions {{{
 Normal               white             black
 Normal/256/8/0
   +transp_bg 1       white             none
@@ -115,7 +72,7 @@ ErrorMsg             white             black             reverse
 FoldColumn           white             black
 Folded               white             black             italic
 IncSearch            white             black             standout
-IncSearch/256/8/0    white             black             reverse
+IncSearch/256/8      white             black             reverse
 LineNr               white             black
 MatchParen           white             black
 ModeMsg              white             black
@@ -163,13 +120,11 @@ ToolbarLine          none              white
 ToolbarButton        white             black             bold
 ; }}}
 
-; Additional highlight groups {{{
-; Add additional highlight groups here if you want
-; }}}
+Include: _bw.colortemplate
 
 Background: light
 
-#const transp_bg = get(g:, 'transp_bg', 0)
+Include: _common.colortemplate
 
 ; Color palette for light variant {{{
 ; Color name                GUI                  Base256    Base16 (optional)
@@ -192,12 +147,11 @@ Color: brightwhite          #ffffff     231         White
 ; }}}
 
 ; Terminal colors for light variant {{{
-Term colors: black red green yellow blue magenta cyan white
-             brightblack brightred brightgreen brightyellow
-             brightblue brightmagenta brightcyan brightwhite
+Term colors: black       red       green       yellow       blue       magenta       cyan       white
+             brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite
 ; }}}
 
-; Definitions common to all variants {{{
+; Light highlight group definitions {{{
 Normal           black             white
 Terminal         black             white
 
@@ -223,7 +177,7 @@ ErrorMsg             black             white             reverse
 FoldColumn           black             white
 Folded               black             white             italic
 IncSearch            black             white             standout
-IncSearch/256/8/0    black             white             reverse
+IncSearch/256/8      black             white             reverse
 LineNr               black             white
 MatchParen           black             white
 ModeMsg              black             white
@@ -271,9 +225,4 @@ ToolbarLine          none              black
 ToolbarButton        black             white             bold
 ; }}}
 
-; Additional highlight groups {{{
-; Add additional highlight groups here if you want
-; }}}
-
-; Include: _bw.colortemplate
-
+Include: _bw.colortemplate

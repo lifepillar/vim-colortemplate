@@ -1389,7 +1389,6 @@ export const Avg = Curry(Avg_)
 # }}}
 
 # Convenience functions {{{
-# Compare two relation instances
 export def In(t: dict<any>, R: any): bool
   return index(Instance(R), t) != -1
 enddef

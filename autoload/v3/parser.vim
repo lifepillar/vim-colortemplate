@@ -28,6 +28,14 @@ const T              = parser.TextToken(SpaceOrComment)
 # }}}
 
 # Semantic actions {{{
+def Db(state: dict<any>): Database
+  if empty(state.background)
+    throw 'Please set the background first'
+  endif
+
+  return state[state.background]
+enddef
+
 def SetActiveBackground(v: list<string>, ctx: Context)
   const bg = v[2]
   if bg != 'dark' && bg != 'light'
@@ -38,6 +46,8 @@ def SetActiveBackground(v: list<string>, ctx: Context)
 
   const state = ctx.state
   var meta: Metadata = state.meta
+
+  state.Reset()
   state.background = v[2]
   meta.backgrounds[state.background] = true
 enddef
@@ -124,7 +134,7 @@ enddef
 def SetTermColors(v: list<string>, ctx: Context)
   const state           = ctx.state
   var   meta: Metadata  = state.meta
-  const dbase: Database = state.Db()
+  const dbase: Database = Db(state)
 
   for colorName in v
     const t = dbase.Color.Lookup(['ColorName'], [colorName])
@@ -143,7 +153,7 @@ def DefineColor(v: list<string>, ctx: Context)
   const v256:      string   = v[4]  # FIXME: convert ~
   const v16:       string   = v[5]
   const delta:     float    = 0.0  # FIXME
-  const dbase:     Database = ctx.state.Db()
+  const dbase:     Database = Db(ctx.state)
   const meta:      Metadata = ctx.state.meta
 
   if empty(meta.variants)
@@ -162,7 +172,7 @@ enddef
 def DefineDiscriminator(v: list<string>, ctx: Context)
   const discrName:  string   = v[2]
   const definition: string   = v[4]
-  const dbase:      Database = ctx.state.Db()
+  const dbase:      Database = Db(ctx.state)
 
   dbase.Discriminator.Insert({
     DiscrName:  discrName,
@@ -190,7 +200,7 @@ enddef
 def SetDiscrName(v: list<string>, ctx: Context)
   const discrName       = v[1]
   const state           = ctx.state
-  const dbase: Database = state.Db()
+  const dbase: Database = Db(state)
   const t               = dbase.HiGroup.Lookup(['HiGroupName'], [state.hiGroupName])
 
   if empty(t)
@@ -223,7 +233,7 @@ enddef
 
 def DefineLinkedGroup(v: list<string>, ctx: Context)
   const state           = ctx.state
-  const dbase: Database = state.Db()
+  const dbase: Database = Db(state)
   const hiGroupName     = state.hiGroupName
   const targetGroup     = v[1]
 
@@ -239,7 +249,7 @@ enddef
 def CheckColorName(colorName: string, ctx: Context): string
   if !empty(colorName)
     const state = ctx.state
-    const db: Database = state.Db()
+    const db: Database = Db(state)
 
     if empty(db.Color.Lookup(['ColorName'], [colorName]))
       throw printf("Undefined color name: %s", colorName)
@@ -251,7 +261,7 @@ enddef
 
 def DefineBaseGroup(v: list<any>, ctx: Context)
   const state           = ctx.state
-  const dbase: Database = state.Db()
+  const dbase: Database = Db(state)
   const hiGroupName     = state.hiGroupName
   const fgColor         = v[0]
   const bgColor         = v[1]
@@ -493,22 +503,12 @@ const Template      = Seq(
 # Main {{{
 const DEFAULT_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
 
-def GetDatabase(state: dict<any>): func(): Database
-  return (): Database => {
-    if empty(state.background)
-      throw 'Please set the background first'
-    endif
-    return state[state.background]
-  }
-enddef
-
 class ColortemplateContext extends Context
   def new(this.text)
     this.state.meta                   = Metadata.new()
     this.state.dark                   = Database.new('dark')
     this.state.light                  = Database.new('light')
     this.state.background             = ''
-    this.state.Db                     = GetDatabase(this.state)
     this.state.hiGroupName            = ''
     this.state.isDefault              = true
     this.state.variants               = []

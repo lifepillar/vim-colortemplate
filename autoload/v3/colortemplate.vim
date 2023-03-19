@@ -3,11 +3,6 @@ vim9script
 import './parser.vim'    as parser
 import './generator.vim' as generator
 
-class Config
-  public this.creator = true
-  public this.useTabs = false
-endclass
-
 # Helper functions {{{
 def ClearScreen()
   redraw
@@ -40,21 +35,17 @@ def Success(): bool
     return true
 enddef
 
-def NewBuffer(name: string, content: list<string>, config: Config = Config.new()): number
+def NewBuffer(name: string, content: list<string>): number
   const nr = bufadd(name)
 
   setbufvar(nr, "&filetype",   "vim")
   setbufvar(nr, "&rightleft",  0)
   setbufvar(nr, "&wrap",       0)
   setbufvar(nr, "&bufhidden",  "hide")
-  setbufvar(nr, "&expandtab",  config.useTabs ? 0 : 1)
-  setbufvar(nr, "&tabstop",    2)
-  setbufvar(nr, "&shiftwidth", 2)
   setbufvar(nr, "&buflisted",  1)
   bufload(nr)
   silent execute printf(":%dbufdo normal ggdG", nr)
   setbufline(nr, 1, content)
-  silent execute printf(":%dbufdo normal gg=G", nr)
 
   return nr
 enddef

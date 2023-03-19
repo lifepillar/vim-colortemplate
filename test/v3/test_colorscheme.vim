@@ -11,9 +11,6 @@ const Database = colorscheme.Database
 
 def Test_CS_GetVariantMetadata()
   const template =<< trim END
-  Full name: X
-  Short name: x
-  Author: me
   Background: dark
   Variants: gui 256
   Color: black #333333 231 black
@@ -52,9 +49,6 @@ enddef
 
 def Test_CS_HiGroupDef()
   const template =<< trim END
-  Full name: X
-  Short name: x
-  Author: me
   Background: dark
   Variants: gui 256
   Color: black #333333 231 black

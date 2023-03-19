@@ -42,6 +42,14 @@ def SetActiveBackground(v: list<string>, ctx: Context)
   meta.backgrounds[state.background] = true
 enddef
 
+def SetOption(v: list<string>, ctx: Context)
+  const key: string  = v[0]
+  const val: string  = v[2]
+  var meta: Metadata = ctx.state.meta
+
+  meta.options[key] = val
+enddef
+
 def SetSupportedVariants(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
   if !empty(meta.variants)
@@ -277,6 +285,7 @@ const K_AUTHOR      = T('Author')
 const K_BACKGROUND  = T('Background')
 const K_COLOR       = T('Color')
 const K_COLORS      = R('[Cc]olors')
+const K_COLORT      = T('Colortemplate')
 const K_CONST       = T('const')
 const K_DESCRIPTION = T('Description')
 const K_FULL        = T('Full')
@@ -284,6 +293,9 @@ const K_INCLUDE     = T('Include')
 const K_LICENSE     = T('License')
 const K_MAINTAINER  = T('Maintainer')
 const K_NAME        = R('[Nn]ame')
+const K_OPTS        = R('[Oo]ptions')
+const K_OPTN        = R('\%(creator\|useTabs\|shiftwidth\)\>')
+const K_OPTV        = R('\%(true\|false\)\>\|\d\+')
 const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\|sp\>')
 const K_TERM        = R('Term\%[inal\]')
@@ -347,6 +359,9 @@ const L_HEXCOL      = Lab(HEXCOL,               "Expected a hex color value")
 const L_HIGROUPNAME = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
 const L_IDENTIFIER  = Lab(IDENTIFIER,           "Expected an identifier")
 const L_NAME        = Lab(K_NAME,               "Expected the keyword 'Name'")
+const L_OPTN        = Lab(K_OPTN,               "Expected a valid option")
+const L_OPTS        = Lab(K_OPTS,               "Expected the keyword 'Options'")
+const L_OPTV        = Lab(K_OPTV,               "Expected a valid option value")
 const L_PATH        = Lab(TEXTLINE,             "Expected a relative path")
 const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the special color")
 const L_TEXTLINE    = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
@@ -409,11 +424,16 @@ const TermColorList = Seq(
                         L_COLORNAME
                       )                                             ->Apply(SetTermColors)
 
+const OptionsList   = OneOrMore(
+                        Seq(L_OPTN, L_EQ, L_OPTV)                   ->Apply(SetOption)
+                      )
+
 const VariantList   = Lab(
                         OneOrMore(K_VARIANT),
                         "Expected one of: gui, 256, 88, 16, 8, 0"
                       )                                             ->Apply(SetSupportedVariants)
 
+const Options       = Seq(K_COLORT, L_OPTS, L_COLON, OptionsList)   ->Apply(SetVersion)
 const Version       = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
 const Variants      = Seq(K_VARIANTS,       L_COLON, VariantList)
 const URL           = Seq(K_URL,            L_COLON, L_TEXTLINE)    ->Apply(SetURL)

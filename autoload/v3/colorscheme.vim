@@ -5,11 +5,17 @@ import 'librelalg.vim' as ra
 # Aliases {{{
 const Bool          = ra.Bool
 const DictTransform = ra.DictTransform
+const EquiJoin      = ra.EquiJoin
 const Float         = ra.Float
 const ForeignKey    = ra.ForeignKey
 const Int           = ra.Int
+const LeftEquiJoin  = ra.LeftEquiJoin
+const PartitionBy   = ra.PartitionBy
+const Query         = ra.Query
 const Rel           = ra.Rel
+const Select        = ra.Select
 const Str           = ra.Str
+const Transform     = ra.Transform
 # }}}
 
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
@@ -27,6 +33,7 @@ export class Metadata
   public this.variants:    list<string> = []
   public this.backgrounds: dict<bool>   = {'dark': false, 'light': false}
   public this.termcolors:  list<string> = []
+  public this.options:     dict<any>    = {creator: true, useTabs: false, shiftwidth: 2}
 
   def IsLightAndDark(): bool
     return this.backgrounds['dark'] && this.backgrounds['light']
@@ -298,25 +305,25 @@ export class Database
     })
   enddef
 
+  # Retrieve the relevant metadata for the given variant, including the names
+  # of the attributes for the specified variant. An empty string indicates
+  # that the variant does not support the corresponding attribute. For
+  # example, for the 'gui' variant, this would be:
+  #
+  #    {
+  #      Variant:   'gui',
+  #      NumColors: 16777216,
+  #      ColorAttr: 'GUIValue',
+  #      Colors:    {colname1: #111111, ..., colnameN: #nnnnnn},
+  #      Fg:        'guifg',
+  #      Bg:        'guibg',
+  #      Special:   'guisp',
+  #      Style:     'gui',
+  #      Font:      'font',
+  #      Start:     '',
+  #      Stop:      '',
+  #    }
   def GetVariantMetadata(variant: string): dict<any>
-    # Retrieve the relevant metadata for the given variant, including the
-    # names of the attributes for the current variant. An empty string
-    # indicates that the variant does not support the corresponding attribute.
-    # For example, for the 'gui' variant, this would be:
-    #
-    #    {
-    #      Variant:   'gui',
-    #      NumColors: 16777216,
-    #      ColorAttr: 'GUIValue',
-    #      Colors:    {colname1: #111111, ..., colnameN: #nnnnnn},
-    #      Fg:        'guifg',
-    #      Bg:        'guibg',
-    #      Special:   'guisp',
-    #      Style:     'gui',
-    #      Font:      'font',
-    #      Start:     '',
-    #      Stop:      '',
-    #    }
     const numColors = this.Variant.Lookup(['Variant'], [variant]).NumColors
     const colorAttr = numColors <= 16 ? 'Base16Value' : numColors <= 256 ? 'Base256Value' : 'GUIValue'
     var   metadata  = {
@@ -337,27 +344,25 @@ export class Database
     return metadata
   enddef
 
+  # Return the tuple corresponding to the correct definition for the specified
+  # highlight group, variant, and discriminator value.
+  #
+  # Parameters:
+  #
+  # hiGroupName  The name of a highlight group (e.g., 'Normal')
+  # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
+  # discrValue   [optional] The value of the discriminator associated to the
+  #              highlight group.
+  #
+  # Returns:
+  #   a tuple containing the pieces of information that are needed to build
+  #   the requested highlight group definition. The caller should always check
+  #   whether the result is empty, which may happen if the input values are
+  #   invalid or if no overriding definition exists for a given non-default
+  #   discriminator value.
   def HiGroupDef(
       hiGroupName: string, variant: string, discrValue: string = DEFAULT_DISCR_VALUE
   ): dict<any>
-    # Return the tuple corresponding to the correct definition for the
-    # specified highlight group, variant, and discriminator value. To
-    # distinguish a linked group from a base group, you may check whether the
-    # returned tuple `has_key('TargetGroup')`.
-    #
-    # Parameters:
-    #
-    # hiGroupName  The name of a highlight group (e.g., 'Normal')
-    # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
-    # discrValue   [optional] The value of the discriminator associated to the
-    #              highlight group.
-    #
-    # Returns:
-    #   a tuple containing the pieces of information that are needed to build
-    #   the requested highlight group definition. The caller should always
-    #   check whether the result is empty, which may happen if the input
-    #   values are invalid or if no overriding definition exists for a given
-    #   non-default discriminator value.
     if discrValue == DEFAULT_DISCR_VALUE
       return this.GetDefaultDef(hiGroupName, variant)
     endif
@@ -365,19 +370,19 @@ export class Database
     return this.GetOverrideDef(hiGroupName, variant, discrValue)
   enddef
 
+  # Return the tuple corresponding to the default definition for the given
+  # variant. This may be the global default definition or a variant-specific
+  # override if it exists (e.g., `Comment/256 fgColor bgColor`).
+  #
+  # Parameters:
+  #
+  # hiGroupName  The name of a highlight group (e.g., 'Normal')
+  # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
+  #
+  # Returns:
+  #   a tuple containing the pieces of information that are needed to build
+  #   the requested highlight group definition.
   def GetDefaultDef(hiGroupName: string, variant: string): dict<any>
-    # Return the tuple corresponding to the default definition for the given
-    # variant. This may be the global default definition or a variant-specific
-    # override if it exists (e.g., `Comment/256 fgColor bgColor`).
-    #
-    # Parameters:
-    #
-    # hiGroupName  The name of a highlight group (e.g., 'Normal')
-    # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
-    #
-    # Returns:
-    #   a tuple containing the pieces of information that are needed to build
-    #   the requested highlight group definition.
     var t = this.GetOverrideDef(hiGroupName, variant, DEFAULT_DISCR_VALUE)
 
     if empty(t)  # Look for the global default definition
@@ -391,24 +396,23 @@ export class Database
     return t
   enddef
 
+  # Return the tuple corresponding to an overriding definition for the given
+  # variant and discriminator value.
+  #
+  # Parameters:
+  #
+  # hiGroupName  The name of a highlight group (e.g., 'Normal')
+  # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
+  # discrValue   The value of the discriminator associated to the highlight
+  #              group.
+  #
+  # Returns:
+  #   a tuple containing the pieces of information that are needed to build
+  #   the requested highlight group definition. When an overriding definition
+  #   matching the input cannot be found, an empty tuple is returned.
   def GetOverrideDef(
       hiGroupName: string, variant: string, discrValue: string
   ): dict<any>
-    # Return the tuple corresponding to an overriding definition for the given
-    # variant and discriminator value.
-    #
-    # Parameters:
-    #
-    # hiGroupName  The name of a highlight group (e.g., 'Normal')
-    # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
-    # discrValue   The value of the discriminator associated to the highlight
-    #              group.
-    #
-    # Returns:
-    #   a tuple containing the pieces of information that are needed to build
-    #   the requested highlight group definition. When an overriding
-    #   definition matching the input cannot be found, an empty tuple is
-    #   returned.
     const t = this.HiGroupOverride.Lookup(
       ['HiGroupName', 'Variant', 'DiscrValue'],
       [hiGroupName, variant, discrValue]
@@ -429,5 +433,50 @@ export class Database
         ['HiGroupName', 'Variant', 'DiscrValue'],
         [hiGroupName, variant, discrValue]
       )
+  enddef
+
+  def Discriminators(): list<dict<any>>
+    return Query(
+      this.Discriminator
+      ->Select((t) => !empty(t.DiscrName) && t.DiscrName != 't_Co')
+    )
+  enddef
+
+  # Return all the default definitions for the given variant. Note that the
+  # result is NOT a relation, because it is a list of heterogeneous tuples.
+  def DefaultDefinitions(variant: string): list<dict<any>>
+    return this.HiGroup->Transform((t) => this.GetDefaultDef(t.HiGroupName, variant))
+  enddef
+
+  # Return only variant-specific definitions for the given variant, except
+  # those that depend on a discriminator. Note that the result is NOT
+  # a relation.
+  def VariantSpecificDefinitions(variant: string): list<dict<any>>
+      return Query(
+        this.HiGroupOverride
+        ->Select((t) => t.DiscrValue == DEFAULT_DISCR_VALUE && t.Variant == variant)
+        ->LeftEquiJoin(this.LinkedGroupOverride,
+          ['HiGroupName', 'Variant', 'DiscrValue'],
+          ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
+        ->LeftEquiJoin(this.BaseGroupOverride,
+          ['HiGroupName', 'Variant', 'DiscrValue'],
+          ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
+      )
+  enddef
+
+  # Return the discriminator-based definitions for the given variant. The
+  # returned value is a dictionary of of list of heterogeneous tuples, keyed
+  # by discriminator's name.
+  def OverridingDefsByDiscrName(variant: string): dict<list<dict<any>>>
+    return this.HiGroupOverride
+      ->Select((t) => t.Variant == variant && t.DiscrValue != DEFAULT_DISCR_VALUE)
+      ->EquiJoin(this.HiGroup, ['HiGroupName'], ['HiGroupName'])
+      ->LeftEquiJoin(this.LinkedGroupOverride,
+        ['HiGroupName', 'Variant', 'DiscrValue'],
+        ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
+      ->LeftEquiJoin(this.BaseGroupOverride,
+        ['HiGroupName', 'Variant', 'DiscrValue'],
+        ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
+      ->PartitionBy('DiscrName')
   enddef
 endclass

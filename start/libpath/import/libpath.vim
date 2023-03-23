@@ -2,112 +2,112 @@ vim9script
 
 export const SLASH: string = !exists("+shellslash") || &shellslash ? '/' : '\'
 
-def IsAbsolute(path: string): bool
+export def C(path1: string, path2: string): string
+  return path1 .. SLASH .. path2
+enddef
+
+export def IsAbsolute(path: string): bool
   return isabsolutepath(path)
 enddef
 
-def IsRelative(path: string): bool
-  return !IsAbsolute()
+export def IsRelative(path: string): bool
+  return !IsAbsolute(path)
 enddef
 
-def IsDirectory(path: string): bool
+export def IsDirectory(path: string): bool
   return isdirectory(path)
 enddef
 
-def IsExecutable(path: string): bool
-  return executable(path)
+export def IsExecutable(path: string): bool
+  return executable(path) == 1
 enddef
 
-def Exists(path: string): bool
+export def Exists(path: string): bool
   return filereadable(path) || isdirectory(path)
 enddef
 
-def IsWritable(path: string): bool
+export def IsWritable(path: string): bool
   return filewritable(path) >= 1
 enddef
 
-def Dirname(path: string): string
+export def Dirname(path: string): string
   return fnamemodify(path, ":p:h:t")
 enddef
 
-def Basename(path: string): string
+export def Basename(path: string): string
   return fnamemodify(path, ":p:t")
 enddef
 
-def Parent(path: string): string
-  return fnamemodify(path, ":h")
+export def Parent(path: string): string
+  return fnamemodify(Clean(path), ":h")
 enddef
 
-def Split(path: string): list<string>
+export def Split(path: string): list<string>
   return [Parent(path), Basename(path)]
 enddef
 
-def Components(path: string): list<string>
+export def Clean(path: string): string
+  const path_ = simplify(path)
+  return path_ =~ './$' ? slice(path_, 0, -1) : path_
+enddef
+
+export def Parts(path: string): list<string>
   return split(path, SLASH)
 enddef
 
-def Join(path: string, ...paths: list<string>): string
+export def Join(path: string, ...paths: list<string>): string
   if empty(paths)
-    return simplify(path)
+    return Clean(path)
   endif
 
   var joinedPath = paths[-1]
 
   if isabsolutepath(joinedPath)
-    return simplify(joinedPath)
+    return Clean(joinedPath)
   endif
 
   const n = len(paths)
   var i = 2
 
   while i <= n
-    joinedPath = paths[-i] .. SLASH .. joinedPath
+    joinedPath = C(paths[-i], joinedPath)
 
     if isabsolutepath(joinedPath)
-      return simplify(joinedPath)
+      return Clean(joinedPath)
     endif
 
     ++i
   endwhile
 
-  return simplify(path .. SLASH .. joinedPath)
+  return Clean(C(path, joinedPath))
 enddef
 
-def Expand(path: string, base = ''): string
-  if isabsolutepath(path) || empty(base)
-    return simplify(fnamemodify(path, ":p"))
+export def Expand(path: string, base = ''): string
+  if isabsolutepath(path)
+    return path
   endif
 
-  return simplify(fnamemodify(base .. SLASH .. path, ":p"))
+  if isabsolutepath(base)
+    return Clean(C(base, path))
+  endif
+
+  return Clean(getcwd()->C(base)->C(path))
 enddef
 
-def IsEqual(path1: string, path2: string, base = ''): bool
+export def IsEqual(path1: string, path2: string, base = ''): bool
   return Expand(path1, base) == Expand(path2, base)
 enddef
 
-def Contains(outerPath: string, innerPath: string,  base: string = ''): bool
-  const outer = Components(Expand(outerPath, base))
-  const inner = Components(Expand(innerPath, base))
+export def Contains(path: string, subpath: string,  base = ''): bool
+  const path_    = Parts(Expand(path, base))
+  const subpath_ = Parts(Expand(subpath, base))
+  const n_       = len(path_)
 
-  if len(inner) < len(outer)
-    return false
-  endif
-
-  for i in range(len(outer))
-    if outer[i] != inner[i]
-      return false
-    endif
-  endfor
-
-  return true
+  return n_ < 1 || path_ == subpath_[0 : (n_ - 1)]
 enddef
 
-def MakeDir(path: string, flags: string): bool
+export def MakeDir(path: string, flags = ''): bool
   return mkdir(fnameescape(path), flags)
 enddef
-
-const p1 = 'abc'
-const paths = ['def', 'ghi/', 'lmn']
-echo p1->Join('def', 'ghi/', 'lmn/')
 
 # vim: foldmethod=marker nowrap et ts=2 sw=2

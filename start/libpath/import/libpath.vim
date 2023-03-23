@@ -6,6 +6,11 @@ export def C(path1: string, path2: string): string
   return path1 .. SLASH .. path2
 enddef
 
+export def Clean(path: string): string
+  const path_ = simplify(path)
+  return path_ =~ './$' ? slice(path_, 0, -1) : path_
+enddef
+
 export def IsAbsolute(path: string): bool
   return isabsolutepath(path)
 enddef
@@ -39,8 +44,17 @@ export def Dirname(path: string): string
 enddef
 
 export def Basename(path: string): string
-  return fnamemodify(path, ":p:t")
+  return fnamemodify(Clean(path), ":p:t")
 enddef
+
+export def Stem(path: string): string
+  return fnamemodify(Clean(path), ":t:r")
+enddef
+
+export def Extname(path: string): string
+  return fnamemodify(Clean(path), ":e")
+enddef
+
 
 export def Parent(path: string): string
   return fnamemodify(Clean(path), ":h")
@@ -48,11 +62,6 @@ enddef
 
 export def Split(path: string): list<string>
   return [Parent(path), Basename(path)]
-enddef
-
-export def Clean(path: string): string
-  const path_ = simplify(path)
-  return path_ =~ './$' ? slice(path_, 0, -1) : path_
 enddef
 
 export def Parts(path: string): list<string>

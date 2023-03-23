@@ -30,7 +30,25 @@ def Test_Path_IsRelative()
 enddef
 
 def Test_Path_Basename()
+  assert_equal('foo.vim', path.Basename('a/foo.vim'))
+  assert_equal('foo.vim', path.Basename('/a/foo.vim'))
+  assert_equal('foo.vim', path.Basename('/a/foo.vim'))
+  assert_equal('foo.vim', path.Basename('/a/foo.vim/'))
   assert_equal('test_libpath.vim', path.Basename(TESTPATH))
+enddef
+
+def Test_Path_Stem()
+  assert_equal('foo', path.Stem('/a/b/foo.vim'))
+  assert_equal('foo', path.Stem('/a/b/foo.vim/'))
+  assert_equal('.vimrc', path.Stem('/home/me/.vim/.vimrc'))
+  assert_equal('.vimrc', path.Stem('/home/me/.vim/.vimrc/'))
+enddef
+
+def Test_Path_Extname()
+  assert_equal('vim', path.Extname('/a/b/foo.vim'))
+  assert_equal('vim', path.Extname('/a/b/foo.vim/'))
+  assert_equal('', path.Extname('/home/me/.vim/.vimrc'))
+  assert_equal('', path.Extname('/home/me/.vim/.vimrc/'))
 enddef
 
 def Test_Path_Dirname()

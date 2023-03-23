@@ -106,6 +106,13 @@ def Test_Path_IsExecutable()
   assert_false(path.IsExecutable(TESTDIR))
 enddef
 
+def Test_Path_IsFileReadable()
+  assert_true(path.IsFileReadable(TESTPATH))
+  assert_false(path.IsFileReadable(TESTDIR))
+  assert_false(path.IsFileReadable(path.Join(TESTPATH, '#$%^&*(')))
+enddef
+
+
 def Test_Path_IsWritable()
   assert_true(path.IsWritable(TESTPATH))
   assert_true(path.IsWritable(TESTDIR))

@@ -26,6 +26,10 @@ export def Exists(path: string): bool
   return filereadable(path) || isdirectory(path)
 enddef
 
+export def IsFileReadable(path: string): bool
+  return filereadable(path)
+enddef
+
 export def IsWritable(path: string): bool
   return filewritable(path) >= 1
 enddef

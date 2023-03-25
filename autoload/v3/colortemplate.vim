@@ -12,6 +12,14 @@ const Colorscheme = cscheme.Colorscheme
 var colorschemes: dict<Colorscheme>
 
 # Helper functions {{{
+def In(item: any, items: list<any>): bool
+  return index(items, item) != -1
+enddef
+
+def NotIn(item: any, items: list<any>): bool
+  return index(items, item) == -1
+enddef
+
 def ClearScreen()
   redraw
   echo "\r"
@@ -51,9 +59,114 @@ def WriteColorscheme(content: list<string>, outpath: string, overwrite = false):
 
   return true
 enddef
+
+def ColorschemePath(bufnr: number): string
+  var name: string
+
+  if colorschemes->has_key(bufnr)
+    const meta = colorschemes[bufnr].metadata
+    name = meta.shortname
+  else
+    # Extract the name of the color scheme from the template
+    const matchedName = matchlist(
+      getbufline(bufnr, 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)'
+    )
+    if empty(matchedName)  # Fallback to using the template's name
+      name = path.Stem(bufname(bufnr))
+    else
+      name = matchedName[1]
+    endif
+  endif
+
+  return path.Join(b:colortemplate_outdir, 'colors', name .. '.vim')
+enddef
+# }}}
+
+# Toolbar {{{
+class Toolbar
+  public this.entries: list<string>
+  public this.actions: dict<string>
+
+  def new()
+    this.entries = [
+      'Build!',
+      'BuildAll!',
+      'Check',
+      'Show',
+      'Hide',
+      'Source',
+      'Colortest',
+      'HiTest',
+      'OutDir',
+      'Stats*',
+    ]
+    this.actions = extend({
+          \ 'Build!':     ':Colortemplate!<cr>',
+          \ 'BuildAll!':  ':ColortemplateAll!<cr>',
+          \ 'Check':      ':ColortemplateCheck<cr>',
+          \ 'Colortest':  ':ColortemplateTest<cr>',
+          \ 'HiTest':     ':ColortemplateHiTest<cr>',
+          \ 'Hide':       ':ColortemplateHide<cr>',
+          \ 'OutDir':     ':ColortemplateOutdir<cr>',
+          \ 'Show':       ':ColortemplateShow<cr>',
+          \ 'Source':     ':ColortemplateSource<cr>',
+          \ 'Stats*':     ':ColortemplateStats<cr>',
+          \ }, get(g:, 'colortemplate_toolbar_actions', {}))
+  enddef
+
+  def Show()
+    if has('menu')
+        && get(g:, 'colortemplate_toolbar', true)
+        && getbufvar('%', '&ft') == 'colortemplate'
+        && expand('%:t') !~# '\m^_'
+      nunmenu WinBar
+
+      var n = 1
+
+      for entry in this.entries
+        if this.actions->has_key(entry)
+          execute printf(
+            'nnoremenu <silent> 1.%d WinBar.%s %s', n, escape(entry, '@\/ '), this.actions[entry]
+          )
+          ++n
+        endif
+      endfor
+
+      nnoremenu 1.99 WinBar.✕ :nunmenu WinBar<cr>
+    endif
+  enddef
+
+  def Hide()
+    if getbufvar('%', '&ft') == 'colortemplate'
+      nunmenu WinBar
+    endif
+  enddef
+endclass
+
+
 # }}}
 
 # Public {{{
+export const toolbar = Toolbar.new()
+
+export def ColorTest(bufnr: number)
+  ShowColorscheme(bufnr)
+  runtime syntax/colortest.vim
+enddef
+
+export def HighlightTest(bufnr: number)
+  ShowColorscheme(bufnr)
+  runtime syntax/hitest.vim
+enddef
+
+export def Validate(bufnr: number)
+  if ViewSource(bufnr)
+    runtime colors/tools/check_colors.vim
+    input('[Colortemplate] Press a key to continue')
+    wincmd c
+  endif
+enddef
+
 export def AskOutputDir(): string
   if exists('b:colortemplate_outdir')
     if !empty(b:colortemplate_outdir)
@@ -98,30 +211,47 @@ export def SetOutputDir(dirpath: string): bool
   return true
 enddef
 
+var enabledColors:  list<string> = []
+var prevColors:     string
+var prevBackground: string
+
+export def ShowColorscheme(bufnr: number)
+  const sourcePath    = ColorschemePath(bufnr)
+  const colorsName    = path.Stem(sourcePath)
+  const currentColors = get(g:, 'colors_name', 'default')
+
+  if currentColors->NotIn(enabledColors)
+    prevColors = currentColors
+    prevBackground = &background
+  endif
+
+  try
+    execute 'colorscheme' colorsName
+  catch
+    Error(v:exception)
+    return
+  endtry
+
+  if colorsName->NotIn(enabledColors)
+    enabledColors->add(colorsName)
+  endif
+enddef
+
+export def HideColorscheme()
+  enabledColors = []
+  &background   = prevBackground
+  execute 'colorscheme' prevColors
+enddef
 
 export def ViewSource(bufnr: number): bool
-  var name: string
+  const sourcePath = ColorschemePath(bufnr)
 
-  if colorschemes->has_key(bufnr)
-    const meta = colorschemes[bufnr].metadata
-    name = meta.shortname
-  else
-    # Extract the name of the color scheme from the template
-    const matchedName = matchlist(
-      getbufline(bufnr, 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)'
-    )
-    if empty(matchedName)  # Fallback to using the template's name
-      name = path.Stem(bufname(bufnr))
-    else
-      name = matchedName[1]
-    endif
-  endif
-
-  const sourcePath = path.Join(b:colortemplate_outdir, 'colors', name .. '.vim')
   if !path.IsReadable(sourcePath)
-    return Error(printf('Cannot open file at %s', sourcePath))
+    return Error(printf('Color scheme not found at %s', sourcePath))
   endif
+
   execute "keepalt split" sourcePath
+
   ClearScreen()
 
   return true

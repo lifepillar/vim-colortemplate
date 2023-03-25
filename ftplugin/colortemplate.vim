@@ -52,7 +52,7 @@ b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl commentstring< omnifunc<
 
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> ga    <scriptcmd>call colortemplate#getinfo(v:count1)<cr>
-  nnoremap <silent> <buffer> <c-l> <scriptcmd>call colortemplate#toolbar#show()<cr><c-l>
+  nnoremap <silent> <buffer> <c-l> <scriptcmd>ctemplate.toolbar.Show()<cr><c-l>
   nnoremap <silent> <buffer> gl    <scriptcmd>call colortemplate#syn#toggle()<cr>
   nnoremap <silent> <buffer> gx    <scriptcmd>call colortemplate#approx_color(v:count1)<cr>
   nnoremap <silent> <buffer> gy    <scriptcmd>call colortemplate#nearby_colors(v:count1)<cr>
@@ -63,10 +63,14 @@ endif
 
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate       silent ctemplate.Build(bufnr(), <q-args>, "<bang>")
 command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll    silent ctemplate.BuildAll(<q-args>, "<bang>")
-command! -buffer -nargs=0 -bar                     ColortemplateCheck  call colortemplate#validate()
+command! -buffer -nargs=0 -bar                     ColortemplateCheck  ctemplate.Validate(bufnr())
 command! -buffer -nargs=0                          ColortemplateOutdir ctemplate.AskOutputDir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats  call colortemplate#stats()
 command! -buffer -nargs=0 -bar                     ColortemplateSource ctemplate.ViewSource(bufnr())
+command! -buffer -nargs=0 -bar                     ColortemplateShow   ctemplate.ShowColorscheme(bufnr())
+command! -buffer -nargs=0 -bar                     ColortemplateHide   ctemplate.HideColorscheme()
+command! -buffer -nargs=0 -bar                     ColortemplateTest   ctemplate.ColorTest(bufnr())
+command! -buffer -nargs=0 -bar                     ColortemplateHiTest ctemplate.HighlightTest(bufnr())
 
 if has('popupwin') && has('textprop')
   command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)
@@ -79,11 +83,11 @@ augroup END
 
 if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu'))
   augroup colortemplate
-    autocmd BufEnter,WinEnter *.colortemplate call colortemplate#toolbar#show()
-    autocmd BufLeave,WinLeave *.colortemplate call colortemplate#toolbar#hide()
+    autocmd BufEnter,WinEnter *.colortemplate ctemplate.toolbar.Show()
+    autocmd BufLeave,WinLeave *.colortemplate ctemplate.toolbar.Hide()
   augroup END
 endif
 
-call colortemplate#toolbar#show()
+ctemplate.toolbar.Show()
 
 # vim: foldmethod=marker nowrap et ts=2 sw=2

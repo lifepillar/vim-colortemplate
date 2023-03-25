@@ -110,16 +110,16 @@ export def Expand(path: string, base = ''): string
   return Clean(getcwd()->C(base)->C(path))
 enddef
 
-export def IsEqual(path1: string, path2: string, base = ''): bool
-  return Expand(path1, base) == Expand(path2, base)
-enddef
-
 export def Contains(path: string, subpath: string,  base = ''): bool
   const path_    = Parts(Expand(path, base))
   const subpath_ = Parts(Expand(subpath, base))
   const n_       = len(path_)
 
   return n_ < 1 || path_ == subpath_[0 : (n_ - 1)]
+enddef
+
+export def IsEqual(path1: string, path2: string, base = ''): bool
+  return Expand(path1, base) == Expand(path2, base)
 enddef
 
 export def MakeDir(path: string, flags = ''): bool

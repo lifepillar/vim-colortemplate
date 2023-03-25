@@ -53,6 +53,7 @@ enddef
 def Test_Path_Exists()
   assert_true(path.Exists(TESTDIR))
   assert_true(path.Exists(TESTDIR->path.Join(TESTFILE)))
+  assert_true(path.Exists('~'))
   assert_false(path.Exists(path.Join(TESTPATH, '#$%^&*(')))
 enddef
 
@@ -138,6 +139,7 @@ def Test_Path_Expand()
     getcwd()->path.C('a')->path.C('b'),
     path.Expand('b', 'a')
   )
+  assert_equal($HOME, path.Expand('~'))
 enddef
 
 def Test_Path_Contains()

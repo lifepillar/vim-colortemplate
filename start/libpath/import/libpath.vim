@@ -28,7 +28,7 @@ export def IsExecutable(path: string): bool
 enddef
 
 export def Exists(path: string): bool
-  return filereadable(path) || isdirectory(path)
+  return filereadable(Expand(path)) || isdirectory(Expand(path))
 enddef
 
 export def IsReadable(path: string): bool
@@ -100,7 +100,11 @@ enddef
 
 export def Expand(path: string, base = ''): string
   if isabsolutepath(path)
-    return path
+    if path[0] == '~'
+      return Clean(fnamemodify(path, ':p'))
+    else
+      return Clean(path)
+    endif
   endif
 
   if isabsolutepath(base)

@@ -94,7 +94,7 @@ export def SetOutputDir(dirpath: string): bool
   return true
 enddef
 
-export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
+export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
   if !IsColortemplateBuffer('%')
     return Error('Command can be executed only in Colortemplate buffers')
   endif
@@ -147,6 +147,53 @@ export def Make(bufnr: number, outdir: string = '', bang: string = ''): bool
     'Success! %s created in %.00fms (parser: %.00fms, generator: %.00fms)',
     path.Basename(outpath), elapsed, elapsedParse, elapsedGen
   ))
+
+  return true
+enddef
+
+# Build all templates inside a directory
+export def BuildAll(directory: string = '', bang: string = ''): bool
+  if !IsColortemplateBuffer('%')
+    return Error('Command can be executed only in Colortemplate buffers')
+  endif
+
+  var buildDir = directory
+
+  if empty(buildDir)
+    if !empty(expand('%'))
+      buildDir = expand('%:p:h')
+    else
+      return Error('Build directory not set. Is the current buffer unsaved?')
+    endif
+  endif
+
+  if !path.IsReadable(buildDir)
+    return Error(printf('Path not readable: %s', buildDir))
+  endif
+
+  const templates = path.Children(buildDir, '[^_]*.colortemplate')
+  const N         = len(templates)
+  const startTime = reltime()
+  var   success   = true
+  var   failed    = []
+
+  for template in templates
+    execute "edit" template
+    if !Build(bufnr(), null_string, bang)
+      failed->add(path.Basename(template))
+      success = false
+    endif
+  endfor
+
+  const elapsed = 1000.0 * reltimefloat(reltime(startTime))
+
+  if success
+    Notice(printf(
+      'Success! %d color scheme%s built in %.00fms', N, N == 1 ? '' : 's', elapsed
+    ))
+  else
+    return Error(printf('Some templates failed to build (see :messages): %s', failed))
+  endif
 
   return true
 enddef

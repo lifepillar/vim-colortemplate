@@ -5,19 +5,19 @@ vim9script
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # License:     Vim license (see `:help license`)
 
+import 'libpath.vim' as path
+import autoload '../autoload/v3/colortemplate.vim' as ctemplate
+
 if exists("b:did_ftplugin")
   finish
 endif
 
 b:did_ftplugin = 1
 
-import 'libpath.vim' as path
-import autoload '../autoload/v3/colortemplate.vim' as colortemplate
-
 setlocal commentstring=;%s
 setlocal omnifunc=syntaxcomplete#Complete
 
-def InitOutputDir()
+def g:InitOutputDir()
   if empty(get(b:, 'colortemplate_outdir', ''))
     b:colortemplate_outdir = ''  # Make sure variable exists
 
@@ -31,11 +31,11 @@ def InitOutputDir()
       outdir = path.Parent(outdir)
     endif
 
-    colortemplate.SetOutputDir(outdir)
+    ctemplate.SetOutputDir(outdir)
   endif
 enddef
 
-InitOutputDir()
+g:InitOutputDir()
 
 if exists('b:undo_ftplugin')
   b:undo_ftplugin ..= '|'
@@ -61,11 +61,11 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   endif
 endif
 
-command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate colortemplate.Make(bufnr(), <q-args>, "<bang>")
-command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll silent call colortemplate#build_dir(<q-args>, "<bang>")
-command! -buffer -nargs=0 -bar                     ColortemplateCheck call colortemplate#validate()
-command! -buffer -nargs=0                          ColortemplateOutdir colortemplate.AskOutputDir()
-command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
+command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate       silent ctemplate.Build(bufnr(), <q-args>, "<bang>")
+command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll    silent ctemplate.BuildAll(<q-args>, "<bang>")
+command! -buffer -nargs=0 -bar                     ColortemplateCheck  call colortemplate#validate()
+command! -buffer -nargs=0                          ColortemplateOutdir ctemplate.AskOutputDir()
+command! -buffer -nargs=0 -bar                     ColortemplateStats  call colortemplate#stats()
 
 if has('popupwin') && has('textprop')
   command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)
@@ -73,7 +73,7 @@ endif
 
 augroup colortemplate
   autocmd!
-  autocmd BufWritePost *.colortemplate InitOutputDir()
+  autocmd BufWritePost *.colortemplate g:InitOutputDir()
 augroup END
 
 if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu'))

@@ -31,7 +31,15 @@ export def Exists(path: string): bool
   return filereadable(path) || isdirectory(path)
 enddef
 
-export def IsFileReadable(path: string): bool
+export def IsReadable(path: string): bool
+  if isdirectory(path)
+    try
+      readdir(path, (_) => -1)
+      return true
+    catch
+      return false
+    endtry
+  endif
   return filereadable(path)
 enddef
 
@@ -39,12 +47,12 @@ export def IsWritable(path: string): bool
   return filewritable(path) >= 1
 enddef
 
-export def Dirname(path: string): string
-  return fnamemodify(path, ":p:h:t")
+export def Parent(path: string): string
+  return fnamemodify(Clean(path), ":h")
 enddef
 
 export def Basename(path: string): string
-  return fnamemodify(Clean(path), ":p:t")
+  return fnamemodify(Clean(path), ":t")
 enddef
 
 export def Stem(path: string): string
@@ -53,11 +61,6 @@ enddef
 
 export def Extname(path: string): string
   return fnamemodify(Clean(path), ":e")
-enddef
-
-
-export def Parent(path: string): string
-  return fnamemodify(Clean(path), ":h")
 enddef
 
 export def Split(path: string): list<string>

@@ -7,6 +7,12 @@ const TESTPATH = resolve(expand('<sfile>:p'))
 const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
+def Test_Path_Clean()
+  assert_equal('a',  path.Clean('a/'))
+  assert_equal('/a', path.Clean('///a//b/../'))
+  assert_equal('/',  path.Clean('/.'))
+enddef
+
 def Test_Path_IsAbsolute()
   assert_true(path.IsAbsolute('/'))
   assert_true(path.IsAbsolute('/a'))
@@ -29,12 +35,53 @@ def Test_Path_IsRelative()
   assert_true(path.IsRelative('..'))
 enddef
 
+def Test_Path_IsDirectory()
+  assert_true(path.IsDirectory(TESTDIR))
+  assert_false(path.IsDirectory(TESTPATH))
+enddef
+
+def Test_Path_IsExecutable()
+  assert_true(path.IsExecutable(v:progpath))
+  assert_false(path.IsExecutable(TESTPATH))
+  assert_false(path.IsExecutable(TESTDIR))
+enddef
+
+def Test_Path_Exists()
+  assert_true(path.Exists(TESTDIR))
+  assert_true(path.Exists(TESTDIR->path.Join(TESTFILE)))
+  assert_false(path.Exists(path.Join(TESTPATH, '#$%^&*(')))
+enddef
+
+def Test_Path_IsReadable()
+  assert_true(path.IsReadable(TESTPATH))
+  assert_true(path.IsReadable(TESTDIR))
+  assert_false(path.IsReadable(path.Join(TESTPATH, '#$%^&*(')))
+enddef
+
+def Test_Path_IsWritable()
+  assert_true(path.IsWritable(TESTPATH))
+  assert_true(path.IsWritable(TESTDIR))
+  assert_false(path.IsWritable(path.Join(TESTPATH, '#$%^&*(')))
+enddef
+
+def Test_Path_Parent()
+  assert_equal(TESTDIR, path.Parent(TESTPATH))
+  assert_equal(TESTDIR, path.Parent(TESTPATH .. path.SLASH))
+  assert_equal('/a/b', path.Parent('/a/b/c'))
+  assert_equal('/a/b', path.Parent('/a/b/c/'))
+  assert_equal('/', path.Parent('/a'))
+  assert_equal('.', path.Parent('a'))
+  assert_equal('.', path.Parent('.'))
+enddef
+
 def Test_Path_Basename()
   assert_equal('foo.vim', path.Basename('a/foo.vim'))
   assert_equal('foo.vim', path.Basename('/a/foo.vim'))
   assert_equal('foo.vim', path.Basename('/a/foo.vim'))
   assert_equal('foo.vim', path.Basename('/a/foo.vim/'))
   assert_equal('test_libpath.vim', path.Basename(TESTPATH))
+  assert_equal('foo', path.Basename('/bar/foo/'))
+  assert_equal('test', path.Basename(TESTDIR))
 enddef
 
 def Test_Path_Stem()
@@ -49,23 +96,6 @@ def Test_Path_Extname()
   assert_equal('vim', path.Extname('/a/b/foo.vim/'))
   assert_equal('', path.Extname('/home/me/.vim/.vimrc'))
   assert_equal('', path.Extname('/home/me/.vim/.vimrc/'))
-enddef
-
-def Test_Path_Dirname()
-  assert_equal('test', path.Dirname(TESTPATH))
-enddef
-
-def Test_Path_Parent()
-  assert_equal(TESTDIR, path.Parent(TESTPATH))
-  assert_equal('/a/b', path.Parent('/a/b/c'))
-  assert_equal('/a/b', path.Parent('/a/b/c/'))
-  assert_equal('/', path.Parent('/a'))
-enddef
-
-def Test_Path_Clean()
-  assert_equal('a',  path.Clean('a/'))
-  assert_equal('/a', path.Clean('///a//b/../'))
-  assert_equal('/',  path.Clean('/.'))
 enddef
 
 def Test_Path_Split()
@@ -96,6 +126,8 @@ def Test_Path_Expand()
   assert_equal('/a/b/c', path.Expand('c', '/a/b'))
   assert_equal(getcwd(), path.Expand(''))
   assert_equal(getcwd(), path.Expand('.'))
+  echomsg printf("DEBUG: %s", TESTDIR)
+  assert_equal(TESTDIR, path.Expand('../test', TESTDIR))
   assert_equal(
     getcwd()->path.C('a')->path.C('b'),
     path.Expand('b', 'a')
@@ -110,33 +142,6 @@ def Test_Path_Contains()
   assert_false('/a'->path.Contains('/'))
   assert_false('/usr/lib/foo'->path.Contains('/usr/lib'))
 enddef
-
-def Test_Path_Exists()
-  assert_true(path.Exists(TESTDIR))
-  assert_true(path.Exists(TESTDIR->path.Join(TESTFILE)))
-
-  assert_false(path.Exists(path.Join(TESTPATH, '#$%^&*(')))
-enddef
-
-def Test_Path_IsExecutable()
-  assert_true(path.IsExecutable(v:progpath))
-  assert_false(path.IsExecutable(TESTPATH))
-  assert_false(path.IsExecutable(TESTDIR))
-enddef
-
-def Test_Path_IsFileReadable()
-  assert_true(path.IsFileReadable(TESTPATH))
-  assert_false(path.IsFileReadable(TESTDIR))
-  assert_false(path.IsFileReadable(path.Join(TESTPATH, '#$%^&*(')))
-enddef
-
-
-def Test_Path_IsWritable()
-  assert_true(path.IsWritable(TESTPATH))
-  assert_true(path.IsWritable(TESTDIR))
-  assert_false(path.IsWritable(path.Join(TESTPATH, '#$%^&*(')))
-enddef
-
 
 def Test_Path_MakeDir()
   const dirname = 'emptydir'
@@ -156,5 +161,6 @@ def Test_Path_MakeDir()
 
   assert_false(path.Exists(dirpath))
 enddef
+
 
 tt.Run('_Path_')

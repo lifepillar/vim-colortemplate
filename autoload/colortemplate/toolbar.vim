@@ -20,7 +20,7 @@ fun! s:init_toolbar()
         \ 'Hide':      ':call colortemplate#disable_colorscheme()<cr>',
         \ 'OutDir':    ':ColortemplateOutdir<cr>',
         \ 'Show':      ':call colortemplate#enable_colorscheme()<cr>',
-        \ 'Source':    ':call colortemplate#view_source()<cr>',
+        \ 'Source':    ':ColortemplateSource<cr>',
         \ 'Stats':     ':ColortemplateStats<cr>',
         \ }, get(g:, 'colortemplate_toolbar_actions', {}))
 endf

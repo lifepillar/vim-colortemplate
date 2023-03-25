@@ -66,6 +66,7 @@ command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll    silent ct
 command! -buffer -nargs=0 -bar                     ColortemplateCheck  call colortemplate#validate()
 command! -buffer -nargs=0                          ColortemplateOutdir ctemplate.AskOutputDir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats  call colortemplate#stats()
+command! -buffer -nargs=0 -bar                     ColortemplateSource ctemplate.ViewSource(bufnr())
 
 if has('popupwin') && has('textprop')
   command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)

@@ -1,13 +1,14 @@
 vim9script
 
-import './version.vim'
-import './colorscheme.vim'
-import 'librelalg.vim' as ra
+import './version.vim'     as version
+import './colorscheme.vim' as cscheme
+import 'librelalg.vim'     as ra
 
 const VERSION        = version.VERSION
-const NO_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
-const Database       = colorscheme.Database
-const Metadata       = colorscheme.Metadata
+const NO_DISCR_VALUE = cscheme.DEFAULT_DISCR_VALUE
+const Database       = cscheme.Database
+const Metadata       = cscheme.Metadata
+const Colorscheme    = cscheme.Colorscheme
 const Sort           = ra.Sort
 const Transform      = ra.Transform
 
@@ -333,8 +334,10 @@ def EmitColorscheme(db: Database, meta: Metadata, indent = 0): list<string>
   return theme
 enddef
 
+export def Generate(kolorscheme: Colorscheme): list<string>
+  const meta  = kolorscheme.metadata
+  const dbase = {"dark": kolorscheme.dark, "light": kolorscheme.light}
 
-export def Generate(meta: Metadata, dbase: dict<Database>): list<string>
   CheckMetadata(meta)
 
   var theme = Header(meta)

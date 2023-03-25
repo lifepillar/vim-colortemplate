@@ -480,3 +480,10 @@ export class Database
       ->PartitionBy('DiscrName')
   enddef
 endclass
+
+export class Colorscheme
+  this.bufnr:    number   # Template's buffer number
+  this.metadata: Metadata
+  this.dark:     Database
+  this.light:    Database
+endclass

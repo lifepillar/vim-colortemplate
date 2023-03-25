@@ -5,7 +5,11 @@ import './colorscheme.vim' as cscheme
 import './parser.vim'    as parser
 import './generator.vim' as generator
 
-const Metadata = cscheme.Metadata
+const Metadata    = cscheme.Metadata
+const Colorscheme = cscheme.Colorscheme
+
+# Cache for generated color schemes
+var colorschemes: dict<Colorscheme>
 
 # Helper functions {{{
 def ClearScreen()
@@ -94,6 +98,37 @@ export def SetOutputDir(dirpath: string): bool
   return true
 enddef
 
+
+export def ViewSource(bufnr: number): bool
+  var name: string
+
+  if colorschemes->has_key(bufnr)
+    const meta = colorschemes[bufnr].metadata
+    name = meta.shortname
+  else
+    # Extract the name of the color scheme from the template
+    const matchedName = matchlist(
+      getbufline(bufnr, 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)'
+    )
+    if empty(matchedName)  # Fallback to using the template's name
+      name = path.Stem(bufname(bufnr))
+    else
+      name = matchedName[1]
+    endif
+  endif
+
+  const sourcePath = path.Join(b:colortemplate_outdir, 'colors', name .. '.vim')
+  if !path.IsReadable(sourcePath)
+    return Error(printf('Cannot open file at %s', sourcePath))
+  endif
+  execute "keepalt split" sourcePath
+  ClearScreen()
+
+  return true
+enddef
+# }}}
+
+# Main {{{
 export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
   if !IsColortemplateBuffer('%')
     return Error('Command can be executed only in Colortemplate buffers')
@@ -125,17 +160,20 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
     return false
   endif
 
-  const startGen = reltime()
-  const output: list<string> = generator.Generate(
-    parseResult.meta, {
-      'dark':  parseResult.dark,
-      'light': parseResult.light,
-    }
+  # Cache the color scheme data
+  colorschemes[bufnr] = Colorscheme.new(
+    bufnr,
+    parseResult.meta,
+    parseResult.dark,
+    parseResult.light
   )
+
+  const startGen       = reltime()
+  const output         = generator.Generate(colorschemes[bufnr])
   const meta: Metadata = parseResult.meta
-  const elapsedGen = 1000.0 * reltimefloat(reltime(startGen))
-  const name       = meta.shortname .. '.vim'
-  const outpath    = path.Join(outputDir, 'colors', name)
+  const elapsedGen     = 1000.0 * reltimefloat(reltime(startGen))
+  const name           = meta.shortname .. '.vim'
+  const outpath        = path.Join(outputDir, 'colors', name)
 
   if !WriteColorscheme(output, outpath, overwrite)
     return false

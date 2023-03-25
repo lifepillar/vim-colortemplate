@@ -24,7 +24,7 @@ export def IsDirectory(path: string): bool
 enddef
 
 export def IsExecutable(path: string): bool
-  return executable(path) == 1
+  return !empty(exepath(path))
 enddef
 
 export def Exists(path: string): bool

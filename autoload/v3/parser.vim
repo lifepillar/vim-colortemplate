@@ -1,11 +1,12 @@
 vim9script
 
-import 'libparser.vim' as parser
-import './colorscheme.vim'
+import 'libparser.vim'     as parser
+import 'libpath.vim'       as path
+import './colorscheme.vim' as cscheme
 
 # Aliases {{{
-const Database       = colorscheme.Database
-const Metadata       = colorscheme.Metadata
+const Database       = cscheme.Database
+const Metadata       = cscheme.Metadata
 
 const Apply          = parser.Apply
 const Bol            = parser.Bol
@@ -502,10 +503,11 @@ const Template      = Seq(
 # }}}
 
 # Main {{{
-const DEFAULT_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
+const DEFAULT_DISCR_VALUE = cscheme.DEFAULT_DISCR_VALUE
 
 class ColortemplateContext extends Context
-  def new(this.text)
+  def new(this.text, basedir = '')
+    this.state.basedir                = basedir
     this.state.meta                   = Metadata.new()
     this.state.dark                   = Database.new('dark')
     this.state.light                  = Database.new('light')
@@ -527,9 +529,10 @@ class ColortemplateContext extends Context
 endclass
 
 export def Parse(
-    text:    string,
-    Parser:  func(Context): Result = Template,
-    context: Context               = ColortemplateContext.new(text)
+    text: string,
+    basedir = '',
+    Parser: func(Context): Result = Template,
+    context: Context = ColortemplateContext.new(text, basedir)
     ): dict<any>
   var   ctx    = context
   const result = Parser(ctx)
@@ -542,18 +545,19 @@ export def Parse(
 enddef
 
 def ParseInclude(v: list<string>, ctx: Context)
-  const path   = v[2]
-  const text   = join(readfile(path), "\n")
-  var   newCtx = ColortemplateContext.new(text)
+  const state       = ctx.state
+  const includePath = path.Expand(v[2], state.basedir)
+  const text        = join(readfile(includePath), "\n")
+  var   newCtx      = ColortemplateContext.new(text)
 
-  newCtx.state = deepcopy(ctx.state)
+  newCtx.state = deepcopy(state)
 
-  const result = Parse(text, Template, newCtx)
+  const result = Parse(text, null_string, Template, newCtx)
   const parseResult: Result = result.result
 
   if !parseResult.success
     throw printf("in %s, byte %d: %s",
-      path, parseResult.errpos, parseResult.label
+      includePath, parseResult.errpos, parseResult.label
     )
   endif
 

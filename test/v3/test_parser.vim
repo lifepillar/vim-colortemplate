@@ -71,7 +71,7 @@ def Test_Parser_LinkedGroup()
   assert_true(result.success)
   assert_true(meta.backgrounds.dark)
   assert_false(meta.backgrounds.light)
-  assert_equal(['gui', '256', '16', '8', '0'], meta.variants)
+  assert_equal(['0', '16', '256', '8', 'gui'], meta.variants)
 
   const r = ra.Query(
     dbase.LinkedGroup

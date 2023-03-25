@@ -21,6 +21,7 @@ packadd vim9asm
 **Libraries:**
 
 - **libparser**: a simple library to write parsers (alpha level).
+- **libpath**: simplifies working with paths in Vim (alpha level).
 - **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha
   level).
 - **libtinytest**: a minimal unit-testing library (beta level).

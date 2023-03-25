@@ -13,6 +13,11 @@ Basename({path})			*libpath.Basename()*
 		Return the last component of {path} (after first stripping all
 		trailing path separators).
 
+Children({path}[, {glob}])			*libpath.Children()*
+		Return the children of {path} (files and directories, not
+		recursively). Return only those matching the {glob} pattern if
+		{glob} is provided. See also |glob()|.
+
 Clean({path})				*libpath.Clean()*
 		Simplify a path. Like |simplify()|, but also removes any
 		trailing slashes, if present.
@@ -28,7 +33,7 @@ Exists({path})				*libpath.Exists()*
 		Return |true| if {path} exists, |false| otherwise. See also
 		|filereadable()| and |isdirectory()|.
 
-Expand({path}[, {base}])		*libpath.Extname()*
+Expand({path}[, {base}])		*libpath.Expand()*
 		Convert {path} into an absolute path. Relative paths are
 		referenced from the current working directory (see
 		|getcwd()|) unless {base} is not empty, in which case it will

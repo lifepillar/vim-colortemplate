@@ -130,4 +130,8 @@ export def MakeDir(path: string, flags = ''): bool
   return mkdir(fnameescape(path), flags)
 enddef
 
+export def Children(path: string, globPattern = '*'): list<string>
+  return glob(C(path, globPattern), true, true, true)
+enddef
+
 # vim: foldmethod=marker nowrap et ts=2 sw=2

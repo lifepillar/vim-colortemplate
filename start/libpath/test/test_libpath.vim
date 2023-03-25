@@ -170,5 +170,9 @@ def Test_Path_MakeDir()
   assert_false(path.Exists(dirpath))
 enddef
 
+def Test_Path_Children()
+  assert_equal([TESTPATH], path.Children(TESTDIR))
+  assert_equal([TESTPATH], path.Children(TESTDIR, '*.vim'))
+enddef
 
 tt.Run('_Path_')

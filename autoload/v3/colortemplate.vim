@@ -26,32 +26,21 @@ def Error(msg: string): bool
   return false
 enddef
 
-def Fatal(msg: string)
-  ClearScreen()
-  unsilent echoerr '[Colortemplate]' msg .. '.'
-enddef
-
 def IsColortemplateBuffer(bufname: string): bool
   return getbufvar(bufname, '&ft') == 'colortemplate'
 enddef
 
-def MakeDir(dirpath: string)
-  if !path.MakeDir(path.Expand(dirpath))
-    Fatal('Could not create directory: %s', dirpath)
-  endif
-enddef
-
-def SetOutputDir(dirpath: string)
+export def SetOutputDir(dirpath: string): bool
   if !IsColortemplateBuffer('%')
-    Fatal('Directory can be set only in Colortemplate buffers')
+    return Error('Directory can be set only in Colortemplate buffers')
   endif
 
   const newdir = path.Expand(dirpath)
 
   if !path.IsDirectory(newdir)
-    Fatal('Directory does not exist or path in not a directory')
+    return Error('Directory does not exist or path in not a directory')
   elseif !path.IsWritable(newdir)
-    Fatal('Directory is not writable')
+    return Error('Directory is not writable')
   endif
 
   b:colortemplate_outdir = newdir
@@ -59,10 +48,16 @@ def SetOutputDir(dirpath: string)
   if get(g:, 'colortemplate_rtp', true)
     execute 'set runtimepath^=' .. b:colortemplate_outdir
   endif
+
+  return true
 enddef
 
 def WriteColorscheme(content: list<string>, outpath: string, overwrite = false): bool
-  path.MakeDir(path.Parent(outpath), 'p')
+  const outdir = path.Pareent(outpath), 'p')
+
+  if !path.MakeDir(outdir)
+    return Error('Could not create directory: %s', outdir)
+  endif
 
   if overwrite || !path.Exists(outpath)
     if writefile(content, outpath) < 0

@@ -160,13 +160,33 @@ def Test_Parser_TranspBg()
     Normal /256/8 +transp_bg 1 black white
   END
 
-    parserInput = join(template, "\n")
-    const res = Parse(parserInput)
-    const result: Result = res.result
+  parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
 
-    assert_equal('', result.label)
-    assert_true(result.success)
-  enddef
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
+
+def Test_Parser_GUIColor()
+  const template =<< trim END
+    Variants:   256 8
+    Background: light
+
+    Color: black  Black   0  Black
+    Color: blue   Blue   12  Blue
+
+    Normal black blue
+  END
+
+  parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+
+enddef
 
 
-  tt.Run('_Parser_')
+tt.Run('_Parser_')

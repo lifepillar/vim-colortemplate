@@ -351,6 +351,7 @@ const NUM256        = R('\d\{1,3}\>')
 const NUMBER        = R('-\=\d\+\%(\.\d*\)\=')
 const BACKGROUND    = R('dark\>\|light\>')
 const HEXCOL        = R('#[A-Fa-f0-9]\{6}')
+const GUICOL        = OneOf(HEXCOL, IDENTIFIER)
 const STRING        = R('"[^"]*"')
 const TEXTLINE      = R('[^\r\n]\+')
 const THEMENAME     = R('\w\+')
@@ -365,7 +366,7 @@ const L_COLORS      = Lab(K_COLORS,             "Expected the keyword 'Colors'")
 const L_CONST       = Lab(K_CONST,              "Expected the keyword 'const'")
 const L_DISCRNAME   = Lab(DISCRNAME,            "Expected an identifier")
 const L_EQ          = Lab(EQ,                   "Expected an equal sign")
-const L_HEXCOL      = Lab(HEXCOL,               "Expected a hex color value")
+const L_GUICOL      = Lab(GUICOL,               "Expected a GUI color value")
 const L_HIGROUPNAME = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
 const L_IDENTIFIER  = Lab(IDENTIFIER,           "Expected an identifier")
 const L_NAME        = Lab(K_NAME,               "Expected the keyword 'Name'")
@@ -461,7 +462,7 @@ const ColorDef      = Seq(
                         K_COLOR,
                         L_COLON,
                         L_COLORNAME,
-                        L_HEXCOL,
+                        L_GUICOL,
                         L_COL256,
                         Opt(COL16)
                       )                                            ->Apply(DefineColor)

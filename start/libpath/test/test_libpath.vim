@@ -9,6 +9,9 @@ const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
 def Test_Path_Clean()
   assert_equal('a',  path.Clean('a/'))
+  assert_equal('a/b',  path.Clean('a/b'))
+  assert_equal('a/b',  path.Clean('a/b//'))
+  assert_equal('a/b',  path.Clean('a/b///'))
   assert_equal('/a', path.Clean('///a//b/../'))
   assert_equal('/',  path.Clean('/.'))
 enddef
@@ -37,6 +40,7 @@ enddef
 
 def Test_Path_IsDirectory()
   assert_true(path.IsDirectory(TESTDIR))
+  assert_true(path.IsDirectory($VIMRUNTIME))
   assert_false(path.IsDirectory(TESTPATH))
 enddef
 

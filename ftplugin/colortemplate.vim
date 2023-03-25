@@ -5,26 +5,37 @@ vim9script
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # License:     Vim license (see `:help license`)
 
-import autoload '../autoload/v3/colortemplate.vim' as colortemplate
-
 if exists("b:did_ftplugin")
   finish
 endif
 
 b:did_ftplugin = 1
 
-b:colortemplate_outdir = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
-
-if b:colortemplate_outdir =~? '\m\%(color\)\=templates\=$'
-  b:colortemplate_outdir = fnamemodify(b:colortemplate_outdir, ':h')
-endif
-
-if get(g:, 'colortemplate_rtp', 1)
-  execute 'set runtimepath^=' .. b:colortemplate_outdir
-endif
+import 'libpath.vim' as path
+import autoload '../autoload/v3/colortemplate.vim' as colortemplate
 
 setlocal commentstring=;%s
 setlocal omnifunc=syntaxcomplete#Complete
+
+def InitOutputDir()
+  if empty(get(b:, 'colortemplate_outdir', ''))
+    b:colortemplate_outdir = ''  # Make sure variable exists
+
+    if empty(expand('%:p'))
+      return
+    endif
+
+    var outdir = expand('%:p:h')
+
+    if path.Basename(outdir) =~? '\m^\%(color\)\=templates\=$'
+      outdir = path.Parent(outdir)
+    endif
+
+    colortemplate.SetOutputDir(outdir)
+  endif
+enddef
+
+InitOutputDir()
 
 if exists('b:undo_ftplugin')
   b:undo_ftplugin ..= '|'
@@ -34,10 +45,10 @@ endif
 
 b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl commentstring< omnifunc<'
 
-if has('balloon_eval') || has('balloon_eval_term')
-  setlocal balloonexpr=colortemplate#syn#balloonexpr()
-  b:undo_ftplugin = "|setl balloonexpr<"
-endif
+# if has('balloon_eval') || has('balloon_eval_term')
+#   setlocal balloonexpr=colortemplate#syn#balloonexpr()
+#   b:undo_ftplugin = "|setl balloonexpr<"
+# endif
 
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> ga    <scriptcmd>call colortemplate#getinfo(v:count1)<cr>
@@ -50,20 +61,23 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   endif
 endif
 
-# FIXME: make silent?
 command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate colortemplate.Make(bufnr(), <q-args>, "<bang>")
 command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll silent call colortemplate#build_dir(<q-args>, "<bang>")
 command! -buffer -nargs=0 -bar                     ColortemplateCheck call colortemplate#validate()
-command! -buffer -nargs=0                          ColortemplateOutdir call colortemplate#askoutdir()
+command! -buffer -nargs=0                          ColortemplateOutdir colortemplate.AskOutputDir()
 command! -buffer -nargs=0 -bar                     ColortemplateStats call colortemplate#stats()
 
 if has('popupwin') && has('textprop')
   command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)
 endif
 
+augroup colortemplate
+  autocmd!
+  autocmd BufWritePost *.colortemplate InitOutputDir()
+augroup END
+
 if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu'))
   augroup colortemplate
-    autocmd!
     autocmd BufEnter,WinEnter *.colortemplate call colortemplate#toolbar#show()
     autocmd BufLeave,WinLeave *.colortemplate call colortemplate#toolbar#hide()
   augroup END

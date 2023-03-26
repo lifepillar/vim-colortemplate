@@ -20,6 +20,7 @@ packadd vim9asm
 
 **Libraries:**
 
+- **libcolor**: functions and classes to work with colors (alpha level).
 - **libparser**: a simple library to write parsers (alpha level).
 - **libpath**: simplifies working with paths in Vim (alpha level).
 - **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha

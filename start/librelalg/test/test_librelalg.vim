@@ -9,6 +9,7 @@ import 'librelalg.vim' as ra
 import 'libtinytest.vim' as tt
 
 # Aliases {{{
+const AntiEquiJoin         = ra.AntiEquiJoin
 const AntiJoin             = ra.AntiJoin
 const Avg                  = ra.Avg
 const AvgBy                = ra.AvgBy
@@ -1275,6 +1276,52 @@ def Test_RA_AntiJoin()
   assert_equal(expected3, SortBy(From(R)->AntiJoin(S, (rt, st) => rt.A <= st.C), 'A'))
   assert_equal(expected4, SortBy(From(S)->AntiJoin(R, (st, rt) => rt.A <= st.C), 'B'))
   assert_equal(expected5, Query(From(S)->AntiJoin(S, (s1, s2) => s1.C > s2.C)))
+  assert_equal(instanceR, r)
+  assert_equal(instanceS, s)
+enddef
+
+def Test_RA_AntiEquiJoin()
+  var R = Rel.new('R', {A: Int, B: Int}, 'A')
+  const r = R.instance
+
+  const instanceR = [
+    {A: 0, B: 1},
+    {A: 1, B: 2},
+    {A: 2, B: 1},
+  ]
+  R.InsertMany(instanceR)
+
+  var S = Rel.new('S', {B: Int, C: Int}, 'C')
+  const s = S.instance
+
+  const instanceS = [
+    {B: 3, C: 1},
+    {B: 1, C: 0},
+  ]
+  S.InsertMany(instanceS)
+
+  const expected1 = [
+    {A: 1, B: 2},
+  ]
+  const expected2 = [
+    {B: 3, C: 1},
+  ]
+  const expected3 = [
+    {A: 0, B: 1},
+    {A: 2, B: 1},
+  ]
+  const expected4 = [
+    {A: 2, B: 1},
+  ]
+
+  assert_equal(expected1, Query(From(R)->AntiEquiJoin(S, 'B')))
+  assert_equal(expected1, Query(From(R)->AntiEquiJoin(S, 'B', 'C')))
+  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, 'B')))
+  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, 'B', 'A')))
+  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, 'B', 'A')))
+  assert_equal(expected3, Query(From(R)->AntiEquiJoin(S, 'A', 'B')))
+  assert_equal(expected4, Query(From(R)->AntiEquiJoin(S, 'A', 'C')))
+  assert_equal([],        Query(From(S)->AntiEquiJoin(R, 'C', 'A')))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef

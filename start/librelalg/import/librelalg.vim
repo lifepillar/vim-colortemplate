@@ -921,8 +921,12 @@ export def EquiJoinPred(
 enddef
 
 export def EquiJoin(
-    Arg1: any, Arg2: any, lftAttrs: any, rgtAttrs: any, prefix = '_'
-): func(func(dict<any>))
+    Arg1: any,
+    Arg2: any,
+    lftAttrs: any,
+    rgtAttrs: any = lftAttrs,
+    prefix = '_'
+    ): func(func(dict<any>))
   const lftAttrList = Listify(lftAttrs)
   const rgtAttrList = Listify(rgtAttrs)
 
@@ -1018,7 +1022,9 @@ export def Minus(Arg1: any, Arg2: any): func(func(dict<any>))
   }
 enddef
 
-export def SemiJoin(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+export def SemiJoin(
+    Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool
+): func(func(dict<any>))
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
@@ -1034,7 +1040,9 @@ export def SemiJoin(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool
   }
 enddef
 
-export def AntiJoin(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool): func(func(dict<any>))
+export def AntiJoin(
+    Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool
+): func(func(dict<any>))
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
@@ -1048,6 +1056,35 @@ export def AntiJoin(Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool
       Emit(t)
     })
   }
+enddef
+
+export def AntiEquiJoin(
+    Arg1: any,
+    Arg2: any,
+    lftAttrs: any,
+    rgtAttrs: any = lftAttrs
+): func(func(dict<any>))
+  const lftAttrList = Listify(lftAttrs)
+  const rgtAttrList = Listify(rgtAttrs)
+  const Cont        = From(Arg1)
+
+  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2) # Fast path
+    const rel: Rel = Arg2
+
+    return (Emit: func(dict<any>)) => {
+      Cont((t: dict<any>) => {
+        const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
+        if u is KEY_NOT_FOUND
+          Emit(t)
+        endif
+        return
+      })
+    }
+  endif
+
+  const Pred = EquiJoinPred(lftAttrList, rgtAttrList)
+
+  return AntiJoin(Arg1, Arg2, Pred)
 enddef
 
 # See: C. Date & H. Darwen, Outer Join with No Nulls and Fewer Tears, Ch. 20,

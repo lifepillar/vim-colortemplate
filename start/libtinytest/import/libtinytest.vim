@@ -123,9 +123,46 @@ def FinishTesting(time_spent: float): bool
   nunmenu WinBar
   return (fail == 0)
 enddef
+
+def Min(a: float, b: float): float
+  return a <= b ? a : b
+enddef
+
+def Max(a: float, b: float): float
+  return a >= b ? a : b
+enddef
 # }}}
 
 # Public interface {{{
+export def Round(num: float, digits: number): float
+  return str2float(printf('%.0' .. digits .. 'f', num))
+enddef
+
+export def AssertApprox(
+    expected: float, value: float, rtol = 0.001, atol = 0.0
+)
+  assert_true(
+    rtol >= 0.0 && atol >= 0.0, printf(
+    "rtol and atol must be non-negative. Got: rtol≅%.5f, atol≅%.5f",
+    rtol, atol
+    )
+  )
+
+  const tmin = Min(expected - rtol * expected, expected - atol)
+  const tmax = Max(expected + rtol * expected, expected + atol)
+
+  assert_inrange(tmin, tmax, value)
+enddef
+
+export def AssertFails(F: func(): void, expectedError: string)
+  try
+    F()
+    assert_false(1, 'Function should have thrown an error, but succeeded')
+  catch
+    assert_exception(expectedError)
+  endtry
+enddef
+
 # Returns true on success, false on failure
 export def Run(pattern: string = ''): bool
   Init()

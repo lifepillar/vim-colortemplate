@@ -7,281 +7,397 @@ const TESTPATH = resolve(expand('<sfile>:p'))
 const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
+const EPS                = 0.000001
+const Xterm2Hex          = color.Xterm2Hex
+const Xterm2Rgb          = color.Xterm2Rgb
+const Rgb2Hex            = color.Rgb2Hex
+const Hex2Rgb            = color.Hex2Rgb
+const Hex2Gray           = color.Hex2Gray
+const Rgb2Hsv            = color.Rgb2Hsv
+const Hsv2Rgb            = color.Hsv2Rgb
+const Rgb2Xyz            = color.Rgb2Xyz
+const Rgb2Cielab         = color.Rgb2Cielab
+const Rgb                = color.Rgb
+const Hsv                = color.Hsv
+const ContrastRatio      = color.ContrastRatio
+const ColorDifferenceHex = color.ColorDifferenceHex
+const Approximate        = color.Approximate
+const Within             = color.Within
+const Neighbours         = color.Neighbours
+
+
+def Test_Color_Xterm2Hex()
+  assert_equal('#000000', Xterm2Hex(16))
+  assert_equal('#ffffff', Xterm2Hex(231))
+
+  tt.AssertFails(() => {
+    Xterm2Hex(15)
+  },  'out of range'
+  )
+  tt.AssertFails(() => {
+    Xterm2Hex(256)
+  }, 'out of range'
+  )
+enddef
+
+def Test_Color_Xterm2Rgb()
+  assert_equal([0, 0, 0], Xterm2Rgb(16))
+  assert_equal([255, 255, 255], Xterm2Rgb(231))
+enddef
+
 def Test_Color_Hex2Rgb()
-  assert_equal([0, 0, 0], color.Hex2Rgb('#000000'))
-  assert_equal([0, 0, 0], color.Hex2Rgb('000000'))
-  assert_equal([255, 255, 255], color.Hex2Rgb('#ffffff'))
-  assert_equal([255, 255, 255], color.Hex2Rgb('ffffff'))
+  const black = Rgb.new(0, 0, 0)
+  const white = Rgb.new(255, 255, 255)
+
+  assert_equal(black, Rgb.newHex('#000000'))
+  assert_equal(black, Rgb.newHex('000000'))
+  assert_equal(white, Rgb.newHex('#ffffff'))
+  assert_equal(white, Rgb.newHex('ffffff'))
 enddef
 
 def Test_Color_Rgb2Hex()
-  assert_equal('#000000', color.Rgb2Hex(0, 0, 0))
-  assert_equal('#ffffff', color.Rgb2Hex(255, 255, 255))
-  assert_equal('#0b67da', call(color.Rgb2Hex, color.Hex2Rgb('#0b67da')))
+  assert_equal('#000000', Rgb2Hex(0, 0, 0))
+  assert_equal('#ffffff', Rgb2Hex(255, 255, 255))
+  assert_equal('#0b67da', call(Rgb2Hex, Hex2Rgb('#0b67da')))
 enddef
 
-# fun! Test_CT_srgb2xyz238238239()
-#   let [x,y,z] = colortemplate#colorspace#srgb2xyz(238, 238, 239)
-#   " Values as computed by http://colormine.org/color-converter
-#   call assert_true(81.41441852841255 - s:eps < x && x < 81.41441852841255 + s:eps)
-#   call assert_true(85.55820926290504 - s:eps < y && y < 85.55820926290504 + s:eps)
-#   call assert_true(93.88474076133308 - s:eps < z && z < 93.88474076133308 + s:eps)
-# endf
-#
-# fun! Test_CT_srgb2cielab238238239()
-#   let [L,a,b] = colortemplate#colorspace#rgb2cielab(238, 238, 239)
-#   " Values as computed by http://colormine.org/color-converter
-#   call assert_true(94.12313115610355 - s:eps < L && L < 94.12313115610355 + s:eps)
-#   call assert_true(0.18264247948240886 - s:eps < a && a < 0.18264247948240886 + s:eps)
-#   call assert_true(-0.49221569623207895 - s:eps < b && b < -0.49221569623207895 + s:eps)
-# endf
-#
-# fun! Test_CT_rgb2hsv()
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 0, 0)
-#   call assert_equal(  0, h)
-#   call assert_equal(  0, s)
-#   call assert_equal(  0, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 255, 255)
-#   call assert_equal(  0, h)
-#   call assert_equal(  0, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(128, 128, 128)
-#   call assert_equal(  0, h)
-#   call assert_equal(  0, s)
-#   call assert_equal( 50, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 0, 4)
-#   call assert_equal(359, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 0, 0)
-#   call assert_equal(  0, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 128, 0)
-#   call assert_equal( 30, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 255, 0)
-#   call assert_equal( 60, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(128, 255, 0)
-#   call assert_equal( 90, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 255, 0)
-#   call assert_equal(120, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 255, 128)
-#   call assert_equal(150, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 255, 255)
-#   call assert_equal(180, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 128, 255)
-#   call assert_equal(210, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(0, 0, 255)
-#   call assert_equal(240, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(128, 0, 255)
-#   call assert_equal(270, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 0, 255)
-#   call assert_equal(300, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 0, 128)
-#   call assert_equal(330, h)
-#   call assert_equal(100, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(1, 1, 1)
-#   call assert_equal(  0, h)
-#   call assert_equal(  0, s)
-#   call assert_equal(  0, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(3, 3, 3)
-#   call assert_equal(  0, h)
-#   call assert_equal(  0, s)
-#   call assert_equal(  1, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(252, 3, 7)
-#   call assert_equal(359, h)
-#   call assert_equal( 99, s)
-#   call assert_equal( 99, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(255, 255, 254)
-#   call assert_equal( 60, h)
-#   call assert_equal(  0, s)
-#   call assert_equal(100, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(197, 128, 63)
-#   call assert_equal( 29, h)
-#   call assert_equal( 68, s)
-#   call assert_equal( 77, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(33, 197, 99)
-#   call assert_equal(144, h)
-#   call assert_equal( 83, s)
-#   call assert_equal( 77, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(239, 7, 131)
-#   call assert_equal(328, h)
-#   call assert_equal( 97, s)
-#   call assert_equal( 94, v)
-#   let [h,s,v] = colortemplate#colorspace#rgb2hsv(135, 38, 39)
-#   call assert_equal(359, h)
-#   call assert_equal( 72, s)
-#   call assert_equal( 53, v)
-# endf
-#
-# fun! Test_CT_hsv2rgb()
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(0, 0, 0)
-#   call assert_equal(  0, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(  0, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(0, 0, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(255, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(300, 0, 50)
-#   call assert_equal(128, r)
-#   call assert_equal(128, g)
-#   call assert_equal(128, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(359, 100, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(  4, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(360, 100, 100)  " 360° == 0°
-#   call assert_equal(255, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(  0, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(30, 100, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(128, g)
-#   call assert_equal(  0, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(60, 100, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(255, g)
-#   call assert_equal(  0, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(90, 100, 100)
-#   call assert_equal(128, r)
-#   call assert_equal(255, g)
-#   call assert_equal(  0, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(120, 100, 100)
-#   call assert_equal(  0, r)
-#   call assert_equal(255, g)
-#   call assert_equal(  0, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(150, 100, 100)
-#   call assert_equal(  0, r)
-#   call assert_equal(255, g)
-#   call assert_equal(128, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(180, 100, 100)
-#   call assert_equal(  0, r)
-#   call assert_equal(255, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(210, 100, 100)
-#   call assert_equal(  0, r)
-#   call assert_equal(128, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(240, 100, 100)
-#   call assert_equal(  0, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(270, 100, 100)
-#   call assert_equal(128, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(300, 100, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(300, 100, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(255, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(330, 100, 100)
-#   call assert_equal(255, r)
-#   call assert_equal(  0, g)
-#   call assert_equal(128, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(279, 57, 99)
-#   call assert_equal(202, r)
-#   call assert_equal(109, g)
-#   call assert_equal(252, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(1, 1, 1)
-#   call assert_equal(  3, r)
-#   call assert_equal(  3, g)
-#   call assert_equal(  3, b)
-#   let [r,g,b] = colortemplate#colorspace#hsv2rgb(359, 99, 99)
-#   call assert_equal(252, r)
-#   call assert_equal(  3, g)
-#   call assert_equal(  7, b)
-# endf
-#
-# fun! Test_CT_delta_eeeeef()
-#   let l:res = colortemplate#colorspace#approx('#eeeeef')
-#   call assert_equal('#eeeeef', l:res['color'])
-#   call assert_equal(255, l:res['index'])
-#   call assert_equal('#eeeeee', l:res['approx'])
-#   call assert_true(0.54422 - s:eps <= l:res['delta'] && l:res['delta'] <= 0.54422 + s:eps)
-# endf
-#
-# fun! Test_CT_hex_delta_e()
-#   let l:delta = colortemplate#colorspace#hex_delta_e('#767676', '#7c6f64')
-#   call assert_true(7.889685 - s:eps < l:delta && l:delta < 7.889685 + s:eps)
-# endf
-#
-# fun! Test_CT_colors_within()
-#   let l:list = colortemplate#colorspace#colors_within(4.5, '#9e0006')
-#   call assert_equal(2, len(l:list))
-#   call assert_equal(88, l:list[0])
-#   call assert_equal(124, l:list[1])
-# endf
-#
-# fun! Test_CT_2_neighbours()
-#   let l:list = colortemplate#colorspace#k_neighbours('#9e0006', 2)
-#   call assert_equal(2, len(l:list))
-#   call assert_equal(124, l:list[0]['index'])
-#   call assert_equal(88, l:list[1]['index'])
-# endf
-#
-# fun! Test_CT_contrast_ratio()
-#   call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([0,0,0],[0,0,0]))
-#   call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([255,255,255],[255,255,255]))
-#   call assert_equal(1.0, colortemplate#colorspace#contrast_ratio([100,100,100],[100,100,100]))
-#   call assert_equal(21.0, colortemplate#colorspace#contrast_ratio([0,0,0],[255,255,255]))
-#   call assert_equal(21.0, colortemplate#colorspace#contrast_ratio([255,255,255],[0,0,0]))
-#   call assert_equal(4.54, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#e1fafa'), 2))
-#   call assert_equal(4.54, s:round(colortemplate#colorspace#contrast_ratio('#e1fafa', '#707070'), 2))
-#   call assert_equal(4.52, s:round(colortemplate#colorspace#contrast_ratio('#fafa96', '#707070'), 2))
-#   call assert_equal(4.52, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafa96'), 2))
-#   call assert_equal(4.56, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafaaf'), 2))
-#   call assert_equal(4.56, s:round(colortemplate#colorspace#contrast_ratio('#fafaaf', '#707070'), 2))
-#   call assert_equal(4.62, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafac8'), 2))
-#   call assert_equal(4.62, s:round(colortemplate#colorspace#contrast_ratio('#fafac8', '#707070'), 2))
-#   call assert_equal(4.68, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafae1'), 2))
-#   call assert_equal(4.68, s:round(colortemplate#colorspace#contrast_ratio('#fafae1', '#707070'), 2))
-#   call assert_equal(4.74, s:round(colortemplate#colorspace#contrast_ratio('#707070', '#fafafa'), 2))
-#   call assert_equal(4.74, s:round(colortemplate#colorspace#contrast_ratio('#fafafa', '#707070'), 2))
-# endf
-#
-# fun! Test_CT_xterm2hex()
-#   call assert_equal('#000000', colortemplate#colorspace#xterm256_hexvalue(16))
-#   call assert_equal('#ffffff', colortemplate#colorspace#xterm256_hexvalue(231))
-# endf
-#
-# fun! Test_CT_hex2gray()
-#   call assert_equal(0, colortemplate#colorspace#hex2gray('#000000'))
-#   call assert_equal(64, colortemplate#colorspace#hex2gray('#404040'))
-#   call assert_equal(127, colortemplate#colorspace#hex2gray('#7f7f7F'))
-#   call assert_equal(191, colortemplate#colorspace#hex2gray('#bfbfbf'))
-#   call assert_equal(255, colortemplate#colorspace#hex2gray('#ffffff'))
-#   call assert_equal(84, colortemplate#colorspace#hex2gray('#405952'))
-#   call assert_equal(153, colortemplate#colorspace#hex2gray('#9c9b7a'))
-#   call assert_equal(218, colortemplate#colorspace#hex2gray('#ffd393'))
-#   call assert_equal(177, colortemplate#colorspace#hex2gray('#ff974f'))
-#   call assert_equal(137, colortemplate#colorspace#hex2gray('#f54f29'))
-# endf
+def Test_Color_Hex2Gray()
+  assert_equal(0,   Hex2Gray('#000000'))
+  assert_equal(64,  Hex2Gray('#404040'))
+  assert_equal(127, Hex2Gray('#7f7f7F'))
+  assert_equal(191, Hex2Gray('#bfbfbf'))
+  assert_equal(255, Hex2Gray('#ffffff'))
+  assert_equal(84,  Hex2Gray('#405952'))
+  assert_equal(153, Hex2Gray('#9c9b7a'))
+  assert_equal(218, Hex2Gray('#ffd393'))
+  assert_equal(177, Hex2Gray('#ff974f'))
+  assert_equal(137, Hex2Gray('#f54f29'))
+enddef
 
-tt.Run('_Color')
+def Test_Color_Rgb2Hsv()
+  var h: number
+  var s: number
+  var v: number
 
+  [h,s,v] = color.Rgb2Hsv(0, 0, 0)
+  assert_equal(  0, h)
+  assert_equal(  0, s)
+  assert_equal(  0, v)
+  [h,s,v] = color.Rgb2Hsv(255, 255, 255)
+  assert_equal(  0, h)
+  assert_equal(  0, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(128, 128, 128)
+  assert_equal(  0, h)
+  assert_equal(  0, s)
+  assert_equal( 50, v)
+  [h,s,v] = color.Rgb2Hsv(255, 0, 4)
+  assert_equal(359, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(255, 0, 0)
+  assert_equal(  0, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(255, 128, 0)
+  assert_equal( 30, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(255, 255, 0)
+  assert_equal( 60, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(128, 255, 0)
+  assert_equal( 90, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(0, 255, 0)
+  assert_equal(120, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(0, 255, 128)
+  assert_equal(150, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(0, 255, 255)
+  assert_equal(180, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(0, 128, 255)
+  assert_equal(210, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(0, 0, 255)
+  assert_equal(240, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(128, 0, 255)
+  assert_equal(270, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(255, 0, 255)
+  assert_equal(300, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(255, 0, 128)
+  assert_equal(330, h)
+  assert_equal(100, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(1, 1, 1)
+  assert_equal(  0, h)
+  assert_equal(  0, s)
+  assert_equal(  0, v)
+  [h,s,v] = color.Rgb2Hsv(3, 3, 3)
+  assert_equal(  0, h)
+  assert_equal(  0, s)
+  assert_equal(  1, v)
+  [h,s,v] = color.Rgb2Hsv(252, 3, 7)
+  assert_equal(359, h)
+  assert_equal( 99, s)
+  assert_equal( 99, v)
+  [h,s,v] = color.Rgb2Hsv(255, 255, 254)
+  assert_equal( 60, h)
+  assert_equal(  0, s)
+  assert_equal(100, v)
+  [h,s,v] = color.Rgb2Hsv(197, 128, 63)
+  assert_equal( 29, h)
+  assert_equal( 68, s)
+  assert_equal( 77, v)
+  [h,s,v] = color.Rgb2Hsv(33, 197, 99)
+  assert_equal(144, h)
+  assert_equal( 83, s)
+  assert_equal( 77, v)
+  [h,s,v] = color.Rgb2Hsv(239, 7, 131)
+  assert_equal(328, h)
+  assert_equal( 97, s)
+  assert_equal( 94, v)
+  [h,s,v] = color.Rgb2Hsv(135, 38, 39)
+  assert_equal(359, h)
+  assert_equal( 72, s)
+  assert_equal( 53, v)
+enddef
+
+def Test_Color_Hsv2Rgb()
+   var [r,g,b] = Hsv2Rgb(0, 0, 0)
+   assert_equal(  0, r)
+   assert_equal(  0, g)
+   assert_equal(  0, b)
+   [r,g,b] = Hsv2Rgb(0, 0, 100)
+   assert_equal(255, r)
+   assert_equal(255, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(300, 0, 50)
+   assert_equal(128, r)
+   assert_equal(128, g)
+   assert_equal(128, b)
+   [r,g,b] = Hsv2Rgb(359, 100, 100)
+   assert_equal(255, r)
+   assert_equal(  0, g)
+   assert_equal(  4, b)
+   [r,g,b] = Hsv2Rgb(360, 100, 100)  # 360° == 0°
+   assert_equal(255, r)
+   assert_equal(  0, g)
+   assert_equal(  0, b)
+   [r,g,b] = Hsv2Rgb(30, 100, 100)
+   assert_equal(255, r)
+   assert_equal(128, g)
+   assert_equal(  0, b)
+   [r,g,b] = Hsv2Rgb(60, 100, 100)
+   assert_equal(255, r)
+   assert_equal(255, g)
+   assert_equal(  0, b)
+   [r,g,b] = Hsv2Rgb(90, 100, 100)
+   assert_equal(128, r)
+   assert_equal(255, g)
+   assert_equal(  0, b)
+   [r,g,b] = Hsv2Rgb(120, 100, 100)
+   assert_equal(  0, r)
+   assert_equal(255, g)
+   assert_equal(  0, b)
+   [r,g,b] = Hsv2Rgb(150, 100, 100)
+   assert_equal(  0, r)
+   assert_equal(255, g)
+   assert_equal(128, b)
+   [r,g,b] = Hsv2Rgb(180, 100, 100)
+   assert_equal(  0, r)
+   assert_equal(255, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(210, 100, 100)
+   assert_equal(  0, r)
+   assert_equal(128, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(240, 100, 100)
+   assert_equal(  0, r)
+   assert_equal(  0, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(270, 100, 100)
+   assert_equal(128, r)
+   assert_equal(  0, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(300, 100, 100)
+   assert_equal(255, r)
+   assert_equal(  0, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(300, 100, 100)
+   assert_equal(255, r)
+   assert_equal(  0, g)
+   assert_equal(255, b)
+   [r,g,b] = Hsv2Rgb(330, 100, 100)
+   assert_equal(255, r)
+   assert_equal(  0, g)
+   assert_equal(128, b)
+   [r,g,b] = Hsv2Rgb(279, 57, 99)
+   assert_equal(202, r)
+   assert_equal(109, g)
+   assert_equal(252, b)
+   [r,g,b] = Hsv2Rgb(1, 1, 1)
+   assert_equal(  3, r)
+   assert_equal(  3, g)
+   assert_equal(  3, b)
+   [r,g,b] = Hsv2Rgb(359, 99, 99)
+   assert_equal(252, r)
+   assert_equal(  3, g)
+   assert_equal(  7, b)
+enddef
+
+
+def Test_Color_Rgb2xyz()
+  const [x,y,z] = Rgb2Xyz(238, 238, 239)
+  # Values as computed by http://colormine.org/color-converter
+  tt.AssertApprox(81.41441852841255, x, 0.0, EPS)
+  tt.AssertApprox(85.55820926290504, y, 0.0, EPS)
+  tt.AssertApprox(93.88474076133308, z, 0.0, EPS)
+enddef
+
+def Test_Color_Rgb2Cielab()
+  const [L,a,b] = Rgb2Cielab(238, 238, 239)
+  # Values as computed by http://colormine.org/color-converter
+  tt.AssertApprox(94.12313115610355,    L, 0.0, EPS)
+  tt.AssertApprox(0.18264247948240886,  a, 0.0, EPS)
+  tt.AssertApprox(-0.49221569623207895, b, 0.0, EPS)
+enddef
+
+def Test_Color_ColorDifferenceHex()
+  const delta = ColorDifferenceHex('#767676', '#7c6f64')
+  tt.AssertApprox(7.889685, delta, 0.0, EPS)
+enddef
+
+def Test_Color_Rgb()
+  const red    = Rgb.new(166, 35, 23)
+  const redHsv = Hsv.new(5,   86, 65)
+
+  assert_equal(166,       red.r)
+  assert_equal(35,        red.g)
+  assert_equal(23,        red.b)
+  assert_equal('#a62317', red.Hex())
+  assert_equal(86,        red.ToGray())
+  assert_equal(redHsv,    red.ToHsv())
+
+  const brown    = Rgb.new(138, 108, 56)
+  const brownHsv = Hsv.new(38,   59, 54)
+
+  assert_equal(138,       brown.r)
+  assert_equal(108,       brown.g)
+  assert_equal(56,        brown.b)
+  assert_equal('#8a6c38', brown.Hex())
+  assert_equal(113,       brown.ToGray())
+  assert_equal(brownHsv,  brown.ToHsv())
+enddef
+
+def Test_Color_Hsv()
+  const brown    = Hsv.new(38,   59, 54)
+  const brownRgb = Rgb.new(138, 108, 56)
+
+  assert_equal(38,        brown.h)
+  assert_equal(59,        brown.s)
+  assert_equal(54,        brown.v)
+  assert_equal('#8a6c38', brown.Hex())
+  assert_equal(113,       brown.ToGray())
+  assert_equal(brownRgb,  brown.ToRgb())
+
+  const red    = Hsv.new(5,   86, 65)
+  const redRgb = Rgb.new(166, 35, 23)
+
+  assert_equal(5,         red.h)
+  assert_equal(86,        red.s)
+  assert_equal(65,        red.v)
+  assert_equal('#a62317', red.Hex())
+  assert_equal(86,        red.ToGray())
+  assert_equal(redRgb,    red.ToRgb())
+enddef
+
+def Test_Color_ContrastRatio()
+  const testCasesRgb = [
+    [[0,   0,   0  ], [0,   0,   0  ],  1.0],
+    [[255, 255, 255], [255, 255, 255],  1.0],
+    [[100, 100, 100], [100, 100, 100],  1.0],
+    [[0,   0,   0  ], [255, 255, 255], 21.0],
+    [[255, 255, 255], [0,   0,   0  ], 21.0],
+  ]
+
+  for t in testCasesRgb
+    const [r1, g1, b1]          = t[0]
+    const [r2, g2, b2]          = t[1]
+    const expectedContrastRatio = t[2]
+    const rgb1                  = Rgb.new(r1, g1, b1)
+    const rgb2                  = Rgb.new(r2, g2, b2)
+
+    tt.AssertApprox(
+      expectedContrastRatio, ContrastRatio(rgb1, rgb2), 0.01
+    )
+  endfor
+
+  const testCasesHex = [
+    ['#707070', '#e1fafa', 4.54],
+    ['#e1fafa', '#707070', 4.54],
+    ['#fafa96', '#707070', 4.52],
+    ['#707070', '#fafa96', 4.52],
+    ['#707070', '#fafaaf', 4.56],
+    ['#fafaaf', '#707070', 4.56],
+    ['#707070', '#fafac8', 4.62],
+    ['#fafac8', '#707070', 4.62],
+    ['#707070', '#fafae1', 4.68],
+    ['#fafae1', '#707070', 4.68],
+    ['#707070', '#fafafa', 4.74],
+    ['#fafafa', '#707070', 4.74],
+  ]
+
+  for t  in testCasesHex
+    const rgb1                  = Rgb.newHex(t[0])
+    const rgb2                  = Rgb.newHex(t[1])
+    const expectedContrastRatio = t[2]
+
+    tt.AssertApprox(
+      expectedContrastRatio, ContrastRatio(rgb1, rgb2), 0.01
+    )
+  endfor
+enddef
+
+def Test_Color_Approximate()
+  const approx = Approximate('#eeeeef')
+
+  assert_equal('#eeeeef',  approx.hex)
+  assert_equal(255,        approx.xterm)
+  assert_equal('#eeeeee',  approx.approx)
+  tt.AssertApprox(0.54422, approx.delta, 0.0, EPS)
+enddef
+
+
+def Test_Color_Within()
+  const neighbours = '#9e0006'->Within(4.5)
+
+  assert_equal(2,   len(neighbours))
+  assert_equal(88,  neighbours[0])
+  assert_equal(124, neighbours[1])
+enddef
+
+def Test_Color_Neighbours()
+  const neighbours = '#9e0006'->Neighbours(2)
+
+  assert_equal(2,   len(neighbours))
+  assert_equal(124, neighbours[0].xterm)
+  assert_equal(88,  neighbours[1].xterm)
+enddef
+
+
+tt.Run('_Color_')

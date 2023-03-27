@@ -211,6 +211,29 @@ export class Database
     ForeignKey(this.BaseGroupOverride,   'must use as special color a valid', this.Color,            ['Special'], ['ColorName'])
   enddef
 
+  def GetColor_(t: dict<any>, key: string): string
+    if empty(t)
+      return ''
+    endif
+
+    return t[key]
+  enddef
+
+  def Color16(name: string): string
+    const t = this.Color.Lookup(['ColorName'], [name])
+    return this.GetColor_(t, 'Base16Value')
+  enddef
+
+  def Color256(name: string): string
+    const t = this.Color.Lookup(['ColorName'], [name])
+    return this.GetColor_(t, 'Base256Value')
+  enddef
+
+  def ColorGui(name: string): string
+    const t = this.Color.Lookup(['ColorName'], [name])
+    return this.GetColor_(t, 'GUIValue')
+  enddef
+
   def InsertDefaultLinkedGroup(
     hiGroupName: string,
     targetGroup: string

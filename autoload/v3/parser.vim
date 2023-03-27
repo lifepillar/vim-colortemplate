@@ -284,13 +284,86 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
   endif
 enddef
 
+def FindReplacement(placeholder: string, ctx: Context): string
+  if placeholder == '@date'
+    return strftime("%Y %b %d")
+  elseif placeholder == '@vimversion'
+    return string(v:version / 100)
+  endif
+
+  const state = ctx.state
+  const meta: Metadata = state.meta
+
+  if placeholder == '@shortname'
+    return meta.shortname
+  elseif placeholder == '@fullname'
+    return meta.fullname
+  elseif placeholder == '@version'
+    return meta.version
+  # if placeholder == '@author'   # FIXME
+  #   return meta.author[0]
+  elseif placeholder == '@background'
+    return state.background
+  endif
+
+  if !empty(state.background)
+    const db: Database = Db(state)
+    const match = matchlist(placeholder, '^@\(term16\|term256\|gui\)\(\w\+\)$')
+
+    if empty(match)
+      return ''
+    endif
+
+    const kind = match[1]
+    const name = match[2]
+
+    if !empty(name)
+      if kind == 'gui'
+        return db.ColorGui(name)
+      elseif kind == 'term16'
+        return db.Color16(name)
+      else
+        return db.Color256(name)
+      endif
+    endif
+  endif
+
+  return ''
+enddef
+
+def CollectPlaceholders(text: string): dict<bool>
+  var placeholders: dict<bool> = {}
+  var i = 0
+
+  while true
+    const [atString, _, endpos] = matchstrpos(text, '@\w\+\>', i)
+    if empty(atString)
+      break
+    endif
+    placeholders[atString] = true
+    i = endpos
+  endwhile
+
+  return placeholders
+enddef
+
+def Interpolate(text: string, ctx: Context): string
+  var placeholders = CollectPlaceholders(text)
+  var newtext      = text
+
+  for placeholder in keys(placeholders)
+    const replacement = FindReplacement(placeholder, ctx)
+    if !empty(replacement)
+      newtext = substitute(newtext, placeholder, replacement, 'g')
+    endif
+  endfor
+
+  return newtext
+enddef
+
 def GetVerbatim(v: list<any>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  if empty(meta.verbatimtext)
-    meta.verbatimtext = v[1]
-  else
-    meta.verbatimtext ..= v[1]
-  endif
+  meta.verbatimtext ..= Interpolate(v[1], ctx)
 enddef
 # }}}
 

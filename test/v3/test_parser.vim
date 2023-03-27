@@ -11,19 +11,6 @@ const Result   = parser.Result
 const Metadata = colorscheme.Metadata
 const Database = colorscheme.Database
 
-# assert_fails() logs exceptions in messages. This function is quiet.
-def AssertFails(what: string, expectedError: string): void
-  try
-    execute what
-    assert_false(1, printf("'%s' should have failed, but succeeded", what))
-  catch
-    assert_exception(expectedError)
-  endtry
-enddef
-
-# These are defined at the script level for using with AssertFails().
-# See also: https://github.com/vim/vim/issues/6868
-var parserInput: string
 
 def Test_Parser_Background()
   const res = Parse("Background: dark")
@@ -38,6 +25,20 @@ def Test_Parser_Background()
   assert_true(result.success)
   assert_true(meta.backgrounds.dark)
   assert_false(meta.backgrounds.light)
+enddef
+
+def Test_Parser_Variants()
+  const res = Parse("Variants: 8")
+
+  assert_equal(v:t_dict, type(res))
+  assert_equal(['dark', 'light', 'meta', 'result'], sort(keys(res)))
+
+  const result: Result   = res.result
+  const meta:   Metadata = res.meta
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_true(index(meta.variants, '8') != -1)
 enddef
 
 def Test_Parser_NoDefaultLinkedGroup()
@@ -135,7 +136,7 @@ def Test_Parser_MissingDefaultDef()
   Conceal/8 +foobar 1   white black reverse
   END
 
-  parserInput = join(template, "\n")
+  const parserInput = join(template, "\n")
   const res = Parse(parserInput)
   const result: Result = res.result
 
@@ -160,7 +161,7 @@ def Test_Parser_TranspBg()
     Normal /256/8 +transp_bg 1 black white
   END
 
-  parserInput = join(template, "\n")
+  const parserInput = join(template, "\n")
   const res = Parse(parserInput)
   const result: Result = res.result
 
@@ -179,14 +180,33 @@ def Test_Parser_GUIColor()
     Normal black blue
   END
 
-  parserInput = join(template, "\n")
+  const parserInput = join(template, "\n")
   const res = Parse(parserInput)
   const result: Result = res.result
 
   assert_equal('', result.label)
   assert_true(result.success)
-
 enddef
 
+def Test_Parser_VerbatimBlock()
+  const template =<< trim END
+  verbatim
+    This
+      is arbitrary
+            text
+  endverbatim
+  END
+
+  const parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
+  const meta: Metadata = res.meta
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal(
+    "This\n    is arbitrary\n          text\n", meta.verbatimtext
+  )
+enddef
 
 tt.Run('_Parser_')

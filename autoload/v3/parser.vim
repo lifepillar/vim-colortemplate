@@ -283,6 +283,15 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
     endfor
   endif
 enddef
+
+def GetVerbatim(v: list<any>, ctx: Context)
+  var meta: Metadata = ctx.state.meta
+  if empty(meta.verbatimtext)
+    meta.verbatimtext = v[1]
+  else
+    meta.verbatimtext ..= v[1]
+  endif
+enddef
 # }}}
 
 # Parser {{{
@@ -298,6 +307,7 @@ const K_COLOR       = T('Color')
 const K_COLORS      = R('[Cc]olors')
 const K_CONST       = T('#const')
 const K_DESCRIPTION = T('Description')
+const K_ENDVERBATIM = T('endverbatim')
 const K_FULL        = T('Full')
 const K_INCLUDE     = T('Include')
 const K_LICENSE     = T('License')
@@ -312,6 +322,7 @@ const K_TERM        = R('Term\%[inal\]')
 const K_URL         = R('URL')
 const K_VARIANT     = R('\(gui\|256\|88\|16\|8\|0\)\>')
 const K_VARIANTS    = T('Variants')
+const K_VERBATIM    = T('verbatim')
 const K_VERSION     = T('Version')
 
 const BAR           = T('/')
@@ -353,6 +364,7 @@ const HEXCOL        = R('#[A-Fa-f0-9]\{6}')
 const GUICOL        = OneOf(HEXCOL, IDENTIFIER)
 const STRING        = R('"[^"]*"')
 const TEXTLINE      = R('[^\r\n]\+')
+const VERBATIMTXT   = R('\_.\{-}\zeendverbatim')
 const THEMENAME     = R('\w\+')
 
 const L_ATTRIBUTE   = Lab(ATTRIBUTE,            "Expected an attribute")
@@ -375,6 +387,13 @@ const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the specia
 const L_TEXTLINE    = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
 const L_THEMENAME   = Lab(THEMENAME,            "Expected a valid color scheme's name")
 const L_VARIANT     = Lab(K_VARIANT,            "Expected a variant (gui, 256, 88, 16, 8, or 0)")
+const L_VERBATIMTXT = Lab(VERBATIMTXT,          "Expected 'endverbatim'")
+
+const VerbatimBlock = Seq(
+                        K_VERBATIM,
+                        L_VERBATIMTXT,
+                        L_ENDVERBATIM
+                      )                                             ->Apply(GetVerbatim)
 
 const Attributes    = Seq(
                         ATTRIBUTE,
@@ -493,7 +512,7 @@ const Statement     = Seq(
                         L_TEXTLINE
                       )                                            ->Apply(DefineDiscriminator)
 
-const Declaration   = OneOf(Statement, Directive, HiGroupDecl)
+const Declaration   = OneOf(Statement, VerbatimBlock, Directive, HiGroupDecl)
 const Template      = Seq(
                         Skip(SpaceOrComment),
                         Many(Declaration),

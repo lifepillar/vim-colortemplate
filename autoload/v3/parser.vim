@@ -171,8 +171,8 @@ def DefineColor(v: list<string>, ctx: Context)
 enddef
 
 def DefineDiscriminator(v: list<string>, ctx: Context)
-  const discrName:  string   = v[2]
-  const definition: string   = v[4]
+  const discrName:  string   = v[1]
+  const definition: string   = v[3]
   const dbase:      Database = Db(ctx.state)
 
   dbase.Discriminator.Insert({
@@ -296,7 +296,7 @@ const K_AUTHOR      = T('Author')
 const K_BACKGROUND  = T('Background')
 const K_COLOR       = T('Color')
 const K_COLORS      = R('[Cc]olors')
-const K_CONST       = T('const')
+const K_CONST       = T('#const')
 const K_DESCRIPTION = T('Description')
 const K_FULL        = T('Full')
 const K_INCLUDE     = T('Include')
@@ -318,7 +318,6 @@ const BAR           = T('/')
 const COLON         = T(':')
 const COMMA         = T(',')
 const EQ            = T('=')
-const HASH          = T('#')
 const PLUS          = T('+')
 const RARROW        = T('->')
 const SEMICOLON     = T(';')
@@ -362,14 +361,14 @@ const L_BGCOLOR     = Lab(BGCOLOR,              "Expected the name of the backgr
 const L_COL256      = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or tilde")
 const L_COLON       = Lab(COLON,                "Expected a colon")
 const L_COLORNAME   = Lab(COLORNAME,            "Expected a color name")
-const L_COLORS      = Lab(K_COLORS,             "Expected the keyword 'Colors'")
-const L_CONST       = Lab(K_CONST,              "Expected the keyword 'const'")
+const L_COLORS      = Lab(K_COLORS,             "Expected 'Colors'")
 const L_DISCRNAME   = Lab(DISCRNAME,            "Expected an identifier")
+const L_ENDVERBATIM = Lab(K_ENDVERBATIM,        "Expected keyword 'endverbatim'")
 const L_EQ          = Lab(EQ,                   "Expected an equal sign")
 const L_GUICOL      = Lab(GUICOL,               "Expected a GUI color value")
 const L_HIGROUPNAME = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
 const L_IDENTIFIER  = Lab(IDENTIFIER,           "Expected an identifier")
-const L_NAME        = Lab(K_NAME,               "Expected the keyword 'Name'")
+const L_NAME        = Lab(K_NAME,               "Expected 'Name'")
 const L_OPTV        = Lab(K_OPTV,               "Expected a valid option value")
 const L_PATH        = Lab(TEXTLINE,             "Expected a relative path")
 const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the special color")
@@ -488,8 +487,7 @@ const Directive     = Seq(LookAhead(Regex('[^\n\r]*:')),
                       )
 
 const Statement     = Seq(
-                        HASH,
-                        L_CONST,
+                        K_CONST,
                         L_IDENTIFIER,
                         L_EQ,
                         L_TEXTLINE

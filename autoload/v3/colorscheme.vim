@@ -18,6 +18,12 @@ const Str           = ra.Str
 const Transform     = ra.Transform
 # }}}
 
+const ColorKind = {
+  '16':  'Base16Value',
+  '256': 'Base256Value',
+  'gui': 'GUIValue',
+}
+
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
 
 export class Metadata
@@ -211,27 +217,26 @@ export class Database
     ForeignKey(this.BaseGroupOverride,   'must use as special color a valid', this.Color,            ['Special'], ['ColorName'])
   enddef
 
-  def GetColor_(t: dict<any>, key: string): string
+  def GetColor(name: string, kind: string): string
+    const t = this.Color.Lookup(['ColorName'], [name])
+
     if empty(t)
       return ''
     endif
 
-    return t[key]
+    return t[ColorKind[kind]]
   enddef
 
   def Color16(name: string): string
-    const t = this.Color.Lookup(['ColorName'], [name])
-    return this.GetColor_(t, 'Base16Value')
+    return this.GetColor(t, '16')
   enddef
 
   def Color256(name: string): string
-    const t = this.Color.Lookup(['ColorName'], [name])
-    return this.GetColor_(t, 'Base256Value')
+    return this.GetColor(t, '256')
   enddef
 
   def ColorGui(name: string): string
-    const t = this.Color.Lookup(['ColorName'], [name])
-    return this.GetColor_(t, 'GUIValue')
+    return this.GetColor(t, 'gui')
   enddef
 
   def InsertDefaultLinkedGroup(

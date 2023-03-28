@@ -300,35 +300,44 @@ def FindReplacement(placeholder: string, ctx: Context): string
     return meta.fullname
   elseif placeholder == '@version'
     return meta.version
-  # if placeholder == '@author'   # FIXME
-  #   return meta.author[0]
+  elseif placeholder == '@license'
+    return meta.license
   elseif placeholder == '@background'
     return state.background
   endif
 
-  if !empty(state.background)
-    const db: Database = Db(state)
-    const match = matchlist(placeholder, '^@\(term16\|term256\|gui\)\(\w\+\)$')
+  const directive = matchlist(placeholder, '^@\(author\|maintainer\|url\|description\)\(\d\+\)$')
 
-    if empty(match)
-      return ''
-    endif
+  if !empty(directive)
+    const key = directive[1]
+    const num = str2nr(directive[2])
 
-    const kind = match[1]
-    const name = match[2]
-
-    if !empty(name)
-      if kind == 'gui'
-        return db.ColorGui(name)
-      elseif kind == 'term16'
-        return db.Color16(name)
-      else
-        return db.Color256(name)
-      endif
+    if key == 'author'
+      return meta.author[num]
+    elseif key == 'maintainer'
+      return meta.maintainer[num]
+    elseif key == 'url'
+      return meta.url[num]
+    elseif key == 'description'
+      return meta.description[num]
     endif
   endif
 
-  return ''
+  if empty(state.background)
+    return ''
+  endif
+
+  const db: Database = Db(state)
+  const color = matchlist(placeholder, '^@\(16\|256\|gui\)\(\w\+\)$')
+
+  if empty(color)
+    return ''
+  endif
+
+  const kind = color[1]
+  const name = color[2]
+
+  return db.GetColor(name, kind)
 enddef
 
 def CollectPlaceholders(text: string): dict<bool>

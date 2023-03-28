@@ -190,11 +190,34 @@ enddef
 
 def Test_Parser_VerbatimBlock()
   const template =<< trim END
+  Background: light
+  Author: myself
+  Short name: xyz
+  Version: v1.2.3
+  Full name: XYZ
+  Variants: gui
+  Color: black #333333 8 Black
   verbatim
-    This
-      is arbitrary
-            text
+  This is
+    arbitrary text
+  by @author0
+  Color=@guiblack Approx=@256black/@16black
+    Shortname: @shortname
+    Fullname:  @fullname @version
+  For Vim v@vimversion.0 or later
+  The background is @background
   endverbatim
+  END
+
+  const expected =<< trim END
+    This is
+      arbitrary text
+    by myself
+    Color=#333333 Approx=8/Black
+      Shortname: xyz
+      Fullname:  XYZ v1.2.3
+    For Vim v9.0 or later
+    The background is light
   END
 
   const parserInput = join(template, "\n")
@@ -204,9 +227,27 @@ def Test_Parser_VerbatimBlock()
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal(
-    "This\n    is arbitrary\n          text\n", meta.verbatimtext
-  )
+  assert_equal(join(expected, "\n") .. "\n", meta.verbatimtext)
 enddef
+
+def Test_Parser_VerbatimDate()
+  const template =<< trim END
+  verbatim
+    Today is @date
+  endverbatim
+  END
+
+  const expected = printf("Today is %s\n", strftime("%Y %b %d"))
+
+  const parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
+  const meta: Metadata = res.meta
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal(expected, meta.verbatimtext)
+enddef
+
 
 tt.Run('_Parser_')

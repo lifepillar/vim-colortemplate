@@ -18,7 +18,6 @@ colortemplate-best-practices	colortemplate.txt	/*colortemplate-best-practices*
 colortemplate-colors	colortemplate.txt	/*colortemplate-colors*
 colortemplate-commands	colortemplate.txt	/*colortemplate-commands*
 colortemplate-ctrl-l	colortemplate.txt	/*colortemplate-ctrl-l*
-colortemplate-doc-blocks	colortemplate.txt	/*colortemplate-doc-blocks*
 colortemplate-feedback	colortemplate.txt	/*colortemplate-feedback*
 colortemplate-functions	colortemplate.txt	/*colortemplate-functions*
 colortemplate-ga	colortemplate.txt	/*colortemplate-ga*
@@ -26,6 +25,7 @@ colortemplate-gl	colortemplate.txt	/*colortemplate-gl*
 colortemplate-gs	colortemplate.txt	/*colortemplate-gs*
 colortemplate-gx	colortemplate.txt	/*colortemplate-gx*
 colortemplate-gy	colortemplate.txt	/*colortemplate-gy*
+colortemplate-helpfile	colortemplate.txt	/*colortemplate-helpfile*
 colortemplate-hi-groups	colortemplate.txt	/*colortemplate-hi-groups*
 colortemplate-include	colortemplate.txt	/*colortemplate-include*
 colortemplate-intro	colortemplate.txt	/*colortemplate-intro*

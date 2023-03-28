@@ -29,7 +29,7 @@ CONTENTS						*ft-colortemplate*
     8. Terminal colors ...... |colortemplate-termcolors|
     9. Highlight groups ..... |colortemplate-hi-groups|
    10. Verbatim blocks ...... |colortemplate-verbatim|
-   11. Documentation blocks . |colortemplate-doc-blocks|
+   11. Help file ............ |colortemplate-helpfile|
    12. Auxiliary files ...... |colortemplate-auxfiles|
    13. Include directive .... |colortemplate-include|
    14. Colors statistics..... |colortemplate-stats|
@@ -505,13 +505,13 @@ Customizing the reset block is seldom needed. Do it only if you really know
 what you are doing.
 
 ==============================================================================
-Documentation blocks				*colortemplate-doc-blocks*
+Help file					*colortemplate-helpfile*
 
 Any settings that your color scheme provides should be documented in
-a documentation block. For instance, if you add a `g:mytheme_transp_bg` flag
+a help file. For instance, if you add a `g:mytheme_transp_bg` flag
 to enable a transparent background, you may document it as follows:
 >
-  documentation
+  helpfile
   ===========================================================================
   @fullname options                                *@shortname-options*
 
@@ -522,15 +522,14 @@ to enable a transparent background, you may document it as follows:
   >
     let g:@shortname_transp_bg = 0
   <
-  enddocumentation
+  endhelpfile
 
-A documentation block starts with a `documentation` keyword and ends with
-`enddocumentation`. Interpolation works as in verbatim blocks. Multiple
-documentation blocks are chained together in the order in which they are
-encountered.
+A helpfile block starts with `helpfile` and ends with `endhelpfile`.
+Interpolation works as in verbatim blocks. Multiple helpfile blocks are
+chained together in the order in which they are encountered.
 
-A documentation block will generate a help file in a `doc` directory inside
-the output directory. You may suppress the generation of the help file with
+A helpfile block will generate a help file in a `doc` directory inside the
+output directory. You may suppress the generation of the help file with
 |g:colortemplate_no_doc|.
 
 ==============================================================================

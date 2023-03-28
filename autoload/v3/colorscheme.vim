@@ -40,7 +40,7 @@ export class Metadata
   public this.backgrounds:  dict<bool>   = {'dark': false, 'light': false}
   public this.termcolors:   list<string> = []
   public this.options:      dict<any>    = {creator: true, useTabs: false, shiftwidth: 2}
-  public this.verbatimtext: string       = ''
+  public this.verbatimtext: list<string> = []
 
   def IsLightAndDark(): bool
     return this.backgrounds['dark'] && this.backgrounds['light']

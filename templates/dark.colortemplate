@@ -20,8 +20,22 @@ License:       Same as Vim
 ; Include: _help.colortemplate
 ; }}}
 
+verbatim
+# This is copied verbatim at the start of the output.
+# Interpolation allows you to replace metadata in the
+# output. For instance: @author0.
+endverbatim
+
 Variants:   gui 256 8 0
 Background: dark
+
+verbatim
+# Multiple verbatim blocks are possible: no matter where
+# they appear in the template, they are concatenated at
+# the start of the output. Since this block appears after
+# the Background directive, the background value can be
+# interpolated: the background is set to @background.
+endverbatim
 
 ; Common linked groups {{{
 Character         -> Constant
@@ -89,6 +103,13 @@ Term colors: black red green yellow blue magenta cyan white
              brightblack brightred brightgreen brightyellow
              brightblue brightmagenta brightcyan brightwhite
 ; }}}
+
+verbatim
+# This block appears after Color directives, so colors can
+# be interpolated, too: for instance, black is defined as
+# @guiblack in the GUI, and @256black or @16black in
+# terminals.
+endverbatim
 
 ; Default highlight groups {{{
 Normal               white             black

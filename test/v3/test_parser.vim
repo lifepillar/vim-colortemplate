@@ -204,7 +204,6 @@ def Test_Parser_VerbatimBlock()
   Color=@guiblack Approx=@256black/@16black
     Shortname: @shortname
     Fullname:  @fullname @version
-  For Vim v@vimversion.0 or later
   The background is @background
   endverbatim
   END
@@ -216,28 +215,8 @@ def Test_Parser_VerbatimBlock()
     Color=#333333 Approx=8/Black
       Shortname: xyz
       Fullname:  XYZ v1.2.3
-    For Vim v9.0 or later
     The background is light
   END
-
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
-  const meta: Metadata = res.meta
-
-  assert_equal('', result.label)
-  assert_true(result.success)
-  assert_equal(join(expected, "\n") .. "\n", meta.verbatimtext)
-enddef
-
-def Test_Parser_VerbatimDate()
-  const template =<< trim END
-  verbatim
-    Today is @date
-  endverbatim
-  END
-
-  const expected = printf("Today is %s\n", strftime("%Y %b %d"))
 
   const parserInput = join(template, "\n")
   const res = Parse(parserInput)
@@ -249,5 +228,50 @@ def Test_Parser_VerbatimDate()
   assert_equal(expected, meta.verbatimtext)
 enddef
 
+def Test_Parser_VerbatimDateVersion()
+  const template =<< trim END
+  verbatim
+    Today is @date
+    And this is Vim v@vimversion.0
+  endverbatim
+  END
+
+  const expected = [
+    printf("  Today is %s", strftime("%Y %b %d")),
+    printf("  And this is Vim v%d.0", v:version / 100),
+  ]
+
+  const parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
+  const meta: Metadata = res.meta
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal(expected, meta.verbatimtext)
+enddef
+
+def Test_Parser_MultipleVerbatimBlocks()
+  const template =<< trim END
+  Background: dark
+  Author:     Nemo
+  verbatim
+  @background
+  endverbatim
+
+  verbatim @author0 endverbatim
+  END
+
+  const expected = ['dark', ' Nemo ']
+
+  const parserInput = join(template, "\n")
+  const res = Parse(parserInput)
+  const result: Result = res.result
+  const meta: Metadata = res.meta
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal(expected, meta.verbatimtext)
+enddef
 
 tt.Run('_Parser_')

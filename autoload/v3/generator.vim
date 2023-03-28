@@ -183,6 +183,12 @@ def Header(meta: Metadata): list<string>
   header->add('')
   header->add("const t_Co = exists('&t_Co') && !has('gui_running') ? (str2nr(&t_Co) ?? 0) : -1")
 
+  if !empty(meta.verbatimtext)
+    header->add('')
+    header += meta.verbatimtext
+    header->add('')
+  endif
+
   return header
 enddef
 

@@ -356,7 +356,7 @@ def CollectPlaceholders(text: string): dict<bool>
   return placeholders
 enddef
 
-def Interpolate(text: string, ctx: Context): string
+def Interpolate(text: string, ctx: Context): list<string>
   var placeholders = CollectPlaceholders(text)
   var newtext      = text
 
@@ -367,12 +367,12 @@ def Interpolate(text: string, ctx: Context): string
     endif
   endfor
 
-  return newtext
+  return split(newtext, "\n")
 enddef
 
 def GetVerbatim(v: list<any>, ctx: Context)
   var meta: Metadata = ctx.state.meta
-  meta.verbatimtext ..= Interpolate(v[1], ctx)
+  meta.verbatimtext += Interpolate(v[1], ctx)
 enddef
 # }}}
 
@@ -404,7 +404,7 @@ const K_TERM        = R('Term\%[inal\]')
 const K_URL         = R('URL')
 const K_VARIANT     = R('\(gui\|256\|88\|16\|8\|0\)\>')
 const K_VARIANTS    = T('Variants')
-const K_VERBATIM    = T('verbatim')
+const K_VERBATIM    = Regex('verbatim')
 const K_VERSION     = T('Version')
 
 const BAR           = T('/')

@@ -384,13 +384,17 @@ def RefInclude(name: string): func(list<string>, Context)
 enddef
 
 const K_AUTHOR      = T('Author')
+const K_AUXFILE     = T('auxfile')
 const K_BACKGROUND  = T('Background')
 const K_COLOR       = T('Color')
 const K_COLORS      = R('[Cc]olors')
 const K_CONST       = T('#const')
 const K_DESCRIPTION = T('Description')
+const K_ENDAUXFILE  = T('endauxfile')
+const K_ENDHELPFILE = T('endhelpfile')
 const K_ENDVERBATIM = T('endverbatim')
 const K_FULL        = T('Full')
+const K_HELPFILE    = T('helpfile')
 const K_INCLUDE     = T('Include')
 const K_LICENSE     = T('License')
 const K_MAINTAINER  = T('Maintainer')
@@ -446,8 +450,8 @@ const HEXCOL        = R('#[A-Fa-f0-9]\{6}')
 const GUICOL        = OneOf(HEXCOL, IDENTIFIER)
 const STRING        = R('"[^"]*"')
 const TEXTLINE      = R('[^\r\n]\+')
-const VERBATIMTXT   = R('\_.\{-}\zeendverbatim')
 const THEMENAME     = R('\w\+')
+const VERBTEXT      = R('\_.\{-}\ze\%(end\%(verbatim\|help\|auxfile\)\)')
 
 const L_ATTRIBUTE   = Lab(ATTRIBUTE,            "Expected an attribute")
 const L_BACKGROUND  = Lab(BACKGROUND,           "Expected a valid background ('light' or 'dark')")
@@ -455,8 +459,10 @@ const L_BGCOLOR     = Lab(BGCOLOR,              "Expected the name of the backgr
 const L_COL256      = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or tilde")
 const L_COLON       = Lab(COLON,                "Expected a colon")
 const L_COLORNAME   = Lab(COLORNAME,            "Expected a color name")
-const L_COLORS      = Lab(K_COLORS,             "Expected 'Colors'")
+const L_COLORS      = Lab(K_COLORS,             "Expected keyword 'Colors'")
 const L_DISCRNAME   = Lab(DISCRNAME,            "Expected an identifier")
+const L_ENDAUXFILE  = Lab(K_ENDAUXFILE,         "Expected keyword 'endauxfile'")
+const L_ENDHELPFILE = Lab(K_ENDHELPFILE,        "Expected keyword 'endhelpfile'")
 const L_ENDVERBATIM = Lab(K_ENDVERBATIM,        "Expected keyword 'endverbatim'")
 const L_EQ          = Lab(EQ,                   "Expected an equal sign")
 const L_GUICOL      = Lab(GUICOL,               "Expected a GUI color value")
@@ -469,11 +475,24 @@ const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the specia
 const L_TEXTLINE    = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
 const L_THEMENAME   = Lab(THEMENAME,            "Expected a valid color scheme's name")
 const L_VARIANT     = Lab(K_VARIANT,            "Expected a variant (gui, 256, 88, 16, 8, or 0)")
-const L_VERBATIMTXT = Lab(VERBATIMTXT,          "Expected 'endverbatim'")
+const L_VERBTEXT    = Lab(VERBTEXT,             "Expected end of verbatim block")
+
+const AuxFile       = OneOf(
+                        Seq(
+                          K_AUXFILE,
+                          L_PATH,
+                          L_VERBTEXT,
+                          L_ENDAUXFILE
+                        ),
+                        Seq(
+                          K_HELPFILE,
+                          L_VERBTEXT,
+                          L_ENDHELPFILE)
+                      )
 
 const VerbatimBlock = Seq(
                         K_VERBATIM,
-                        L_VERBATIMTXT,
+                        L_VERBTEXT,
                         L_ENDVERBATIM
                       )                                             ->Apply(GetVerbatim)
 
@@ -594,7 +613,7 @@ const Statement     = Seq(
                         L_TEXTLINE
                       )                                            ->Apply(DefineDiscriminator)
 
-const Declaration   = OneOf(Statement, VerbatimBlock, Directive, HiGroupDecl)
+const Declaration   = OneOf(Statement, VerbatimBlock, AuxFile, Directive, HiGroupDecl)
 const Template      = Seq(
                         Skip(SpaceOrComment),
                         Many(Declaration),

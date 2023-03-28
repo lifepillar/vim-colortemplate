@@ -146,18 +146,17 @@ syn keyword colortemplateconstant     contained yellow1 yellow2 yellow3 yellow4 
 
 # These are defined for syntax completion. Since they are `contained`, but not
 # really contained into anything, this rule is never triggered.
-syn keyword colortemplateKeyword      contained auxfile endauxfile documentation enddocumentation reset endreset verbatim endverbatim
+syn keyword colortemplateKeyword      contained auxfile endauxfile helpfile endhelpfile verbatim endverbatim
 
 syn include @colortemplatevim syntax/vim.vim
 unlet b:current_syntax
 syn region colortemplateVim matchgroup=colortemplateVerb start=/^\s*verbatim\>/ end=/^\s*endverbatim\>/ keepend contains=@colortemplatevim
-syn region colortemplateReset matchgroup=colortemplateVerb start=/^\s*reset\>/ end=/^\s*endreset\>/ keepend contains=@colortemplatevim
 syn region colortemplateAux   matchgroup=colortemplateVerb start=/^\s*auxfile\s\+.*$/ end=/^\s*endauxfile\>/ keepend contains=@colortemplatevim
 syn region colortemplateConst matchgroup=colortemplateConst start=/#const\>/ end=/$/ keepend contains=@colortemplatevim
 
 syn include @colortemplatehelp syntax/help.vim
 unlet b:current_syntax
-syn region colortemplateHelp matchgroup=colortemplateVerb start=/documentation/ end=/enddocumentation/ keepend contains=@colortemplatehelp
+syn region colortemplateHelp matchgroup=colortemplateVerb start=/helpfile/ end=/endhelpfile/ keepend contains=@colortemplatehelp
 
 hi def link colortemplateArrow        Delimiter
 hi def link colortemplateAttr         Label

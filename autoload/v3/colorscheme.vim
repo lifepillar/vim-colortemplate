@@ -27,20 +27,22 @@ const ColorKind = {
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
 
 export class Metadata
-  public this.author:       list<string> = []
-  public this.description:  list<string> = []
-  public this.fullname:     string       = ''
-  public this.license:      string       = ''
-  public this.maintainer:   list<string> = []
-  public this.pathname:     string       = ''
-  public this.shortname:    string       = ''
-  public this.url:          list<string> = []
-  public this.version:      string       = ''
-  public this.variants:     list<string> = []
-  public this.backgrounds:  dict<bool>   = {'dark': false, 'light': false}
-  public this.termcolors:   list<string> = []
-  public this.options:      dict<any>    = {creator: true, useTabs: false, shiftwidth: 2}
-  public this.verbatimtext: list<string> = []
+  public this.author:       list<string>       = []
+  public this.description:  list<string>       = []
+  public this.fullname:     string             = ''
+  public this.license:      string             = ''
+  public this.maintainer:   list<string>       = []
+  public this.pathname:     string             = ''
+  public this.shortname:    string             = ''
+  public this.url:          list<string>       = []
+  public this.version:      string             = ''
+  public this.variants:     list<string>       = []
+  public this.backgrounds:  dict<bool>         = {'dark': false, 'light': false}
+  public this.termcolors:   list<string>       = []
+  public this.options:      dict<any>          = {creator: true, useTabs: false, shiftwidth: 2}
+  public this.verbatimtext: list<string>       = []
+  public this.helpfile:     list<string>       = []
+  public this.auxfiles:     dict<list<string>> = []  # path => content
 
   def IsLightAndDark(): bool
     return this.backgrounds['dark'] && this.backgrounds['light']

@@ -1,24 +1,25 @@
-; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
+; vim: ft=colortemplate fdm=marker et ts=2 sw=2
 
-; Information {{{
-; Mandatory
+; Mandatory metadata:
 Full name:     Dark
 Short name:    dark
 Author:        Myself <myself@somewhere.org>
 Author:        Yourself <yourself@nowhere.org>
-; Optional
+
+; Optional metadata:
 Maintainer:    Myself <myself@somewhere.org>
 Maintainer:    Someone Else <some.else@some.where>
 URL:           https://me.org
+URL:           https://you.somewhere.net
 Description:   Template for dark colorscheme
+Description:   More details may go here
 License:       Same as Vim
+
 ; Prefix for options: short name is used if this key is not present:
 ; Option Prefix: dark
-; }}}
 
-; Documentation {{{
-; Include: _help.colortemplate
-; }}}
+; A template can include other templates:
+Include: _help.colortemplate
 
 verbatim
 # This is copied verbatim at the start of the output.
@@ -79,7 +80,6 @@ Typedef           -> Type
 lCursor           -> Cursor
 ; }}}
 
-; Color palette {{{
 ; Color name         GUI         Base256  Base16 (optional)
 Color: black         #394759     238      Black
 Color: red           #ff0000     196      DarkRed
@@ -97,12 +97,9 @@ Color: brightblue    #0064ff     27       LightBlue
 Color: brightmagenta #ff64ff     207      LightMagenta
 Color: brightcyan    #64ffff     87       LightCyan
 Color: brightwhite   #e0e0ed     231      White
-; }}}
-; Terminal colors {{{
-Term colors: black red green yellow blue magenta cyan white
-             brightblack brightred brightgreen brightyellow
-             brightblue brightmagenta brightcyan brightwhite
-; }}}
+
+Term colors: black       red       green       yellow       blue       magenta       cyan       white
+             brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite
 
 verbatim
 # This block appears after Color directives, so colors can
@@ -111,7 +108,6 @@ verbatim
 # terminals.
 endverbatim
 
-; Default highlight groups {{{
 Normal               white             black
 Terminal             white             black
 
@@ -169,7 +165,7 @@ Visual               white             black
 VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
-; Other conventional group names (see `:help group-name`)
+
 Comment              white             none              italic
 Constant             white             none
 Error                white             black             reverse
@@ -181,17 +177,8 @@ Statement            white             none
 Todo                 white             none
 Type                 white             none
 Underlined           white             none
-; See `:help CursorIM`
 CursorIM             none              fg
-; See `:help window-toolbar`
 ToolbarLine          none              black
 ToolbarButton        white             black             bold
-; }}}
 
-; Additional highlight groups {{{
-; Add additional highlight groups here if you want
-; }}}
-
-; B/W variant {{{
 Include: _bw.colortemplate
-; }}}

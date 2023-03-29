@@ -32,7 +32,6 @@ export class Metadata
   public this.fullname:     string             = ''
   public this.license:      string             = ''
   public this.maintainer:   list<string>       = []
-  public this.pathname:     string             = ''
   public this.shortname:    string             = ''
   public this.url:          list<string>       = []
   public this.version:      string             = ''
@@ -41,8 +40,7 @@ export class Metadata
   public this.termcolors:   list<string>       = []
   public this.options:      dict<any>          = {creator: true, useTabs: false, shiftwidth: 2}
   public this.verbatimtext: list<string>       = []
-  public this.helpfile:     list<string>       = []
-  public this.auxfiles:     dict<list<string>> = []  # path => content
+  public this.auxfiles:     dict<list<string>> = {}  # path => content
 
   def IsLightAndDark(): bool
     return this.backgrounds['dark'] && this.backgrounds['light']

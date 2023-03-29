@@ -306,11 +306,15 @@ def FindReplacement(placeholder: string, ctx: Context): string
     return state.background
   endif
 
-  const directive = matchlist(placeholder, '^@\(author\|maintainer\|url\|description\)\(\d\+\)$')
+  const directive = matchlist(placeholder, '^@\(author\|maintainer\|url\|description\)\(\d\+\)\=$')
 
   if !empty(directive)
     const key = directive[1]
-    const num = str2nr(directive[2])
+    const num = empty(directive[2]) ? 0 : str2nr(directive[2]) - 1
+
+    if num < 0
+      return ''
+    endif
 
     if key == 'author'
       return meta.author[num]
@@ -370,9 +374,32 @@ def Interpolate(text: string, ctx: Context): list<string>
   return split(newtext, "\n")
 enddef
 
-def GetVerbatim(v: list<any>, ctx: Context)
+def GetVerbatim(v: list<string>, ctx: Context)
   var meta: Metadata = ctx.state.meta
   meta.verbatimtext += Interpolate(v[1], ctx)
+enddef
+
+def GetAuxFile(v: list<string>, ctx: Context)
+  const auxPath = v[1]
+  var meta: Metadata = ctx.state.meta
+
+  if !meta.auxfiles->has_key(auxPath)
+    meta.auxfiles[auxPath] = []
+  endif
+
+  meta.auxfiles[auxPath] += Interpolate(v[2], ctx)
+enddef
+
+def GetHelpFile(v: list<string>, ctx: Context)
+  var meta: Metadata = ctx.state.meta
+
+  if empty(meta.shortname)
+    throw 'Please define the short name of the color scheme first'
+  endif
+
+  const auxPath = path.Join('doc', meta.shortname .. '.txt')
+
+  GetAuxFile([v[0], auxPath, v[1]], ctx)
 enddef
 # }}}
 
@@ -483,11 +510,12 @@ const AuxFile       = OneOf(
                           L_PATH,
                           L_VERBTEXT,
                           L_ENDAUXFILE
-                        ),
+                        )                                           ->Apply(GetAuxFile),
                         Seq(
                           K_HELPFILE,
                           L_VERBTEXT,
-                          L_ENDHELPFILE)
+                          L_ENDHELPFILE
+                        )                                           ->Apply(GetHelpFile)
                       )
 
 const VerbatimBlock = Seq(
@@ -664,12 +692,20 @@ export def Parse(
 enddef
 
 def ParseInclude(v: list<string>, ctx: Context)
+  if !path.IsRelative(v[2])
+    throw printf(
+      "Include path must be a relative path. Got '%s'", v[2]
+    )
+  endif
+
   const state       = ctx.state
+  const oldBasedir  = state.basedir
   const includePath = path.Expand(v[2], state.basedir)
   const text        = join(readfile(includePath), "\n")
   var   newCtx      = ColortemplateContext.new(text)
 
   newCtx.state = deepcopy(state)
+  newCtx.state.basedir = path.Parent(includePath)
 
   const result = Parse(text, null_string, Template, newCtx)
   const parseResult: Result = result.result
@@ -681,6 +717,7 @@ def ParseInclude(v: list<string>, ctx: Context)
   endif
 
   ctx.state = newCtx.state
+  ctx.state.basedir = oldBasedir
 enddef
 # }}}
 

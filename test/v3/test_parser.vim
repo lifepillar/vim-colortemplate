@@ -200,7 +200,7 @@ def Test_Parser_VerbatimBlock()
   verbatim
   This is
     arbitrary text
-  by @author0
+  by @author1
   Color=@guiblack Approx=@256black/@16black
     Shortname: @shortname
     Fullname:  @fullname @version
@@ -259,7 +259,7 @@ def Test_Parser_MultipleVerbatimBlocks()
   @background
   endverbatim
 
-  verbatim @author0 endverbatim
+  verbatim @author endverbatim
   END
 
   const expected = ['dark', ' Nemo ']
@@ -272,6 +272,23 @@ def Test_Parser_MultipleVerbatimBlocks()
   assert_equal('', result.label)
   assert_true(result.success)
   assert_equal(expected, meta.verbatimtext)
+enddef
+
+
+def Test_Parser_auxfile()
+  const template =<< trim END
+  auxfile foo/bar
+  abcdef
+  endauxfile
+  END
+
+  const res = Parse(join(template, "\n"))
+  const result: Result = res.result
+  const meta: Metadata = res.meta
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal({'foo/bar': ['abcdef']}, meta.auxfiles)
 enddef
 
 tt.Run('_Parser_')

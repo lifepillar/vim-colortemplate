@@ -42,20 +42,55 @@ def IsColortemplateBuffer(bufname: string): bool
   return getbufvar(bufname, '&ft') == 'colortemplate'
 enddef
 
-def WriteColorscheme(content: list<string>, outpath: string, overwrite = false): bool
-  const outdir = path.Parent(outpath)
-
-  if !path.MakeDir(outdir, 'p')
-    return Error(printf('Could not create directory: %s', outdir))
+def CheckMetadata(meta: Metadata)
+  if empty(meta.fullname)
+    throw 'Please define the full name of the color scheme'
   endif
 
-  if overwrite || !path.Exists(outpath)
-    if writefile(content, outpath) < 0
-      return Error(printf("Could not write %s: %s", outpath, v:exception))
+  if empty(meta.shortname)
+    throw 'Please define the short name of the color scheme'
+  endif
+
+  if empty(meta.author)
+    throw 'Please define the author of the color scheme'
+  endif
+enddef
+
+def WriteFile(filePath: string, content: list<string>, overwrite: bool = false): bool
+  if overwrite || !path.Exists(filePath)
+    const dirPath = path.Parent(filePath)
+
+    if !path.MakeDir(dirPath, 'p')
+      return Error(printf('Could not create directory: %s', dirPath))
+    endif
+
+    if writefile(content, filePath) < 0
+      return Error(printf("Could not write %s: %s", filePath, v:exception))
     endif
   else
-    return Error(printf("File exists: %s. Use ! to overwrite it", outpath))
+    return Error(printf("File exists: %s. Use ! to overwrite it", filePath))
   endif
+
+  return true
+enddef
+
+def WriteAuxFiles(outputDir: string, meta: Metadata, overwrite: bool): bool
+  const auxfiles: dict<list<string>> = meta.auxfiles
+
+  for auxPath in keys(auxfiles)
+    if !path.IsRelative(auxPath)
+      return Error(printf(
+        "Path of auxiliary file must be a relative path. Got '%s'", auxPath
+      ))
+    endif
+
+    const outPath = path.Expand(auxPath, outputDir)
+    const content = auxfiles[auxPath]
+
+    if !WriteFile(outPath, content, overwrite)
+      return false
+    endif
+  endfor
 
   return true
 enddef
@@ -298,14 +333,21 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
     parseResult.light
   )
 
-  const startGen       = reltime()
-  const output         = generator.Generate(colorschemes[bufnr])
-  const meta: Metadata = parseResult.meta
-  const elapsedGen     = 1000.0 * reltimefloat(reltime(startGen))
-  const name           = meta.shortname .. '.vim'
-  const outpath        = path.Join(outputDir, 'colors', name)
+  CheckMetadata(parseResult.meta)
 
-  if !WriteColorscheme(output, outpath, overwrite)
+  const startGen = reltime()
+  const content  = generator.Generate(colorschemes[bufnr])
+
+  const elapsedGen     = 1000.0 * reltimefloat(reltime(startGen))
+  const meta: Metadata = parseResult.meta
+  const name           = meta.shortname .. '.vim'
+  const filePath       = path.Join(outputDir, 'colors', name)
+
+  if !WriteFile(filePath, content, overwrite)
+    return false
+  endif
+
+  if !WriteAuxFiles(outputDir, meta, overwrite)
     return false
   endif
 
@@ -313,7 +355,7 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
 
   Notice(printf(
     'Success! %s created in %.00fms (parser: %.00fms, generator: %.00fms)',
-    path.Basename(outpath), elapsed, elapsedParse, elapsedGen
+    path.Basename(filePath), elapsed, elapsedParse, elapsedGen
   ))
 
   return true

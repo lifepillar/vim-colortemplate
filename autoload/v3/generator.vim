@@ -112,20 +112,6 @@ def HiGroupToString(t: dict<any>, meta: dict<any>, indent = 0): string
 
   return BaseGroupToString(t, meta, indent)
 enddef
-
-def CheckMetadata(meta: Metadata)
-  if empty(meta.fullname)
-    throw 'Please define the full name of the color scheme'
-  endif
-
-  if empty(meta.shortname)
-    throw 'Please define the short name of the color scheme'
-  endif
-
-  if empty(meta.author)
-    throw 'Please define the author of the color scheme'
-  endif
-enddef
 # }}}
 
 # Header and footer {{{
@@ -343,8 +329,6 @@ enddef
 export def Generate(kolorscheme: Colorscheme): list<string>
   const meta  = kolorscheme.metadata
   const dbase = {"dark": kolorscheme.dark, "light": kolorscheme.light}
-
-  CheckMetadata(meta)
 
   var theme = Header(meta)
 

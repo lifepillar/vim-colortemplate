@@ -1,13 +1,13 @@
 vim9script
 
+import 'libcolor.vim'      as color
 import 'libparser.vim'     as parser
 import 'libpath.vim'       as path
 import './colorscheme.vim' as cscheme
 
 # Aliases {{{
-const Database       = cscheme.Database
-const Metadata       = cscheme.Metadata
-
+const Approximate    = color.Approximate
+const RgbName2Hex    = color.RgbName2Hex
 const Apply          = parser.Apply
 const Bol            = parser.Bol
 const Context        = parser.Context
@@ -26,6 +26,9 @@ const SpaceOrComment = parser.Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
 const Regex          = parser.Regex
 const R              = parser.RegexToken(SpaceOrComment)
 const T              = parser.TextToken(SpaceOrComment)
+
+const Database       = cscheme.Database
+const Metadata       = cscheme.Metadata
 # }}}
 
 # Semantic actions {{{
@@ -151,7 +154,7 @@ enddef
 def DefineColor(v: list<string>, ctx: Context)
   const colorName: string   = v[2]
   const vGUI:      string   = v[3]
-  const v256:      string   = v[4]  # FIXME: convert ~
+  const v256:      string   = v[4] == '~' ? string(Approximate(vGUI[0] == '#' ? vGUI : RgbName2Hex(vGUI))['xterm']) : v[4]
   const v16:       string   = v[5]
   const delta:     float    = 0.0  # FIXME
   const dbase:     Database = Db(ctx.state)
@@ -332,14 +335,14 @@ def FindReplacement(placeholder: string, ctx: Context): string
   endif
 
   const db: Database = Db(state)
-  const color = matchlist(placeholder, '^@\(16\|256\|gui\)\(\w\+\)$')
+  const colorPlaceholder = matchlist(placeholder, '^@\(16\|256\|gui\)\(\w\+\)$')
 
-  if empty(color)
+  if empty(colorPlaceholder)
     return ''
   endif
 
-  const kind = color[1]
-  const name = color[2]
+  const kind = colorPlaceholder[1]
+  const name = colorPlaceholder[2]
 
   return db.GetColor(name, kind)
 enddef

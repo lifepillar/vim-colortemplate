@@ -274,7 +274,6 @@ def Test_Parser_MultipleVerbatimBlocks()
   assert_equal(expected, meta.verbatimtext)
 enddef
 
-
 def Test_Parser_auxfile()
   const template =<< trim END
   auxfile foo/bar
@@ -290,5 +289,20 @@ def Test_Parser_auxfile()
   assert_true(result.success)
   assert_equal({'foo/bar': ['abcdef']}, meta.auxfiles)
 enddef
+
+def Test_Parser_tilde()
+  const template =<< trim END
+  Variants: gui
+  Background: dark
+  Color: black #333334 ~ Black
+  END
+
+  const res = Parse(join(template, "\n"))
+  const result: Result = res.result
+
+  assert_equal('', result.label)  # FIXME
+  assert_true(result.success)
+enddef
+
 
 tt.Run('_Parser_')

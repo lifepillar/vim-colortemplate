@@ -721,42 +721,49 @@ def ParseInclude(v: list<string>, ctx: Context)
 enddef
 # }}}
 
-# Colortemplate grammar {{{
-# Template                  ::= (VerbatimBlock | Declaration | Comment)*
-# VerbatimBlock             ::= OneLiner | ResetBlock | HelpBlock
-# OneLiner                  ::= ('#if' | '#else[if]' | '#endif' | '#let' | '#unlet[!]' | '#call[!]') '[^\r\n]*'
-# ResetBlock                ::= 'reset' '.*' 'endreset'
-# HelpBlock                 ::= 'help' '.*' 'endhelp'
-# Declaration               ::= [Directive | HiGroupDef]
-# Comment                   ::= ';' '[^\r\n]*'
+# Colortemplate's grammar {{{
+# Template        ::= Declaration*
+# Declaration     ::= Statement | VerbatimBlock | Auxfile |  Directive | HiGroupDecl
+# Statement       ::= '#const' IDENT = TEXTLINE
+# VerbatimBlock   ::= 'verbatim' TEXT 'endverbatim'
+# Auxfile         ::= 'auxfile' PATH TEXT 'endauxfile' | 'helpfile' TEXT 'endhelpfile'
 
-# Directive                 ::= ColorDef | Key ':' DirectiveValue
-# Key                       ::= 'Include' | 'Full name' | 'Short name' | 'Author' | 'Background' | ...
-# DirectiveValue            ::= '[^\r\n]+'
+# Directive       ::= ColorDef | Include    | Background | Author     | Description |
+#                              | Fullname   | License    | Maintainer | Shortname   |
+#                              | Termcolors | URL        | Variants   | Version     |
+#                              | Options
 
-# ColorDef                  ::= 'Color' ':' ColorName GUIValue Base256Value [Base16Value]
-# ColorName                 ::= '[A-Za-z][A-Za-z0-9_]*'
-# GUIValue                  ::= HexValue | RGBValue
-# HexValue                  ::= '#[A-Fa-f0-9]{6}'
-# RGBValue                  ::= 'rgb' '(' Num256 ',' Num256 ',' Num256 ')'
-# Base256Value              ::= '~' | Num256
-# Num256                    ::= '0' | '1' | ... | '255'
-# Base16Value               ::= '0' | '1' | ... | '15' | 'Black' | 'DarkRed' | ...
+# Author          ::= 'Author'        ':' TEXTLINE
+# Background      ::= 'Background'    ':' ('dark' | 'light')
+# Description     ::= 'Description'   ':' TEXTLINE
+# Fullname        ::= 'Full' 'name'   ':' TEXTLINE
+# Include         ::= 'Include'       ':' PATH
+# License         ::= 'License'       ':' TEXTLINE
+# Maintainer      ::= 'Maintainer'    ':' TEXTLINE
+# Options         ::= 'Options'       ':' (OPTNAME '=' OPTVALUE)+
+# Shortname       ::= 'Short' 'name'  ':' IDENT
+# TermColors      ::= 'Term' 'colors' ':' IDENT{16}
+# URL             ::= 'URL'           ':' TEXTLINE
+# Variants        ::= 'Variants'      ':' VARIANT+
+# Version         ::= 'Version'       ':' TEXTLINE
 
-# HiGroupDecl               ::= ^HiGroupName (HiGroupDef HiGroupVersion* | HiGroupVersion+)
-# HiGroupVersion            ::= HiGroupVariant | HiGroupDiscr
-# HiGroupVariant            ::= ('/' Variant)+ (HiGroupDiscr | HiGroupDef)
-# HiGroupDiscr              ::= ('+' | '-') DiscrName (DiscrValue HiGroupDef)+
-# DiscrName                 ::= '[A-z_0-9]+'
-# DiscrValue                ::= '[0-9]+ | ''' .+ ''' | true | false
-# Variant                   ::= 'gui' | '256' | '88' | '16' | '8' | '0' | 'bw'
-# HiGroupDef                ::= '->' HiGroupName | BaseGroup
-# BaseGroup                 ::= FgColor BgColor Attributes?
-# HiGroupName               ::= '[A-z][A-z0-9]*'
-# FgColor                   ::= ColorName
-# BgColor                   ::= ColorName
-# Attributes                ::= Attribute (',' Attribute)* | SpecialColor
-# Attribute                 ::= 'bold | 'italic' | ...
-# SpecialColor              ::= 's' '=' ColorName
+# ColorDef        ::= 'Color' ':' IDENT GUICol Col256 [Col16]
+# GUICol          ::= '#[A-Fa-f0-9]{6}' | IDENT
+# Col256          ::= '~' | Num256
+# Num256          ::= '0' | '1' | ... | '255'
+# Col16           ::= '0' | '1' | ... | '15' | IDENT
+
+# HiGroupDecl     ::= ^HiGroupName HiGroupRest
+# HiGroupRest     ::= HiGroupDef HiGroupVersion* | HiGroupVersion+
+# HiGroupVersion  ::= HiGroupVariant | DiscrDef
+# HiGroupVariant  ::= ('/' VARIANT)+ (DiscrDef | HiGroupDef)
+# DiscrDef        ::= '+' IDENT DiscrRest
+# DiscrRest       ::= (DiscrValue HiGroupDef)+
+# DiscrValue      ::= NUMBER | STRING | TRUE | FALSE
+# HiGroupDef      ::= LinkedGroup | BaseGroup
+# LinkedGroup     ::= '->' IDENT
+# BaseGroup       ::= IDENT IDENT SpecialColor? Attributes?
+# SpecialColor    ::= 's' '=' IDENT
+# Attributes      ::= ATTRIBUTE (',' ATTRIBUTE)*
 # }}}
 

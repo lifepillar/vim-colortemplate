@@ -133,8 +133,8 @@ Todo                 black               yellow
 
 Variant: gui
 
-Normal               white               white
-Terminal             white               white
+Normal               black               white
+Terminal             black               white
 CursorLine           none                lightgrey90
 Pmenu                none                lightmagenta
 PmenuSel             none                grey

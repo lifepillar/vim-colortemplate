@@ -15,11 +15,13 @@ Description: A nearly exact clone of Vim's default colorscheme
 Variants:   gui 256 8 0
 
 Background: light
+
 Include: _common_default.colortemplate
+
 ; Highlight groups for light variant {{{
 ; Group                    Foreground          Background        Attributes
-Normal                     white               white
-Terminal                   white               white
+Normal                     black               white
+Terminal                   black               white
 CursorLine                 none                lightgrey90
 Pmenu                      none                lightmagenta
 PmenuSel                   none                grey
@@ -91,8 +93,8 @@ Title            /gui      magentadarkmagenta  none              bold
 Statement        /gui      brown               none              bold
 Type             /gui      seagreen            none              bold
 
-Normal           /256/8    white               none
-Terminal         /256/8    white               none
+Normal           /256/8    black               none
+Terminal         /256/8    black               none
 CursorLine       /256/8    none                none              underline
 Pmenu            /256/8    black               lightmagenta
 PmenuSel         /256/8    black               lightgrey
@@ -106,10 +108,13 @@ TabLine          /256/8    black               lightgrey         underline
 Ignore           /256/8    white               none
 Todo             /256/8    black               yellow
 ; }}}
+
 Include: _bw_default.colortemplate
 
 Background: dark
+
 Include: _common_default.colortemplate
+
 ; Highlight groups for dark variant {{{
 ; Group                     Foreground          Background        Attributes
 Normal                      white               black
@@ -186,7 +191,7 @@ TabLine                     none                darkgrey242       underline
 Todo                        blue                yellow
 
 Normal          /256/8      white               none
-Terminal        /256/8      white               black
+Terminal        /256/8      white               none
 CursorLine      /256/8      none                none              underline
 Pmenu           /256/8      black               magenta
 PmenuSel        /256/8      darkgrey242         black

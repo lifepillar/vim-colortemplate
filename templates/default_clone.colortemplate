@@ -116,8 +116,8 @@ Background: light
 Variant: 256 8
 
 ; NOTE: Vim's default does not define Normal
-Normal               white               none
-Terminal             white               none
+Normal               black               none
+Terminal             black               none
 CursorLine           none                none              underline
 Pmenu                black               lightmagenta
 PmenuSel             black               lightgrey

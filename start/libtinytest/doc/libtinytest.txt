@@ -35,7 +35,7 @@ AssertApprox({expected}, {num}[, {rtol}, {atol}])
 		tolerance {rtol} or within the absolute tolerance {atol} (or
 		both).
 
-		The default realtive threshold is 0.001 (1‰ tolerance), and
+		The default relative threshold is 0.001 (1‰ tolerance), and
 		the default absolute tolerance is 0.0. So, by default only the
 		relative threshold matters.
 

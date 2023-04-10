@@ -925,7 +925,7 @@ enddef
 # Return the hex value of the specified color name.
 export def RgbName2Hex(colorName: string): string
   const name = tolower(colorName)
-  return get(v:colornames, name, '')
+  return v:colornames[name]
 enddef
 # }}}
 

@@ -248,14 +248,14 @@ def StartVariant(variantMeta: dict<any>, indent: number): list<string>
   return [printf('%sif t_Co >= %d', spaces, variantMeta.NumColors)]
 enddef
 
-def EndVariant(variantMeta: dict<any>, indent: number): list<string>
+def EndVariant(variantMeta: dict<any>, indent: number, opts: dict<any>): list<string>
   const spaces  = repeat(' ', indent)
 
   if variantMeta.Variant == 'gui'
     return [printf('%sendif', spaces)]
   endif
 
-  return [printf('%sfinish', spaces), printf('%sendif', spaces)]
+  return [printf('%sfinish', spaces .. repeat(' ', opts.shiftwidth)), printf('%sendif', spaces)]
 enddef
 
 def GenerateVariant(db: Database, meta: Metadata, variant: string, indent = 0, onlyOverrides = false): list<string>
@@ -282,7 +282,7 @@ def GenerateVariant(db: Database, meta: Metadata, variant: string, indent = 0, o
     theme->add('')
     theme += StartVariant(variantMeta, indent)
     theme += defs
-    theme += EndVariant(variantMeta, indent)
+    theme += EndVariant(variantMeta, indent, opts)
   endif
 
   return theme

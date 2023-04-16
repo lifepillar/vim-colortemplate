@@ -14,7 +14,7 @@ URL:           https://you.somewhere.net
 Description:   Template for dark colorscheme
 Description:   More details may go here
 License:       Same as Vim
-Options:       backend=legacy  ; This is the default: use 'legacy' for legacy Vim script
+Options:       backend=vim9  ; This is the default: use 'legacy' for legacy Vim script
 
 ; Prefix for the color scheme's options: short name is used if this key is not present:
 Prefix: drk

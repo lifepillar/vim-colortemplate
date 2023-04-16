@@ -247,7 +247,9 @@ export class Generator
 
     output += this.GenerateDiscriminators(background, nextIndent)
     output->add('')
-    output->add(printf('%sg:terminal_ansi_colors = %s', this._letKeyword, string(db.termcolors)))
+    output->add(printf('%s%sg:terminal_ansi_colors = %s',
+      repeat(' ', nextIndent), this._letKeyword, string(db.termcolors))
+    )
     output->add('')
     defs = globalLinked->Transform((t) => LinkedGroupToString(t, nextIndent))
 

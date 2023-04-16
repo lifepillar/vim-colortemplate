@@ -14,9 +14,10 @@ URL:           https://you.somewhere.net
 Description:   Template for dark colorscheme
 Description:   More details may go here
 License:       Same as Vim
+Options:       backend=legacy  ; This is the default: use 'legacy' for legacy Vim script
 
-; Prefix for options: short name is used if this key is not present:
-; Option Prefix: dark
+; Prefix for the color scheme's options: short name is used if this key is not present:
+Prefix: drk
 
 ; A template can include other templates:
 Include: _help.colortemplate
@@ -24,7 +25,7 @@ Include: _help.colortemplate
 verbatim
 # This is copied verbatim at the start of the output.
 # Interpolation allows you to replace metadata in the
-# output. For instance: @author0.
+# output. For instance: @author1.
 endverbatim
 
 Variants:   gui 256 8 0
@@ -46,6 +47,8 @@ CurSearch         -> IncSearch
 CursorLineFold    -> FoldColumn
 CursorLineSign    -> SignColumn
 Debug             -> Special
+debugPC           -> SignColumn
+debugBreakpoint   -> SignColumn
 Define            -> PreProc
 Delimiter         -> Special
 Exception         -> Statement
@@ -54,6 +57,8 @@ Function          -> Identifier
 Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement
+LineNrAbove       -> LineNr
+LineNrBelow       -> LineNr
 Macro             -> PreProc
 MessageWindow     -> WarningMsg
 Number            -> Constant

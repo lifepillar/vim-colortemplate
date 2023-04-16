@@ -1,234 +1,264 @@
 vim9script
 
-import 'libcolor.vim'      as color
+import 'libcolor.vim'      as libcol
 import 'libparser.vim'     as parser
 import 'libpath.vim'       as path
-import './colorscheme.vim' as cscheme
+import './colorscheme.vim' as themes
 
 # Aliases {{{
-const Approximate    = color.Approximate
-const RgbName2Hex    = color.RgbName2Hex
-const Apply          = parser.Apply
-const Bol            = parser.Bol
-const Context        = parser.Context
-const Eof            = parser.Eof
-const Lab            = parser.Lab
-const LookAhead      = parser.LookAhead
-const Many           = parser.Many
-const Map            = parser.Map
-const OneOf          = parser.OneOf
-const OneOrMore      = parser.OneOrMore
-const Opt            = parser.Opt
-const Result         = parser.Result
-const Seq            = parser.Seq
-const Skip           = parser.Skip
-const SpaceOrComment = parser.Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
-const Regex          = parser.Regex
-const R              = parser.RegexToken(SpaceOrComment)
-const T              = parser.TextToken(SpaceOrComment)
-
-const Database       = cscheme.Database
-const Metadata       = cscheme.Metadata
+const Approximate         = libcol.Approximate
+const RgbName2Hex         = libcol.RgbName2Hex
+const Xterm2Hex           = libcol.Xterm2Hex
+const ColorDifferenceHex  = libcol.ColorDifferenceHex
+const Apply               = parser.Apply
+const Bol                 = parser.Bol
+const Context             = parser.Context
+const Eof                 = parser.Eof
+const Lab                 = parser.Lab
+const LookAhead           = parser.LookAhead
+const Many                = parser.Many
+const Map                 = parser.Map
+const OneOf               = parser.OneOf
+const OneOrMore           = parser.OneOrMore
+const Opt                 = parser.Opt
+const Result              = parser.Result
+const Seq                 = parser.Seq
+const Skip                = parser.Skip
+const SpaceOrComment      = parser.Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
+const Regex               = parser.Regex
+const R                   = parser.RegexToken(SpaceOrComment)
+const T                   = parser.TextToken(SpaceOrComment)
+const Colorscheme         = themes.Colorscheme
+const Database            = themes.Database
+const DEFAULT_DISCR_VALUE = themes.DEFAULT_DISCR_VALUE
 # }}}
 
 # Semantic actions {{{
-def Db(state: dict<any>): Database
-  if empty(state.background)
-    throw 'Please set the background first'
-  endif
-
-  return state[state.background]
+def ResetState(state: dict<any>)
+  const theme: Colorscheme = state.theme
+  state.variants           = theme.variants
+  state.discrName          = ''
+  state.discrValue         = DEFAULT_DISCR_VALUE
+  state.isDefault          = true
 enddef
 
-def SetActiveBackground(v: list<string>, ctx: Context)
-  const bg = v[2]
-  if bg != 'dark' && bg != 'light'
+def SetActiveDatabases(v: list<string>, ctx: Context)
+  const bg                 = v[2]
+  const state              = ctx.state
+  var   theme: Colorscheme = state.theme
+
+  ResetState(state)
+
+  if bg == 'dark'
+    state.active_db         = [theme.dark]
+    theme.backgrounds.dark  = true
+  elseif bg == 'light'
+    state.active_db         = [theme.light]
+    theme.backgrounds.light = true
+  elseif bg == 'any'
+    state.active_db         = [theme.dark, theme.light]
+    theme.backgrounds.dark  = true
+    theme.backgrounds.light = true
+  else
     throw printf(
-      "Invalid background: %s. Valid values are 'dark' and 'light'.", bg
+      "Invalid background: %s. Valid values are 'dark', 'light' and 'any'.", bg
     )
   endif
+enddef
 
-  const state = ctx.state
-  var meta: Metadata = state.meta
+def ActiveDatabases(state: dict<any>): list<Database>
+  if empty(state.active_db)
+    throw "Missing 'Background' directive: please set the background first"
+  endif
 
-  state.Reset()
-  state.background = v[2]
-  meta.backgrounds[state.background] = true
+  return state.active_db
 enddef
 
 def SetOption(v: list<string>, ctx: Context)
-  const key: string  = v[0]
-  const val: string  = v[2]
-  var meta: Metadata = ctx.state.meta
+  const key: string      = v[0]
+  const val: string      = v[2]
+  var theme: Colorscheme = ctx.state.theme
 
-  meta.options[key] = val == "true" ? true : val == "false" ? false : str2nr(val)
+  if theme.options->has_key(key)
+    if val == 'true'
+      theme.options[key] = true
+    elseif val == 'false'
+      theme.options[key] = false
+    elseif val =~ '^\d\+$'
+      theme.options[key] = str2nr(val)
+    else
+      theme.options[key] = val
+    endif
+  else
+    throw printf("Invalid option name: '%s'. Valid options: %s", key, keys(theme.options))
+  endif
+enddef
+
+def CheckEmpty(name: string, value: any)
+  if !empty(value)
+    throw printf('%s already defined (%s)', name, value)
+  endif
 enddef
 
 def SetSupportedVariants(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  if !empty(meta.variants)
-    throw printf(
-      "Supported variants already defined ('%s')", meta.variants
-    )
-  endif
-  meta.variants = ['gui'] + v
-  meta.variants->sort()->uniq()
+  var theme: Colorscheme = ctx.state.theme
+  theme.variants = ['gui'] + v
+  theme.variants->sort()->uniq()
 enddef
 
 def SetFullName(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  if !empty(meta.fullname)
-    throw printf(
-      'Full name already defined (%s)', meta.fullname
-    )
-  endif
-  meta.fullname = v[3]
+  var theme: Colorscheme = ctx.state.theme
+  CheckEmpty('Full name', theme.fullname)
+  theme.fullname = v[3]
 enddef
 
 def SetShortName(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  if !empty(meta.shortname)
-    throw printf(
-      'Short name already defined (%s)', meta.shortname
-    )
-  endif
-  meta.shortname = v[3]
+  var theme: Colorscheme = ctx.state.theme
+  CheckEmpty('Short name', theme.shortname)
+  theme.shortname = v[3]
 enddef
 
 def SetLicense(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  if !empty(meta.license)
-    throw printf(
-      "License already defined ('%s')", meta.license
-    )
-  endif
-  meta.license = v[2]
+  var theme: Colorscheme = ctx.state.theme
+  CheckEmpty('License', theme.license)
+  theme.license = v[2]
 enddef
 
 def SetAuthor(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  meta.author->add(v[2])
+  var theme: Colorscheme = ctx.state.theme
+  theme.author->add(v[2])
 enddef
 
 def SetMaintainer(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  meta.maintainer->add(v[2])
+  var theme: Colorscheme = ctx.state.theme
+  theme.maintainer->add(v[2])
 enddef
 
 def SetDescription(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  meta.description->add(v[2])
+  var theme: Colorscheme = ctx.state.theme
+  theme.description->add(v[2])
 enddef
 
 def SetVersion(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  if !empty(meta.version)
-    throw printf(
-      "Version already defined ('%s')", meta.version
-    )
-  endif
-  meta.version = v[2]
+  var theme: Colorscheme = ctx.state.theme
+  CheckEmpty('Version', theme.version)
+  theme.version = v[2]
+enddef
+
+def SetOptionsPrefix(v: list<string>, ctx: Context)
+  var theme: Colorscheme = ctx.state.theme
+  CheckEmpty('Options prefix', theme.prefix)
+  theme.prefix = v[2]
 enddef
 
 def SetURL(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  meta.url->add(v[2])
+  var theme: Colorscheme = ctx.state.theme
+  theme.url->add(v[2])
 enddef
 
 def SetTermColors(v: list<string>, ctx: Context)
-  const state           = ctx.state
-  var   meta: Metadata  = state.meta
-  const dbase: Database = Db(state)
+  for db in ActiveDatabases(ctx.state)
+    for colorName in v
+      const t = db.Color.Lookup(['ColorName'], [colorName])
 
-  for colorName in v
-    const t = dbase.Color.Lookup(['ColorName'], [colorName])
-    if empty(t)
-      throw printf(
-        "Invalid color name: %s", colorName
-      )
-    endif
-    meta.termcolors->add(t.GUIValue)
+      if empty(t)
+        throw printf(
+          "Invalid color name: %s (%s background)", colorName, db.background
+        )
+      endif
+
+      db.termcolors->add(t.GUIValue)
+    endfor
   endfor
 enddef
 
 def DefineColor(v: list<string>, ctx: Context)
-  const colorName: string   = v[2]
-  const vGUI:      string   = v[3]
-  const v256:      string   = v[4] == '~' ? string(Approximate(vGUI[0] == '#' ? vGUI : RgbName2Hex(vGUI))['xterm']) : v[4]
-  const v16:       string   = v[5]
-  const delta:     float    = 0.0  # FIXME
-  const dbase:     Database = Db(ctx.state)
-  const meta:      Metadata = ctx.state.meta
+  const colorName: string = v[2]
+  const vGui:      string = v[3]
+  const vGuiHex:   string = vGui[0] == '#' ? vGui : RgbName2Hex(vGui)
+  const v16:       string = v[5]
+  var   v256:      string
+  var   v256Hex:   string
+  var   delta:     float
 
-  if empty(meta.variants)
-    throw "Missing Variants directive: please define the supported variants first"
+  if v[4] == '~'
+    const approxColor: dict<any> = Approximate(vGuiHex)
+    v256    = string(approxColor.xterm)
+    v256Hex = approxColor.hex
+    delta   = approxColor.delta
+  else
+    v256 = v[4]
+    v256Hex = Xterm2Hex(str2nr(v256))
+    delta = ColorDifferenceHex(vGuiHex, v256Hex)
   endif
 
-  dbase.Color.Insert({
-    ColorName:    colorName,
-    GUIValue:     vGUI,
-    Base256Value: v256,
-    Base16Value:  v16,
-    Delta:        delta,
-  })
+  for db in ActiveDatabases(ctx.state)
+    db.Color.Insert({
+      ColorName:       colorName,
+      GUIValue:        vGui,
+      Base256Value:    v256,
+      Base256HexValue: v256Hex,
+      Base16Value:     v16,
+      Delta:           delta,
+    })
+  endfor
 enddef
 
 def DefineDiscriminator(v: list<string>, ctx: Context)
-  const discrName:  string   = v[1]
-  const definition: string   = v[3]
-  const dbase:      Database = Db(ctx.state)
+  const discrName:  string = v[1]
+  const definition: string = v[3]
 
-  dbase.Discriminator.Insert({
-    DiscrName:  discrName,
-    Definition: definition,
-  })
+  for db in ActiveDatabases(ctx.state)
+    db.Discriminator.Insert({
+      DiscrName:  discrName,
+      Definition: definition,
+    })
+  endfor
 enddef
 
 def SetHiGroupName(v: list<string>, ctx: Context)
   const state   = ctx.state
   const hiGroup = v[0]
-
-  state.Reset()
+  ResetState(state)
   state.hiGroupName = hiGroup
 enddef
 
 def SetVariants(v: list<any>, ctx: Context)
   const state                  = ctx.state
-  const meta: Metadata         = state.meta
   const variants: list<string> = flattennew(v)
-
   state.variants = variants
   state.isDefault = false
 enddef
 
 def SetDiscrName(v: list<string>, ctx: Context)
-  const discrName       = v[1]
-  const state           = ctx.state
-  const dbase: Database = Db(state)
-  const t               = dbase.HiGroup.Lookup(['HiGroupName'], [state.hiGroupName])
-
-  if empty(t)
-    throw printf(
-      "Missing default definition for highlight group: %s",
-      state.hiGroupName
-    )
-  endif
-
-  if empty(t.DiscrName)  # First override: set the discriminator's name
-    dbase.HiGroup.Update({
-      HiGroupName: t.HiGroupName,
-      DiscrName:   discrName,
-      IsLinked:    t.IsLinked,
-    })
-  elseif t.DiscrName != discrName
-    throw printf(
-      "Inconsistent discriminator: '%s' ('%s' already uses '%s')",
-      discrName, state.hiGroupName, t.DiscrName
-    )
-  endif
-
+  const discrName = v[1]
+  const state     = ctx.state
   state.discrName = discrName
   state.isDefault = false
+
+  for db in ActiveDatabases(state)
+    const t = db.HiGroup.Lookup(['HiGroupName'], [state.hiGroupName])
+
+    if empty(t)
+      throw printf(
+        "Missing default definition for highlight group '%s' (%s background)",
+        state.hiGroupName, db.background
+      )
+    endif
+
+    if empty(t.DiscrName)  # First override: set the discriminator's name
+      db.HiGroup.Update({
+        HiGroupName: t.HiGroupName,
+        DiscrName:   discrName,
+        IsLinked:    t.IsLinked,
+      })
+    elseif t.DiscrName != discrName
+      throw printf(
+        "Inconsistent discriminator name '%s': '%s' already uses '%s' (%s background)",
+        discrName, state.hiGroupName, t.DiscrName, db.background
+      )
+    endif
+  endfor
 enddef
 
 def SetDiscrValue(discrValue: string, ctx: Context)
@@ -237,54 +267,58 @@ enddef
 
 def DefineLinkedGroup(v: list<string>, ctx: Context)
   const state           = ctx.state
-  const dbase: Database = Db(state)
   const hiGroupName     = state.hiGroupName
   const targetGroup     = v[1]
 
-  if state.isDefault
-    dbase.InsertDefaultLinkedGroup(hiGroupName, targetGroup)
-  else
-    for variant in state.variants
-      dbase.InsertLinkedGroupOverride(variant, state.discrValue, hiGroupName, targetGroup)
-    endfor
-  endif
+  for db in ActiveDatabases(state)
+    if state.isDefault
+      db.InsertDefaultLinkedGroup(hiGroupName, targetGroup)
+    else
+      for variant in state.variants
+        db.InsertLinkedGroupOverride(variant, state.discrValue, hiGroupName, targetGroup)
+      endfor
+    endif
+  endfor
 enddef
 
 def CheckColorName(colorName: string, ctx: Context): string
   if !empty(colorName)
-    const state = ctx.state
-    const db: Database = Db(state)
-
-    if empty(db.Color.Lookup(['ColorName'], [colorName]))
-      throw printf("Undefined color name: %s", colorName)
-    endif
+    for db in ActiveDatabases(ctx.state)
+      if empty(db.Color.Lookup(['ColorName'], [colorName]))
+        throw printf(
+          "Undefined color name: '%s' (%s background)",
+          colorName, db.background
+        )
+      endif
+    endfor
   endif
 
   return colorName
 enddef
 
 def DefineBaseGroup(v: list<any>, ctx: Context)
-  const state           = ctx.state
-  const dbase: Database = Db(state)
-  const hiGroupName     = state.hiGroupName
-  const fgColor         = v[0]
-  const bgColor         = v[1]
-  const spColor         = empty(v[2]) ? 'none' : v[2]
-  const attributes      = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
+  const state       = ctx.state
+  const hiGroupName = state.hiGroupName
+  const fgColor     = v[0]
+  const bgColor     = v[1]
+  const spColor     = empty(v[2]) ? 'none' : v[2]
+  const attributes  = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
 
-  if state.isDefault
-    dbase.InsertDefaultBaseGroup(
-      hiGroupName,
-      fgColor, bgColor, spColor, attributes, '', '', ''
-    )
-  else
-    for variant in state.variants
-      dbase.InsertBaseGroupOverride(
-        variant, state.discrValue, hiGroupName,
+  for db in ActiveDatabases(state)
+    if state.isDefault
+      db.InsertDefaultBaseGroup(
+        hiGroupName,
         fgColor, bgColor, spColor, attributes, '', '', ''
       )
-    endfor
-  endif
+    else
+      for variant in state.variants
+        db.InsertBaseGroupOverride(
+          variant, state.discrValue, hiGroupName,
+          fgColor, bgColor, spColor, attributes, '', '', ''
+        )
+      endfor
+    endif
+  endfor
 enddef
 
 def FindReplacement(placeholder: string, ctx: Context): string
@@ -295,18 +329,18 @@ def FindReplacement(placeholder: string, ctx: Context): string
   endif
 
   const state = ctx.state
-  const meta: Metadata = state.meta
+  const theme: Colorscheme = state.theme
 
   if placeholder == '@shortname'
-    return meta.shortname
+    return theme.shortname
   elseif placeholder == '@fullname'
-    return meta.fullname
+    return theme.fullname
   elseif placeholder == '@version'
-    return meta.version
+    return theme.version
   elseif placeholder == '@license'
-    return meta.license
-  elseif placeholder == '@background'
-    return state.background
+    return theme.license
+  elseif placeholder == '@prefix'
+    return empty(theme.prefix) ? theme.shortname : theme.prefix
   endif
 
   const directive = matchlist(placeholder, '^@\(author\|maintainer\|url\|description\)\(\d\+\)\=$')
@@ -320,21 +354,27 @@ def FindReplacement(placeholder: string, ctx: Context): string
     endif
 
     if key == 'author'
-      return meta.author[num]
+      return theme.author[num]
     elseif key == 'maintainer'
-      return meta.maintainer[num]
+      return theme.maintainer[num]
     elseif key == 'url'
-      return meta.url[num]
+      return theme.url[num]
     elseif key == 'description'
-      return meta.description[num]
+      return theme.description[num]
     endif
   endif
 
-  if empty(state.background)
+  # The following replacements make sense only if the background is unambiguous
+  if len(state.active_db) != 1
     return ''
   endif
 
-  const db: Database = Db(state)
+  const db: Database = state.active_db[0]
+
+  if placeholder == '@background'
+    return db.background
+  endif
+
   const colorPlaceholder = matchlist(placeholder, '^@\(16\|256\|gui\)\(\w\+\)$')
 
   if empty(colorPlaceholder)
@@ -352,7 +392,7 @@ def CollectPlaceholders(text: string): dict<bool>
   var i = 0
 
   while true
-    const [atString, _, endpos] = matchstrpos(text, '@\w\+\>', i)
+    const [atString, _, endpos] = matchstrpos(text, '@\%(prefix\|\w\+\>\)', i)
     if empty(atString)
       break
     endif
@@ -378,29 +418,29 @@ def Interpolate(text: string, ctx: Context): list<string>
 enddef
 
 def GetVerbatim(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
-  meta.verbatimtext += Interpolate(v[1], ctx)
+  var theme: Colorscheme = ctx.state.theme
+  theme.verbatimtext = theme.verbatimtext + Interpolate(v[1], ctx)
 enddef
 
 def GetAuxFile(v: list<string>, ctx: Context)
   const auxPath = v[1]
-  var meta: Metadata = ctx.state.meta
+  var theme: Colorscheme = ctx.state.theme
 
-  if !meta.auxfiles->has_key(auxPath)
-    meta.auxfiles[auxPath] = []
+  if !theme.auxfiles->has_key(auxPath)
+    theme.auxfiles[auxPath] = []
   endif
 
-  meta.auxfiles[auxPath] += Interpolate(v[2], ctx)
+  theme.auxfiles[auxPath] += Interpolate(v[2], ctx)
 enddef
 
 def GetHelpFile(v: list<string>, ctx: Context)
-  var meta: Metadata = ctx.state.meta
+  var theme: Colorscheme = ctx.state.theme
 
-  if empty(meta.shortname)
+  if empty(theme.shortname)
     throw 'Please define the short name of the color scheme first'
   endif
 
-  const auxPath = path.Join('doc', meta.shortname .. '.txt')
+  const auxPath = path.Join('doc', theme.shortname .. '.txt')
 
   GetAuxFile([v[0], auxPath, v[1]], ctx)
 enddef
@@ -430,8 +470,9 @@ const K_LICENSE     = T('License')
 const K_MAINTAINER  = T('Maintainer')
 const K_NAME        = R('[Nn]ame')
 const K_OPTIONS     = T('Options')
-const K_OPTN        = R('\%(creator\|useTabs\|shiftwidth\)\>')
-const K_OPTV        = R('\%(true\|false\)\>\|\d\+')
+const K_OPTN        = R('\%(backend\|creator\|tabs\|shiftwidth\)\>')
+const K_OPTV        = R('\%(true\|false\)\>\|\d\+\|\w\+')
+const K_PREFIX      = T('Prefix')
 const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\|sp\>')
 const K_TERM        = R('Term\%[inal\]')
@@ -475,7 +516,7 @@ const ATTRIBUTE     = R(printf('\%(%s\)\>',
 const COL16         = R('\%(\d\+\)\|\w\+') # FIXME: match only colors from g:colortemplate#colorspace#ansi_colors
 const NUM256        = R('\d\{1,3}\>')
 const NUMBER        = R('-\=\d\+\%(\.\d*\)\=')
-const BACKGROUND    = R('dark\>\|light\>')
+const BACKGROUND    = R('dark\>\|light\|any\>')
 const HEXCOL        = R('#[A-Fa-f0-9]\{6}')
 const GUICOL        = OneOf(HEXCOL, IDENTIFIER)
 const STRING        = R('"[^"]*"')
@@ -595,6 +636,7 @@ const VariantList   = Lab(
                         "Expected one of: gui, 256, 88, 16, 8, 0"
                       )                                             ->Apply(SetSupportedVariants)
 
+const Prefix        = Seq(K_PREFIX,         L_COLON, L_IDENTIFIER)  ->Apply(SetOptionsPrefix)
 const Options       = Seq(K_OPTIONS,        L_COLON, OptionsList)
 const Version       = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
 const Variants      = Seq(K_VARIANTS,       L_COLON, VariantList)
@@ -606,7 +648,7 @@ const License       = Seq(K_LICENSE,        L_COLON, L_TEXTLINE)    ->Apply(SetL
 const Fullname      = Seq(K_FULL,  L_NAME,  L_COLON, L_TEXTLINE)    ->Apply(SetFullName)
 const Description   = Seq(K_DESCRIPTION,    L_COLON, L_TEXTLINE)    ->Apply(SetDescription)
 const Author        = Seq(K_AUTHOR,         L_COLON, L_TEXTLINE)    ->Apply(SetAuthor)
-const Background    = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveBackground)
+const Background    = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveDatabases)
 const Include       = Seq(K_INCLUDE,        L_COLON, L_PATH)        ->Apply(RefInclude('ParseInclude'))
 const ColorDef      = Seq(
                         K_COLOR,
@@ -633,7 +675,8 @@ const Directive     = Seq(LookAhead(Regex('[^\n\r]*:')),
                           URL,
                           Variants,
                           Version,
-                          Options
+                          Options,
+                          Prefix
                         ), 'Expected a valid metadata directive')
                       )
 
@@ -653,28 +696,16 @@ const Template      = Seq(
 # }}}
 
 # Main {{{
-const DEFAULT_DISCR_VALUE = cscheme.DEFAULT_DISCR_VALUE
-
 class ColortemplateContext extends Context
   def new(this.text, basedir = '')
-    this.state.basedir                = basedir
-    this.state.meta                   = Metadata.new()
-    this.state.dark                   = Database.new('dark')
-    this.state.light                  = Database.new('light')
-    this.state.background             = ''
-    this.state.hiGroupName            = ''
-    this.state.isDefault              = true
-    this.state.variants               = []
-    this.state.discrName              = ''
-    this.state.discrValue             = DEFAULT_DISCR_VALUE
-    this.state.Reset                  = () => {
-      const state          = this.state
-      const meta: Metadata = state.meta
-      state.variants       = meta.variants
-      state.discrName      = ''
-      state.discrValue     = DEFAULT_DISCR_VALUE
-      state.isDefault      = true
-    }
+    this.state.basedir     = basedir
+    this.state.theme       = Colorscheme.new()
+    this.state.active_db   = []
+    this.state.hiGroupName = ''
+    this.state.isDefault   = true
+    this.state.variants    = ['gui']
+    this.state.discrName   = ''
+    this.state.discrValue  = DEFAULT_DISCR_VALUE
   enddef
 endclass
 
@@ -683,15 +714,12 @@ export def Parse(
     basedir = '',
     Parser: func(Context): Result = Template,
     context: Context = ColortemplateContext.new(text, basedir)
-    ): dict<any>
-  var   ctx    = context
-  const result = Parser(ctx)
+): list<any>
+  var   ctx                = context
+  const result: Result     = Parser(ctx)
+  const theme: Colorscheme = ctx.state.theme
 
-  const meta:  Metadata = ctx.state.meta
-  const dark:  Database = ctx.state.dark
-  const light: Database = ctx.state.light
-
-  return {result: result, meta: meta, dark: dark, light: light}
+  return [result, theme]
 enddef
 
 def ParseInclude(v: list<string>, ctx: Context)
@@ -710,13 +738,10 @@ def ParseInclude(v: list<string>, ctx: Context)
   newCtx.state = deepcopy(state)
   newCtx.state.basedir = path.Parent(includePath)
 
-  const result = Parse(text, null_string, Template, newCtx)
-  const parseResult: Result = result.result
+  const [result: Result, theme: Colorscheme] = Parse(text, null_string, Template, newCtx)
 
-  if !parseResult.success
-    throw printf("in %s, byte %d: %s",
-      includePath, parseResult.errpos, parseResult.label
-    )
+  if !result.success
+    throw printf("in %s, byte %d: %s", includePath, result.errpos, result.label)
   endif
 
   ctx.state = newCtx.state
@@ -734,7 +759,7 @@ enddef
 # Directive       ::= ColorDef | Include    | Background | Author     | Description |
 #                              | Fullname   | License    | Maintainer | Shortname   |
 #                              | Termcolors | URL        | Variants   | Version     |
-#                              | Options
+#                              | Options    | Prefix
 
 # Author          ::= 'Author'        ':' TEXTLINE
 # Background      ::= 'Background'    ':' ('dark' | 'light')
@@ -744,6 +769,7 @@ enddef
 # License         ::= 'License'       ':' TEXTLINE
 # Maintainer      ::= 'Maintainer'    ':' TEXTLINE
 # Options         ::= 'Options'       ':' (OPTNAME '=' OPTVALUE)+
+# Prefix          ::= 'Prefix'        ':' IDENT
 # Shortname       ::= 'Short' 'name'  ':' IDENT
 # TermColors      ::= 'Term' 'colors' ':' IDENT{16}
 # URL             ::= 'URL'           ':' TEXTLINE

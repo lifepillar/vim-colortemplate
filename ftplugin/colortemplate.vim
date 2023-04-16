@@ -19,7 +19,7 @@ setlocal omnifunc=syntaxcomplete#Complete
 
 def g:InitOutputDir()
   if empty(get(b:, 'colortemplate_outdir', ''))
-    b:colortemplate_outdir = ''  # Make sure variable exists
+    b:colortemplate_outdir = ''  # Ensure that the variable exists
 
     if empty(expand('%:p'))
       return

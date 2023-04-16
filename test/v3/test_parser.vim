@@ -2,43 +2,30 @@ vim9script
 
 import 'libtinytest.vim' as tt
 import 'librelalg.vim' as ra
-import 'libparser.vim' as parser
-import '../../autoload/v3/parser.vim' as colortemplate_parser
-import '../../autoload/v3/colorscheme.vim'
+import 'libparser.vim'
+import '../../autoload/v3/parser.vim' as colortemplateParser
+import '../../autoload/v3/colorscheme.vim' as themes
 
-const Parse    = colortemplate_parser.Parse
-const Result   = parser.Result
-const Metadata = colorscheme.Metadata
-const Database = colorscheme.Database
+const Parse    = colortemplateParser.Parse
+const Result   = libparser.Result
+const Colorscheme = themes.Colorscheme
 
 
 def Test_Parser_Background()
-  const res = Parse("Background: dark")
-
-  assert_equal(v:t_dict, type(res))
-  assert_equal(['dark', 'light', 'meta', 'result'], sort(keys(res)))
-
-  const result: Result   = res.result
-  const meta:   Metadata = res.meta
+  const [result: Result, theme: Colorscheme] = Parse("Background: dark")
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_true(meta.backgrounds.dark)
-  assert_false(meta.backgrounds.light)
+  assert_true(theme.backgrounds.dark)
+  assert_false(theme.backgrounds.light)
 enddef
 
 def Test_Parser_Variants()
-  const res = Parse("Variants: 8")
-
-  assert_equal(v:t_dict, type(res))
-  assert_equal(['dark', 'light', 'meta', 'result'], sort(keys(res)))
-
-  const result: Result   = res.result
-  const meta:   Metadata = res.meta
+  const [result: Result, theme: Colorscheme] = Parse("Variants: 8")
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_true(index(meta.variants, '8') != -1)
+  assert_equal(['8', 'gui'], theme.variants)
 enddef
 
 def Test_Parser_NoDefaultLinkedGroup()
@@ -48,8 +35,7 @@ def Test_Parser_NoDefaultLinkedGroup()
     Define/256 -> Conditional
   END
 
-  const res = Parse(join(template, "\n"))
-  const result: Result = res.result
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_false(result.success)
   assert_match('must override an existing Highlight Group', result.label)
@@ -63,19 +49,17 @@ def Test_Parser_LinkedGroup()
     Define/256 -> Conditional
   END
 
-  const res = Parse(join(template, "\n"))
-  const result: Result   = res.result
-  const meta:   Metadata = res.meta
-  const dbase:  Database = res.dark
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_true(meta.backgrounds.dark)
-  assert_false(meta.backgrounds.light)
-  assert_equal(['0', '16', '256', '8', 'gui'], meta.variants)
+  assert_true(theme.backgrounds.dark)
+  assert_false(theme.backgrounds.light)
+  assert_equal(['0', '16', '256', '8', 'gui'], theme.variants)
 
+  const db = theme.dark
   const r = ra.Query(
-    dbase.LinkedGroup
+    db.LinkedGroup
     ->ra.Select((t) => t.HiGroupName == 'Define')
   )
 
@@ -83,7 +67,7 @@ def Test_Parser_LinkedGroup()
   assert_equal('Identifier', r[0]['TargetGroup'])
 
   const s = ra.Query(
-    dbase.LinkedGroupOverride
+    db.LinkedGroupOverride
     ->ra.Select((t) => t.HiGroupName == 'Define')
   )
   assert_equal(1, len(s))
@@ -100,8 +84,8 @@ def Test_Parser_VariantDiscriminatorOverride()
     Normal white white
     Normal /256/8 +transp_bg 1 white none
   END
-  const res = Parse(join(template, "\n"))
-  const result: Result = res.result
+
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
@@ -110,16 +94,16 @@ enddef
 
 def Test_Parser_DiscriminatorName()
   const template =<< trim END
-  Background: dark
-  Variants: gui 8
-  Color: black  #394759  238  Black
-  Color: white  #ebebeb  255  LightGrey
-  #const foobar = get(g:, 'foobar', 0)
-  Conceal black white
-       /8 +foobar 1   white black reverse
+    Background: dark
+    Variants: gui 8
+    Color: black  #394759  238  Black
+    Color: white  #ebebeb  255  LightGrey
+    #const foobar = get(g:, 'foobar', 0)
+    Conceal black white
+         /8 +foobar 1   white black reverse
   END
-  const res = Parse(join(template, "\n"))
-  const result: Result = res.result
+
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
@@ -127,21 +111,19 @@ enddef
 
 def Test_Parser_MissingDefaultDef()
   const template =<< trim END
-  Background: dark
-  Variants: gui 8
-  Color: black  #394759  238  Black
-  Color: white  #ebebeb  255  LightGrey
-  #const foobar = get(g:, 'foobar', 0)
-  ; Missing default definition for Conceal
-  Conceal/8 +foobar 1   white black reverse
+    Background: dark
+    Variants: gui 8
+    Color: black  #394759  238  Black
+    Color: white  #ebebeb  255  LightGrey
+    #const foobar = get(g:, 'foobar', 0)
+    ; Missing default definition for Conceal
+    Conceal/8 +foobar 1   white black reverse
   END
 
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
-  assert_equal(
-    'Missing default definition for highlight group: Conceal',
+  assert_match(
+    "Missing default definition for highlight group 'Conceal'",
     result.label
   )
   assert_false(result.success)
@@ -161,9 +143,7 @@ def Test_Parser_TranspBg()
     Normal /256/8 +transp_bg 1 black white
   END
 
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
@@ -171,18 +151,15 @@ enddef
 
 def Test_Parser_GUIColor()
   const template =<< trim END
-    Variants:   256 8
     Background: light
 
-    Color: black  Black   0  Black
-    Color: blue   Blue   12  Blue
+    Color: black  Black  16  Black
+    Color: blue   Blue    ~  Blue
 
     Normal black blue
   END
 
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
@@ -190,50 +167,47 @@ enddef
 
 def Test_Parser_VerbatimBlock()
   const template =<< trim END
-  Background: light
-  Author: myself
-  Short name: xyz
-  Version: v1.2.3
-  Full name: XYZ
-  Variants: gui
-  Color: black #333333 8 Black
-  verbatim
-  This is
-    arbitrary text
-  by @author1
-  Color=@guiblack Approx=@256black/@16black
-    Shortname: @shortname
-    Fullname:  @fullname @version
-  The background is @background
-  endverbatim
+    Background: light
+    Author: myself
+    Short name: xyz
+    Version: v1.2.3
+    Full name: XYZ
+    Variants: gui
+    Color: black #333333 17 Black
+    verbatim
+    This is
+      arbitrary text
+    by @author1
+    Color=@guiblack Approx=@256black/@16black
+      Shortname: @shortname
+      Fullname:  @fullname @version
+    The background is @background
+    endverbatim
   END
 
   const expected =<< trim END
     This is
       arbitrary text
     by myself
-    Color=#333333 Approx=8/Black
+    Color=#333333 Approx=17/Black
       Shortname: xyz
       Fullname:  XYZ v1.2.3
     The background is light
   END
 
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
-  const meta: Metadata = res.meta
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal(expected, meta.verbatimtext)
+  assert_equal(expected, theme.verbatimtext)
 enddef
 
 def Test_Parser_VerbatimDateVersion()
   const template =<< trim END
-  verbatim
-    Today is @date
-    And this is Vim v@vimversion.0
-  endverbatim
+    verbatim
+      Today is @date
+      And this is Vim v@vimversion.0
+    endverbatim
   END
 
   const expected = [
@@ -241,14 +215,11 @@ def Test_Parser_VerbatimDateVersion()
     printf("  And this is Vim v%d.0", v:version / 100),
   ]
 
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
-  const meta: Metadata = res.meta
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal(expected, meta.verbatimtext)
+  assert_equal(expected, theme.verbatimtext)
 enddef
 
 def Test_Parser_MultipleVerbatimBlocks()
@@ -263,31 +234,25 @@ def Test_Parser_MultipleVerbatimBlocks()
   END
 
   const expected = ['dark', ' Nemo ']
-
-  const parserInput = join(template, "\n")
-  const res = Parse(parserInput)
-  const result: Result = res.result
-  const meta: Metadata = res.meta
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal(expected, meta.verbatimtext)
+  assert_equal(expected, theme.verbatimtext)
 enddef
 
 def Test_Parser_auxfile()
   const template =<< trim END
-  auxfile foo/bar
-  abcdef
-  endauxfile
+    auxfile foo/bar
+    abcdef
+    endauxfile
   END
 
-  const res = Parse(join(template, "\n"))
-  const result: Result = res.result
-  const meta: Metadata = res.meta
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal({'foo/bar': ['abcdef']}, meta.auxfiles)
+  assert_equal({'foo/bar': ['abcdef']}, theme.auxfiles)
 enddef
 
 def Test_Parser_tilde()
@@ -297,8 +262,7 @@ def Test_Parser_tilde()
   Color: black #333334 ~ Black
   END
 
-  const res = Parse(join(template, "\n"))
-  const result: Result = res.result
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)  # FIXME
   assert_true(result.success)

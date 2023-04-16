@@ -14,7 +14,7 @@ License:       Public domain
 ; }}}
 
 ; Documentation {{{
-; Include: _help.colortemplate
+Include: _help.colortemplate
 ; }}}
 
 Background: dark
@@ -120,8 +120,6 @@ ToolbarLine          none              white
 ToolbarButton        white             black             bold
 ; }}}
 
-Include: _bw.colortemplate
-
 Background: light
 
 Include: _common.colortemplate
@@ -224,5 +222,7 @@ CursorIM             none              fg
 ToolbarLine          none              black
 ToolbarButton        black             white             bold
 ; }}}
+
+Background: any
 
 Include: _bw.colortemplate

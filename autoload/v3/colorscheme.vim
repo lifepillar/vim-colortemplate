@@ -26,31 +26,6 @@ const ColorKind = {
 
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
 
-export class Metadata
-  public this.author:       list<string>       = []
-  public this.description:  list<string>       = []
-  public this.fullname:     string             = ''
-  public this.license:      string             = ''
-  public this.maintainer:   list<string>       = []
-  public this.shortname:    string             = ''
-  public this.url:          list<string>       = []
-  public this.version:      string             = ''
-  public this.variants:     list<string>       = []
-  public this.backgrounds:  dict<bool>         = {'dark': false, 'light': false}
-  public this.termcolors:   list<string>       = []
-  public this.options:      dict<any>          = {creator: true, useTabs: false, shiftwidth: 2}
-  public this.verbatimtext: list<string>       = []
-  public this.auxfiles:     dict<list<string>> = {}  # path => content
-
-  def IsLightAndDark(): bool
-    return this.backgrounds['dark'] && this.backgrounds['light']
-  enddef
-
-  def HasBackground(background: string): bool
-    return this.backgrounds[background]
-  enddef
-endclass
-
 # Integrity constraints {{{
 def IsValidColorName(t: dict<any>)
   if t.ColorName == 'none' ||
@@ -70,7 +45,8 @@ enddef
 # }}}
 
 export class Database
-  public this.background:  string
+  public this.background: string
+  public this.termcolors: list<string> = []
 
   this.Variant: Rel = Rel.new('Variant', {
         \   Variant:   Str,
@@ -118,19 +94,17 @@ export class Database
         \ ])
 
   this.Color = Rel.new('Color', {
-        \   ColorName:    Str,
-        \   GUIValue:     Str,
-        \   Base256Value: Str,
-        \   Base16Value:  Str,
-        \   Delta:        Float,
-        \ }, [
-        \   ['ColorName'],
-        \   ['GUIValue', 'Base256Value', 'Base16Value']
-        \ ]).InsertMany([
-        \   {ColorName: 'omit', GUIValue: '',     Base256Value: '',     Base16Value: '',     Delta: 0.0},
-        \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base16Value: 'NONE', Delta: 0.0},
-        \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base16Value: 'fg',   Delta: 0.0},
-        \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base16Value: 'bg',   Delta: 0.0}
+        \   ColorName:       Str,
+        \   GUIValue:        Str,
+        \   Base256Value:    Str,
+        \   Base256HexValue: Str,
+        \   Base16Value:     Str,
+        \   Delta:           Float,
+        \ }, 'ColorName').InsertMany([
+        \   {ColorName: 'omit', GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',     Delta: 0.0},
+        \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE', Delta: 0.0},
+        \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg',   Delta: 0.0},
+        \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg',   Delta: 0.0}
         \ ])
 
   # The tuple with t_Co prevents overriding Colortemplate's definition
@@ -494,7 +468,7 @@ export class Database
   enddef
 
   # Return the discriminator-based definitions for the given variant. The
-  # returned value is a dictionary of of list of heterogeneous tuples, keyed
+  # returned value is a dictionary of list of heterogeneous tuples, keyed
   # by discriminator's name.
   def OverridingDefsByDiscrName(variant: string): dict<list<dict<any>>>
     return this.HiGroupOverride
@@ -511,8 +485,45 @@ export class Database
 endclass
 
 export class Colorscheme
-  this.bufnr:    number   # Template's buffer number
-  this.metadata: Metadata
-  this.dark:     Database
-  this.light:    Database
+  this.dark:  Database
+  this.light: Database
+
+  public this.author:       list<string>       = []
+  public this.description:  list<string>       = []
+  public this.fullname:     string             = ''
+  public this.license:      string             = ''
+  public this.maintainer:   list<string>       = []
+  public this.shortname:    string             = ''
+  public this.url:          list<string>       = []
+  public this.version:      string             = ''
+  public this.variants:     list<string>       = ['gui']
+  public this.backgrounds:  dict<bool>         = {'dark': false, 'light': false}
+  public this.verbatimtext: list<string>       = []
+  public this.auxfiles:     dict<list<string>> = {}  # path => content
+  public this.options:      dict<any>          = {backend: 'vim9', creator: true, shiftwidth: 2}
+  public this.prefix:       string             = ''
+
+  def new()
+    this.dark = Database.new('dark')
+    this.light = Database.new('light')
+  enddef
+
+  def IsLightAndDark(): bool
+    return this.backgrounds['dark'] && this.backgrounds['light']
+  enddef
+
+  def HasBackground(background: string): bool
+    return this.backgrounds[background]
+  enddef
+
+  def Db(background: string): Database
+    if background == 'dark'
+      return this.dark
+    elseif background == 'light'
+      return this.light
+    endif
+
+    throw 'Invalid background: ' .. background
+    return Database.new('')  # Silence a Vim "Missing return statement" error
+  enddef
 endclass

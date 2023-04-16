@@ -34,7 +34,9 @@ enddef
 # }}}
 
 # Test files
+source <sfile>:h/test_colorscheme.vim
 source <sfile>:h/test_parser.vim
+source <sfile>:h/test_generator.vim
 
 # Runner!
 const success = tt.Run(get(g:, 'test', 'CT'))

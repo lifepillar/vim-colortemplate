@@ -10,12 +10,10 @@ Maintainer:    Myself <myself@somewhere.org>
 URL:           https://me.org
 Description:   Template for a light colorscheme
 License:       Same as Vim
-; Prefix for options: short name is used if this key is not present:
-; Option Prefix: light
 ; }}}
 
 ; Documentation {{{
-; Include: _help.colortemplate
+Include: _help.colortemplate
 ; }}}
 
 Variants:   gui 256 8 0
@@ -38,6 +36,8 @@ Function          -> Identifier
 Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement
+LineNrAbove       -> LineNr
+LineNrBelow       -> LineNr
 Macro             -> PreProc
 MessageWindow     -> WarningMsg
 Number            -> Constant
@@ -62,6 +62,9 @@ Tag               -> Special
 Typedef           -> Type
 ; See `:help lCursor`
 lCursor           -> Cursor
+; See `:help hl-debugPC`
+debugPC           -> SignColumn
+debugBreakpoint   -> SignColumn
 ; }}}
 
 ; Color palette {{{

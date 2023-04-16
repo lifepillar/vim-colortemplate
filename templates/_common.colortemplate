@@ -9,6 +9,8 @@ CurSearch            -> IncSearch
 CursorLineFold       -> FoldColumn
 CursorLineSign       -> SignColumn
 Debug                -> Special
+debugPC              -> SignColumn
+debugBreakpoint      -> SignColumn
 Define               -> PreProc
 Delimiter            -> Special
 Exception            -> Statement
@@ -17,6 +19,8 @@ Function             -> Identifier
 Include              -> PreProc
 Keyword              -> Statement
 Label                -> Statement
+LineNrBelow          -> LineNr
+LineNrAbove          -> LinrNr
 Macro                -> PreProc
 MessageWindow        -> WarningMsg
 Number               -> Constant

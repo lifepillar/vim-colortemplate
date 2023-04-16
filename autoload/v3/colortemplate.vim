@@ -1,15 +1,15 @@
 vim9script
 
-import 'libpath.vim' as path
-import './colorscheme.vim' as cscheme
-import './parser.vim'    as parser
-import './generator.vim' as generator
+import 'libpath.vim'       as path
+import './colorscheme.vim' as themes
+import './parser.vim'      as parser
+import './generator.vim'   as g
 
-const Metadata    = cscheme.Metadata
-const Colorscheme = cscheme.Colorscheme
+const Colorscheme = themes.Colorscheme
+const Generator   = g.Generator
 
 # Cache for generated color schemes
-var colorschemes: dict<Colorscheme>
+var theme_cache: dict<Colorscheme>
 
 # Helper functions {{{
 def In(item: any, items: list<any>): bool
@@ -42,16 +42,19 @@ def IsColortemplateBuffer(bufname: string): bool
   return getbufvar(bufname, '&ft') == 'colortemplate'
 enddef
 
-def CheckMetadata(meta: Metadata)
-  if empty(meta.fullname)
+# export def RegisterBackend(generator: IGenerator)
+# enddef
+
+def CheckMetadata(theme: Colorscheme)
+  if empty(theme.fullname)
     throw 'Please define the full name of the color scheme'
   endif
 
-  if empty(meta.shortname)
+  if empty(theme.shortname)
     throw 'Please define the short name of the color scheme'
   endif
 
-  if empty(meta.author)
+  if empty(theme.author)
     throw 'Please define the author of the color scheme'
   endif
 enddef
@@ -74,8 +77,8 @@ def WriteFile(filePath: string, content: list<string>, overwrite: bool = false):
   return true
 enddef
 
-def WriteAuxFiles(outputDir: string, meta: Metadata, overwrite: bool): bool
-  const auxfiles: dict<list<string>> = meta.auxfiles
+def WriteAuxFiles(outputDir: string, theme: Colorscheme, overwrite: bool): bool
+  const auxfiles: dict<list<string>> = theme.auxfiles
 
   for auxPath in keys(auxfiles)
     if !path.IsRelative(auxPath)
@@ -98,9 +101,8 @@ enddef
 def ColorschemePath(bufnr: number): string
   var name: string
 
-  if colorschemes->has_key(bufnr)
-    const meta = colorschemes[bufnr].metadata
-    name = meta.shortname
+  if theme_cache->has_key(bufnr)
+    name = theme_cache[bufnr].shortname
   else
     # Extract the name of the color scheme from the template
     const matchedName = matchlist(
@@ -177,8 +179,6 @@ class Toolbar
     endif
   enddef
 endclass
-
-
 # }}}
 
 # Public {{{
@@ -295,14 +295,14 @@ enddef
 
 # Main {{{
 export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
-  if !IsColortemplateBuffer('%')
-    return Error('Command can be executed only in Colortemplate buffers')
+  if !IsColortemplateBuffer(bufname(bufnr))
+    return Error('Command can be executed only on Colortemplate buffers')
   endif
 
   const text      = join(getbufline(bufnr, 1, '$'), "\n")
   const overwrite = (bang == '!')
   const outputDir = empty(outdir) ? get(b:, 'colortemplate_outdir', '') : path.Expand(outdir)
-  const inputPath = expand('%:p')
+  const inputPath = path.Expand(bufname(bufnr))
 
   if empty(outputDir)
     return Error('Output directory not set: please set b:colortemplate_outdir')
@@ -311,9 +311,8 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
   Notice(printf('Building%s…', empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)))
 
   const startTime = reltime()
-  const parseResult = parser.Parse(text, path.Parent(inputPath))
+  const [result: parser.Result, theme: Colorscheme] = parser.Parse(text, path.Parent(inputPath))
   const elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
-  const result: parser.Result = parseResult.result
 
   if !result.success
     Notice(printf(
@@ -326,28 +325,22 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
   endif
 
   # Cache the color scheme data
-  colorschemes[bufnr] = Colorscheme.new(
-    bufnr,
-    parseResult.meta,
-    parseResult.dark,
-    parseResult.light
-  )
+  # theme_cache[bufnr] = theme
 
-  CheckMetadata(parseResult.meta)
+  CheckMetadata(theme)
 
-  const startGen = reltime()
-  const content  = generator.Generate(colorschemes[bufnr])
-
+  const startGen       = reltime()
+  const generator      = Generator.new(theme)
+  const content        = generator.Generate()
   const elapsedGen     = 1000.0 * reltimefloat(reltime(startGen))
-  const meta: Metadata = parseResult.meta
-  const name           = meta.shortname .. '.vim'
+  const name           = theme.shortname .. '.vim'
   const filePath       = path.Join(outputDir, 'colors', name)
 
   if !WriteFile(filePath, content, overwrite)
     return false
   endif
 
-  if !WriteAuxFiles(outputDir, meta, overwrite)
+  if !WriteAuxFiles(outputDir, theme, overwrite)
     return false
   endif
 

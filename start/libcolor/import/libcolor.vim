@@ -769,18 +769,17 @@ enddef
 export def ColorDifferenceRgb(
     r1: number, g1: number, b1: number, r2: number, g2: number, b2: number
 ): float
-    const [L1, a1, b1] = Rgb2Cielab(r1, g1, b1)
-    const [L2, a2, b2] = Rgb2Cielab(r2, g2, b2)
-    return ColorDifference(L1, a1, b1, L2, a2, b2)
+    const [L1, A1, B1] = Rgb2Cielab(r1, g1, b1)
+    const [L2, A2, B2] = Rgb2Cielab(r2, g2, b2)
+    return ColorDifference(L1, A1, B1, L2, A2, B2)
 enddef
 
 var cache: dict<any> = {}
 
 # Return a dictionary with four keys:
-# hex:    the color passed as argument
-# xterm:  the base-256 color number that best approximates the given color
-# approx: the hex value of the approximate color
-# delta:  the CIEDE2000 difference between the two colors
+# xterm [number] the base-256 color number that best approximates the given color
+# hex   [string] the hex value of the approximate xterm color
+# delta [float]  the CIEDE2000 difference between the input color and its approximation
 export def Approximate(hexColor: string): dict<any>
   if has_key(cache, hexColor)
     return cache[hexColor]

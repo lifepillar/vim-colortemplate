@@ -245,7 +245,10 @@ export class Generator
       nextIndent += this._shiftwidth
     endif
 
-    output += this.GenerateDiscriminators(background, nextIndent)->add('')
+    output += this.GenerateDiscriminators(background, nextIndent)
+    output->add('')
+    output->add(printf('%sg:terminal_ansi_colors = %s', this._letKeyword, string(db.termcolors)))
+    output->add('')
     defs = globalLinked->Transform((t) => LinkedGroupToString(t, nextIndent))
 
     if !empty(defs)

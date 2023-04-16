@@ -804,10 +804,9 @@ export def Approximate(hexColor: string): dict<any>
   endwhile
 
   cache[hexColor] = {
-    'hex':    hexColor,
-    'xterm':  colorIndex + 16,
-    'approx': XTERM256_COLORS[colorIndex],
-    'delta':  delta,
+    'xterm': colorIndex + 16,
+    'hex':   XTERM256_COLORS[colorIndex],
+    'delta': delta,
   }
 
   return cache[hexColor]

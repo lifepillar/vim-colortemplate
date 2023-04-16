@@ -244,7 +244,7 @@ enddef
 def Test_Parser_auxfile()
   const template =<< trim END
     auxfile foo/bar
-    abcdef
+    abc '▇' def
     endauxfile
   END
 
@@ -252,21 +252,43 @@ def Test_Parser_auxfile()
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal({'foo/bar': ['abcdef']}, theme.auxfiles)
+  assert_equal({'foo/bar': ["abc '▇' def"]}, theme.auxfiles)
 enddef
 
 def Test_Parser_tilde()
   const template =<< trim END
-  Variants: gui
   Background: dark
   Color: black #333334 ~ Black
   END
 
   const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
 
-  assert_equal('', result.label)  # FIXME
+  assert_equal('', result.label)
   assert_true(result.success)
 enddef
 
+def Test_Parser_Rgb()
+  const template =<< trim END
+  Background: dark
+  Color: black rgb(0, 255, 127) ~ Green
+  END
+
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
+
+def Test_Parser_Base16IsOptional()
+  const template =<< trim END
+  Background: dark
+  Color: black #343434 ~
+  END
+
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
 
 tt.Run('_Parser_')

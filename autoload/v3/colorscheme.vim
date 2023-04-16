@@ -22,6 +22,7 @@ const ColorKind = {
   '16':  'Base16Value',
   '256': 'Base256Value',
   'gui': 'GUIValue',
+  '':    'GUIValue',
 }
 
 export const DEFAULT_DISCR_VALUE = '__DfLt__'

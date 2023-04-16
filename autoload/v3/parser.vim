@@ -8,6 +8,7 @@ import './colorscheme.vim' as themes
 # Aliases {{{
 const Approximate         = libcol.Approximate
 const RgbName2Hex         = libcol.RgbName2Hex
+const Rgb2Hex             = libcol.Rgb2Hex
 const Xterm2Hex           = libcol.Xterm2Hex
 const ColorDifferenceHex  = libcol.ColorDifferenceHex
 const Apply               = parser.Apply
@@ -170,6 +171,18 @@ def SetTermColors(v: list<string>, ctx: Context)
       db.termcolors->add(t.GUIValue)
     endfor
   endfor
+enddef
+
+def ToHexColor(v: list<string>, ctx: Context): string
+  const r = str2nr(v[2])
+  const g = str2nr(v[4])
+  const b = str2nr(v[6])
+
+  if r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255
+    throw printf('Invalid RGB values: (%d, %d, %d)', r, g, b)
+  endif
+
+  return Rgb2Hex(r, g, b)
 enddef
 
 def DefineColor(v: list<string>, ctx: Context)
@@ -375,7 +388,7 @@ def FindReplacement(placeholder: string, ctx: Context): string
     return db.background
   endif
 
-  const colorPlaceholder = matchlist(placeholder, '^@\(16\|256\|gui\)\(\w\+\)$')
+  const colorPlaceholder = matchlist(placeholder, '^@\(16\|256\|gui\)\?\(\w\+\)$')
 
   if empty(colorPlaceholder)
     return ''
@@ -392,7 +405,7 @@ def CollectPlaceholders(text: string): dict<bool>
   var i = 0
 
   while true
-    const [atString, _, endpos] = matchstrpos(text, '@\%(prefix\|\w\+\>\)', i)
+    const [atString, _, endpos] = matchstrpos(text, '@\%(prefix\|shortname\|\w\+\>\)', i)
     if empty(atString)
       break
     endif
@@ -423,7 +436,7 @@ def GetVerbatim(v: list<string>, ctx: Context)
 enddef
 
 def GetAuxFile(v: list<string>, ctx: Context)
-  const auxPath = v[1]
+  const auxPath: string = Interpolate(v[1], ctx)[0]
   var theme: Colorscheme = ctx.state.theme
 
   if !theme.auxfiles->has_key(auxPath)
@@ -473,6 +486,7 @@ const K_OPTIONS     = T('Options')
 const K_OPTN        = R('\%(backend\|creator\|tabs\|shiftwidth\)\>')
 const K_OPTV        = R('\%(true\|false\)\>\|\d\+\|\w\+')
 const K_PREFIX      = T('Prefix')
+const K_RGB         = R('rgb\>')
 const K_SHORT       = T('Short')
 const K_SPECIAL     = R('s\|sp\>')
 const K_TERM        = R('Term\%[inal\]')
@@ -486,6 +500,8 @@ const BAR           = T('/')
 const COLON         = T(':')
 const COMMA         = T(',')
 const EQ            = T('=')
+const LPAREN        = T('(')
+const RPAREN        = T(')')
 const PLUS          = T('+')
 const RARROW        = T('->')
 const SEMICOLON     = T(';')
@@ -531,17 +547,20 @@ const L_COL256      = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or t
 const L_COLON       = Lab(COLON,                "Expected a colon")
 const L_COLORNAME   = Lab(COLORNAME,            "Expected a color name")
 const L_COLORS      = Lab(K_COLORS,             "Expected keyword 'Colors'")
+const L_COMMA       = Lab(COMMA,                "Expected a comma")
 const L_DISCRNAME   = Lab(DISCRNAME,            "Expected an identifier")
 const L_ENDAUXFILE  = Lab(K_ENDAUXFILE,         "Expected keyword 'endauxfile'")
 const L_ENDHELPFILE = Lab(K_ENDHELPFILE,        "Expected keyword 'endhelpfile'")
 const L_ENDVERBATIM = Lab(K_ENDVERBATIM,        "Expected keyword 'endverbatim'")
 const L_EQ          = Lab(EQ,                   "Expected an equal sign")
-const L_GUICOL      = Lab(GUICOL,               "Expected a GUI color value")
 const L_HIGROUPNAME = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
 const L_IDENTIFIER  = Lab(IDENTIFIER,           "Expected an identifier")
+const L_LPAREN      = Lab(LPAREN,               "Expected open parenthesis")
 const L_NAME        = Lab(K_NAME,               "Expected 'Name'")
+const L_NUM256      = Lab(NUM256,               "Expected a number")
 const L_OPTV        = Lab(K_OPTV,               "Expected a valid option value")
 const L_PATH        = Lab(TEXTLINE,             "Expected a relative path")
+const L_RPAREN      = Lab(RPAREN,               "Expected closed parenthesis")
 const L_SPCOLOR     = Lab(COLORNAME,            "Expected the name of the special color")
 const L_TEXTLINE    = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
 const L_THEMENAME   = Lab(THEMENAME,            "Expected a valid color scheme's name")
@@ -650,11 +669,24 @@ const Description   = Seq(K_DESCRIPTION,    L_COLON, L_TEXTLINE)    ->Apply(SetD
 const Author        = Seq(K_AUTHOR,         L_COLON, L_TEXTLINE)    ->Apply(SetAuthor)
 const Background    = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveDatabases)
 const Include       = Seq(K_INCLUDE,        L_COLON, L_PATH)        ->Apply(RefInclude('ParseInclude'))
+const RgbColor      = Seq(
+                        K_RGB,
+                        L_LPAREN,
+                        L_NUM256,
+                        L_COMMA,
+                        L_NUM256,
+                        L_COMMA,
+                        L_NUM256,
+                        L_RPAREN)                                   ->Map(ToHexColor)
+const GuiColor      = Lab(
+                        OneOf(RgbColor, GUICOL),
+                        "Expected a valid GUI color definition"
+                      )
 const ColorDef      = Seq(
                         K_COLOR,
                         L_COLON,
                         L_COLORNAME,
-                        L_GUICOL,
+                        GuiColor,
                         L_COL256,
                         Opt(COL16)
                       )                                            ->Apply(DefineColor)

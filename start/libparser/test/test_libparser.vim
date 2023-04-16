@@ -676,5 +676,36 @@ def Test_LP_ApplyThrows()
   assert_equal(2, ctx.index)
 enddef
 
+def Test_LP_UnicodeText()
+  const expected = 'abc ▇'
+  const text     = expected .. "\n  endverb"
+  var   ctx      = Context.new(text)
+
+  const Parser = Text(expected)
+  const result = Parser(ctx)
+
+  assert_true(result.success)
+  assert_equal(expected, result.value)
+  assert_equal(strlen(expected), ctx.index)
+enddef
+
+def Test_LP_UnicodeText2()
+  const text = "abc ▇\n  endverb"
+  var   ctx  = Context.new(text)
+
+  const SpaceOrComment = Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
+  const R              = RegexToken(SpaceOrComment)
+  const VERBTEXT       = R('\_.\{-}\zeendverb')
+  const Parser         = Seq(VERBTEXT, Text('endverb'))
+  const result         = Parser(ctx)
+  const expectedValue  = ["abc ▇\n  ", "endverb"]
+
+  assert_equal(15, strchars(text))
+  assert_equal(17, strlen(text))
+  assert_true(result.success)
+  assert_equal(expectedValue, result.value)
+  assert_equal(strlen(text), ctx.index)
+enddef
+
 
 tt.Run('_LP_')

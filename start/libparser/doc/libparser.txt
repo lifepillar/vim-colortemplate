@@ -32,8 +32,8 @@ To parse some text, at a minimum you have to define a "context" object with
 two pieces of information:
 
 - the |string| to be parsed;
-- the position (or "index") in the text where parsing should start (which is
-  zero by default).
+- the byte position (or "index") in the text where parsing should start (which
+  is zero by default).
 
 The text to be parsed is considered immutable and never changed by a parser;
 the index, however, is updated as parsing proceeds to always point at the next
@@ -1048,7 +1048,8 @@ new({string}[, {index}])
 		A Context object has the following attributes:
 
 		- "text" (read-only): the text to be parsed.
-		- "index": the next position in the text yet to be parsed.
+		- "index": the next position (in bytes) in the text yet to be
+		  parsed.
 		- "farthest": The position of the farthest failure.
 		- "state": a dictionary of arbitrary values.
 

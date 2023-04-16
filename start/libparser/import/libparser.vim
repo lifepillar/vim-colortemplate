@@ -102,9 +102,9 @@ enddef
 # NOTE: the text should not match across lines.
 export def Text(text: string): func(Context): Result
   return (ctx: Context): Result => {
-    const n = strchars(text)
+    const n = len(text)
 
-    if strcharpart(ctx.text, ctx.index, n) == text
+    if strpart(ctx.text, ctx.index, n) == text
       ctx.index = ctx.index + n
       return Success(text)
     else
@@ -113,7 +113,6 @@ export def Text(text: string): func(Context): Result
   }
 enddef
 
-# NOTE: the pattern should not match across lines.
 export def Regex(pattern: string): func(Context): Result
   return (ctx: Context): Result => {
     const match = matchstrpos(ctx.text, '^\%(' .. pattern .. '\)', ctx.index)

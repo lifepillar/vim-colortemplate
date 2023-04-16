@@ -923,6 +923,11 @@ enddef
 # Return the hex value of the specified color name.
 export def RgbName2Hex(colorName: string): string
   const name = tolower(colorName)
+
+  if !v:colornames->has_key(name)
+    throw 'Invalid RGB color name: ' .. colorName
+  endif
+
   return v:colornames[name]
 enddef
 # }}}

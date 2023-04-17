@@ -2292,8 +2292,9 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 <
 Transform({rel}, {func})			*librelalg.Transform()*
 		Transform a base or derived relation {rel} into a |list|
-		object. This is similar to |map()|, but each tuple can be
-		mapped into more than one value.
+		object by applying {func} to each tuple of {rel}. This is
+		similar to |map()|, but each tuple can be mapped into zero or
+		more values.
 
 		For example, this turns each tuple into an integer:
 >
@@ -2323,6 +2324,18 @@ Transform({rel}, {func})			*librelalg.Transform()*
 		Output:
 >
 		[[9], [9]]
+<
+		If the transformation function returns |null|, then its value
+		is ignored. This allows you to skip tuples. For instance, here
+		the value of attribute `X` is added to the output only when it
+		is positive:
+>
+		const r = [{X: 2}, {X: -1}, {X: 3}, {X: 0}]
+		echo Transform(r, (t) => t.X <= 0 ? null : t.X)
+<
+		Output:
+>
+		[2, 3]
 <
 		Note that the result is NOT a relation, in general!
 

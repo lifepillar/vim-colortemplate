@@ -1489,7 +1489,9 @@ export def Transform(Arg: any, F: func(dict<any>): any): list<any>
 
   Cont((t) => {
     const value = F(t)
-    if type(value) == v:t_list
+    if value == null
+      return
+    elseif type(value) == v:t_list
       result += value
     else
       result->add(value)

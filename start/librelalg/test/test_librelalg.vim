@@ -2105,6 +2105,29 @@ def Test_RA_Transform()
   assert_equal(expected2, Transform(s, (t) => t.when .. t.where))
 enddef
 
+def Test_RA_TransformSkipEven()
+  const r = [{X: 2}, {X: 1}, {X: 3}, {X: 0}, {X: 5}]
+  const expected = [1, 3, 5]
+
+  assert_equal(
+    expected,
+    Transform(r, (t) => t.X % 2 == 0 ? null : t.X)
+  )
+
+  const s = [{X: 1}, {X: 3}]
+  assert_equal([], Transform(s, (t) => t.X % 2 == 0 ? t.X : null))
+enddef
+
+def Test_RA_TransformSkipNonPositive()
+  const r = [{X: 2}, {X: -1}, {X: 3}, {X: 0}]
+  const expected = [2, 3]
+
+  assert_equal(
+    expected,
+    Transform(r, (t) => t.X <= 0 ? null : t.X)
+  )
+enddef
+
 def Test_RA_DictTransform()
   const s = [
     {X: 'a', Y: 6},

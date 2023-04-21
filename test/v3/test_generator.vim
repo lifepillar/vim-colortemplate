@@ -20,11 +20,12 @@ def Verify(name: string)
 enddef
 
 def AssertBuild(name: string)
-  const template = path.Join(TESTDIR, name .. '.colortemplate')
-  echo template
+  const template = path.Join(TESTDIR, 'templates', name .. '.colortemplate')
   execute 'edit' template
-  ctemplate.Build(bufnr('%'))
-  # assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
+  const success = ctemplate.Build(bufnr('%'), TESTDIR, '!')
+
+  assert_true(success)
+
   Verify(name)
   execute 'bwipe' template
 enddef

@@ -102,7 +102,7 @@ export class Database
         \   Base16Value:     Str,
         \   Delta:           Float,
         \ }, 'ColorName').InsertMany([
-        \   {ColorName: 'omit', GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',     Delta: 0.0},
+        \   {ColorName: '',     GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',     Delta: 0.0},
         \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE', Delta: 0.0},
         \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg',   Delta: 0.0},
         \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg',   Delta: 0.0}
@@ -177,7 +177,7 @@ export class Database
     this.Color.Check(IsValidColorName)
     this.Color.Check(IsValidBase256Value)
 
-    ForeignKey(this.HiGroup,             'must be classified by a',           this.Discriminator,    ['DiscrName'])
+    ForeignKey(this.HiGroup,             'must be classified by a valid',     this.Discriminator,    ['DiscrName'])
     ForeignKey(this.LinkedGroup,         'must be a',                         this.HiGroup,          ['HiGroupName'])
     ForeignKey(this.BaseGroup,           'must be a',                         this.HiGroup,          ['HiGroupName'])
     ForeignKey(this.BaseGroup,           'must use as foreground a valid',    this.Color,            ['Fg'], ['ColorName'])
@@ -501,8 +501,13 @@ export class Colorscheme
   public this.backgrounds:  dict<bool>         = {'dark': false, 'light': false}
   public this.verbatimtext: list<string>       = []
   public this.auxfiles:     dict<list<string>> = {}  # path => content
-  public this.options:      dict<any>          = {backend: 'vim9', creator: true, shiftwidth: 2}
   public this.prefix:       string             = ''
+  public this.options:      dict<any>          = {
+        \ backend: 'vim9',
+        \ creator: true,
+        \ shiftwidth: 2,
+        \ timestamp: true,
+        \ }
 
   def new()
     this.dark = Database.new('dark')

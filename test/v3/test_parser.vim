@@ -11,7 +11,7 @@ const Result   = libparser.Result
 const Colorscheme = themes.Colorscheme
 
 
-def Test_Parser_Background()
+def Test_PS_Background()
   const [result: Result, theme: Colorscheme] = Parse("Background: dark")
 
   assert_equal('', result.label)
@@ -20,7 +20,7 @@ def Test_Parser_Background()
   assert_false(theme.backgrounds.light)
 enddef
 
-def Test_Parser_Variants()
+def Test_PS_Variants()
   const [result: Result, theme: Colorscheme] = Parse("Variants: 8")
 
   assert_equal('', result.label)
@@ -28,7 +28,7 @@ def Test_Parser_Variants()
   assert_equal(['8', 'gui'], theme.variants)
 enddef
 
-def Test_Parser_NoDefaultLinkedGroup()
+def Test_PS_NoDefaultLinkedGroup()
   const template =<< trim END
     Background: dark
     Variants:   256
@@ -41,7 +41,7 @@ def Test_Parser_NoDefaultLinkedGroup()
   assert_match('must override an existing Highlight Group', result.label)
 enddef
 
-def Test_Parser_LinkedGroup()
+def Test_PS_LinkedGroup()
   const template =<< trim END
     Background: dark
     Variants:   gui 256 16 8 0
@@ -75,7 +75,7 @@ def Test_Parser_LinkedGroup()
   assert_equal('256',         s[0]['Variant'])
 enddef
 
-def Test_Parser_VariantDiscriminatorOverride()
+def Test_PS_VariantDiscriminatorOverride()
   const template =<< trim END
     Background: dark
     Variants:   gui 256 8
@@ -92,7 +92,7 @@ def Test_Parser_VariantDiscriminatorOverride()
 enddef
 
 
-def Test_Parser_DiscriminatorName()
+def Test_PS_DiscriminatorName()
   const template =<< trim END
     Background: dark
     Variants: gui 8
@@ -109,7 +109,7 @@ def Test_Parser_DiscriminatorName()
   assert_true(result.success)
 enddef
 
-def Test_Parser_MissingDefaultDef()
+def Test_PS_MissingDefaultDef()
   const template =<< trim END
     Background: dark
     Variants: gui 8
@@ -129,7 +129,7 @@ def Test_Parser_MissingDefaultDef()
   assert_false(result.success)
 enddef
 
-def Test_Parser_TranspBg()
+def Test_PS_TranspBg()
   const template =<< trim END
     Variants: 256 8
     Background: light
@@ -149,7 +149,7 @@ def Test_Parser_TranspBg()
   assert_true(result.success)
 enddef
 
-def Test_Parser_GUIColor()
+def Test_PS_GUIColor()
   const template =<< trim END
     Background: light
 
@@ -165,7 +165,7 @@ def Test_Parser_GUIColor()
   assert_true(result.success)
 enddef
 
-def Test_Parser_VerbatimBlock()
+def Test_PS_VerbatimBlock()
   const template =<< trim END
     Background: light
     Author: myself
@@ -202,7 +202,7 @@ def Test_Parser_VerbatimBlock()
   assert_equal(expected, theme.verbatimtext)
 enddef
 
-def Test_Parser_VerbatimDateVersion()
+def Test_PS_VerbatimDateVersion()
   const template =<< trim END
     verbatim
       Today is @date
@@ -222,7 +222,7 @@ def Test_Parser_VerbatimDateVersion()
   assert_equal(expected, theme.verbatimtext)
 enddef
 
-def Test_Parser_MultipleVerbatimBlocks()
+def Test_PS_MultipleVerbatimBlocks()
   const template =<< trim END
   Background: dark
   Author:     Nemo
@@ -241,7 +241,7 @@ def Test_Parser_MultipleVerbatimBlocks()
   assert_equal(expected, theme.verbatimtext)
 enddef
 
-def Test_Parser_auxfile()
+def Test_PS_auxfile()
   const template =<< trim END
     auxfile foo/bar
     abc '▇' def
@@ -255,7 +255,7 @@ def Test_Parser_auxfile()
   assert_equal({'foo/bar': ["abc '▇' def"]}, theme.auxfiles)
 enddef
 
-def Test_Parser_tilde()
+def Test_PS_tilde()
   const template =<< trim END
   Background: dark
   Color: black #333334 ~ Black
@@ -267,7 +267,7 @@ def Test_Parser_tilde()
   assert_true(result.success)
 enddef
 
-def Test_Parser_Rgb()
+def Test_PS_Rgb()
   const template =<< trim END
   Background: dark
   Color: black rgb(0, 255, 127) ~ Green
@@ -279,10 +279,10 @@ def Test_Parser_Rgb()
   assert_true(result.success)
 enddef
 
-def Test_Parser_Base16IsOptional()
+def Test_PS_MinimalColorDefinition()
   const template =<< trim END
   Background: dark
-  Color: black #343434 ~
+  Color: black #000000 ~
   END
 
   const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
@@ -291,4 +291,36 @@ def Test_Parser_Base16IsOptional()
   assert_true(result.success)
 enddef
 
-tt.Run('_Parser_')
+def Test_PS_OptionalBase16()
+  const template =<< trim END
+  Background: dark
+  Color: bg1             #ffffff     237 DarkGray
+  Color: bg2             #fafafa     239
+  Color: bg3             #343433      59
+  END
+
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
+
+def Test_PS_SingleDefMultipleVariants()
+  const template =<< trim END
+    Background: dark
+    #const italic = get(g:, 'italic', 1)
+    Color: grey            rgb(146, 131, 116)    102 DarkGray
+    Color: fg4             rgb(168, 153, 132)    137 Gray
+    Comment                              grey   none          italic
+                 /gui/256/16+italic 0    grey   none
+                 /8                      fg4    none          italic
+                 /8         +italic 0    fg4    none
+  END
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
+
+
+tt.Run('_PS_')

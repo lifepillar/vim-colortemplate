@@ -6,6 +6,7 @@ import 'libpath.vim'       as path
 import './colorscheme.vim' as themes
 
 # Aliases {{{
+const ANSI_COLORS         = libcol.ANSI_COLORS
 const Approximate         = libcol.Approximate
 const RgbName2Hex         = libcol.RgbName2Hex
 const Rgb2Hex             = libcol.Rgb2Hex
@@ -219,7 +220,7 @@ enddef
 
 def DefineDiscriminator(v: list<string>, ctx: Context)
   const discrName:  string = v[1]
-  const definition: string = v[3]
+  const definition: string = join(Interpolate(v[3], ctx))
 
   for db in ActiveDatabases(ctx.state)
     db.Discriminator.Insert({
@@ -239,8 +240,9 @@ enddef
 def SetVariants(v: list<any>, ctx: Context)
   const state                  = ctx.state
   const variants: list<string> = flattennew(v)
-  state.variants = variants
-  state.isDefault = false
+  state.variants   = variants
+  state.isDefault  = false
+  state.discrValue = DEFAULT_DISCR_VALUE
 enddef
 
 def SetDiscrName(v: list<string>, ctx: Context)
@@ -281,7 +283,7 @@ enddef
 def DefineLinkedGroup(v: list<string>, ctx: Context)
   const state           = ctx.state
   const hiGroupName     = state.hiGroupName
-  const targetGroup     = v[1]
+  const targetGroup     = v[1] == 'omit' ? '' : v[1]
 
   for db in ActiveDatabases(state)
     if state.isDefault
@@ -295,7 +297,7 @@ def DefineLinkedGroup(v: list<string>, ctx: Context)
 enddef
 
 def CheckColorName(colorName: string, ctx: Context): string
-  if !empty(colorName)
+  if !empty(colorName) && colorName != 'omit'
     for db in ActiveDatabases(ctx.state)
       if empty(db.Color.Lookup(['ColorName'], [colorName]))
         throw printf(
@@ -312,10 +314,10 @@ enddef
 def DefineBaseGroup(v: list<any>, ctx: Context)
   const state       = ctx.state
   const hiGroupName = state.hiGroupName
-  const fgColor     = v[0]
-  const bgColor     = v[1]
-  const spColor     = empty(v[2]) ? 'none' : v[2]
-  const attributes  = empty(v[3]) ? 'NONE' : join(sort(v[3]), ',')
+  const fgColor     = v[0] == 'omit' ? '' : v[0]
+  const bgColor     = v[1] == 'omit' ? '' : v[1]
+  const spColor     = empty(v[2]) ? 'none' : v[2] == 'omit' ? '' : v[2]
+  const attributes  = empty(v[3]) ? 'NONE' : index(v[3], 'omit') != -1 ? '' : join(sort(v[3]), ',')
 
   for db in ActiveDatabases(state)
     if state.isDefault
@@ -483,7 +485,7 @@ const K_LICENSE     = T('License')
 const K_MAINTAINER  = T('Maintainer')
 const K_NAME        = R('[Nn]ame')
 const K_OPTIONS     = T('Options')
-const K_OPTN        = R('\%(backend\|creator\|tabs\|shiftwidth\)\>')
+const K_OPTN        = R('\%(backend\|creator\|shiftwidth\|timestamp\)\>')
 const K_OPTV        = R('\%(true\|false\)\>\|\d\+\|\w\+')
 const K_PREFIX      = T('Prefix')
 const K_RGB         = R('rgb\>')
@@ -527,9 +529,10 @@ const ATTRIBUTE     = R(printf('\%(%s\)\>',
                         'underdashed',
                         'underdouble',
                         'underdotted',
-                        'nocombine'
+                        'nocombine',
+                        'omit'
                       ], '\|')))
-const COL16         = R('\%(\d\+\)\|\w\+') # FIXME: match only colors from g:colortemplate#colorspace#ansi_colors
+const COL16         = R('\%(\d\+\)\|' .. join(ANSI_COLORS, '\|'))
 const NUM256        = R('\d\{1,3}\>')
 const NUMBER        = R('-\=\d\+\%(\.\d*\)\=')
 const BACKGROUND    = R('dark\>\|light\|any\>')
@@ -720,6 +723,7 @@ const Statement     = Seq(
                       )                                            ->Apply(DefineDiscriminator)
 
 const Declaration   = OneOf(Statement, VerbatimBlock, AuxFile, Directive, HiGroupDecl)
+
 const Template      = Seq(
                         Skip(SpaceOrComment),
                         Many(Declaration),

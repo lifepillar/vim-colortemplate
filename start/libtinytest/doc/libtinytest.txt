@@ -24,7 +24,22 @@ The tests may also be sourced (not imported!) from a separate file:
 
 	const success = tt.Run()
 <
-In either case, the output appears in a new scratch buffer.
+If the imported file executes `Run()` the tests will be executed twice, once
+when sourcing the script and another time by `tt.Run()`. To avoid that, set
+`dryrun` to `true` before sourcing the tests, and set it back to `false`
+afterwards:
+>
+	vim9script
+
+	import 'libtinytest.vim' as tt
+
+	tt.dryrun = true
+	source <sfile>:h/my_tests.vim
+	tt.dryrun = false
+
+	const success = tt.Run()
+<
+The output always appears in a new scratch buffer.
 
 Functions ~
 

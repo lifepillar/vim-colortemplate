@@ -13,6 +13,8 @@ endif
 const  OK = '✔︎'
 const TSK = '✘'
 
+export var dryrun = false
+
 # Local state {{{
 var mesg = []
 var erro = []
@@ -165,6 +167,10 @@ enddef
 
 # Returns true on success, false on failure
 export def Run(pattern: string = ''): bool
+  if dryrun
+    return true
+  endif
+
   Init()
 
   var tests: list<dict<string>> = FindTests(pattern)

@@ -367,6 +367,23 @@ def Test_PS_SingleDefMultipleVariants()
 enddef
 
 
+def Test_PS_ConditionalDef()
+  const template =<< trim END
+    Background: dark
+    Color: red #ff0000 ~
+    #const foo = get(g:, 'foo', false)
+    baldBison -> omit
+
+    baldBison/gui+foo 1  none   none s=red   undercurl
+             /256+foo 1  none   none s=red   underline
+  END
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
+
+
 tt.Run('_PS_')
 
 # vim: tw=100

@@ -73,8 +73,10 @@ def AttributesToString(t: dict<any>, meta: dict<any>, termgui: bool): list<strin
   # has a value for it, map the color and add it to the definition
   for key in ['Fg', 'Bg', 'Special']
     if !empty(meta[key]) && !empty(t[key])
-      const colorName: string = t[key]
-      attributes->add(meta[key] .. '=' .. meta.Colors[colorName])
+      const colorValue: string = meta.Colors[t[key]]
+      if !empty(colorValue)
+        attributes->add(meta[key] .. '=' .. colorValue)
+      endif
     endif
   endfor
 
@@ -262,7 +264,7 @@ export class Generator
     endif
 
     if !empty(db.verbatimtext)
-      output += mapnew(db.verbatimtext, (_, line) => repeat(' ', nextIndent) .. line)
+      output += mapnew(db.verbatimtext, (_, l) => empty(l) ? l : repeat(' ', nextIndent) .. l)
       output->add('')
     endif
 

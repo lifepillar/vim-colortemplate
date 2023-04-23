@@ -165,19 +165,58 @@ def Test_PS_GUIColor()
   assert_true(result.success)
 enddef
 
-def Test_PS_VerbatimBlock()
+# A verbatim block before a background directive is stored as theme metadata
+def Test_PS_VerbatimMetadata()
   const template =<< trim END
-    Background: light
+    verbatim
+      Hi!
+    endverbatim
+  END
+  const expected = ['  Hi!']
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal(expected, theme.verbatimtext)
+enddef
+
+# A verbatim block after a background directive is stored as database metadata
+def Test_PS_VerbatimDatabase()
+  const template =<< trim END
+    Background: dark
+    verbatim
+      Hi!
+    endverbatim
+  END
+  const expected = ['  Hi!']
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal([], theme.verbatimtext)
+  assert_equal(['  Hi!'], theme.dark.verbatimtext)
+  assert_equal([], theme.light.verbatimtext)
+enddef
+
+# Verbatim blocks are interpolated
+def Test_PS_VerbatimBlockInterpolation()
+  const template =<< trim END
     Author: myself
     Short name: xyz
     Version: v1.2.3
     Full name: XYZ
-    Variants: gui
-    Color: black #333333 17 Black
     verbatim
+
     This is
       arbitrary text
-    by @author1
+    By @author1
+    endverbatim
+
+    Background: light
+    Variants: gui
+    Color: black #333333 17 Black
+
+    verbatim
     Color=@guiblack Approx=@256black/@16black
       Shortname: @shortname
       Fullname:  @fullname @version
@@ -185,10 +224,13 @@ def Test_PS_VerbatimBlock()
     endverbatim
   END
 
-  const expected =<< trim END
+  const expected1 =<< trim END
     This is
       arbitrary text
-    by myself
+    By myself
+  END
+
+  const expected2 =<< trim END
     Color=#333333 Approx=17/Black
       Shortname: xyz
       Fullname:  XYZ v1.2.3
@@ -199,7 +241,8 @@ def Test_PS_VerbatimBlock()
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal(expected, theme.verbatimtext)
+  assert_equal(expected1, theme.verbatimtext)
+  assert_equal(expected2, theme.light.verbatimtext)
 enddef
 
 def Test_PS_VerbatimDateVersion()
@@ -222,6 +265,7 @@ def Test_PS_VerbatimDateVersion()
   assert_equal(expected, theme.verbatimtext)
 enddef
 
+# Multiple verbatim blocks are concatenated
 def Test_PS_MultipleVerbatimBlocks()
   const template =<< trim END
   Background: dark
@@ -238,7 +282,7 @@ def Test_PS_MultipleVerbatimBlocks()
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal(expected, theme.verbatimtext)
+  assert_equal(expected, theme.dark.verbatimtext)
 enddef
 
 def Test_PS_auxfile()
@@ -324,3 +368,5 @@ enddef
 
 
 tt.Run('_PS_')
+
+# vim: tw=100

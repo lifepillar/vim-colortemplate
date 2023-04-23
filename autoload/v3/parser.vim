@@ -51,29 +51,36 @@ def SetActiveDatabases(v: list<string>, ctx: Context)
 
   ResetState(state)
 
-  if bg == 'dark'
-    state.active_db         = [theme.dark]
-    theme.backgrounds.dark  = true
-  elseif bg == 'light'
-    state.active_db         = [theme.light]
-    theme.backgrounds.light = true
-  elseif bg == 'any'
-    state.active_db         = [theme.dark, theme.light]
-    theme.backgrounds.dark  = true
-    theme.backgrounds.light = true
-  else
+  if index(['dark', 'light', 'any'], bg) == -1
     throw printf(
       "Invalid background: %s. Valid values are 'dark', 'light' and 'any'.", bg
     )
   endif
+
+  state.background = bg
+
+  if bg == 'any'
+    theme.backgrounds['dark']  = true
+    theme.backgrounds['light'] = true
+  else
+    theme.backgrounds[bg] = true
+  endif
 enddef
 
-def ActiveDatabases(state: dict<any>): list<Database>
-  if empty(state.active_db)
+def ActiveDatabases(ctx: Context): list<Database>
+  const state: dict<any> = ctx.state
+
+  if empty(state.background)
     throw "Missing 'Background' directive: please set the background first"
   endif
 
-  return state.active_db
+  const theme: Colorscheme = state.theme
+
+  if state.background == 'any'
+    return [theme.dark, theme.light]
+  endif
+
+  return [theme.Db(state.background)]
 enddef
 
 def SetOption(v: list<string>, ctx: Context)
@@ -159,7 +166,7 @@ def SetURL(v: list<string>, ctx: Context)
 enddef
 
 def SetTermColors(v: list<string>, ctx: Context)
-  for db in ActiveDatabases(ctx.state)
+  for db in ActiveDatabases(ctx)
     for colorName in v
       const t = db.Color.Lookup(['ColorName'], [colorName])
 
@@ -206,7 +213,7 @@ def DefineColor(v: list<string>, ctx: Context)
     delta = ColorDifferenceHex(vGuiHex, v256Hex)
   endif
 
-  for db in ActiveDatabases(ctx.state)
+  for db in ActiveDatabases(ctx)
     db.Color.Insert({
       ColorName:       colorName,
       GUIValue:        vGui,
@@ -222,7 +229,7 @@ def DefineDiscriminator(v: list<string>, ctx: Context)
   const discrName:  string = v[1]
   const definition: string = join(Interpolate(v[3], ctx))
 
-  for db in ActiveDatabases(ctx.state)
+  for db in ActiveDatabases(ctx)
     db.Discriminator.Insert({
       DiscrName:  discrName,
       Definition: definition,
@@ -251,7 +258,7 @@ def SetDiscrName(v: list<string>, ctx: Context)
   state.discrName = discrName
   state.isDefault = false
 
-  for db in ActiveDatabases(state)
+  for db in ActiveDatabases(ctx)
     const t = db.HiGroup.Lookup(['HiGroupName'], [state.hiGroupName])
 
     if empty(t)
@@ -285,7 +292,7 @@ def DefineLinkedGroup(v: list<string>, ctx: Context)
   const hiGroupName     = state.hiGroupName
   const targetGroup     = v[1] == 'omit' ? '' : v[1]
 
-  for db in ActiveDatabases(state)
+  for db in ActiveDatabases(ctx)
     if state.isDefault
       db.InsertDefaultLinkedGroup(hiGroupName, targetGroup)
     else
@@ -298,7 +305,7 @@ enddef
 
 def CheckColorName(colorName: string, ctx: Context): string
   if !empty(colorName) && colorName != 'omit'
-    for db in ActiveDatabases(ctx.state)
+    for db in ActiveDatabases(ctx)
       if empty(db.Color.Lookup(['ColorName'], [colorName]))
         throw printf(
           "Undefined color name: '%s' (%s background)",
@@ -319,7 +326,7 @@ def DefineBaseGroup(v: list<any>, ctx: Context)
   const spColor     = empty(v[2]) ? 'none' : v[2] == 'omit' ? '' : v[2]
   const attributes  = empty(v[3]) ? 'NONE' : index(v[3], 'omit') != -1 ? '' : join(sort(v[3]), ',')
 
-  for db in ActiveDatabases(state)
+  for db in ActiveDatabases(ctx)
     if state.isDefault
       db.InsertDefaultBaseGroup(
         hiGroupName,
@@ -368,23 +375,27 @@ def FindReplacement(placeholder: string, ctx: Context): string
       return ''
     endif
 
-    if key == 'author'
-      return theme.author[num]
-    elseif key == 'maintainer'
-      return theme.maintainer[num]
-    elseif key == 'url'
-      return theme.url[num]
-    elseif key == 'description'
-      return theme.description[num]
-    endif
+    try
+      if key == 'author'
+        return theme.author[num]
+      elseif key == 'maintainer'
+        return theme.maintainer[num]
+      elseif key == 'url'
+        return theme.url[num]
+      elseif key == 'description'
+        return theme.description[num]
+      endif
+    catch /E684/ # List index out of range
+      throw printf("Cannot interpolate value '%s': index out of range", placeholder)
+    endtry
   endif
 
   # The following replacements make sense only if the background is unambiguous
-  if len(state.active_db) != 1
+  if empty(state.background) || state.background == 'any'
     return ''
   endif
 
-  const db: Database = state.active_db[0]
+  const db: Database = theme.Db(state.background)
 
   if placeholder == '@background'
     return db.background
@@ -433,8 +444,16 @@ def Interpolate(text: string, ctx: Context): list<string>
 enddef
 
 def GetVerbatim(v: list<string>, ctx: Context)
-  var theme: Colorscheme = ctx.state.theme
-  theme.verbatimtext = theme.verbatimtext + Interpolate(v[1], ctx)
+  var state: dict<any> = ctx.state
+  var theme: Colorscheme = state.theme
+  const text = Interpolate(v[1], ctx)
+
+  if state.background == '' || state.background == 'any'
+    theme.verbatimtext = theme.verbatimtext + text
+  else
+    var db: Database = theme.Db(state.background)
+    db.verbatimtext = db.verbatimtext + text
+  endif
 enddef
 
 def GetAuxFile(v: list<string>, ctx: Context)
@@ -736,7 +755,7 @@ class ColortemplateContext extends Context
   def new(this.text, basedir = '')
     this.state.basedir     = basedir
     this.state.theme       = Colorscheme.new()
-    this.state.active_db   = []
+    this.state.background  = ''
     this.state.hiGroupName = ''
     this.state.isDefault   = true
     this.state.variants    = ['gui']

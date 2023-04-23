@@ -46,8 +46,9 @@ enddef
 # }}}
 
 export class Database
-  public this.background: string
-  public this.termcolors: list<string> = []
+  public this.background:   string
+  public this.termcolors:   list<string> = []
+  public this.verbatimtext: list<string> = []
 
   this.Variant: Rel = Rel.new('Variant', {
         \   Variant:   Str,

@@ -261,6 +261,12 @@ export class Generator
       nextIndent += this._shiftwidth
     endif
 
+    if !empty(db.verbatimtext)
+      output->add('')
+      output += mapnew(db.verbatimtext, (_, line) => repeat(' ', nextIndent) .. line)
+      output->add('')
+    endif
+
     output += this.GenerateDiscriminators(background, nextIndent)
     output->add('')
     output->add(printf('%s%sg:terminal_ansi_colors = %s',

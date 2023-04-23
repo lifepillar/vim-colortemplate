@@ -109,8 +109,7 @@ Term colors: black       red       green       yellow       blue       magenta  
 verbatim
 # This block appears after Color directives, so colors can
 # be interpolated, too: for instance, black is defined as
-# @guiblack in the GUI, and @256black or @16black in
-# terminals.
+# @guiblack in the GUI, and @256black or @16black in terminals.
 endverbatim
 
 Normal               white             black

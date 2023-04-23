@@ -224,10 +224,10 @@ export class Generator
       header->add("let s:t_Co = exists('&t_Co') && !has('gui_running') ? +&t_Co : -1")
     endif
 
+
     if !empty(theme.verbatimtext)
       header->add('')
       header += theme.verbatimtext
-      header->add('')
     endif
 
     return header
@@ -262,7 +262,6 @@ export class Generator
     endif
 
     if !empty(db.verbatimtext)
-      output->add('')
       output += mapnew(db.verbatimtext, (_, line) => repeat(' ', nextIndent) .. line)
       output->add('')
     endif

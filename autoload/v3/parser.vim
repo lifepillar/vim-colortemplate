@@ -433,7 +433,7 @@ def Interpolate(text: string, ctx: Context): list<string>
   var placeholders = CollectPlaceholders(text)
   var newtext      = text
 
-  for placeholder in keys(placeholders)
+  for placeholder in sort(keys(placeholders), (x, y) => len(y) - len(x))
     const replacement = FindReplacement(placeholder, ctx)
     if !empty(replacement)
       newtext = substitute(newtext, placeholder, replacement, 'g')

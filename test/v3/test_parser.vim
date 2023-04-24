@@ -285,6 +285,24 @@ def Test_PS_MultipleVerbatimBlocks()
   assert_equal(expected, theme.dark.verbatimtext)
 enddef
 
+def Test_PS_VerbatimIdentifierWithNumbers()
+  const template =<< trim END
+    Background: dark
+    Color: base0    #839496   246     12
+    Color: base03   #002b36   235      8
+    verbatim
+      @256base03
+      @256base0
+    endverbatim
+  END
+  const expected = ['  235', '  246']
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+  assert_equal(expected, theme.dark.verbatimtext)
+enddef
+
 def Test_PS_auxfile()
   const template =<< trim END
     auxfile foo/bar

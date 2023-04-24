@@ -713,8 +713,7 @@ const ColorDef      = Seq(
                         Opt(COL16)
                       )                                            ->Apply(DefineColor)
 
-# FIXME: better lookahead (a colon may appear in a comment)
-const Directive     = Seq(LookAhead(Regex('[^\n\r]*:')),
+const Directive     = Seq(LookAhead(Regex('\%(\w\|\s\)\+\_s*:')),
                         Lab(OneOf(
                           ColorDef,
                           Include,

@@ -384,7 +384,6 @@ def Test_PS_SingleDefMultipleVariants()
   assert_true(result.success)
 enddef
 
-
 def Test_PS_ConditionalDef()
   const template =<< trim END
     Background: dark
@@ -401,6 +400,18 @@ def Test_PS_ConditionalDef()
   assert_true(result.success)
 enddef
 
+def Test_PS_Lookahead()
+  const template =<< trim END
+    Background: dark
+    Color: red #ff0000 ~
+
+    gladCrane red none ; a : here should not be picked up by lookahed
+  END
+  const [result: Result, _] = Parse(join(template, "\n"))
+
+  assert_equal('', result.label)
+  assert_true(result.success)
+enddef
 
 tt.Run('_PS_')
 

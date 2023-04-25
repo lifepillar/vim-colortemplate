@@ -12,6 +12,19 @@ const Generator   = g.Generator
 var theme_cache: dict<Colorscheme>
 
 # Helper functions {{{
+def CacheTheme(bufnr: number, theme: Colorscheme)
+  unlockvar theme_cache
+  theme_cache[bufnr] = theme
+enddef
+
+def CachedTheme(bufnr: number)
+  return theme_cache[bufnr]
+enddef
+
+def IsCached(bufnr: number)
+  return theme_cache->has_key(bufnr)
+enddef
+
 def In(item: any, items: list<any>): bool
   return index(items, item) != -1
 enddef
@@ -101,8 +114,9 @@ enddef
 def ColorschemePath(bufnr: number): string
   var name: string
 
-  if theme_cache->has_key(bufnr)
-    name = theme_cache[bufnr].shortname
+  if IsCached(bufnr)
+    const theme: Colorscheme = CachedTheme(bufnr)
+    name = theme.shortname
   else
     # Extract the name of the color scheme from the template
     const matchedName = matchlist(
@@ -324,9 +338,7 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
     return false
   endif
 
-  # Cache the color scheme data
-  # theme_cache[bufnr] = theme
-
+  CacheTheme(bufnr, theme)
   CheckMetadata(theme)
 
   const startGen       = reltime()

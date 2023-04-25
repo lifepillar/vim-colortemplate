@@ -17,11 +17,11 @@ def CacheTheme(bufnr: number, theme: Colorscheme)
   theme_cache[bufnr] = theme
 enddef
 
-def CachedTheme(bufnr: number)
+def CachedTheme(bufnr: number): Colorscheme
   return theme_cache[bufnr]
 enddef
 
-def IsCached(bufnr: number)
+def IsCached(bufnr: number): bool
   return theme_cache->has_key(bufnr)
 enddef
 

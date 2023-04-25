@@ -1,11 +1,13 @@
 vim9script
 
 import 'libpath.vim'       as path
+import 'libparser.vim'     as libparser
 import './colorscheme.vim' as themes
 import './parser.vim'      as parser
 import './generator.vim'   as g
 
 const Colorscheme = themes.Colorscheme
+const Result      = libparser.Result
 const Generator   = g.Generator
 
 # Cache for generated color schemes
@@ -130,6 +132,28 @@ def ColorschemePath(bufnr: number): string
   endif
 
   return path.Join(b:colortemplate_outdir, 'colors', name .. '.vim')
+enddef
+
+def ReportError(result: Result, bufnr: number)
+  const errmsg = result.label
+  const included = matchlist(errmsg, 'in included file "\(.\{-}\)", byte \(\d\+\)')
+  var errpos: number
+  var nr:     number
+
+  if empty(included)
+    nr = bufnr
+    errpos = result.errpos + 1
+  else
+    execute 'edit' included[1]
+    nr = bufnr()
+    errpos = str2nr(included[2]) + 1
+  endif
+
+  Notice(printf(
+    "Build failed: %s (line %d, byte %d)", result.label, byte2line(errpos), errpos
+  ))
+  execute ':' nr 'buffer'
+  execute 'goto' errpos
 enddef
 # }}}
 
@@ -325,16 +349,11 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
   Notice(printf('Building%s…', empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)))
 
   const startTime = reltime()
-  const [result: parser.Result, theme: Colorscheme] = parser.Parse(text, path.Parent(inputPath))
+  const [result: Result, theme: Colorscheme] = parser.Parse(text, path.Parent(inputPath))
   const elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
 
   if !result.success
-    Notice(printf(
-      "Build failed: %s (line %d, byte %d)",
-      result.label, byte2line(result.errpos + 1), result.errpos + 1
-    ))
-    execute ':' bufnr 'buffer'
-    execute 'goto' result.errpos
+    ReportError(result, bufnr)
     return false
   endif
 

@@ -792,10 +792,12 @@ def ParseInclude(v: list<string>, ctx: Context)
   newCtx.state = deepcopy(state)
   newCtx.state.basedir = path.Parent(includePath)
 
-  const [result: Result, theme: Colorscheme] = Parse(text, null_string, Template, newCtx)
+  const result: Result = Template(newCtx)
 
   if !result.success
-    throw printf("in %s, byte %d: %s", includePath, result.errpos, result.label)
+    throw printf('%s in included file "%s", byte %d)',
+      result.label, includePath, result.errpos
+    )
   endif
 
   ctx.state = newCtx.state

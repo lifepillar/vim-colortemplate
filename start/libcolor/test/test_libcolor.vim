@@ -20,7 +20,7 @@ const Rgb2Cielab         = color.Rgb2Cielab
 const Rgb                = color.Rgb
 const Hsv                = color.Hsv
 const ContrastRatio      = color.ContrastRatio
-const ColorDifferenceHex = color.ColorDifferenceHex
+const ColorDifference    = color.ColorDifference
 const Approximate        = color.Approximate
 const Within             = color.Within
 const Neighbours         = color.Neighbours
@@ -277,8 +277,8 @@ def Test_Color_Rgb2Cielab()
   tt.AssertApprox(-0.49221569623207895, b, 0.0, EPS)
 enddef
 
-def Test_Color_ColorDifferenceHex()
-  const delta = ColorDifferenceHex('#767676', '#7c6f64')
+def Test_Color_ColorDifference()
+  const delta = ColorDifference('#767676', '#7c6f64')
   tt.AssertApprox(7.889685, delta, 0.0, EPS)
 enddef
 
@@ -376,9 +376,8 @@ enddef
 def Test_Color_Approximate()
   const approx = Approximate('#eeeeef')
 
-  assert_equal('#eeeeef',  approx.hex)
   assert_equal(255,        approx.xterm)
-  assert_equal('#eeeeee',  approx.approx)
+  assert_equal('#eeeeee',  approx.hex)
   tt.AssertApprox(0.54422, approx.delta, 0.0, EPS)
 enddef
 

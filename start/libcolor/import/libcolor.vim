@@ -659,7 +659,7 @@ enddef
 
 # See: https://en.wikipedia.org/wiki/Color_difference
 # See also: http://colormine.org/delta-e-calculator/cie2000
-def ColorDifference(
+def DeltaCIE2000(
     L1: float, a1: float, b1: float, L2: float, a2: float, b2: float): float
   const k_L = 1.0
   const k_C = 1.0
@@ -760,20 +760,6 @@ def ColorDifference(
   return CIEDE2000
 enddef
 
-export def ColorDifferenceHex(hexColor1: string, hexColor2: string): float
-    const [L1, a1, b1] = Hex2Cielab(hexColor1)
-    const [L2, a2, b2] = Hex2Cielab(hexColor2)
-    return ColorDifference(L1, a1, b1, L2, a2, b2)
-enddef
-
-export def ColorDifferenceRgb(
-    r1: number, g1: number, b1: number, r2: number, g2: number, b2: number
-): float
-    const [L1, A1, B1] = Rgb2Cielab(r1, g1, b1)
-    const [L2, A2, B2] = Rgb2Cielab(r2, g2, b2)
-    return ColorDifference(L1, A1, B1, L2, A2, B2)
-enddef
-
 var cache: dict<any> = {}
 
 # Return a dictionary with four keys:
@@ -793,7 +779,7 @@ export def Approximate(hexColor: string): dict<any>
 
   while i < N
     const [L2, a2, b2] = XTERM_CIELAB[i]
-    const new_delta = ColorDifference(L1, a1, b1, L2, a2, b2)
+    const new_delta = DeltaCIE2000(L1, a1, b1, L2, a2, b2)
 
     if new_delta < delta
       delta = new_delta
@@ -829,7 +815,7 @@ export def Within(
   while i < N
     const color = candidates[i]
     const [L2, a2, b2] = Hex2Cielab(color)
-    const delta = ColorDifference(L1, a1, b1, L2, a2, b2)
+    const delta = DeltaCIE2000(L1, a1, b1, L2, a2, b2)
 
     if delta <= threshold
       neighbours->add(i + 16)
@@ -885,7 +871,7 @@ export def Neighbours(
 
       const xtermColor   = candidates[i]
       const [L2, a2, b2] = Hex2Cielab(xtermColor)
-      const new_delta    = ColorDifference(L1, a1, b1, L2, a2, b2)
+      const new_delta    = DeltaCIE2000(L1, a1, b1, L2, a2, b2)
 
       if new_delta < delta
         delta = new_delta
@@ -991,21 +977,40 @@ endclass
 
 # }}}
 
-export def ContrastRatio(col1: Rgb, col2: Rgb): float
-  const L1 = col1.RelativeLuminance()
-  const L2 = col2.RelativeLuminance()
+def ToRgb(col: any): Rgb
+  if type(col) == v:t_string
+    return Rgb.newHex(col)
+  endif
+
+  return col
+enddef
+
+export def ContrastRatio(col1: any, col2: any): float
+  const rgb1 = ToRgb(col1)
+  const rgb2 = ToRgb(col2)
+  const L1 = rgb1.RelativeLuminance()
+  const L2 = rgb2.RelativeLuminance()
   return L1 > L2 ? (L1 + 0.05) / (L2 + 0.05) : (L2 + 0.05) / (L1 + 0.05)
 enddef
 
-export def BrightnessDifference(col1: Rgb, col2: Rgb): float
-  const [sR1, sG1, sB1] = [col1.r, col1.g, col1.b]
-  const [sR2, sG2, sB2] = [col2.r, col2.g, col2.b]
+export def BrightnessDifference(col1: any, col2: any): float
+  const rgb1 = ToRgb(col1)
+  const rgb2 = ToRgb(col2)
+  const [sR1, sG1, sB1] = [rgb1.r, rgb1.g, rgb1.b]
+  const [sR2, sG2, sB2] = [rgb2.r, rgb2.g, rgb2.b]
 
   # return ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
   return abs(
     ((sR1 * 299.0 + sG1 * 587.0 + sB1 * 114.0) / 1000.0)
     - ((sR2 * 299.0 + sG2 * 587.0 + sB2 * 114.0) / 1000.0)
   )
+enddef
+
+export def ColorDifference(col1: any, col2: any): float
+  const [L1, a1, b1] = type(col1) == v:t_string ? Hex2Cielab(col1) : Rgb2Cielab(col1.r, col1.g, col1.b)
+  const [L2, a2, b2] = type(col2) == v:t_string ? Hex2Cielab(col2) : Rgb2Cielab(col2.r, col2.g, col2.b)
+
+  return DeltaCIE2000(L1, a1, b1, L2, a2, b2)
 enddef
 
 # vim: foldmethod=marker nowrap et ts=2 sw=2

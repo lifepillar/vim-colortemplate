@@ -806,36 +806,40 @@ instance at the end of |librelalg-tutorial|, which we report again here:
 	     abc      3    6     3
 <
 Functions ~
-
-AvgBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.AvgBy()*
-		Group the tuples of relation {rel} with respect to a |list| of
-		attributes {groupby}, and determine the average of the values
-		of attribute {attr} in each group. When grouping by a single
-		attribute, {groupby} can also be a |string|. The schema of the
-		output relation consists of the grouping attributes plus the
-		aggregate attribute. The name of the aggregate attribute is
-		given by {name} (the default name is "avg").
-
-		For instance:
+						*librelalg.AntiEquiJoin()*
+AntiEquiJoin({rel1}, {rel2}, {list1}[, {list2}])
+		Perform the anti-equi-join of {rel1} and {rel2}. The result is
+		the set of tuples of {rel1} that cannot be joined with any
+		tuple in {rel2}. {list1} and {list2} are used as in
+		|librelalg.EquiJoin()|.
 >
-		var r = [
-		    {A: 1, B: 6},
-		    {A: 1, B: 4},
-		    {A: 2, B: 3}
+		const r = [
+		  {A: 0, B: 1},
+		  {A: 1, B: 2},
+		  {A: 2, B: 1},
 		]
-		const result = From(r)->AvgBy('A', 'B')
-		echo Table(result)
+		const s = [
+		  {B: 3, C: 1},
+		  {B: 1, C: 0},
+		]
+		const result1 = Query(AntiEquiJoin(r, s, 'B'))
+		const result2 = Query(AntiEquiJoin(r, s, 'A', 'B'))
+		echo Table(result1)
+		echo Table(result2)
 <
-		Output:
+		Result:
 >
-		───────
-		 A avg
-		───────
-		 1 5.0
-		 2 3.0
-<
-		This is a leaf operator, returning a relation instance.
+		─────
+		 A B                                                                                                                                                                   
+		─────
+		 1 2
 
+		─────
+		 A B
+		─────
+		 0 1
+		 2 1
+<
 AntiJoin({rel1}, {rel2}, {func})		*librelalg.AntiJoin()*
 		Perform the anti-join of {rel1} and {rel2}. The join condition
 		is specified by {func}, which is defined as in
@@ -880,6 +884,35 @@ AntiJoin({rel1}, {rel2}, {func})		*librelalg.AntiJoin()*
 		     bar     2
 <
 		This is a pipeline operator, returning a continuation.
+
+AvgBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.AvgBy()*
+		Group the tuples of relation {rel} with respect to a |list| of
+		attributes {groupby}, and determine the average of the values
+		of attribute {attr} in each group. When grouping by a single
+		attribute, {groupby} can also be a |string|. The schema of the
+		output relation consists of the grouping attributes plus the
+		aggregate attribute. The name of the aggregate attribute is
+		given by {name} (the default name is "avg").
+
+		For instance:
+>
+		var r = [
+		    {A: 1, B: 6},
+		    {A: 1, B: 4},
+		    {A: 2, B: 3}
+		]
+		const result = From(r)->AvgBy('A', 'B')
+		echo Table(result)
+<
+		Output:
+>
+		───────
+		 A avg
+		───────
+		 1 5.0
+		 2 3.0
+<
+		This is a leaf operator, returning a relation instance.
 
 Build({rel})					*librelalg.Build()*
 		A synonym of |librelalg.Query()|.
@@ -1087,13 +1120,15 @@ Divide({rel1}, {rel2})				*librelalg.Divide()*
 		projection of the dividend on X.
 
 						*librelalg.EquiJoin()*
-EquiJoin({rel1}, {rel2}, {list1}, {list2}, [, {prefix}])
+EquiJoin({rel1}, {rel2}, {list1}[, {list2}, {prefix}])
 		Perform an equi-join between two relations {rel1} and {rel2}.
 
 		The |list| {list1} is a subset of the attributes of {rel1}.
 		{list2} is a matching |list| of attributes of {rel2}, that is,
 		the two lists must have the same length. Attributes at the
-		same position in the two lists are compared for equality. For
+		same position in the two lists are compared for equality. When
+		{list2} is omitted, it is taken to be equal to {list1}. Lists
+		of one attribute can also be replaced by strings. For
 		{prefix}, see |librelalg.Join()|. Examples:
 >
 		var r = [
@@ -1119,7 +1154,7 @@ EquiJoin({rel1}, {rel2}, {list1}, {list2}, [, {prefix}])
 		To join all the buffers with all their tags:
 >
 		const result = Query(
-		    EquiJoin(Buffer, Tag, ['BufId'], ['BufId'], 't_')
+		    EquiJoin(Buffer, Tag, 'BufId', 'BufId', 't_')
 		  )
 		echo Table(result)
 <

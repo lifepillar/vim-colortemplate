@@ -1,29 +1,30 @@
 vim9script
 
 import 'libtinytest.vim' as tt
-import 'libcolor.vim'    as color
+import 'libcolor.vim'    as libcolor
 
 const TESTPATH = resolve(expand('<sfile>:p'))
 const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
-const EPS                = 0.000001
-const Xterm2Hex          = color.Xterm2Hex
-const Xterm2Rgb          = color.Xterm2Rgb
-const Rgb2Hex            = color.Rgb2Hex
-const Hex2Rgb            = color.Hex2Rgb
-const Hex2Gray           = color.Hex2Gray
-const Rgb2Hsv            = color.Rgb2Hsv
-const Hsv2Rgb            = color.Hsv2Rgb
-const Rgb2Xyz            = color.Rgb2Xyz
-const Rgb2Cielab         = color.Rgb2Cielab
-const Rgb                = color.Rgb
-const Hsv                = color.Hsv
-const ContrastRatio      = color.ContrastRatio
-const ColorDifference    = color.ColorDifference
-const Approximate        = color.Approximate
-const Within             = color.Within
-const Neighbours         = color.Neighbours
+const EPS                  = 0.000001
+const Xterm2Hex            = libcolor.Xterm2Hex
+const Xterm2Rgb            = libcolor.Xterm2Rgb
+const Rgb2Hex              = libcolor.Rgb2Hex
+const Hex2Rgb              = libcolor.Hex2Rgb
+const Hex2Gray             = libcolor.Hex2Gray
+const Rgb2Hsv              = libcolor.Rgb2Hsv
+const Hsv2Rgb              = libcolor.Hsv2Rgb
+const Rgb2Xyz              = libcolor.Rgb2Xyz
+const Rgb2Cielab           = libcolor.Rgb2Cielab
+const Rgb                  = libcolor.Rgb
+const Hsv                  = libcolor.Hsv
+const ColorDifference      = libcolor.ColorDifference
+const ContrastRatio        = libcolor.ContrastRatio
+const PerceptualDifference = libcolor.PerceptualDifference
+const Approximate          = libcolor.Approximate
+const Within               = libcolor.Within
+const Neighbours           = libcolor.Neighbours
 
 
 def Test_Color_Xterm2Hex()
@@ -79,99 +80,99 @@ def Test_Color_Rgb2Hsv()
   var s: number
   var v: number
 
-  [h,s,v] = color.Rgb2Hsv(0, 0, 0)
+  [h,s,v] = Rgb2Hsv(0, 0, 0)
   assert_equal(  0, h)
   assert_equal(  0, s)
   assert_equal(  0, v)
-  [h,s,v] = color.Rgb2Hsv(255, 255, 255)
+  [h,s,v] = Rgb2Hsv(255, 255, 255)
   assert_equal(  0, h)
   assert_equal(  0, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(128, 128, 128)
+  [h,s,v] = Rgb2Hsv(128, 128, 128)
   assert_equal(  0, h)
   assert_equal(  0, s)
   assert_equal( 50, v)
-  [h,s,v] = color.Rgb2Hsv(255, 0, 4)
+  [h,s,v] = Rgb2Hsv(255, 0, 4)
   assert_equal(359, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(255, 0, 0)
+  [h,s,v] = Rgb2Hsv(255, 0, 0)
   assert_equal(  0, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(255, 128, 0)
+  [h,s,v] = Rgb2Hsv(255, 128, 0)
   assert_equal( 30, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(255, 255, 0)
+  [h,s,v] = Rgb2Hsv(255, 255, 0)
   assert_equal( 60, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(128, 255, 0)
+  [h,s,v] = Rgb2Hsv(128, 255, 0)
   assert_equal( 90, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(0, 255, 0)
+  [h,s,v] = Rgb2Hsv(0, 255, 0)
   assert_equal(120, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(0, 255, 128)
+  [h,s,v] = Rgb2Hsv(0, 255, 128)
   assert_equal(150, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(0, 255, 255)
+  [h,s,v] = Rgb2Hsv(0, 255, 255)
   assert_equal(180, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(0, 128, 255)
+  [h,s,v] = Rgb2Hsv(0, 128, 255)
   assert_equal(210, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(0, 0, 255)
+  [h,s,v] = Rgb2Hsv(0, 0, 255)
   assert_equal(240, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(128, 0, 255)
+  [h,s,v] = Rgb2Hsv(128, 0, 255)
   assert_equal(270, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(255, 0, 255)
+  [h,s,v] = Rgb2Hsv(255, 0, 255)
   assert_equal(300, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(255, 0, 128)
+  [h,s,v] = Rgb2Hsv(255, 0, 128)
   assert_equal(330, h)
   assert_equal(100, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(1, 1, 1)
+  [h,s,v] = Rgb2Hsv(1, 1, 1)
   assert_equal(  0, h)
   assert_equal(  0, s)
   assert_equal(  0, v)
-  [h,s,v] = color.Rgb2Hsv(3, 3, 3)
+  [h,s,v] = Rgb2Hsv(3, 3, 3)
   assert_equal(  0, h)
   assert_equal(  0, s)
   assert_equal(  1, v)
-  [h,s,v] = color.Rgb2Hsv(252, 3, 7)
+  [h,s,v] = Rgb2Hsv(252, 3, 7)
   assert_equal(359, h)
   assert_equal( 99, s)
   assert_equal( 99, v)
-  [h,s,v] = color.Rgb2Hsv(255, 255, 254)
+  [h,s,v] = Rgb2Hsv(255, 255, 254)
   assert_equal( 60, h)
   assert_equal(  0, s)
   assert_equal(100, v)
-  [h,s,v] = color.Rgb2Hsv(197, 128, 63)
+  [h,s,v] = Rgb2Hsv(197, 128, 63)
   assert_equal( 29, h)
   assert_equal( 68, s)
   assert_equal( 77, v)
-  [h,s,v] = color.Rgb2Hsv(33, 197, 99)
+  [h,s,v] = Rgb2Hsv(33, 197, 99)
   assert_equal(144, h)
   assert_equal( 83, s)
   assert_equal( 77, v)
-  [h,s,v] = color.Rgb2Hsv(239, 7, 131)
+  [h,s,v] = Rgb2Hsv(239, 7, 131)
   assert_equal(328, h)
   assert_equal( 97, s)
   assert_equal( 94, v)
-  [h,s,v] = color.Rgb2Hsv(135, 38, 39)
+  [h,s,v] = Rgb2Hsv(135, 38, 39)
   assert_equal(359, h)
   assert_equal( 72, s)
   assert_equal( 53, v)
@@ -278,7 +279,20 @@ def Test_Color_Rgb2Cielab()
 enddef
 
 def Test_Color_ColorDifference()
-  const delta = ColorDifference('#767676', '#7c6f64')
+  const fixture = [
+    [0.0,   ColorDifference('#000000', '#000000')],
+    [765.0, ColorDifference('#000000', '#ffffff')],
+    [765.0, ColorDifference('#ffff00', '#0000ff')],
+  ]
+
+  for pair in fixture
+    assert_equal(v:t_float, type(pair[1]))
+    assert_equal(pair[0], pair[1])
+  endfor
+enddef
+
+def Test_Color_PerceptualDifference()
+  const delta = PerceptualDifference('#767676', '#7c6f64')
   tt.AssertApprox(7.889685, delta, 0.0, EPS)
 enddef
 

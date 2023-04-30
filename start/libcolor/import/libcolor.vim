@@ -1007,6 +1007,12 @@ export def BrightnessDifference(col1: any, col2: any): float
 enddef
 
 export def ColorDifference(col1: any, col2: any): float
+  const [sR1, sG1, sB1] = type(col1) == v:t_string ? Hex2Rgb(col1) : [col1.r, col1.g, col1.b]
+  const [sR2, sG2, sB2] = type(col2) == v:t_string ? Hex2Rgb(col2) : [col2.r, col2.g, col2.b]
+  return 1.0 * (abs(sR1 - sR2) + abs(sG1 - sG2) + abs(sB1 - sB2))
+enddef
+
+export def PerceptualDifference(col1: any, col2: any): float
   const [L1, a1, b1] = type(col1) == v:t_string ? Hex2Cielab(col1) : Rgb2Cielab(col1.r, col1.g, col1.b)
   const [L2, a2, b2] = type(col2) == v:t_string ? Hex2Cielab(col2) : Rgb2Cielab(col2.r, col2.g, col2.b)
 

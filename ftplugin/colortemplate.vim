@@ -65,7 +65,7 @@ command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate       silent ct
 command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll    silent ctemplate.BuildAll(<q-args>, "<bang>")
 command! -buffer -nargs=0 -bar                     ColortemplateCheck  ctemplate.Validate(bufnr())
 command! -buffer -nargs=0                          ColortemplateOutdir ctemplate.AskOutputDir()
-command! -buffer -nargs=0 -bar                     ColortemplateStats  call colortemplate#stats()
+command! -buffer -nargs=0 -bar                     ColortemplateStats  ctemplate.Stats()
 command! -buffer -nargs=0 -bar                     ColortemplateSource ctemplate.ViewSource(bufnr())
 command! -buffer -nargs=0 -bar                     ColortemplateShow   ctemplate.ShowColorscheme(bufnr())
 command! -buffer -nargs=0 -bar                     ColortemplateHide   ctemplate.HideColorscheme()

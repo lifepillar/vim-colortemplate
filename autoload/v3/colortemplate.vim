@@ -5,6 +5,7 @@ import 'libparser.vim'     as libparser
 import './colorscheme.vim' as themes
 import './parser.vim'      as parser
 import './generator.vim'   as g
+import './colorstats.vim'  as stats
 
 const Colorscheme = themes.Colorscheme
 const Result      = libparser.Result
@@ -173,7 +174,7 @@ class Toolbar
       'Colortest',
       'HiTest',
       'OutDir',
-      'Stats*',
+      'Stats',
     ]
     this.actions = extend({
           \ 'Build!':     ':Colortemplate!<cr>',
@@ -185,7 +186,7 @@ class Toolbar
           \ 'OutDir':     ':ColortemplateOutdir<cr>',
           \ 'Show':       ':ColortemplateShow<cr>',
           \ 'Source':     ':ColortemplateSource<cr>',
-          \ 'Stats*':     ':ColortemplateStats<cr>',
+          \ 'Stats':      ':ColortemplateStats<cr>',
           \ }, get(g:, 'colortemplate_toolbar_actions', {}))
   enddef
 
@@ -430,6 +431,16 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
   endif
 
   return true
+enddef
+
+export def Stats()
+  const nr = bufnr()
+
+  if IsCached(nr)
+    stats.ColorStats(CachedTheme(nr))
+  else
+    Error(printf('Please build the template first'))
+  endif
 enddef
 # }}}
 

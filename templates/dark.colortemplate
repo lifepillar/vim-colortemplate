@@ -86,14 +86,14 @@ lCursor           -> Cursor
 ; }}}
 
 ; Color name         GUI         Base256  Base16 (optional)
-Color: black         #394759     238      Black
+Color: black         #394759     ~        Black
 Color: red           #ff0000     196      DarkRed
 Color: green         #00ff00     46       DarkGreen
 Color: yellow        #ffff00     226      DarkYellow
 Color: blue          #0000ff     196      DarkBlue
 Color: magenta       #ff00ff     196      DarkMagenta
 Color: cyan          #00ffff     51       DarkCyan
-Color: white         #ebebeb     255      LightGrey
+Color: white         #ebebeb     ~        LightGrey
 Color: brightblack   #d2d2d2     252      DarkGrey
 Color: brightred     #ff6400     202      LightRed
 Color: brightgreen   #64ff00     82       LightGreen

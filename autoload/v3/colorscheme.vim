@@ -101,12 +101,11 @@ export class Database
         \   Base256Value:    Str,
         \   Base256HexValue: Str,
         \   Base16Value:     Str,
-        \   Delta:           Float,
         \ }, 'ColorName').InsertMany([
-        \   {ColorName: '',     GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',     Delta: 0.0},
-        \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE', Delta: 0.0},
-        \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg',   Delta: 0.0},
-        \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg',   Delta: 0.0}
+        \   {ColorName: '',     GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',   },
+        \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE'},
+        \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg', },
+        \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg', }
         \ ])
 
   # The tuple with t_Co prevents overriding Colortemplate's definition

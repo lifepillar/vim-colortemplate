@@ -1,17 +1,17 @@
 vim9script
 
-import 'libcolor.vim'      as libcol
+import 'libcolor.vim'      as libcolor
 import 'libparser.vim'     as parser
 import 'libpath.vim'       as path
 import './colorscheme.vim' as themes
 
 # Aliases {{{
-const ANSI_COLORS         = libcol.ANSI_COLORS
-const Approximate         = libcol.Approximate
-const RgbName2Hex         = libcol.RgbName2Hex
-const Rgb2Hex             = libcol.Rgb2Hex
-const Xterm2Hex           = libcol.Xterm2Hex
-const ColorDifferenceHex  = libcol.ColorDifferenceHex
+const ANSI_COLORS         = libcolor.ANSI_COLORS
+const Approximate         = libcolor.Approximate
+const RgbName2Hex         = libcolor.RgbName2Hex
+const Rgb2Hex             = libcolor.Rgb2Hex
+const Xterm2Hex           = libcolor.Xterm2Hex
+const ColorDifference     = libcolor.ColorDifference
 const Apply               = parser.Apply
 const Bol                 = parser.Bol
 const Context             = parser.Context
@@ -200,17 +200,14 @@ def DefineColor(v: list<string>, ctx: Context)
   const v16:       string = v[5]
   var   v256:      string
   var   v256Hex:   string
-  var   delta:     float
 
   if v[4] == '~'
     const approxColor: dict<any> = Approximate(vGuiHex)
     v256    = string(approxColor.xterm)
     v256Hex = approxColor.hex
-    delta   = approxColor.delta
   else
     v256 = v[4]
     v256Hex = Xterm2Hex(str2nr(v256))
-    delta = ColorDifferenceHex(vGuiHex, v256Hex)
   endif
 
   for db in ActiveDatabases(ctx)
@@ -220,7 +217,6 @@ def DefineColor(v: list<string>, ctx: Context)
       Base256Value:    v256,
       Base256HexValue: v256Hex,
       Base16Value:     v16,
-      Delta:           delta,
     })
   endfor
 enddef

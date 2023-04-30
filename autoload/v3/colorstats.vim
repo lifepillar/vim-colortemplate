@@ -6,10 +6,11 @@ import './colorscheme.vim' as themes
 
 const Colorscheme          = themes.Colorscheme
 const NO_DISCR             = themes.DEFAULT_DISCR_VALUE
-const ContrastRatio        = libcolor.ContrastRatio
 const BrightnessDifference = libcolor.BrightnessDifference
 const ColorDifference      = libcolor.ColorDifference
+const ContrastRatio        = libcolor.ContrastRatio
 const Hex2Rgb              = libcolor.Hex2Rgb
+const PerceptualDifference = libcolor.PerceptualDifference
 const AntiEquiJoin         = ra.AntiEquiJoin
 const EquiJoin             = ra.EquiJoin
 const Extend               = ra.Extend
@@ -40,7 +41,7 @@ def SimilarityTable(theme: Colorscheme, background: string): list<string>
       return {
             \ 'GUI RGB': rgbGui,
             \ 'Term RGB': rgbTerm,
-            \ 'Delta': ColorDifference(t.GUIValue, t.Base256HexValue)
+            \ 'Delta': PerceptualDifference(t.GUIValue, t.Base256HexValue)
             \ }
     })
     ->SortBy('Delta')
@@ -83,7 +84,7 @@ def CriticalPairs(theme: Colorscheme, background: string, gui: bool): list<strin
     ->Extend((t): dict<any> => {
       return {
             \ BrightnessDiff: BrightnessDifference(t['fg_' .. colorAttr], t[colorAttr]),
-            \ ColorDiff: ColorDifference(t['fg_' .. colorAttr], t[colorAttr]),
+            \ ColorDiff: PerceptualDifference(t['fg_' .. colorAttr], t[colorAttr]),
             \ Definition: empty(t.Variant) ? 'default' : 'override',
             \ }
     })
@@ -112,7 +113,7 @@ enddef
 
 def BuildMatrix(theme: Colorscheme, background: string, F: func(any, any): float, attr: string): list<string>
   const db     = theme.Db(background)
-  const colors = Query(db.Color->Select((t) => t.ColorName->NotIn(['', 'none', 'fg', 'bg'])))
+  const colors = db.Color->Select((t) => t.ColorName->NotIn(['', 'none', 'fg', 'bg']))->SortBy('ColorName')
   const names  = mapnew(colors, (_, t) => t.ColorName)
   const M      = Matrix(colors, F, attr)
 
@@ -121,10 +122,9 @@ def BuildMatrix(theme: Colorscheme, background: string, F: func(any, any): float
   output->add("\t" .. join(names, "\t"))
 
   for i in range(len(M))
-    const label = colors[i].ColorName
     output->add(printf(
       "%s\t%s\t%s",
-      label, join(mapnew(M[i], (j, v) => j == i ? '' : printf("%5.02f", v)), "\t"), label
+      names[i], join(mapnew(M[i], (j, v) => j == i ? '' : printf("%6.02f", v)), "\t"), names[i]
     ))
   endfor
 

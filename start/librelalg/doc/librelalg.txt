@@ -2020,26 +2020,34 @@ CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 >
 		const nDistinctTags = From(Tag)->CountDistinct('TagName')  # 4
 <
-ListAgg({rel}, {attr}, {how})			*librelalg.ListAgg()*
+ListAgg({rel}, {attr}, {how}, {uniq})		*librelalg.ListAgg()*
 		Return the values of attribute {attr} in a relation {rel} as
 		a |list|, sorted using the method specified by {how}. For the
 		possible values of {how}, see |sort()|. If you want the lists
-		to remain unsorted, pass |null|. Examples:
+		to remain unsorted, pass |null|. If {uniq} is |true| then
+		second and succeeding copies of repeated adjacent values are
+		removed. Note: all the arguments are mandatory! Examples:
 >
 		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A', null)  # [9, 7, 11]
+			->ListAgg('A', null, false)  # [9, 7, 11]
 
 		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A', 'f')  # [7, 9, 11]
+			->ListAgg('A', 'f', false)  # [7, 9, 11]
 
 		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A', '')  # [11, 7, 9]
+			->ListAgg('A', '', false)  # [11, 7, 9]
+
+		echo From([{A: 9}, {A: 7}, {A: 7}])
+			->ListAgg('A', '', false)  # [9, 7, 7]
+
+		echo From([{A: 9}, {A: 7}, {A: 7}])
+			->ListAgg('A', 'f', true)  # [7, 11]
 <
 		To build the sorted lists of tags in each buffer, sorted by
 		buffer:
 >
 		const result = From(Tag)
-		               ->GroupBy('BufId', ListAgg('TagName', ''))
+		               ->GroupBy('BufId', ListAgg('TagName', '', false))
 		               ->SortBy(['BufId'])
 		echo Table(result)
 <
@@ -2072,21 +2080,25 @@ Max({rel}, {attr})				*librelalg.Max()*
 >
 		const maxCol = From(Tag)->Max('Column')         # 15
 <
-StringAgg({rel}, {attr}, {sep}, {how})		*librelalg.StringAgg()*
+StringAgg({rel}, {attr}, {sep}, {how}, {uniq})	*librelalg.StringAgg()*
 		Return the values of attribute {attr} in a relation {rel}
 		joined into a |string|. The values in the string are separated
 		by string {sep}. The items are sorted using |sort()|. {how} is
-		defined as in |sort()|. Note: all the arguments are mandatory!
+		defined as in |sort()|. If {uniq} is |true| then duplicated
+		values are removed. Note: all the arguments are mandatory!
 		Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->StringAgg('A', ', ', 'n')  # '7, 9, 11'
+		echo From([{A: 9}, {A: 7}, {A: 11}, {A: 9}])
+			->StringAgg('A', ', ', 'n', false)  # '7, 9, 9, 11'
+
+		echo From([{A: 9}, {A: 7}, {A: 11}, {A: 9}])
+			->StringAgg('A', ', ', 'n', true)  # '7, 9, 11'
 <
 		To return the tags in each buffer joined into a string, sorted
 		by buffer:
 >
 		const result = From(Tag)
-		               ->GroupBy('BufId', StringAgg('TagName', ',', ''))
+		               ->GroupBy('BufId', StringAgg('TagName', ',', '', false))
 		               ->SortBy(['BufId'])
 		echo Table(result)
 <

@@ -1588,11 +1588,35 @@ def Test_RA_ListAgg()
     {A: 4, aggrValue: [2.5, 2.5]},
   ]
 
-  assert_equal([], From([])->ListAgg('A', ''))
-  assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A', ''))
-  assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B', null))
-  assert_equal([-3.0, 1.5, 2.5, 2.5, 2.5, 10.0], From(r)->ListAgg('B', 'f'))
-  assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B', null))->SortBy('A'))
+  assert_equal([], From([])->ListAgg('A', '', false))
+  assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A', '', false))
+  assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B', null, false))
+  assert_equal([-3.0, 1.5, 2.5, 2.5, 2.5, 10.0], From(r)->ListAgg('B', 'f', false))
+  assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B', null, false))->SortBy('A'))
+enddef
+
+def Test_RA_ListAggUnique()
+  const r = [
+    {id: 0, A: 0, B: 10.0},
+    {id: 1, A: 2, B:  2.5},
+    {id: 2, A: 2, B: -3.0},
+    {id: 3, A: 2, B:  2.5},
+    {id: 4, A: 4, B:  3.5},
+    {id: 5, A: 4, B:  3.5},
+  ]
+  const expected1 = [
+    {A: 0, aggrValue: [10.0]},
+    {A: 2, aggrValue: [-3.0, 2.5, 2.5]},
+    {A: 4, aggrValue: [3.5, 3.5]},
+  ]
+  const expected2 = [
+    {A: 0, aggrValue: [10.0]},
+    {A: 2, aggrValue: [-3.0, 2.5]},
+    {A: 4, aggrValue: [3.5]},
+  ]
+
+  assert_equal(expected1, r->GroupBy('A', ListAgg('B', 'f', false))->SortBy('A'))
+  assert_equal(expected2, r->GroupBy('A', ListAgg('B', 'f', true))->SortBy('A'))
 enddef
 
 def Test_RA_StringAgg()
@@ -1605,15 +1629,16 @@ def Test_RA_StringAgg()
     {id: 5, A: 4, B: 'm'},
   ]
 
-  assert_equal('', From([])->StringAgg('A', '', ''))
-  assert_equal('0.2.2.2.4.4', r->StringAgg('A', '.', ''))
-  assert_equal('a, b, c, f, m, p', r->StringAgg('B', ', ', ''))
+  assert_equal('', From([])->StringAgg('A', '', '', false))
+  assert_equal('0.2.2.2.4.4', r->StringAgg('A', '.', '', false))
+  assert_equal('a, b, c, f, m, p', r->StringAgg('B', ', ', '', false))
 
   const result = From(r)
                  ->GroupBy('A',
                      StringAgg('B',
                                ',',
-                               (x, y) => x == y ? 0 : x > y ? -1 : 1)
+                               (x, y) => x == y ? 0 : x > y ? -1 : 1,
+                               false),
                      )
                  ->SortBy('A')
 
@@ -1624,6 +1649,32 @@ def Test_RA_StringAgg()
   ]
 
   assert_equal(expected, result)
+enddef
+
+def Test_RA_StringAgg_Unique()
+  const r = [
+    {id: 0, A: 0, B: 'a'},
+    {id: 1, A: 2, B: 'a'},
+    {id: 2, A: 2, B: 'a'},
+    {id: 3, A: 2, B: 'p'},
+    {id: 4, A: 4, B: 'b'},
+    {id: 5, A: 4, B: 'b'},
+  ]
+  const expected1 = [
+    {A: 0, aggrValue: 'a'},
+    {A: 2, aggrValue: 'a,a,p'},
+    {A: 4, aggrValue: 'b,b'},
+  ]
+  const expected2 = [
+    {A: 0, aggrValue: 'a'},
+    {A: 2, aggrValue: 'a,p'},
+    {A: 4, aggrValue: 'b'},
+  ]
+  const result1 = r->GroupBy('A', StringAgg('B', ',', 'i', false))->SortBy('A')
+  const result2 = r->GroupBy('A', StringAgg('B', ',', 'i', true))->SortBy('A')
+
+  assert_equal(expected1, result1)
+  assert_equal(expected2, result2)
 enddef
 
 def Test_RA_SumBy()

@@ -292,8 +292,15 @@ def Test_Color_ColorDifference()
 enddef
 
 def Test_Color_PerceptualDifference()
-  const delta = PerceptualDifference('#767676', '#7c6f64')
-  tt.AssertApprox(7.889685, delta, 0.0, EPS)
+  const fixture = [
+    [7.889685, PerceptualDifference('#767676', '#7c6f64')],
+    [52.878674, PerceptualDifference('#444444', '#ff0000')],
+  ]
+
+  for pair in fixture
+    assert_equal(v:t_float, type(pair[1]))
+    tt.AssertApprox(pair[0], pair[1], 0.0, EPS)
+  endfor
 enddef
 
 def Test_Color_Rgb()

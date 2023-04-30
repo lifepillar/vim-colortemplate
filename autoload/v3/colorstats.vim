@@ -39,15 +39,15 @@ def SimilarityTable(theme: Colorscheme, background: string): list<string>
       const rgbGui = Hex2Rgb(t.GUIValue)
       const rgbTerm = Hex2Rgb(t.Base256HexValue)
       return {
-            \ 'GUI RGB': rgbGui,
-            \ 'Term RGB': rgbTerm,
-            \ 'Delta': PerceptualDifference(t.GUIValue, t.Base256HexValue)
+            \ 'GUI RGB':  printf('(%3d, %3d, %3d)', rgbGui[0], rgbGui[1], rgbGui[2]),
+            \ 'Xterm RGB': printf('(%3d, %3d, %3d)', rgbTerm[0], rgbTerm[1], rgbTerm[2]),
+            \ 'Delta':    printf('%.6f', PerceptualDifference(t.GUIValue, t.Base256HexValue))
             \ }
     })
     ->SortBy('Delta')
 
   var output = [printf('{{{ Color Similarity Table (%s)', background)]
-  output += split(Table(colors, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Term RGB', 'Delta']), '\n')
+  output += split(Table(colors, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Xterm RGB', 'Delta']), '\n')
   output->add('}}} Color Similarity Table')
 
   return output
@@ -138,6 +138,7 @@ def ContrastRatioMatrix(theme: Colorscheme, background: string, gui: bool): list
     printf('{{{ Contrast Ratio Matrix (%s %s)', background, gui ? 'gui' : 'terminal'),
     'Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo',
     '█ Not W3C conforming   █ Not ISO-9241-3 conforming',
+    '',
   ]
   + BuildMatrix(theme, background, ContrastRatio, gui ? 'GUIValue' : 'Base256HexValue')
   + ['}}} Contrast Ratio Matrix']
@@ -149,6 +150,7 @@ def ColorDifferenceMatrix(theme: Colorscheme, background: string, gui: bool): li
   var output = [
     printf('{{{ Color Difference Matrix (%s %s)', background, gui ? 'gui' : 'terminal'),
     'Pairs of colors whose color difference is ≥500 can be safely used as a fg/bg combo',
+    '',
   ]
   + BuildMatrix(theme, background, ColorDifference, gui ? 'GUIValue' : 'Base256HexValue')
   + ['}}} Color Difference Matrix']
@@ -160,6 +162,7 @@ def BrightnessDifferenceMatrix(theme: Colorscheme, background: string, gui: bool
   var output = [
     printf('{{{ Brightness Difference Matrix (%s %s)', background, gui ? 'gui' : 'terminal'),
     'Pairs of colors whose brightness difference is ≥125 can be safely used as a fg/bg combo',
+    '',
   ]
   + BuildMatrix(theme, background, BrightnessDifference, gui ? 'GUIValue' : 'Base256HexValue')
   + ['}}} Brightness Difference Matrix']

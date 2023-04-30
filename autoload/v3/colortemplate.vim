@@ -171,10 +171,10 @@ class Toolbar
       'Show',
       'Hide',
       'Source',
+      'Stats',
       'Colortest',
       'HiTest',
       'OutDir',
-      'Stats',
     ]
     this.actions = extend({
           \ 'Build!':     ':Colortemplate!<cr>',

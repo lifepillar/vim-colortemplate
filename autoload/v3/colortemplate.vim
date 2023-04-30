@@ -333,7 +333,7 @@ enddef
 # }}}
 
 # Main {{{
-export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
+export def Build(bufnr: number, outdir: string = '', bang: string = '', parseOnly = false): bool
   if !IsColortemplateBuffer(bufname(bufnr))
     return Error('Command can be executed only on Colortemplate buffers')
   endif
@@ -359,6 +359,12 @@ export def Build(bufnr: number, outdir: string = '', bang: string = ''): bool
   endif
 
   CacheTheme(bufnr, theme)
+
+  if parseOnly
+    ClearScreen()
+    return true
+  endif
+
   CheckMetadata(theme)
 
   const startGen       = reltime()
@@ -436,10 +442,8 @@ enddef
 export def Stats()
   const nr = bufnr()
 
-  if IsCached(nr)
+  if IsCached(nr) || Build(nr, null_string, null_string, true)
     stats.ColorStats(CachedTheme(nr))
-  else
-    Error(printf('Please build the template first'))
   endif
 enddef
 # }}}

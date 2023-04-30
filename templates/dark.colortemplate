@@ -87,21 +87,21 @@ lCursor           -> Cursor
 
 ; Color name         GUI         Base256  Base16 (optional)
 Color: black         #394759     ~        Black
-Color: red           #ff0000     196      DarkRed
-Color: green         #00ff00     46       DarkGreen
-Color: yellow        #ffff00     226      DarkYellow
-Color: blue          #0000ff     196      DarkBlue
-Color: magenta       #ff00ff     196      DarkMagenta
-Color: cyan          #00ffff     51       DarkCyan
+Color: red           #ff0000     ~        DarkRed
+Color: green         #00ff00     ~        DarkGreen
+Color: yellow        #ffff00     ~        DarkYellow
+Color: blue          #0000ff     ~        DarkBlue
+Color: magenta       #ff00ff     ~        DarkMagenta
+Color: cyan          #00ffff     ~        DarkCyan
 Color: white         #ebebeb     ~        LightGrey
-Color: brightblack   #d2d2d2     252      DarkGrey
-Color: brightred     #ff6400     202      LightRed
-Color: brightgreen   #64ff00     82       LightGreen
-Color: brightyellow  #ffff64     227      LightYellow
-Color: brightblue    #0064ff     27       LightBlue
-Color: brightmagenta #ff64ff     207      LightMagenta
-Color: brightcyan    #64ffff     87       LightCyan
-Color: brightwhite   #e0e0ed     231      White
+Color: brightblack   #d2d2d2     ~        DarkGrey
+Color: brightred     #ff6400     ~        LightRed
+Color: brightgreen   #64ff00     ~        LightGreen
+Color: brightyellow  #ffff64     ~        LightYellow
+Color: brightblue    #0064ff     ~        LightBlue
+Color: brightmagenta #ff64ff     ~        LightMagenta
+Color: brightcyan    #64ffff     ~        LightCyan
+Color: brightwhite   #e0e0ed     ~        White
 
 Term colors: black       red       green       yellow       blue       magenta       cyan       white
              brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite

@@ -187,3 +187,24 @@ export def ToggleHighlightInfo()
     endif
   endif
 enddef
+
+export def ApproximateColor(n: number)
+  var ctx = Context.new(getline('.'))
+  const result = ColorParser(ctx)
+
+  if !result.success
+    return
+  endif
+
+  const guiValue = result.value[3]
+  const approx   = Neighbours(guiValue, n)[-1]
+
+  setline('.', substitute(getline('.'), '\~', string(approx.xterm), ''))
+enddef
+
+# def NearbyColors(n: number)
+#   let l:name = s:quickly_parse_color_line()
+#   if empty(l:name) | return | endif
+#   echo colortemplate#colorspace#colors_within(a:n, s:guihex(l:name, 'dark'))
+# enddef
+#

@@ -280,7 +280,7 @@ export class Generator
       output += defs->add('')
     endif
 
-    output += globalBaseGr->Transform((t) => BaseGroupToString(t, metaGui, nextIndent, true))
+    output += globalBaseGr->Transform((t) => BaseGroupToString(t, metaGui, nextIndent, false))
 
     # Add variant-specific definitions and overrides, in the specified order
     for variant in ['gui', '256', '88', '16', '8', '0']

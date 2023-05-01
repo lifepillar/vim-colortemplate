@@ -74,7 +74,7 @@ def AttributesToString(t: dict<any>, meta: dict<any>, termgui: bool): list<strin
   for key in ['Fg', 'Bg', 'Special']
     if !empty(meta[key]) && !empty(t[key])
       const colorValue: string = meta.Colors[t[key]]
-      if !empty(colorValue)
+      if !empty(colorValue) && (meta[key] != 'ctermul' || colorValue != 'NONE')
         attributes->add(meta[key] .. '=' .. colorValue)
       endif
     endif

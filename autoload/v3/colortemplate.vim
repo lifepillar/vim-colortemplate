@@ -167,12 +167,11 @@ class Toolbar
     this.entries = [
       'Build!',
       'BuildAll!',
-      'Check',
       'Show',
       'Hide',
-      'Source',
+      'Check',
       'Stats',
-      'Colortest',
+      'Source',
       'HiTest',
       'OutDir',
     ]

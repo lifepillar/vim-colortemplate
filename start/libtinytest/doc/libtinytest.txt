@@ -1,4 +1,6 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2023 Mar 26
+*libtinytest.txt*	For Vim version 9.0	Last change: 2023 May 01
+
+Note: Vim 9.0.1501 or later is recommended.
 
 Tiny Test is a minimalist unit testing library for Vim 9 script developers.
 A unit test is just a function without arguments and return value whose
@@ -67,7 +69,7 @@ AssertApprox({expected}, {num}[, {rtol}, {atol}])
 AssertFails({func}, {msg})		*libtinytest.AssertFails()*
 		Check that {func} throws an error that contains the string
 		{msg}. {func} must be a function or lambda with no arguments
-		and return value. For example this assertion succeeds:
+		and no return value. For example this assertion succeeds:
 >
 		AssertFails(() => {
 		    throw 'This is a fatal error'

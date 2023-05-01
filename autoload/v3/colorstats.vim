@@ -20,6 +20,7 @@ const Project              = ra.Project
 const Query                = ra.Query
 const Rel                  = ra.Rel
 const Select               = ra.Select
+const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
 const StringAgg            = ra.StringAgg
 const Table                = ra.Table
@@ -28,6 +29,10 @@ const Union                = ra.Union
 
 def NotIn(item: any, items: list<any>): bool
   return index(items, item) == -1
+enddef
+
+def Cmp(x: float, y: float): number
+  return x < y ? -1 : x > y ? 1 : 0
 enddef
 
 # Print details about the color palette for the specified background
@@ -41,13 +46,16 @@ def SimilarityTable(theme: Colorscheme, background: string): list<string>
       return {
             \ 'GUI RGB':  printf('(%3d, %3d, %3d)', rgbGui[0], rgbGui[1], rgbGui[2]),
             \ 'Xterm RGB': printf('(%3d, %3d, %3d)', rgbTerm[0], rgbTerm[1], rgbTerm[2]),
+            \ 'DeltaValue': PerceptualDifference(t.GUIValue, t.Base256HexValue),
             \ 'Delta':    printf('%.6f', PerceptualDifference(t.GUIValue, t.Base256HexValue))
             \ }
     })
-    ->SortBy('Delta')
+    ->Sort((t, u): number => Cmp(t.DeltaValue, u.DeltaValue))
 
   var output = [printf('{{{ Color Similarity Table (%s)', background)]
-  output += split(Table(colors, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Xterm RGB', 'Delta']), '\n')
+  output += split(Table(
+    colors, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Xterm RGB', 'Delta'], null_string, 2
+  ), '\n')
   output->add('}}} Color Similarity Table')
 
   return output
@@ -88,7 +96,7 @@ def CriticalPairs(theme: Colorscheme, background: string, gui: bool): list<strin
             \ Definition: empty(t.Variant) ? 'default' : 'override',
             \ }
     })
-    ->SortBy('ContrastRatio')
+    ->Sort((t, u): number => Cmp(t.ContrastRatio, u.ContrastRatio))
   )
 
   var output: list<string> = []
@@ -99,7 +107,8 @@ def CriticalPairs(theme: Colorscheme, background: string, gui: bool): list<strin
   output += split(Table(
     pairs,
     ['Fg', 'Bg', 'ContrastRatio', 'BrightnessDiff', 'ColorDiff', 'HighlightGroup', 'Definition'],
-    printf('%s (%s)', gui ? 'GUI' : 'Terminal', background)
+    printf('%s (%s)', gui ? 'GUI' : 'Terminal', background),
+    2
   ), '\n')
   output->add('}}} Critical Pairs')
 

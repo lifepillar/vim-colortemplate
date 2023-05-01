@@ -52,9 +52,9 @@ b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl commentstring< omnifunc<
 # endif
 
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
-  nnoremap <silent> <buffer> ga    <scriptcmd>util.GetColorInfo(v:count1)<cr>
   nnoremap <silent> <buffer> <c-l> <scriptcmd>ctemplate.toolbar.Show()<cr><c-l>
-  nnoremap <silent> <buffer> gl    <scriptcmd>call colortemplate#syn#toggle()<cr>
+  nnoremap <silent> <buffer> ga    <scriptcmd>util.GetColorInfo(v:count1)<cr>
+  nnoremap <silent> <buffer> gl    <scriptcmd>util.ToggleHighlightInfo()<cr>
   nnoremap <silent> <buffer> gx    <scriptcmd>call colortemplate#approx_color(v:count1)<cr>
   nnoremap <silent> <buffer> gy    <scriptcmd>call colortemplate#nearby_colors(v:count1)<cr>
   if has('popupwin') && has('textprop')

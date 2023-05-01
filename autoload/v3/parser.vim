@@ -700,14 +700,17 @@ const GuiColor      = Lab(
                         OneOf(RgbColor, GUICOL),
                         "Expected a valid GUI color definition"
                       )
-const ColorDef      = Seq(
+
+export const ColorParser  = Seq(
                         K_COLOR,
                         L_COLON,
                         L_COLORNAME,
                         GuiColor,
                         L_COL256,
                         Opt(COL16)
-                      )                                            ->Apply(DefineColor)
+                      )
+
+const ColorDef      = ColorParser                                 ->Apply(DefineColor)
 
 const Directive     = Seq(LookAhead(Regex('\%(\w\|\s\)\+\_s*:')),
                         Lab(OneOf(

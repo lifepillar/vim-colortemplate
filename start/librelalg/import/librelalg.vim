@@ -1556,7 +1556,7 @@ export def RelEq(R: any, S: any): bool
 enddef
 
 # Returns a textual representation of a relation
-export def Table(R: any, columns: any = null, name = null_string, sep = '─'): string
+export def Table(R: any, columns: any = null, name = null_string, gap = 1, sep = '─'): string
   if strchars(sep) != 1
     throw printf("A table separator must be a single character. Got %s", sep)
   endif
@@ -1580,13 +1580,13 @@ export def Table(R: any, columns: any = null, name = null_string, sep = '─'): 
   var width: dict<number> = {}
 
   for attr in attributes
-    width[attr] = 1 + strwidth(attr)
+    width[attr] = gap + strwidth(attr)
   endfor
 
   # Determine the maximum width for each column
   for t in rel
     for attr in attributes
-      const ll = 1 + strwidth(String(t[attr]))
+      const ll = gap + strwidth(String(t[attr]))
       if ll > width[attr]
         width[attr] = ll
       endif

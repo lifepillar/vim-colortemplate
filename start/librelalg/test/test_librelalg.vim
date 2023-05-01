@@ -2298,7 +2298,7 @@ def Test_RA_Table()
 ================
 END
 
-  assert_equal(expectedTable, split(Table(R, null, 'Empty Instance', '='), "\n"))
+  assert_equal(expectedTable, split(Table(R, null, 'Empty Instance', 1, '='), "\n"))
 
   R.InsertMany([
     {AAAAAAAAA: 1, B: 'XYWZ'},
@@ -2326,6 +2326,17 @@ END
 END
 
   assert_equal(expectedTable, split(Table(R, null, 'Very Long Table Name'), "\n"))
+
+  expectedTable =<< END
+ R
+────────────────────────────────
+            B         AAAAAAAAA
+────────────────────────────────
+         XYWZ                 1
+          ABC                 2
+END
+
+  assert_equal(expectedTable, split(Table(R, null, null_string, 9), "\n"))
 enddef
 
 

@@ -1,3 +1,6 @@
+if !has('vim9script')
+  finish
+endif
 vim9script
 
 # Name:        Colortemplate

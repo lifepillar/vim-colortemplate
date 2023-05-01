@@ -2291,7 +2291,8 @@ Split({rel}, {func})				*librelalg.Split()*
 		 5
 		 7
 <
-Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
+						*librelalg.Table()*
+Table({rel} [, {columns}, {name}, {spacing}, {sep}])
 		Return a tabular representation of a base or derived relation
 		{rel} as a |string|. The title of the table may be specified
 		with {name}: the default is to use the relation name for base
@@ -2301,6 +2302,9 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		columns to be in a particular order or you want to print only
 		a subset of the columns, specify the |list| of {columns}. When
 		{columns} is a single attribute, it can also be a |string|.
+
+		The {spacing} determines the gap between columns: the default
+		is one character.
 
 		The horizontal separator symbol can be set with {sep}, and
 		must be a single character.
@@ -2313,7 +2317,7 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		]
 
 		echo Table(r) "\n"
-		echo Table(r, ['Y', 'X'], 'A table', '~') "\n"
+		echo Table(r, ['Y', 'X'], 'A table', 5, '~') "\n"
 		echo Table(r, 'Y')
 <
 		Output:
@@ -2325,11 +2329,11 @@ Table({rel} [, {columns}, {name}, {sep})	*librelalg.Table()*
 		 20 twenty
 
 		 A table
-		~~~~~~~~~~~
-		      Y  X
-		~~~~~~~~~~~
-		    ten 10
-		 twenty 20
+		~~~~~~~~~~~~~~~~~~~
+		          Y      X
+		~~~~~~~~~~~~~~~~~~~
+		        ten     10
+		     twenty     20
 
 		────────
 		      Y

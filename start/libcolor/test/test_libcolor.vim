@@ -23,7 +23,7 @@ const ColorDifference      = libcolor.ColorDifference
 const ContrastRatio        = libcolor.ContrastRatio
 const PerceptualDifference = libcolor.PerceptualDifference
 const Approximate          = libcolor.Approximate
-const Within               = libcolor.Within
+const ColorsWithin         = libcolor.ColorsWithin
 const Neighbours           = libcolor.Neighbours
 
 
@@ -403,8 +403,8 @@ def Test_Color_Approximate()
 enddef
 
 
-def Test_Color_Within()
-  const neighbours = '#9e0006'->Within(4.5)
+def Test_Color_ColorsWithin()
+  const neighbours = '#9e0006'->ColorsWithin(4.5)
 
   assert_equal(2,   len(neighbours))
   assert_equal(88,  neighbours[0])

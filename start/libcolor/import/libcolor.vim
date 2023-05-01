@@ -828,7 +828,7 @@ enddef
 # the given color.
 # hexColor: a hexdecimal color
 # colorsList: an optional list of candidate hex colors
-export def Within(
+export def ColorsWithin(
     hexColor: string, threshold: float, colorsList: list<string> = []
 ): list<number>
   const [L1, a1, b1]             = Hex2Cielab(hexColor)

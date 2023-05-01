@@ -5,10 +5,11 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
-import 'librelalg.vim' as ra
+import 'librelalg.vim'   as ra
 import 'libtinytest.vim' as tt
 
 # Aliases {{{
+const AssertFails          = tt.AssertFails
 const AntiEquiJoin         = ra.AntiEquiJoin
 const AntiJoin             = ra.AntiJoin
 const Avg                  = ra.Avg
@@ -65,21 +66,6 @@ const Transform            = ra.Transform
 const Union                = ra.Union
 const Zip                  = ra.Zip
 # }}}
-
-# assert_fails() logs exceptions in messages. This function is quiet.
-def AssertFails(what: string, expectedError: string): void
-  try
-    execute what
-    assert_false(1, 'Command should have failed, but succeeded')
-  catch
-    assert_exception(expectedError)
-  endtry
-enddef
-
-# These are defined at the script level for using with AssertFails().
-# See also: https://github.com/vim/vim/issues/6868
-var RR: Rel
-var SS: Rel
 
 # Data definition {{{
 def Test_RA_CreateEmptyRel()
@@ -167,63 +153,80 @@ def Test_RA_CreateEmptyRel()
 enddef
 
 def Test_RA_DuplicateKey()
-  RR = Rel.new('RR', {A: Int, B: Str}, ['A'])
-  AssertFails('RR.Key(["A"])', "Key ['A'] already defined in RR")
-  AssertFails('RR.Key("A")',   "Key ['A'] already defined in RR")
-  RR.Key('B')
-  RR.Key(['A', 'B'])  # Superkeys are also allowed
-  assert_equal([['A'], ['B'], ['A', 'B']], RR.keys)
+  var R = Rel.new('R', {A: Int, B: Str}, ['A'])
+
+  AssertFails(() => {
+    R.Key(["A"])
+  }, "Key ['A'] already defined in R")
+  AssertFails(() => {
+    R.Key("A")
+  }, "Key ['A'] already defined in R")
+
+  R.Key('B')
+  R.Key(['A', 'B'])  # Superkeys are also allowed
+
+  assert_equal([['A'], ['B'], ['A', 'B']], R.keys)
 enddef
 
 def Test_RA_WrongKey()
-  AssertFails("Rel.new('RR', {A: Int}, [['B']])", "B is not an attribute of RR")
-  AssertFails("Rel.new('RR', {A: Int}, ['B'])",   "B is not an attribute of RR")
+  AssertFails(() => {
+    Rel.new('R', {A: Int}, 'B')
+  }, "B is not an attribute of R")
+  AssertFails(() => {
+    Rel.new('R', {A: Int}, 'B')
+  }, "B is not an attribute of R")
 enddef
 # }}}
 
 # Data manipulation {{{
 def Test_RA_Insert()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
-  RR.Insert({A: 0, B: 'b0', C: true, D: 1.2})
+  var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  R.Insert({A: 0, B: 'b0', C: true, D: 1.2})
 
-  assert_equal(1, len(RR.instance))
+  assert_equal(1, len(R.instance))
 
-  const result = RR.Insert({A: 0, B: 'b1', C: false, D: 0.2})
+  const result = R.Insert({A: 0, B: 'b1', C: false, D: 0.2})
 
-  assert_equal(2, len(RR.instance))
+  assert_equal(2, len(R.instance))
   assert_equal(
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
-    RR.instance
+    R.instance
   )
   assert_equal(v:t_object, type(result))
-  assert_true(result is RR, 'The result is not the relation object')
+  assert_true(result is R, 'The result is not the relation object')
 
-  AssertFails("RR.Insert({A: 0, B: 'b2', C: true, D: 3.5})",
-              'Duplicate key')
+  AssertFails(() => {
+    R.Insert({A: 0, B: 'b2', C: true, D: 3.5})
+  }, 'Duplicate key')
 
-  AssertFails("RR.Insert({A: 9})",
-              'Expected a tuple on schema')
+  AssertFails(() => {
+    R.Insert({A: 9})
+  }, 'Expected a tuple on schema')
 
-  AssertFails("RR.Insert({A: false, B: 'b3', C: false, D: 7.0})",
-              "Attribute A is of type integer, but value 'false' of type boolean")
+  AssertFails(() => {
+    R.Insert({A: false, B: 'b3', C: false, D: 7.0})
+  }, "Attribute A is of type integer, but value 'false' of type boolean")
 
-  AssertFails("RR.Insert({A: 9, B: 9, C: false, D: 'tsk'})",
-              "Attribute B is of type string, but value '9' of type integer")
+  AssertFails(() => {
+    R.Insert({A: 9, B: 9, C: false, D: 'tsk'})
+  }, "Attribute B is of type string, but value '9' of type integer")
 
-  AssertFails("RR.Insert({A: 9, B: 'b3', C: 3.2, D: 'tsk'})",
-              "Attribute C is of type boolean, but value '3.2' of type float")
+  AssertFails(() => {
+    R.Insert({A: 9, B: 'b3', C: 3.2, D: 'tsk'})
+  }, "Attribute C is of type boolean, but value '3.2' of type float")
 
-  AssertFails("RR.Insert({A: 9, B: 'b3', C: false, D: 'tsk'})",
-              "Attribute D is of type float, but value 'tsk' of type string")
+  AssertFails(() => {
+    R.Insert({A: 9, B: 'b3', C: false, D: 'tsk'})
+  }, "Attribute D is of type float, but value 'tsk' of type string")
 
   assert_equal(
     [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
-    RR.instance
+    R.instance
   )
 enddef
 
 def Test_RA_InsertMany()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  var RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
   const instance = [
     {A: 0, B: 'b0', C: true, D: 1.2},
     {A: 1, B: 'b1', C: true, D: 3.4},
@@ -234,21 +237,14 @@ def Test_RA_InsertMany()
 enddef
 
 def Test_RA_NonTransactionalInsertMany()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
   const instance = [
     {A: 0, B: 'b0', C: true, D: 1.2},
     {A: 1, B: 'b1', C: true, D: 3.4},
   ]
-  RR.InsertMany(instance)
+  R.InsertMany(instance)
 
-  assert_equal(instance, RR.instance)
-
-  const statement =<< trim END
-    RR.InsertMany([
-      {A: 2, B: 'b2', C: false, D: 1.0},
-      {A: 1, B: 'b3', C: true,  D: 3.4},
-    ])
-  END
+  assert_equal(instance, R.instance)
 
   const expected = [
     {A: 0, B: 'b0', C: true, D: 1.2},
@@ -256,14 +252,18 @@ def Test_RA_NonTransactionalInsertMany()
     {A: 2, B: 'b2', C: false, D: 1.0},
   ]
 
-  AssertFails(join(statement),
-    "Duplicate key value: ['A', 'C'] = (1, true) already exists")
+  AssertFails(() => {
+    R.InsertMany([
+      {A: 2, B: 'b2', C: false, D: 1.0},
+      {A: 1, B: 'b3', C: true,  D: 3.4},
+    ])
+  }, "Duplicate key value: ['A', 'C'] = (1, true) already exists")
 
-  assert_equal(expected, RR.instance)
+  assert_equal(expected, R.instance)
 enddef
 
 def Test_RA_TransactionalInsertMany()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+  var RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
   const instance = [
     {A: 0, B: 'b0', C: true, D: 1.2},
     {A: 1, B: 'b1', C: true, D: 3.4},
@@ -272,63 +272,55 @@ def Test_RA_TransactionalInsertMany()
 
   assert_equal(instance, RR.instance)
 
-  const statement =<< trim END
+  const expected = instance
+
+  AssertFails(() => {
     RR.InsertMany([
       {A: 2, B: 'b2', C: false, D: 1.0},
       {A: 1, B: 'b3', C: true,  D: 3.4},
     ], true)
-  END
-
-  const expected = instance
-
-  AssertFails(join(statement),
-    "Duplicate key value: ['A', 'C'] = (1, true) already exists")
+  }, "Duplicate key value: ['A', 'C'] = (1, true) already exists")
 
   assert_equal(expected, RR.instance)
 enddef
 
 def Test_RA_InsertManyDuplicateKey()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, ['A', 'B', 'C'])
+  var RR = Rel.new('R', {A: Int, B: Str, C: Bool, D: Float}, ['A', 'B', 'C'])
 
-  const transactionalInsert =<< trim END
+  AssertFails(() => {
     RR.InsertMany([
       {A: 0, B: 'b0', C: true, D: 1.2},
       {A: 0, B: 'b0', C: true, D: 0.4},
     ], true)
-  END
-
-  AssertFails(join(transactionalInsert),
-    "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
+  }, "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
 
   assert_true(RR.IsEmpty())
-
-  const nonTransactionalInsert =<< trim END
-    RR.InsertMany([
-      {A: 0, B: 'b0', C: true, D: 1.2},
-      {A: 0, B: 'b0', C: true, D: 0.4},
-    ], false)
-  END
 
   const expected = [
       {A: 0, B: 'b0', C: true, D: 1.2},
   ]
 
-  AssertFails(join(nonTransactionalInsert),
-    "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
+  AssertFails(() => {
+    RR.InsertMany([
+      {A: 0, B: 'b0', C: true, D: 1.2},
+      {A: 0, B: 'b0', C: true, D: 0.4},
+    ], false)
+  }, "Duplicate key value: ['A', 'B', 'C'] = (0, 'b0', true) already exists")
 
   assert_equal(expected, RR.instance)
 enddef
 
 def Test_RA_Update()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
-  const rr = RR.instance
-  RR.InsertMany([
+  var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
+  const rr = R.instance
+
+  R.InsertMany([
     {A: 0, B: 'x', C: true, D: 'd1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  RR.Update({A: 0, B: 'x', C: true, D: 'new-d1'})
-  RR.Update({A: 1, B: 'x', C: false, D: 'new-d2'})
+  R.Update({A: 0, B: 'x', C: true, D: 'new-d1'})
+  R.Update({A: 1, B: 'x', C: false, D: 'new-d2'})
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -336,10 +328,14 @@ def Test_RA_Update()
   ]
 
   assert_equal(expected, rr)
-  AssertFails("RR.Update({A: 0, B: 'x', C: false, D: ''})",
-              "Key attribute C in RR cannot be changed")
-  AssertFails("RR.Update({A: 2, B: 'y', C: true, D: 'd3'})",
-              "Tuple with ['A'] = [2] not found in RR")
+
+  AssertFails(() => {
+    R.Update({A: 0, B: 'x', C: false, D: ''})
+  }, "Key attribute C in R cannot be changed")
+
+  AssertFails(() => {
+    R.Update({A: 2, B: 'y', C: true, D: 'd3'})
+  }, "Tuple with ['A'] = [2] not found in R")
 enddef
 
 def Test_RA_UpdateDiscriminator()
@@ -373,15 +369,15 @@ def Test_RA_UpdateDiscriminator()
 enddef
 
 def Test_RA_Upsert()
-  RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
-  const rr = RR.instance
-  RR.InsertMany([
+  var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
+  const rr = R.instance
+  R.InsertMany([
     {A: 0, B: 'x', C: true, D: 'd1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  RR.Update({A: 2, B: 'y', C: true, D: 'd3'}, true)
-  RR.Update({A: 0, B: 'x', C: true, D: 'new-d1'}, true)
+  R.Update({A: 2, B: 'y', C: true, D: 'd3'}, true)
+  R.Update({A: 0, B: 'x', C: true, D: 'new-d1'}, true)
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -391,8 +387,9 @@ def Test_RA_Upsert()
 
   assert_equal(expected, rr)
 
-  AssertFails("RR.Update({A: 0, B: 'x', C: false, D: ''})",
-              "Key attribute C in RR cannot be changed")
+  AssertFails(() => {
+    R.Update({A: 0, B: 'x', C: false, D: ''})
+  }, "Key attribute C in R cannot be changed")
 enddef
 
 def Test_RA_Delete()
@@ -431,10 +428,10 @@ def Test_RA_Delete()
 enddef
 
 def Test_RA_NonTransactionalDelete()
-  RR = Rel.new('R', {A: Int, B: Str}, ['A'])
+  var R = Rel.new('R', {A: Int, B: Str}, ['A'])
 
-  RR.Check((t) => {
-    if len(RR.instance) <= 2
+  R.Check((t) => {
+    if len(R.instance) <= 2
       throw 'Too few tuples'
     endif
   }, ['D'])
@@ -443,18 +440,22 @@ def Test_RA_NonTransactionalDelete()
     {A: 0, B: 'X'},
     {A: 1, B: 'Y'},
   ]
-  RR.InsertMany(instance)
+  R.InsertMany(instance)
 
-  assert_equal(2, len(RR.instance))
-  AssertFails("RR.Delete((t) => t.A == 0)", "Too few tuples")
-  assert_equal([], RR.instance)
+  assert_equal(2, len(R.instance))
+
+  AssertFails(() => {
+    R.Delete((t) => t.A == 0)
+  }, "Too few tuples")
+
+  assert_equal([], R.instance)
 enddef
 
 def Test_RA_TransactionalDelete()
-  RR = Rel.new('R', {A: Int, B: Str}, ['A'])
+  var R = Rel.new('R', {A: Int, B: Str}, ['A'])
 
-  RR.Check((t) => {
-    if len(RR.instance) <= 2
+  R.Check((t) => {
+    if len(R.instance) <= 2
       throw 'Too few tuples'
     endif
   }, ['D'])
@@ -463,68 +464,80 @@ def Test_RA_TransactionalDelete()
     {A: 0, B: 'X'},
     {A: 1, B: 'Y'},
   ]
-  RR.InsertMany(instance)
+  R.InsertMany(instance)
 
-  assert_equal(2, len(RR.instance))
-  AssertFails("RR.Delete((t) => t.A == 0, true)", "Too few tuples")
-  assert_equal(instance, RR.instance)
+  assert_equal(2, len(R.instance))
+
+  AssertFails(() => {
+    R.Delete((t) => t.A == 0, true)
+  }, "Too few tuples")
+
+  assert_equal(instance, R.instance)
 enddef
 
 def Test_RA_ReferentialIntegrity()
-  RR = Rel.new('R', {A: Int}, ['A'])
-  SS = Rel.new('S', {X: Str, Y: Int}, ['X'])
-  ForeignKey(SS, 'references', RR, ['Y'], ['A'])
-  RR.Insert({A: 2})
-  SS.Insert({X: 'a', Y: 2})
+  var R = Rel.new('R', {A: Int}, ['A'])
+  var S = Rel.new('S', {X: Str, Y: Int}, ['X'])
+  ForeignKey(S, 'references', R, ['Y'], ['A'])
+  R.Insert({A: 2})
+  S.Insert({X: 'a', Y: 2})
 
-  AssertFails("RR.Delete()",
-    "S references R: R['A'] = (2) is referenced by {'X': 'a', 'Y': 2}")
+  AssertFails(() => {
+    R.Delete()
+  }, "S references R: R['A'] = (2) is referenced by {'X': 'a', 'Y': 2}")
 
-  SS.Delete()
-  RR.Delete()
+  S.Delete()
+  R.Delete()
 
-  assert_true(RR.IsEmpty())
+  assert_true(R.IsEmpty())
 enddef
 # }}}
 
 # Integrity constraints {{{
 def Test_RA_ForeignKey()
-  RR = Rel.new('RR', {A: Str}, 'A')
-  SS = Rel.new('SS', {B: Int, C: Str}, 'B')
+  var R = Rel.new('R', {A: Str}, 'A')
+  var S = Rel.new('S', {B: Int, C: Str}, 'B')
 
-  AssertFails("ForeignKey(SS, 'ref', RR, ['B', 'C'], ['A'])",
-              "Wrong foreign key size: SS['B', 'C'] -> RR['A']")
-  AssertFails("ForeignKey(SS, 'ref', RR, ['C'])",
-              "Wrong foreign key: SS['C'] -> RR['C']. ['C'] is not a key of RR")
-  AssertFails("ForeignKey(SS, 'ref', RR, ['A'], ['A'])",
-              "Wrong foreign key: SS['A'] -> RR['A']. A is not an attribute of SS")
+  AssertFails(() => {
+    ForeignKey(S, 'ref', R, ['B', 'C'], ['A'])
+  }, "Wrong foreign key size: S['B', 'C'] -> R['A']")
 
-  ForeignKey(SS, 'references', RR, 'C', 'A')
+  AssertFails(() => {
+    ForeignKey(S, 'ref', R, ['C'])
+  }, "Wrong foreign key: S['C'] -> R['C']. ['C'] is not a key of R")
 
-  RR.InsertMany([{A: 'ab'}, {A: 'tm'}])
-  SS.Insert({B: 10, C: 'tm'})
-  SS.Insert({B: 20, C: 'tm'})
-  SS.Insert({B: 30, C: 'ab'})
+  AssertFails(() => {
+    ForeignKey(S, 'ref', R, ['A'], ['A'])
+  }, "Wrong foreign key: S['A'] -> R['A']. A is not an attribute of S")
 
-  AssertFails("SS.Insert({B: 40, C: 'xy'})",
-              "SS references RR: SS['C'] = ('xy') is not present in RR['A']")
+  ForeignKey(S, 'references', R, 'C', 'A')
 
-  SS.Update({B: 20, C: 'ab'})
+  R.InsertMany([{A: 'ab'}, {A: 'tm'}])
+  S.Insert({B: 10, C: 'tm'})
+  S.Insert({B: 20, C: 'tm'})
+  S.Insert({B: 30, C: 'ab'})
 
-  AssertFails("SS.Update({B: 30, C: 'wz'})",
-              "SS references RR: SS['C'] = ('wz') is not present in RR['A']")
+  AssertFails(() => {
+    S.Insert({B: 40, C: 'xy'})
+  }, "S references R: S['C'] = ('xy') is not present in R['A']")
+
+  S.Update({B: 20, C: 'ab'})
+
+  AssertFails(() => {
+    S.Update({B: 30, C: 'wz'})
+  }, "S references R: S['C'] = ('wz') is not present in R['A']")
 
   const expected = [
     {B: 10, C: 'tm'},
     {B: 20, C: 'ab'},
     {B: 30, C: 'ab'},
   ]
-  assert_equal(expected, SS.instance)
+  assert_equal(expected, S.instance)
 enddef
 
 def Test_RA_ForeignKeySameAttrs()
-  RR = Rel.new('R', {A: Str}, 'A')
-  SS = Rel.new('S', {B: Int, A: Str}, 'B')
+  var RR = Rel.new('R', {A: Str}, 'A')
+  var SS = Rel.new('S', {B: Int, A: Str}, 'B')
 
   ForeignKey(SS, 'flocks with', RR, 'A')
 
@@ -533,12 +546,13 @@ def Test_RA_ForeignKeySameAttrs()
   SS.Insert({B: 20, A: 'tm'})
   SS.Insert({B: 30, A: 'ab'})
 
-  AssertFails("SS.Insert({B: 40, A: 'xy'})",
-              "S flocks with R: S['A'] = ('xy') is not present in R['A']")
+  AssertFails(() => {
+    SS.Insert({B: 40, A: 'xy'})
+  }, "S flocks with R: S['A'] = ('xy') is not present in R['A']")
 enddef
 
 def Test_RA_GenericConstraint()
-  RR = Rel.new('R', {A: Int, B: Int}, 'A')
+  var RR = Rel.new('R', {A: Int, B: Int}, 'A')
 
   RR.Check((t) => {
     if t.B <= 0
@@ -551,13 +565,17 @@ def Test_RA_GenericConstraint()
 
   assert_equal([t0], RR.instance)
 
-  AssertFails("RR.Insert({A: 2, B: -3})", "B must be positive: got -3")
+  AssertFails(() => {
+    RR.Insert({A: 2, B: -3})
+  }, "B must be positive: got -3")
 
   assert_equal([t0], RR.instance)
 
   RR.Update({A: 1, B: 3})
 
-  AssertFails("RR.Update({A: 1, B: -2})", "B must be positive: got -2")
+  AssertFails(() => {
+    RR.Update({A: 1, B: -2})
+  }, "B must be positive: got -2")
 
   assert_equal([t0], RR.instance)
 
@@ -2041,16 +2059,22 @@ def Test_RA_Divide()
 enddef
 
 def Test_RA_EmptyKey()
-  RR = Rel.new('RR', {'A': Int, 'B': Str}, [[]])
+  var RR = Rel.new('RR', {'A': Int, 'B': Str}, [[]])
 
-  AssertFails("RR.Key([])", "Key [] already defined in RR")
-  AssertFails("RR.Insert({})",
-    "Expected a tuple on schema {A: integer, B: string}: got {} instead")
+  AssertFails(() => {
+    RR.Key([])
+  }, "Key [] already defined in RR")
+
+  AssertFails(() => {
+    RR.Insert({})
+  }, "Expected a tuple on schema {A: integer, B: string}: got {} instead")
 
   RR.Insert({A: 1, B: 'x'})
 
   assert_equal([{A: 1, B: 'x'}], RR.instance)
-  AssertFails("RR.Insert({A: 2, B: 'y'})", "Duplicate key")
+  AssertFails(() => {
+    RR.Insert({A: 2, B: 'y'})
+  }, "Duplicate key")
 
   RR.Delete()
   RR.Insert({A: 2, B: 'y'})
@@ -2071,14 +2095,18 @@ def Test_RA_DivideEdgeCases()
 enddef
 
 def Test_RA_DeeDum()
-  RR = Rel.new('Dee', {}, [[]])
+  var RR = Rel.new('Dee', {}, [[]])
   assert_equal(0, len(RR.instance))
-  AssertFails("RR.Insert({A: 0})", "Expected a tuple on schema {}")
+  AssertFails(() => {
+    RR.Insert({A: 0})
+  }, "Expected a tuple on schema {}")
 
   RR.Insert({})
 
   assert_equal(1, len(RR.instance))
-  AssertFails("RR.Insert({})", "Duplicate key")
+  AssertFails(() => {
+    RR.Insert({})
+  }, "Duplicate key")
 
   var Dum = Rel.new('Dum', {}, [[]])
   var Dee = RR
@@ -2156,7 +2184,7 @@ def Test_RA_Transform()
   assert_equal(expected2, Transform(s, (t) => t.when .. t.where))
 enddef
 
-def Test_RA_TransformSkipEven()
+def Test_RA_TransformSkipTuples()
   const r = [{X: 2}, {X: 1}, {X: 3}, {X: 0}, {X: 5}]
   const expected = [1, 3, 5]
 

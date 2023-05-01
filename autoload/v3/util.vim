@@ -4,11 +4,12 @@ import 'libcolor.vim'  as libcolor
 import 'libparser.vim' as libparser
 import './parser.vim'  as parser
 
-const Approximate = libcolor.Approximate
-const Hex2Rgb     = libcolor.Hex2Rgb
-const Neighbours  = libcolor.Neighbours
-const ColorParser = parser.ColorParser
-const Context     = libparser.Context
+const Approximate  = libcolor.Approximate
+const Hex2Rgb      = libcolor.Hex2Rgb
+const Neighbours   = libcolor.Neighbours
+const ColorsWithin = libcolor.ColorsWithin
+const ColorParser  = parser.ColorParser
+const Context      = libparser.Context
 
 # Get info about the Color definition under the cursor.
 #
@@ -202,9 +203,16 @@ export def ApproximateColor(n: number)
   setline('.', substitute(getline('.'), '\~', string(approx.xterm), ''))
 enddef
 
-# def NearbyColors(n: number)
-#   let l:name = s:quickly_parse_color_line()
-#   if empty(l:name) | return | endif
-#   echo colortemplate#colorspace#colors_within(a:n, s:guihex(l:name, 'dark'))
-# enddef
-#
+export def NearbyColors(n: float)
+  var ctx = Context.new(getline('.'))
+  const result = ColorParser(ctx)
+
+  if !result.success
+    return
+  endif
+
+  const guiValue = result.value[3]
+
+  echo ColorsWithin(guiValue, n)
+enddef
+

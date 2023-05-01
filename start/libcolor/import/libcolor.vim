@@ -788,7 +788,7 @@ enddef
 
 var cache: dict<any> = {}
 
-# Return a dictionary with four keys:
+# Return a dictionary with the following keys:
 # xterm [number] the base-256 color number that best approximates the given color
 # hex   [string] the hex value of the approximate xterm color
 # delta [float]  the CIEDE2000 difference between the input color and its approximation
@@ -816,9 +816,9 @@ export def Approximate(hexColor: string): dict<any>
   endwhile
 
   cache[hexColor] = {
-    'xterm': colorIndex + 16,
-    'hex':   XTERM256_COLORS[colorIndex],
-    'delta': delta,
+    xterm: colorIndex + 16,
+    hex:   XTERM256_COLORS[colorIndex],
+    delta: delta,
   }
 
   return cache[hexColor]
@@ -854,14 +854,15 @@ export def Within(
 enddef
 
 # Return the list of the k colors nearest to the given color.
-# k: a number between 1 and 240 (or between 1 and the number of colors in the
-# list passed as the third argument).
-# color: a hex color.
-# colorsList: an optional list of hex colors
+# hexColor:   a hex color.
+# k:          a number between 1 and 240 (or between 1 and the number of
+#             colors in the list passed as the third argument).
+# colorsList: an optional list of hex colors.
 #
-# Return value: a list of dictionaries with two keys:
+# Return value: a list of dictionaries with the following keys:
 # xterm: a color index
-# delta: the distance from the given color
+# hex:   the hex value of the approximate xterm color
+# delta: the CIEDE2000 distance from the given color
 #
 # NOTE: this is a highly inefficient implementation!
 export def Neighbours(
@@ -907,7 +908,11 @@ export def Neighbours(
       ++i
     endwhile
 
-    neighbours->add({'xterm': colorIndex + 16, 'delta': delta})
+    neighbours->add({
+      xterm: colorIndex + 16,
+      hex: XTERM256_COLORS[colorIndex],
+      delta: delta,
+    })
 
     ++j
   endwhile

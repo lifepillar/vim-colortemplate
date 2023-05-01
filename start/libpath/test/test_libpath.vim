@@ -142,6 +142,11 @@ def Test_Path_Expand()
   assert_equal($HOME, path.Expand('~'))
 enddef
 
+def Test_Path_ExpandPathWithSpaces()
+  assert_equal('/a b/c d', path.Expand('/a b/c d'))
+  assert_equal('/a b/c d', path.Expand('c d', '/a b'))
+enddef
+
 def Test_Path_Contains()
   assert_true('/usr/lib'->path.Contains('/usr/lib/foo'))
   assert_true('/'->path.Contains('/a'))

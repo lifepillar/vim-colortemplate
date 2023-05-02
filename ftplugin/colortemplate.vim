@@ -11,10 +11,8 @@ let b:did_ftplugin = 1
 let s:undo_ftplugin = "setlocal commentstring< omnifunc< | unlet! b:colortemplate_outdir"
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin .. '|' : '') .. s:undo_ftplugin
 
-let b:colortemplate_outdir = empty(expand('%:p:h')) ? getcwd() : expand('%:p:h')
-if b:colortemplate_outdir =~? '\m\%(color\)\=templates\=$'
-  let b:colortemplate_outdir = fnamemodify(b:colortemplate_outdir, ':h')
-endif
+let b:colortemplate_head = expand('%:p:h:S')
+let b:colortemplate_outdir = empty(b:colortemplate_head) ? fnamemodify(getcwd(), ':p:h:S') : b:colortemplate_head
 if get(g:, 'colortemplate_rtp', 1)
   execute 'set runtimepath^=' .. b:colortemplate_outdir
 endif

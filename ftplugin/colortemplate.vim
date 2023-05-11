@@ -82,7 +82,7 @@ augroup colortemplate
   autocmd BufWritePost *.colortemplate g:InitOutputDir()
 augroup END
 
-if get(g:, 'colortemplate_toolbar', 1) && (has('patch-8.0.1123') && has('menu'))
+if get(g:, 'colortemplate_toolbar', true) && has('menu')
   augroup colortemplate
     autocmd BufEnter,WinEnter *.colortemplate ctemplate.toolbar.Show()
     autocmd BufLeave,WinLeave *.colortemplate ctemplate.toolbar.Hide()

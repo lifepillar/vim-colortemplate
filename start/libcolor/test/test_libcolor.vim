@@ -31,6 +31,16 @@ def Test_Color_Xterm2Hex()
   assert_equal('#000000', Xterm2Hex(16))
   assert_equal('#ffffff', Xterm2Hex(231))
 
+  var i = 16
+
+  while i < 256
+    const hex = Xterm2Hex(i)
+
+    assert_equal(i, Approximate(hex).xterm)
+
+    ++i
+  endwhile
+
   tt.AssertFails(() => {
     Xterm2Hex(15)
   },  'out of range'
@@ -293,8 +303,9 @@ enddef
 
 def Test_Color_PerceptualDifference()
   const fixture = [
-    [7.889685, PerceptualDifference('#767676', '#7c6f64')],
-    [52.878674, PerceptualDifference('#444444', '#ff0000')],
+    [0.5442200, PerceptualDifference('#eeeeef', '#eeeeee')],
+    [7.8896850, PerceptualDifference('#767676', '#7c6f64')],
+    [38.040076, PerceptualDifference('#444444', '#ff0000')],
   ]
 
   for pair in fixture

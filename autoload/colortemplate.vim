@@ -104,7 +104,7 @@ fun! s:make_dir(dirpath)
     return
   endif
   try
-    call mkdir(fnameescape(l:dirpath), "p")
+    call mkdir(l:dirpath, "p")
   catch /.*/
     throw 'Could not create directory: ' . l:dirpath
   endtry
@@ -1423,7 +1423,7 @@ fun! s:include(path)
   endif
   let s:linenr = 0
   if !has_key(s:cache, s:path)
-    let s:cache[s:path] = { 'data': reverse(readfile(fnameescape((s:path)))) }
+    let s:cache[s:path] = { 'data': reverse(readfile(s:path)) }
   endif
   let s:numlines = len(s:cache[s:path]['data'])
   call extend(s:input_stack, s:cache[s:path]['data'])

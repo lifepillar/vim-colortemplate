@@ -16,7 +16,7 @@ if b:colortemplate_outdir =~? '\m\%(color\)\=templates\=$'
   let b:colortemplate_outdir = fnamemodify(b:colortemplate_outdir, ':h')
 endif
 if get(g:, 'colortemplate_rtp', 1)
-  execute 'set runtimepath^=' .. b:colortemplate_outdir
+  execute 'set runtimepath^=' .. fnameescape(b:colortemplate_outdir)
 endif
 
 if (has('balloon_eval') || has('balloon_eval_term')) && !has('nvim')

@@ -278,7 +278,7 @@ export def SetOutputDir(dirpath: string): bool
   b:colortemplate_outdir = newdir
 
   if get(g:, 'colortemplate_rtp', true)
-    execute 'set runtimepath^=' .. b:colortemplate_outdir
+    execute 'set runtimepath^=' .. fnameescape(b:colortemplate_outdir)
   endif
 
   return true

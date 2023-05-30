@@ -45,6 +45,8 @@ Colortemplate is a plugin that help users create their own color schemes
 without much effort. It can also be used to create color schemes suitable for
 distribution with Vim.
 
+Colortemplate requires Vim 9.0.1558 or later.
+
 ==============================================================================
 Getting Started					*colortemplate-quickstart*
 

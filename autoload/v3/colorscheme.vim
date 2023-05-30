@@ -530,6 +530,5 @@ export class Colorscheme
     endif
 
     throw 'Invalid background: ' .. background
-    return Database.new('')  # Silence a Vim "Missing return statement" error
   enddef
 endclass

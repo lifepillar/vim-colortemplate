@@ -16,4 +16,4 @@ else
 	hi Normal guifg=#000000 guibg=#ffffff gui=NONE cterm=NONE
 endif
 
-" vim: noet
+" vim: noet ts=8 sw=8 sts=8

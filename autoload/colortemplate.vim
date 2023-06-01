@@ -2364,7 +2364,7 @@ fun! s:print_header(bufnr)
   if s:supports_neovim() || s:getopt('backward_compatible')
     call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !has('gui_running') ? +&t_Co : -1"      )
   else
-    call s:put(a:bufnr,   "let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1")
+    call s:put(a:bufnr,   "let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)")
   endif
   if s:uses_italics()
     let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"

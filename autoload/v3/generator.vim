@@ -221,9 +221,9 @@ export class Generator
     header->add('')
 
     if this._backend == 'vim9'
-      header->add("const t_Co = exists('&t_Co') && !has('gui_running') ? (str2nr(&t_Co) ?? 0) : -1")
+      header->add("const t_Co = has('gui_running') ? -1 : (str2nr(&t_Co) ?? 0)")
     else # legacy
-      header->add("let s:t_Co = exists('&t_Co') && !has('gui_running') ? +&t_Co : -1")
+      header->add("let s:t_Co = has('gui_running') ? -1 : +&t_Co")
     endif
 
 

@@ -26,4 +26,4 @@ let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
 hi Normal guifg=#a34c9e guibg=#ffffff gui=NONE cterm=NONE
 " Verbatim block 2
 
-" vim: et ts=2 sw=2
+" vim: et sw=2 sts=2

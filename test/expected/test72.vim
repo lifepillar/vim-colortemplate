@@ -18,4 +18,4 @@ else
   hi Normal guifg=#000000 guibg=#ffffff gui=NONE cterm=NONE
 endif
 
-" vim: et ts=2 sw=2
+" vim: et sw=2 sts=2

@@ -13,4 +13,4 @@ let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
 hi Normal guifg=NONE guibg=NONE gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
 hi LineNr guifg=NONE guibg=NONE gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
 
-" vim: et ts=2 sw=2
+" vim: et sw=2 sts=2

@@ -403,7 +403,6 @@ export def CtermColorNumber(name: string, t_Co: number): number
   endif
 
   throw printf('CtermColorNumber: t_Co must be 8 or 16. Got: %d', t_Co)
-  return 0  # Silence a Vim "Missing return statement" error
 enddef
 
 export def Xterm2Hex(num: number): string

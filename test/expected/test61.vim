@@ -8,7 +8,7 @@ set background=light
 hi clear
 let g:colors_name = 'test61'
 
-let s:t_Co = exists('&t_Co') && !has('gui_running') ? (&t_Co ?? 0) : -1
+let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
 
 let x256 = '236'
 let x16  = 'Black'

@@ -8,7 +8,6 @@ set background=dark
 hi clear
 g:colors_name = 'test001'
 
-const t_Co = has('gui_running') ? -1 : (str2nr(&t_Co) ?? 0)
 
 g:terminal_ansi_colors = []
 

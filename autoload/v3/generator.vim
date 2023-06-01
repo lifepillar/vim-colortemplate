@@ -220,13 +220,6 @@ export class Generator
     header->add(printf("%sg:colors_name = '%s'", this._letKeyword, theme.shortname))
     header->add('')
 
-    if this._backend == 'vim9'
-      header->add("const t_Co = has('gui_running') ? -1 : (str2nr(&t_Co) ?? 0)")
-    else # legacy
-      header->add("let s:t_Co = has('gui_running') ? -1 : +&t_Co")
-    endif
-
-
     if !empty(theme.verbatimtext)
       header->add('')
       header += theme.verbatimtext
@@ -392,7 +385,7 @@ export class Generator
       return [space .. "if has('gui_running')"]
     endif
 
-    return [printf('%sif %st_Co >= %s', space, this._varPrefix, variantMeta.NumColors)]
+    return [printf('%sif str2nr(&t_Co) >= %s', space, variantMeta.NumColors)]
   enddef
 
   def EndVariant(variantMeta: dict<any>, background: string, indent: number): list<string>
@@ -408,7 +401,6 @@ export class Generator
     if this._backend == 'legacy'
       const db = this.theme.Db(background)
       const discriminators = db.Discriminators()
-      output->add(doublespace .. 'unlet s:t_Co')
 
       for t in discriminators
         output->add(doublespace .. 'unlet s:' .. t.DiscrName)

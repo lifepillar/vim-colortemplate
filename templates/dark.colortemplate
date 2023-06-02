@@ -4,6 +4,7 @@
 Full name:     Dark
 Short name:    dark
 Author:        Myself <myself@somewhere.org>
+; Some keys such as Author may appear multiple times:
 Author:        Yourself <yourself@nowhere.org>
 
 ; Optional metadata:
@@ -14,9 +15,12 @@ URL:           https://you.somewhere.net
 Description:   Template for dark colorscheme
 Description:   More details may go here
 License:       Same as Vim
-Options:       backend=vim9  ; This is the default: use 'legacy' for legacy Vim script
+; The backend determines how the code is generated.
+; 'vim9' is the default: use 'legacy' for legacy Vim script
+Options:       backend=vim9
 
-; Prefix for the color scheme's options: short name is used if this key is not present:
+; Prefix for the color scheme's options (if any): short name
+; is used if this key is not present:
 Prefix: drk
 
 ; A template can include other templates:
@@ -28,7 +32,11 @@ verbatim
 # output. For instance: @author1.
 endverbatim
 
-Variants:   gui 256 8 0
+; Variants and Background keys are mandatory, and must be
+; defined before any color or highlight group definition.
+; The 'gui' variant is always enabled and doesn't have to be
+; specified (unless it's the only one to be supported).
+Variants:   256 8 0
 Background: dark
 
 verbatim
@@ -39,7 +47,8 @@ verbatim
 # interpolated: the background is set to @background.
 endverbatim
 
-; Common linked groups {{{
+; Linked groups do not depend on colors, so they may be
+; defined before defining colors:
 Character         -> Constant
 Boolean           -> Constant
 Conditional       -> Statement
@@ -81,9 +90,15 @@ String            -> Constant
 Structure         -> Type
 Tag               -> Special
 Typedef           -> Type
-; See `:help lCursor`
 lCursor           -> Cursor
-; }}}
+
+; Each color has an arbitrary name, a hex value (for GUI and
+; terminals supporting millions of colors), a base-256 value
+; (that is, a number between 16 and 255), and an optional
+; base-16 value (a number between 0 and 15 or, better, a
+; color name: see :help cterm-colors).
+; The base-256 value is inferred automatically by
+; Colortemplate when ~ is used.
 
 ; Color name         GUI         Base256  Base16 (optional)
 Color: black         #394759     ~        Black
@@ -112,14 +127,26 @@ verbatim
 # @guiblack in the GUI, and @256black or @16black in terminals.
 endverbatim
 
+; Each highlight group definition consists of the highlight
+; group's name, the foreground color, the background color,
+; and optional style attributes.
+; NOTE: the highlight group's name *must* be anchored at the
+; start of the line! Other than that, spaces do not count.
 Normal               white             black
 Terminal             white             black
 
+; The following is a 'discriminator'. It is defined using
+; Vim 9 script syntax and it is used to override some
+; highlight group definitions when the discriminator has
+; certain values.
 #const transp_bg = get(g:, 'dark_transp_bg', 0)
 
+; For example, Normal and Terminal are white on black by
+; default (see above), but if there are 256 or 8 colors
+; *and* transp_bg is equal to 1 then Normal and Terminal are
+; defined as white on a transparent background:
 Normal
   /256/8+transp_bg 1 white             none
-
 Terminal
   /256/8+transp_bg 1 white             none
 
@@ -139,6 +166,11 @@ EndOfBuffer          white             black
 ErrorMsg             white             black             reverse
 FoldColumn           white             black
 Folded               white             black             italic
+; Every highlight group must have a default definition. The
+; default definition may be overriden for specific variants
+; and/or discriminator values. Here, IncSearch has
+; a 'standout' attribute instead of a 'reverse' attribute in
+; gVim:
 IncSearch            white             black             reverse
 IncSearch/gui        white             black             standout
 LineNr               white             black

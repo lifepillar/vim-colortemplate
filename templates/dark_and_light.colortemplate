@@ -1,6 +1,5 @@
 ; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
 
-; Information {{{
 ; Mandatory
 Full name:     Dark and Light
 Short name:    dark_and_light
@@ -11,13 +10,22 @@ Maintainer:    Myself <myself@somewhere.org>
 URL:           https://me.org
 Description:   Template for a colorscheme with dark and light variants
 License:       Public domain
-; }}}
 
-; Documentation {{{
 Include: _help.colortemplate
-; }}}
+
+verbatim
+# For dual background colorschemes, verbatim text before a Background
+# directive or in the scope of `Background: any` is put at the top of the
+# colorscheme.
+endverbatim
+
 
 Background: dark
+
+verbatim
+# Verbatim text under `Background: dark` is put
+# at the beginning of the dark block.
+endverbatim
 
 Include: _common.colortemplate
 
@@ -223,6 +231,15 @@ ToolbarLine          none              black
 ToolbarButton        black             white             bold
 ; }}}
 
+verbatim
+# This will appear at the start of the light background block
+# because it is in the scope of `Background: light`.
+endverbatim
+
 Background: any
+
+verbatim
+# This will appear at the top of the colorscheme.
+endverbatim
 
 Include: _bw.colortemplate

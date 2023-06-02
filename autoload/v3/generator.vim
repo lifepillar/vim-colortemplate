@@ -213,7 +213,6 @@ export class Generator
 
     header->add('hi clear')
     header->add(printf("%sg:colors_name = '%s'", this._letKeyword, theme.shortname))
-    header->add('')
 
     if !empty(theme.verbatimtext)
       header->add('')
@@ -251,16 +250,17 @@ export class Generator
       nextIndent += this._shiftwidth
     endif
 
+    output->add(printf('%s%sg:terminal_ansi_colors = %s',
+      repeat(' ', nextIndent), this._letKeyword, string(db.termcolors))
+    )
+    output->add('')
+
     if !empty(db.verbatimtext)
       output += mapnew(db.verbatimtext, (_, l) => empty(l) ? l : repeat(' ', nextIndent) .. l)
       output->add('')
     endif
 
     output += this.GenerateDiscriminators(background, nextIndent)
-    output->add('')
-    output->add(printf('%s%sg:terminal_ansi_colors = %s',
-      repeat(' ', nextIndent), this._letKeyword, string(db.termcolors))
-    )
     output->add('')
     defs = globalLinked->Transform((t) => LinkedGroupToString(t, nextIndent))
 

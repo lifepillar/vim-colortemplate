@@ -15,7 +15,9 @@ endif
 
 b:did_ftplugin = 1
 
+setlocal comments=:;
 setlocal commentstring=;%s
+setlocal formatoptions=cjloqr1
 setlocal omnifunc=syntaxcomplete#Complete
 
 def g:InitOutputDir()
@@ -44,7 +46,7 @@ else
   b:undo_ftplugin = ''
 endif
 
-b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl commentstring< omnifunc<'
+b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl cms< com< fo< ofu<'
 
 # if has('balloon_eval') || has('balloon_eval_term')
 #   setlocal balloonexpr=colortemplate#syn#balloonexpr()

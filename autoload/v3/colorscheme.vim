@@ -14,6 +14,7 @@ const PartitionBy   = ra.PartitionBy
 const Query         = ra.Query
 const Rel           = ra.Rel
 const Select        = ra.Select
+const SortBy        = ra.SortBy
 const Str           = ra.Str
 const Transform     = ra.Transform
 # }}}
@@ -111,10 +112,11 @@ export class Database
   this.Discriminator = Rel.new('Discriminator', {
         \ DiscrName:  Str,
         \ Definition: Str,
+        \ DiscrNum:   Int,
         \ }, [
-        \ ['DiscrName']
+        \ ['DiscrName'], ['DiscrNum']
         \ ]).InsertMany([
-        \   {DiscrName: '',     Definition: ''},
+        \   {DiscrName: '', Definition: '', DiscrNum: 0},
         \ ])
 
   this.HiGroup = Rel.new('Highlight Group', {
@@ -438,10 +440,11 @@ export class Database
       )
   enddef
 
+  # Return the discriminators in the order they have been defined.
   def Discriminators(): list<dict<any>>
-    return Query(
-      this.Discriminator->Select((t) => !empty(t.DiscrName))
-    )
+    return this.Discriminator
+      ->Select((t) => !empty(t.DiscrName))
+      ->SortBy('DiscrNum')
   enddef
 
   # Return all the default definitions for the given variant. Note that the

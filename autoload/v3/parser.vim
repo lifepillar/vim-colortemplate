@@ -221,14 +221,18 @@ def DefineColor(v: list<string>, ctx: Context)
   endfor
 enddef
 
+var discrNum = 0
+
 def DefineDiscriminator(v: list<string>, ctx: Context)
   const discrName:  string = v[1]
   const definition: string = join(Interpolate(v[3], ctx))
 
   for db in ActiveDatabases(ctx)
+    discrNum += 1
     db.Discriminator.Insert({
       DiscrName:  discrName,
       Definition: definition,
+      DiscrNum: discrNum,
     })
   endfor
 enddef

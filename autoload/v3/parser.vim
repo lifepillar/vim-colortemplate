@@ -51,12 +51,6 @@ def SetActiveDatabases(v: list<string>, ctx: Context)
 
   ResetState(state)
 
-  if index(['dark', 'light', 'any'], bg) == -1
-    throw printf(
-      "Invalid background: %s. Valid values are 'dark', 'light' and 'any'.", bg
-    )
-  endif
-
   state.background = bg
 
   if bg == 'any'
@@ -563,7 +557,7 @@ const THEMENAME     = R('\w\+')
 const VERBTEXT      = R('\_.\{-}\ze\%(end\%(verbatim\|help\|auxfile\)\)')
 
 const L_ATTRIBUTE   = Lab(ATTRIBUTE,            "Expected an attribute")
-const L_BACKGROUND  = Lab(BACKGROUND,           "Expected a valid background ('light' or 'dark')")
+const L_BACKGROUND  = Lab(BACKGROUND,           "Expected a valid background ('light', 'dark', or 'any')")
 const L_BGCOLOR     = Lab(BGCOLOR,              "Expected the name of the background color")
 const L_COL256      = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or tilde")
 const L_COLON       = Lab(COLON,                "Expected a colon")

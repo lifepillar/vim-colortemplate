@@ -34,14 +34,9 @@ enddef
 def CompareByDiscrName(t: dict<any>, u: dict<any>): number
   if t.DiscrName == u.DiscrName
     return 0
-  elseif t.DiscrName == 't_Co'
-    return -1
-  elseif u.DiscrName == 't_Co'
-    return 1
   else
     return CompareDistinct(t.DiscrName, u.DiscrName)
   endif
-
 enddef
 
 def CompareByDiscrValueAndHiGroupName(t: dict<any>, u: dict<any>): number

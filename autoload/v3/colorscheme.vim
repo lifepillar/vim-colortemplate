@@ -108,14 +108,13 @@ export class Database
         \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg', }
         \ ])
 
-  # The tuple with t_Co prevents overriding Colortemplate's definition
   this.Discriminator = Rel.new('Discriminator', {
         \ DiscrName:  Str,
         \ Definition: Str,
-        \ },
-        \ 'DiscrName').InsertMany([
+        \ }, [
+        \ ['DiscrName']
+        \ ]).InsertMany([
         \   {DiscrName: '',     Definition: ''},
-        \   {DiscrName: 't_Co', Definition: ''},
         \ ])
 
   this.HiGroup = Rel.new('Highlight Group', {
@@ -441,8 +440,7 @@ export class Database
 
   def Discriminators(): list<dict<any>>
     return Query(
-      this.Discriminator
-      ->Select((t) => !empty(t.DiscrName) && t.DiscrName != 't_Co')
+      this.Discriminator->Select((t) => !empty(t.DiscrName))
     )
   enddef
 

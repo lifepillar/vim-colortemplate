@@ -233,7 +233,7 @@ def GetCtermColor(synid: number, kind: string): string
     return cterm
   endif
 
-  const t_Co = exists('&t_Co') && str2nr(&t_Co) == 8 ? 8 : 16
+  const t_Co = str2nr(&t_Co) == 8 ? 8 : 16
 
   try
     const nr = CtermColorNumber(cterm, t_Co)

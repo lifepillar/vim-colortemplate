@@ -42,10 +42,6 @@ enddef
 def CompareByDiscrName(t: dict<any>, u: dict<any>): number
   if t.DiscrName == u.DiscrName
     return 0
-  elseif t.DiscrName == 't_Co'
-    return -1
-  elseif u.DiscrName == 't_Co'
-    return 1
   else
     return CompareDistinct(t.DiscrName, u.DiscrName)
   endif
@@ -115,7 +111,7 @@ enddef
 
 def GenerateDiscriminators(db: Database): list<string>
   const defs = db.Discriminator
-    ->Select((t) => !empty(t.DiscrName) && t.DiscrName != 't_Co')
+    ->Select((t) => !empty(t.DiscrName))
     ->Sort(CompareByDiscrName)
     ->Transform((t) => printf("const %s = %s", t.DiscrName, t.Definition))
 
@@ -178,7 +174,7 @@ def StartVariant(meta: dict<any>): list<string>
     return ["if has('gui_running')"]
   endif
 
-  return [printf('if t_Co >= %d', meta.NumColors)]
+  return [printf('if str2nr(&t_Co) >= %d', meta.NumColors)]
 enddef
 
 def EndVariant(meta: dict<any>): list<string>

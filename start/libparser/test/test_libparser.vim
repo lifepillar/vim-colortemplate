@@ -165,6 +165,16 @@ def Test_LP_Bol()
     result = Bol(ctx)
     assert_false(result.success)
   endfor
+
+  const T = TextToken(Blank)
+  const Parser = Seq(T('à'), Seq(Bol, T('b')))
+
+  ctx = Context.new("à\rb")
+  result = Parser(ctx)
+
+  assert_true(result.success)
+  assert_equal(-1, result.errpos)
+  assert_equal(['à', ['b']], result.value)
 enddef
 
 def Test_LP_ParseEmptyText001()

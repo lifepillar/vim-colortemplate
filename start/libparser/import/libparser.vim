@@ -65,7 +65,7 @@ enddef
 
 # Basic parsers {{{
 export def Bol(ctx: Context): Result
-  if ctx.index <= 0 || ctx.text[ctx.index - 1] =~ '[\n\r]'
+  if ctx.index <= 0 || strpart(ctx.text, ctx.index - 1, 1) =~ '[\n\r]'
     return Success()
   else
     return Failure(ctx)

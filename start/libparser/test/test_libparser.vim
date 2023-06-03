@@ -501,7 +501,6 @@ def Test_LP_MapThrows()
 
   const Parser = Text("12")->Map((v, _): string => {
     throw 'Tsk'
-    return 'ok'
   })
   const result = Parser(ctx)
 

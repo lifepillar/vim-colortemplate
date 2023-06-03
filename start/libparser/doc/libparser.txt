@@ -164,7 +164,7 @@ Let us now define a function to parse some expressions:
 	  if result.success
 	    echo result.value
 	  else
-	    echo strcharpart(e, 0, 1 + result.errpos) .. '<==='
+	    echo strpart(e, 0, 1 + result.errpos) .. '<==='
 
 	    if !empty(result.label)
 	      echo printf('Expected %s at position %d',

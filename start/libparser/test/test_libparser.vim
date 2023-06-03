@@ -706,5 +706,24 @@ def Test_LP_UnicodeText2()
   assert_equal(strlen(text), ctx.index)
 enddef
 
+def Test_LP_ComposingCharacters()
+  const text = "X:ė̃\r  x"
+  var   ctx  = Context.new(text)
+
+  assert_equal(8,  strchars(text))       # Count composing characters separately
+  assert_equal(7,  strchars(text, true)) # Ignore composing characters
+  assert_equal(7,  strcharlen(text))     # Same as strchars(..., true)
+  assert_equal(10, strlen(text))         # Length in bytes
+
+  const R             = RegexToken(Space)
+  const Line          = R('[^\r\n]\+')
+  const Parser        = Seq(Text('X'), Text(':'), Line, Text('x'))
+  const result        = Parser(ctx)
+  const expectedValue = ['X', ':', 'ė̃', 'x']
+
+  assert_true(result.success)
+  assert_equal(expectedValue, result.value)
+  assert_equal(strlen(text), ctx.index)
+enddef
 
 tt.Run('_LP_')

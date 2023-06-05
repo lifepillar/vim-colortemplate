@@ -2382,7 +2382,7 @@ fun! s:finish_endif(bufnr)
 endf
 
 fun! s:print_footer(bufnr)
-  call s:put(a:bufnr, s:getopt('use_tabs') ? '" vim: noet ts=8 sw=8 sts=8' : '" vim: et sw=2 sts=2')
+  call s:put(a:bufnr, s:getopt('use_tabs') ? '" vim: noet ts=8 sw=8 sts=8' : '" vim: et ts=8 sw=2 sts=2')
 endf
 
 " In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of

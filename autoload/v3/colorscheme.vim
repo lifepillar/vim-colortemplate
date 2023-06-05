@@ -504,10 +504,11 @@ export class Colorscheme
   public this.auxfiles:     dict<list<string>> = {}  # path => content
   public this.prefix:       string             = ''
   public this.options:      dict<any>          = {
-        \ backend: 'vim9',
-        \ creator: true,
+        \ backend:    'vim9',
+        \ creator:    true,
+        \ palette:    false,
         \ shiftwidth: 2,
-        \ timestamp: true,
+        \ timestamp:  true,
         \ }
 
   def new()

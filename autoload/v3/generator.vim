@@ -223,8 +223,31 @@ export class Generator
   enddef
 
   def Footer(): list<string>
-    return [
-      '',
+    const theme = this.theme
+    var sourceComments = ['']
+
+
+    if theme.options.palette
+      const commentSymbol = theme.options.backend == 'legacy' ? '" ' : '# '
+
+      for background in ['dark', 'light']
+        if theme.HasBackground(background)
+          const db = theme.Db(background)
+          const palette = db.Color
+            ->ra.Select((t) => !empty(t.ColorName) && t.ColorName != 'none' && t.ColorName != 'fg' && t.ColorName != 'bg')
+            ->ra.SortBy('ColorName')
+
+          sourceComments->add(printf('%sBackground: %s', commentSymbol, background))
+          sourceComments->add(commentSymbol)
+          sourceComments += map(split(
+            ra.Table(palette, ['ColorName', 'GUIValue', 'Base256Value', 'Base256HexValue', 'Base16Value']),
+            "\n"), (_, v) => commentSymbol .. v)
+          sourceComments->add('')
+        endif
+      endfor
+    endif
+
+    return sourceComments + [
       printf('%s vim: et ts=8 sw=%s sts=%s',
         this._comment,
         this._shiftwidth,

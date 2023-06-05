@@ -10,6 +10,7 @@ Maintainer:    Myself <myself@somewhere.org>
 URL:           https://me.org
 Description:   Template for a colorscheme with dark and light variants
 License:       Public domain
+Options:       backend=vim9 palette=true
 
 Include: _help.colortemplate
 

@@ -6,8 +6,8 @@ import 'libparser.vim'
 import '../../autoload/v3/parser.vim' as colortemplateParser
 import '../../autoload/v3/colorscheme.vim' as themes
 
-const Parse    = colortemplateParser.Parse
-const Result   = libparser.Result
+const Parse       = colortemplateParser.Parse
+const Result      = libparser.Result
 const Colorscheme = themes.Colorscheme
 
 
@@ -411,6 +411,19 @@ def Test_PS_Lookahead()
 
   assert_equal('', result.label)
   assert_true(result.success)
+enddef
+
+def Test_PS_UnicodeMetadata()
+  const template =<< trim END
+    Full name: àèì ėęčž 🚀 Scheme®
+    Background: dark
+    helpVim   -> Title
+  END
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_true(result.success)
+  assert_equal('àèì ėęčž 🚀 Scheme®', theme.fullname)
+  assert_equal('', result.label)
 enddef
 
 tt.Run('_PS_')

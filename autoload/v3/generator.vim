@@ -228,7 +228,7 @@ export class Generator
 
 
     if theme.options.palette
-      const commentSymbol = theme.options.backend == 'legacy' ? '" ' : '# '
+      const commentSymbol = theme.options.backend == 'legacy' ? '"' : '#'
 
       for background in ['dark', 'light']
         if theme.HasBackground(background)
@@ -237,11 +237,11 @@ export class Generator
             ->ra.Select((t) => !empty(t.ColorName) && t.ColorName != 'none' && t.ColorName != 'fg' && t.ColorName != 'bg')
             ->ra.SortBy('ColorName')
 
-          sourceComments->add(printf('%sBackground: %s', commentSymbol, background))
+          sourceComments->add(printf('%s Background: %s', commentSymbol, background))
           sourceComments->add(commentSymbol)
           sourceComments += map(split(
             ra.Table(palette, ['ColorName', 'GUIValue', 'Base256Value', 'Base256HexValue', 'Base16Value']),
-            "\n"), (_, v) => commentSymbol .. v)
+            "\n"), (_, v) => commentSymbol .. ' ' .. v)
           sourceComments->add('')
         endif
       endfor

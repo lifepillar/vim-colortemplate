@@ -225,7 +225,11 @@ export class Generator
   def Footer(): list<string>
     return [
       '',
-      printf('%s vim: nowrap et sw=%s', this._comment, this._shiftwidth)
+      printf('%s vim: et ts=8 sw=%s sts=%s',
+        this._comment,
+        this._shiftwidth,
+        this._shiftwidth
+      )
     ]
   enddef
 

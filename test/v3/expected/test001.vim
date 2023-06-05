@@ -12,4 +12,4 @@ g:terminal_ansi_colors = []
 
 hi Normal guifg=#fafafa guibg=#333333 guisp=NONE gui=NONE
 
-# vim: nowrap et sw=2
+# vim: et ts=8 sw=2 sts=2

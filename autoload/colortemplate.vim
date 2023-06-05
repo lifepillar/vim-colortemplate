@@ -1355,8 +1355,8 @@ fun! s:token.next() dict
     let self.kind = 'EOL'
     let self.spos = len(s:getl()) - 1 " For correct error location
     let self.pos = len(s:getl()) " Makes next() at eol idempotent
-  elseif l:char =~? '\m\a'
-    let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '\w\+', self.pos - 1)
+  elseif l:char =~? '\m\a\|@'
+    let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '@\?\w\+\(\.\w\+\)*', self.pos - 1)
     let self.kind = 'WORD'
   elseif l:char =~# '\m[0-9]'
     let [self.value, self.spos, self.pos] = matchstrpos(s:getl(), '\d\+', self.pos - 1)
@@ -2382,7 +2382,7 @@ fun! s:finish_endif(bufnr)
 endf
 
 fun! s:print_footer(bufnr)
-  call s:put(a:bufnr, s:getopt('use_tabs') ? '" vim: noet ts=8 sw=8 sts=8' : '" vim: et sw=2 sts=2')
+  call s:put(a:bufnr, s:getopt('use_tabs') ? '" vim: noet ts=8 sw=8 sts=8' : '" vim: et ts=8 sw=2 sts=2')
 endf
 
 " In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of

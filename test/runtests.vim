@@ -1104,6 +1104,10 @@ fun! Test_CT_backward_compatible_option()
   call s:assert_build('test89')
 endf
 
+fun! Test_CT_neovim_scoped_group_name()
+  call s:assert_build('test90')
+endf
+
 "
 " Runner!
 "

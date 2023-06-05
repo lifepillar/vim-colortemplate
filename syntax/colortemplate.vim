@@ -12,6 +12,7 @@ syn case    match
 syn match   colortemplateAttrs        "\<\%(te\?r\?m\?\|gu\?i\?\)=\S\+" contains=colortemplateAttr,colortemplateSpecial
 syn match   colortemplateGuisp        "\<\%(guisp\|sp\?\)="
 syn match   colortemplateTermCode     "\<st\%(art\|op\)="
+syn match   colortemplateHiGroup      "@\w\+\%(\.\w\+\)*"
 syn match   colortemplateHiGroup      "\<Conceal\>"
 syn match   colortemplateHiGroup      "\<Include\>"
 syn match   colortemplateHiGroup      "\<Terminal\>"

@@ -44,4 +44,4 @@ if s:t_Co >= 8
   finish
 endif
 
-" vim: et sw=2 sts=2
+" vim: et ts=8 sw=2 sts=2

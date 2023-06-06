@@ -18,4 +18,4 @@ else " A comment
   hi Normal guifg=#000000 guibg=#000000 gui=NONE cterm=NONE
 endif " end some condition (255)
 
-" vim: et sw=2 sts=2
+" vim: et ts=8 sw=2 sts=2

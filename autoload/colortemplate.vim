@@ -692,7 +692,7 @@ fun! s:supports_only_neovim()
 endf
 
 fun! s:set_supports_neovim(val)
-  if a:val =~ '\my\%[es]|1'
+  if a:val =~ '\my\%[es]\|1'
     let s:supports_neovim = 1
   elseif a:val =~ '\monly'
     let s:supports_neovim = 2

@@ -1,5 +1,5 @@
 " vim: foldmethod=marker nowrap et ts=2 sw=2
-let s:VERSION = '2.2.1'
+let s:VERSION = '2.2.3'
 " Informal grammar {{{
 " <Template>                  ::= <Line>*
 " <Line>                      ::= <EmptyLine> | <Comment> | <KeyValuePair> | <HiGroupDef> |
@@ -684,11 +684,21 @@ fun! s:info_keys_regex()
 endf
 
 fun! s:supports_neovim()
-  return s:supports_neovim
+  return s:supports_neovim > 0
 endf
 
-fun! s:set_supports_neovim()
-  let s:supports_neovim = 1
+fun! s:supports_only_neovim()
+  return s:supports_neovim == 2
+endf
+
+fun! s:set_supports_neovim(val)
+  if a:val =~ '\m^\%(y\%[es]\|1\)$'
+    let s:supports_neovim = 1
+  elseif a:val == 'only'
+    let s:supports_neovim = 2
+  else
+    let s:supports_neovim = 0
+  endif
 endf
 
 fun! s:uses_italics()
@@ -965,11 +975,17 @@ fun! s:add_italic_item(variant, section, item)
 endf
 
 fun! s:global_preamble()
-  return s:data['global']['preamble']
-        \ + (s:supports_neovim() && !empty(s:nvim['global']['preamble'])
-        \   ? [['raw', "if has('nvim')"]] + s:nvim['global']['preamble'] + [['raw', 'endif']]
-        \   : []
-        \   )
+  let l:preamble = s:data['global']['preamble']
+
+  if s:supports_neovim() && !empty(s:nvim['global']['preamble'])
+    if s:supports_only_neovim()
+      let l:preamble += s:nvim['global']['preamble']
+    else
+      let l:preamble += [['raw', "if has('nvim')"]] + s:nvim['global']['preamble'] + [['raw', 'endif']]
+    endif
+  endif
+
+  return l:preamble
 endf
 
 " Add italics definitions accumulated so far to the colorscheme at the current point
@@ -987,9 +1003,17 @@ fun! s:flush_neovim(variant, section)
   if !s:supports_neovim() || empty(s:nvim[a:variant][a:section])
     return
   endif
-  call s:add_raw_item(a:variant, a:section,  "if has('nvim')")
+
+  if !s:supports_only_neovim()
+    call s:add_raw_item(a:variant, a:section,  "if has('nvim')")
+  endif
+
   call extend(s:data[a:variant][a:section], s:nvim[a:variant][a:section])
-  call s:add_raw_item(a:variant, a:section, 'endif')
+
+  if !s:supports_only_neovim()
+    call s:add_raw_item(a:variant, a:section, 'endif')
+  endif
+
   let s:nvim[a:variant][a:section] = []
 endf
 
@@ -1818,10 +1842,11 @@ fun! s:parse_key_value_pair()
   elseif l:key ==# 'termcolors'
     call s:parse_term_colors()
   elseif l:key ==# 'neovim'
-    if s:token.next().value !~# '\m^y\%[es]\|n\%[o]\|1\|0$'
-      throw "Neovim key can only be 'yes' or 'no'"
+    let l:val = s:token.next().value
+    if l:val !~# '\m^y\%[es]\|n\%[o]\|only\|1\|0$'
+      throw "Neovim key can only be 'yes', 'no' or 'only'"
     endif
-    call s:set_supports_neovim()
+    call s:set_supports_neovim(l:val)
   elseif l:key ==# 'colortemplateoptions'
     call s:parse_colortemplate_options()
   else " Assume that the value is a path and may contain any characters
@@ -2370,13 +2395,19 @@ fun! s:print_header(bufnr)
           \ "let s:t_Co = has('gui_running') ? -1 : get(g:, '%s_t_Co', get(g:, 't_Co', exists('&t_Co') ? +&t_Co : 0))", l:prefix
           \ ))
   else
-    call s:put(a:bufnr,   "let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)")
+    call s:put(a:bufnr, "let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)")
   endif
   if s:uses_italics()
-    let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
-    if s:supports_neovim()
-      let l:itcheck .= " || has('nvim')"
+    if s:supports_only_neovim()
+      let l:itcheck =  printf("let s:italics = get(g:, '%s_italics', 1)", s:info['optionprefix'])
+    else
+      let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
+
+      if s:supports_neovim()
+        let l:itcheck .= " || has('nvim')"
+      endif
     endif
+
     call s:put(a:bufnr, l:itcheck)
   endif
 endf
@@ -2397,6 +2428,10 @@ endf
 " which had an example using color 234.
 " See https://github.com/lifepillar/vim-colortemplate/issues/13.
 fun! s:check_bug_bg234(bufnr, bg, item, ncols)
+  if s:supports_only_neovim()
+    return
+  endif
+
   if s:is_higroup_type(a:item) && s:hi_name(s:item_value(a:item)) ==? 'Normal'
     let l:v = s:item_value(a:item)
     if a:bg ==# 'dark'
@@ -2438,23 +2473,38 @@ fun! s:print_terminal_colors(bufnr, variant, section)
   if !s:is_gui(a:variant) || len(s:term_colors(a:section)) != 16
     return
   endif
+
   if a:section !=# 'preamble' && len(s:term_colors('preamble')) == 16
     " Already added in the preamble
     return
   endif
+
   let l:tc = s:term_colors(a:section)
-  let l:col0_15 = join(map(copy(l:tc), { _,c -> "'" .. s:guicol(c, a:section) .. "'" }), ', ')
-  call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
-  call s:put(a:bufnr, '  let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
-  call s:put(a:bufnr, "endif")
+
+  if !s:supports_only_neovim()
+    let l:col0_15 = join(map(copy(l:tc), { _,c -> "'" .. s:guicol(c, a:section) .. "'" }), ', ')
+    call s:put(a:bufnr, "if (has('termguicolors') && &termguicolors) || has('gui_running')")
+    call s:put(a:bufnr, '  let g:terminal_ansi_colors = [' .. l:col0_15 .. ']')
+    call s:put(a:bufnr, "endif")
+  endif
+
   if s:supports_neovim()
     let l:n = 0
-    call s:put(a:bufnr, "if has('nvim')")
+
+    if !s:supports_only_neovim()
+      call s:put(a:bufnr, "if has('nvim')")
+    endif
+
     for l:color in l:tc
       call s:put(a:bufnr, "let g:terminal_color_".string(l:n)." = '".s:guicol(l:color, a:section)."'")
       let l:n += 1
     endfor
-    call s:put(a:bufnr, 'endif')
+
+    if s:supports_only_neovim()
+      call s:put(a:bufnr, '')
+    else
+      call s:put(a:bufnr, 'endif')
+    endif
   endif
 endf
 

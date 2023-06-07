@@ -2398,10 +2398,16 @@ fun! s:print_header(bufnr)
     call s:put(a:bufnr, "let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)")
   endif
   if s:uses_italics()
-    let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
-    if s:supports_neovim() && (!s:supports_only_neovim())
-      let l:itcheck .= " || has('nvim')"
+    if s:supports_only_neovim()
+      let l:itcheck =  printf("let s:italics = get(g:, '%s_italics', 1)", s:info['optionprefix'])
+    else
+      let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
+
+      if s:supports_neovim()
+        let l:itcheck .= " || has('nvim')"
+      endif
     endif
+
     call s:put(a:bufnr, l:itcheck)
   endif
 endf

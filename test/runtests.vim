@@ -1112,6 +1112,11 @@ fun! Test_CT_supports_only_neovim()
   call s:assert_build('test91')
 endf
 
+fun! Test_CT_supports_only_neovim_italics()
+  call s:assert_build('test92')
+endf
+
+
 "
 " Runner!
 "

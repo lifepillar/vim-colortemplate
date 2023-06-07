@@ -240,7 +240,8 @@ fields in shown in square brackets. All the fields should be self-descriptive
 except for the last two.
 
 When `Neovim` is set to `yes` or `1` then additional code is generated to
-support Neovim.
+support Neovim. When `Neovim` is set to `only` the code is optimized for
+Neovim only, but it may not work correctly in Vim.
 
 `Colortemplate Options` allows you to set some options for the current
 template, overriding the corresponding global options (see

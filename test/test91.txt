@@ -1,0 +1,20 @@
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Neovim: only
+Full name:Test 91
+Short name:test91
+Author:y
+Color:black rgb(0,0,0) 16 Black
+Color:white #ffffff 255 White
+
+Term colors: black black black black black black black black
+Term colors: white white white white white white white white
+
+@function     -> Label
+@text.literal -> Comment
+
+Background:dark
+
+Normal white black
+
+; vim: ft=colortemplate
+

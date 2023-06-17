@@ -313,20 +313,26 @@ export class Database
   # Retrieve the relevant metadata for the given variant, including the names
   # of the attributes for the specified variant. An empty string indicates
   # that the variant does not support the corresponding attribute. For
-  # example, for the 'gui' variant, this would be:
+  # example, for the '256' variant, this would be:
   #
   #    {
-  #      Variant:   'gui',
-  #      NumColors: 16777216,
-  #      ColorAttr: 'GUIValue',
-  #      Colors:    {colname1: #111111, ..., colnameN: #nnnnnn},
-  #      Fg:        'guifg',
-  #      Bg:        'guibg',
-  #      Special:   'guisp',
-  #      Style:     'gui',
-  #      Font:      'font',
-  #      Start:     '',
-  #      Stop:      '',
+  #      Variant:    '256',
+  #      NumColors:  256,
+  #      ColorAttr:  'Base256Value',
+  #      Colors:     {colname1: '50', ..., colnameN: '253'},
+  #      Fg:         'ctermfg',
+  #      Bg:         'ctermbg',
+  #      Special:    'ctermul',
+  #      Style:      'cterm',
+  #      Font:       '',
+  #      Start:      '',
+  #      Stop:       '',
+  #      GuiColors:  {
+  #                     Colors:  {colname1: #111111, ..., colnameN: #nnnnnn},
+  #                     Fg:      'guifg',
+  #                     Bg:      'guibg',
+  #                     Special: 'guisp',
+  #                  }
   #    }
   def GetVariantMetadata(variant: string): dict<any>
     const numColors = this.Variant.Lookup(['Variant'], [variant]).NumColors
@@ -336,6 +342,12 @@ export class Database
       NumColors: numColors,
       ColorAttr: colorAttr,
       Colors:    this.Color->DictTransform((t) => ({[t.ColorName]: t[colorAttr]}), true),
+      GuiColors: {
+        Colors: this.Color->DictTransform((t) => ({[t.ColorName]: t['GUIValue']}), true),
+        Fg:      'guifg',
+        Bg:      'guibg',
+        Special: 'guisp',
+      }
     }
 
     for key in ['Fg', 'Bg', 'Special', 'Style', 'Font', 'Start', 'Stop']

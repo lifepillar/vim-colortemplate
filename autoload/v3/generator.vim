@@ -68,7 +68,17 @@ def AttributesToString(t: dict<any>, meta: dict<any>, termgui: bool): list<strin
   # has a value for it, map the color and add it to the definition
   for key in ['Fg', 'Bg', 'Special']
     if !empty(meta[key]) && !empty(t[key])
+      # Special treatment to support termguicolors:
+      if termgui
+        const colorValue: string = meta.GuiColors.Colors[t[key]]
+
+        if !empty(colorValue)
+          attributes->add(meta.GuiColors[key] .. '=' .. colorValue)
+        endif
+      endif
+
       const colorValue: string = meta.Colors[t[key]]
+
       if !empty(colorValue) && (meta[key] != 'ctermul' || colorValue != 'NONE')
         attributes->add(meta[key] .. '=' .. colorValue)
       endif
@@ -78,10 +88,6 @@ def AttributesToString(t: dict<any>, meta: dict<any>, termgui: bool): list<strin
   # Do the same for the other (non-color) attributes (no mapping needed)
   if !empty(meta.Style) && !empty(t.Style)
     attributes->add(meta.Style .. '=' .. t.Style)
-
-    if termgui
-      attributes->add('cterm=' .. t.Style)
-    endif
   endif
 
   for key in ['Font', 'Start', 'Stop']
@@ -93,7 +99,7 @@ def AttributesToString(t: dict<any>, meta: dict<any>, termgui: bool): list<strin
   return attributes
 enddef
 
-def BaseGroupToString(t: dict<any>, meta: dict<any>, indent = 0, termgui: bool = false): string
+def BaseGroupToString(t: dict<any>, meta: dict<any>, indent = 0, termgui = false): string
   const space = repeat(' ', indent)
   const attrs = AttributesToString(t, meta, termgui)
 
@@ -111,12 +117,12 @@ enddef
 # t       A tuple with enough information to generate a highlight group
 #         definition (for example, a tuple from Database.BaseGroup).
 # meta    Variant metadata from Database.GetVariantMetadata()
-def HiGroupToString(t: dict<any>, meta: dict<any>, indent = 0): string
+def HiGroupToString(t: dict<any>, meta: dict<any>, indent = 0, termgui = false): string
   if t->has_key('TargetGroup') && !empty(t.TargetGroup)
     return LinkedGroupToString(t, indent)
   endif
 
-  return BaseGroupToString(t, meta, indent)
+  return BaseGroupToString(t, meta, indent, termgui)
 enddef
 
 def AddMeta(
@@ -380,7 +386,7 @@ export class Generator
           discrValue = t.DiscrValue
           defs->add(printf("%selseif %s%s == %s", space, this._varPrefix, discrName, discrValue))
         endif
-        const overridingDef = HiGroupToString(t, variantMeta, indent + this._shiftwidth)
+        const overridingDef = HiGroupToString(t, variantMeta, indent + this._shiftwidth, variantMeta.Variant != 'gui')
         defs->add(overridingDef)
       endfor
 

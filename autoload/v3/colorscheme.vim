@@ -204,15 +204,15 @@ export class Database
   enddef
 
   def Color16(name: string): string
-    return this.GetColor(t, '16')
+    return this.GetColor(name, '16')
   enddef
 
   def Color256(name: string): string
-    return this.GetColor(t, '256')
+    return this.GetColor(name, '256')
   enddef
 
   def ColorGui(name: string): string
-    return this.GetColor(t, 'gui')
+    return this.GetColor(name, 'gui')
   enddef
 
   def InsertDefaultLinkedGroup(

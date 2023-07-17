@@ -1,4 +1,4 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2023 May 01
+*libtinytest.txt*	For Vim version 9.0	Last change: 2023 Jul 17
 
 Note: Vim 9.0.1501 or later is recommended.
 
@@ -42,6 +42,27 @@ afterwards:
 	const success = tt.Run()
 <
 The output always appears in a new scratch buffer.
+
+Obviously, all the names that are used in tests must be visible to the tests.
+Names that are exported by the script to be tested can be imported in the test
+script. Sometimes, however, it is convenient to be able to test the private,
+not exported, components of a script. To do so, the tests must be inlined in
+the script itself. A variation of the following structure can serve the
+purpose:
+>
+	vim9script
+
+	# Here goes the code to be tested
+
+	if !get(g:, 'test_mode', false)
+	  finish
+	endif
+
+	import 'libtinytest.vim' as tt
+
+	# Write the tests here
+<
+Then, to run the tests just set `g:test_mode` to `true` and source the script.
 
 Functions ~
 

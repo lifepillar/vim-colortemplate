@@ -402,15 +402,12 @@ export def CtermColorNumber(name: string, t_Co: number): number
     return COLORMAP_NR8[name] + (g:colortemplate#ansi_style ? 8 : 0)
   endif
 
-  throw printf('CtermColorNumber: t_Co must be 8 or 16. Got: %d', t_Co)
+  throw $'CtermColorNumber: t_Co must be 8 or 16. Got: {t_Co}'
 enddef
 
 export def Xterm2Hex(num: number): string
   if num < 16 || num > 255
-    throw printf(
-      'Xterm color index out of range: %d (must be between 16 and 255)',
-      num
-    )
+    throw $'Xterm color index out of range: {num} (must be between 16 and 255)'
   endif
   return XTERM256_COLORS[num - 16]
 enddef
@@ -876,9 +873,7 @@ export def Neighbours(
   endif
 
   if k > N
-    throw printf(
-      'Requested too many neighbours: k=%d, but there are only %d candidates', k, N
-    )
+    throw $'Requested too many neighbours: k={k}, but there are only {N} candidates'
   endif
 
   var neighbours: list<dict<any>> = []

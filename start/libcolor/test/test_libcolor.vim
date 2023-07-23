@@ -8,6 +8,8 @@ const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
 const EPS                  = 0.000001
+const Cterm2Hex            = libcolor.Cterm2Hex
+const CtermName2Hex        = libcolor.CtermName2Hex
 const Xterm2Hex            = libcolor.Xterm2Hex
 const Xterm2Rgb            = libcolor.Xterm2Rgb
 const Rgb2Hex              = libcolor.Rgb2Hex
@@ -26,6 +28,21 @@ const Approximate          = libcolor.Approximate
 const ColorsWithin         = libcolor.ColorsWithin
 const Neighbours           = libcolor.Neighbours
 
+def In(v: any, items: list<any>): bool
+  return index(items, v) != -1
+enddef
+
+def Test_Color_Cterm2Hex()
+  for i in range(16)
+    assert_equal(libcolor.ANSI_HEX[i], Cterm2Hex(i))
+  endfor
+enddef
+
+def Test_Color_CtermName2Hex()
+  for name in libcolor.ANSI_COLORS
+    assert_true(CtermName2Hex(name)->In(libcolor.ANSI_HEX))
+  endfor
+enddef
 
 def Test_Color_Xterm2Hex()
   assert_equal('#000000', Xterm2Hex(16))

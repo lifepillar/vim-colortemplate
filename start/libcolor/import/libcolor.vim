@@ -328,66 +328,67 @@ const XTERM_CIELAB = [
   [87.050879, 0.004673,    -0.009246],
   [90.58892,  0.004834,    -0.009564],
   [94.097834, 0.004993,    -0.009879],
-       ]
+]
 
-export const COLORMAP_NR8 = {
-  'black':        0,
-  'darkblue':     4,
-  'darkgreen':    2,
-  'darkcyan':     6,
-  'darkred':      1,
-  'darkmagenta':  5,
-  'brown':        3,
-  'darkyellow':   3,
-  'lightgray':    7,
-  'lightgrey':    7,
-  'gray':         7,
-  'grey':         7,
-  'darkgray':     0,
-  'darkgrey':     0,
-  'blue':         4,
-  'lightblue':    4,
-  'green':        2,
-  'lightgreen':   2,
-  'cyan':         6,
-  'lightcyan':    6,
-  'red':          1,
-  'lightred':     1,
-  'magenta':      5,
-  'lightmagenta': 5,
-  'yellow':       3,
-  'lightyellow':  3,
-  'white':        7,
-}
-
-export const COLORMAP_NR16 = {
-  'black':        0,
-  'darkblue':     1,
-  'darkgreen':    2,
-  'darkcyan':     3,
-  'darkred':      4,
-  'darkmagenta':  5,
-  'brown':        6,
-  'darkyellow':   6,
-  'lightgray':    7,
-  'lightgrey':    7,
-  'gray':         7,
-  'grey':         7,
-  'darkgray':     8,
-  'darkgrey':     8,
-  'blue':         9,
-  'lightblue':    9,
-  'green':        10,
-  'lightgreen':   10,
-  'cyan':         11,
-  'lightcyan':    11,
-  'red':          12,
-  'lightred':     12,
-  'magenta':      13,
-  'lightmagenta': 13,
-  'yellow':       14,
-  'lightyellow':  14,
-  'white':        15,
+export const CTERM_COLOR_MAP = {
+  8: {
+    'black':        0,
+    'darkblue':     4,
+    'darkgreen':    2,
+    'darkcyan':     6,
+    'darkred':      1,
+    'darkmagenta':  5,
+    'brown':        3,
+    'darkyellow':   3,
+    'lightgray':    7,
+    'lightgrey':    7,
+    'gray':         7,
+    'grey':         7,
+    'darkgray':     0,
+    'darkgrey':     0,
+    'blue':         4,
+    'lightblue':    4,
+    'green':        2,
+    'lightgreen':   2,
+    'cyan':         6,
+    'lightcyan':    6,
+    'red':          1,
+    'lightred':     1,
+    'magenta':      5,
+    'lightmagenta': 5,
+    'yellow':       3,
+    'lightyellow':  3,
+    'white':        7,
+  },
+  16: {
+    'black':        0,
+    'darkblue':     1,
+    'darkgreen':    2,
+    'darkcyan':     3,
+    'darkred':      4,
+    'darkmagenta':  5,
+    'brown':        6,
+    'darkyellow':   6,
+    'lightgray':    7,
+    'lightgrey':    7,
+    'gray':         7,
+    'grey':         7,
+    'darkgray':     8,
+    'darkgrey':     8,
+    'blue':         9,
+    'lightblue':    9,
+    'green':        10,
+    'lightgreen':   10,
+    'cyan':         11,
+    'lightcyan':    11,
+    'red':          12,
+    'lightred':     12,
+    'magenta':      13,
+    'lightmagenta': 13,
+    'yellow':       14,
+    'lightyellow':  14,
+    'white':        15,
+  }
 }
 # }}}
 
@@ -397,12 +398,22 @@ export const COLORMAP_NR16 = {
 # t_Co must be 8 or 16. See :help cterm-colors
 export def CtermColorNumber(name: string, t_Co: number): number
   if t_Co == 16
-    return COLORMAP_NR16[name]
+    return CTERM_COLOR_MAP[t_Co][name]
   elseif t_Co == 8
-    return COLORMAP_NR8[name] + (g:colortemplate#ansi_style ? 8 : 0)
+    return CTERM_COLOR_MAP[t_Co][name] + (g:colortemplate#ansi_style ? 8 : 0)
   endif
 
   throw $'CtermColorNumber: t_Co must be 8 or 16. Got: {t_Co}'
+enddef
+
+export def Cterm2Hex(colorNumber: number): string
+  return ANSI_HEX[colorNumber]
+enddef
+
+# Return a conventional hex value for the given cterm color name
+export def CtermName2Hex(name: string): string
+  const colorNumber = CtermColorNumber(name, 16)
+  return Cterm2Hex(colorNumber)
 enddef
 
 export def Xterm2Hex(num: number): string

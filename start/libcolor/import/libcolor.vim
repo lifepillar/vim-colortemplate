@@ -393,27 +393,44 @@ export const CTERM_COLOR_MAP = {
 # }}}
 
 # Functions {{{
-
-# Returns the number corresponding to the given color name.
-# t_Co must be 8 or 16. See :help cterm-colors
-export def CtermColorNumber(name: string, t_Co: number): number
-  if t_Co == 16
-    return CTERM_COLOR_MAP[t_Co][name]
-  elseif t_Co == 8
-    return CTERM_COLOR_MAP[t_Co][name] + (g:colortemplate#ansi_style ? 8 : 0)
+export def ColorNumber2Hex(num: number): string
+  if num < 16
+    return Cterm2Hex(num)
   endif
-
-  throw $'CtermColorNumber: t_Co must be 8 or 16. Got: {t_Co}'
+  return Xterm2Hex(num)
 enddef
 
-export def Cterm2Hex(colorNumber: number): string
-  return ANSI_HEX[colorNumber]
+# Returns the number corresponding to the given color name.
+# See :help cterm-colors
+export def CtermColorNumber(name: string, t_Co: number): number
+  if t_Co != 16 && t_Co != 8
+    throw $'CtermColorNumber: t_Co must be 8 or 16. Got: {t_Co}'
+  endif
+
+  const num = get(CTERM_COLOR_MAP[t_Co], name, -1)
+
+  if num < 0
+    throw $"Invalid color name: '{name}'"
+  endif
+
+  if t_Co == 16
+    return num
+  endif
+
+  return num + (g:colortemplate#ansi_style ? 8 : 0)
+enddef
+
+export def Cterm2Hex(num: number): string
+  if num < 0 || num > 15
+    throw $'Cterm color index out of range: {num} (must be between 0 and 15)'
+  endif
+  return ANSI_HEX[num]
 enddef
 
 # Return a conventional hex value for the given cterm color name
 export def CtermName2Hex(name: string): string
-  const colorNumber = CtermColorNumber(name, 16)
-  return Cterm2Hex(colorNumber)
+  const num = CtermColorNumber(name, 16)
+  return Cterm2Hex(num)
 enddef
 
 export def Xterm2Hex(num: number): string

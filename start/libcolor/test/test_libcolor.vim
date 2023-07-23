@@ -8,6 +8,8 @@ const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
 const EPS                  = 0.000001
+const AssertFails          = tt.AssertFails
+const ColorNumber2Hex      = libcolor.ColorNumber2Hex
 const Cterm2Hex            = libcolor.Cterm2Hex
 const CtermName2Hex        = libcolor.CtermName2Hex
 const Xterm2Hex            = libcolor.Xterm2Hex
@@ -42,6 +44,22 @@ def Test_Color_CtermName2Hex()
   for name in libcolor.ANSI_COLORS
     assert_true(CtermName2Hex(name)->In(libcolor.ANSI_HEX))
   endfor
+enddef
+
+def Test_Color_ColorNumber2Hex()
+  assert_equal(libcolor.ANSI_HEX[0],  ColorNumber2Hex(0))
+  assert_equal(libcolor.ANSI_HEX[9],  ColorNumber2Hex(9))
+  assert_equal(libcolor.ANSI_HEX[15], ColorNumber2Hex(15))
+  assert_equal('#000000',             ColorNumber2Hex(16))
+  assert_equal('#ffffff',             ColorNumber2Hex(231))
+
+  AssertFails(() => {
+    ColorNumber2Hex(256)
+  }, 'out of range')
+
+  AssertFails(() => {
+    ColorNumber2Hex(-1)
+  }, 'out of range')
 enddef
 
 def Test_Color_Xterm2Hex()

@@ -300,36 +300,6 @@ class UniqueIndex
     return get(this._index, string(keyValue), KEY_NOT_FOUND)
   enddef
 endclass
-
-class NonUniqueIndex
-  this.key: list<string> = []
-  this._index: dict<list<dict<any>>> = {}
-
-  def GetRawIndex(): dict<list<dict<any>>>
-    return this._index
-  enddef
-
-  def IsEmpty(): bool
-    return empty(this._index)
-  enddef
-
-  def Add(t: dict<any>)
-    const keyValues = string(Values(t, this.key))
-    if !this._index->has_key(keyValues)
-      this._index[keyValues] = []
-    endif
-    this._index[keyValues]->add(t)
-  enddef
-
-  def Remove(t: dict<any>)
-    const keyValues = string(Values(t, this.key))
-    filter(get(this._index, keyValues, []), (u) => t == u)
-  enddef
-
-  def Search(keyValue: list<any>): list<dict<any>>
-    return get(this._index, string(keyValue), [])
-  enddef
-endclass
 # }}}
 
 # Relations {{{

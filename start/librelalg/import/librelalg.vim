@@ -300,6 +300,36 @@ class UniqueIndex
     return get(this._index, string(keyValue), KEY_NOT_FOUND)
   enddef
 endclass
+
+class NonUniqueIndex
+  this.key: list<string> = []
+  this._index: dict<list<dict<any>>> = {}
+
+  def GetRawIndex(): dict<list<dict<any>>>
+    return this._index
+  enddef
+
+  def IsEmpty(): bool
+    return empty(this._index)
+  enddef
+
+  def Add(t: dict<any>)
+    const keyValues = string(Values(t, this.key))
+    if !this._index->has_key(keyValues)
+      this._index[keyValues] = []
+    endif
+    this._index[keyValues]->add(t)
+  enddef
+
+  def Remove(t: dict<any>)
+    const keyValues = string(Values(t, this.key))
+    filter(get(this._index, keyValues, []), (u) => t == u)
+  enddef
+
+  def Search(keyValue: list<any>): list<dict<any>>
+    return get(this._index, string(keyValue), [])
+  enddef
+endclass
 # }}}
 
 # Relations {{{
@@ -315,16 +345,16 @@ export class Rel
   this._indexes:      dict<UniqueIndex> = {}
   this._constraints:  dict<list<func(dict<any>): void>> = {'I': [], 'U': [], 'D': []}
 
-  def new(this.name, this.schema, keys: any, checkType = true)
+  def new(this.name, this.schema, relKeys: any, checkType = true)
     if checkType
       this.TypeCheck_()
     endif
 
-    if empty(keys)
+    if empty(relKeys)
       throw ErrNoKey(this.name)
     endif
 
-    const keys_: list<list<string>> = ListifyKeys(keys)
+    const keys_: list<list<string>> = ListifyKeys(relKeys)
 
     this.attributes = keys(this.schema)->sort()
     this.keyAttributes = flattennew(keys_)->sort()->uniq()
@@ -920,6 +950,7 @@ export def EquiJoinPred(
   }
 enddef
 
+# TODO: build index on the fly
 export def EquiJoin(
     Arg1: any,
     Arg2: any,

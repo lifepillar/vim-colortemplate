@@ -1208,7 +1208,7 @@ enddef
 export def GroupBy(
     Arg: any,
     groupBy: any,
-    AggregateFn: func(...any): any,
+    AggregateFn: func(...list<any>): any,
     aggrName = 'aggrValue'
 ): func(func(dict<any>))
   var   fid:      dict<list<dict<any>>> = PartitionBy(Arg, groupBy)
@@ -1343,9 +1343,9 @@ enddef
 
 export const StringAgg = Curry(StringAgg_)
 
-export def Count(Arg: any): number
+export def Count(...ArgList: list<any>): number
   var count = 0
-  const Cont = From(Arg)
+  const Cont = From(ArgList[0])
 
   Cont((t) => {
     ++count

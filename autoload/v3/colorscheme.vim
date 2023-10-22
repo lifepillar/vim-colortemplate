@@ -64,7 +64,7 @@ export class Database
         \   {Variant:       '0', NumColors:        0},
         \ ])
 
-  this.VariantAttribute = Rel.new("Variant's Attribute", {
+  this.VariantAttribute: Rel = Rel.new("Variant's Attribute", {
         \   Variant:  Str,
         \   AttrType: Str,
         \   AttrKey:  Str,
@@ -96,7 +96,7 @@ export class Database
         \   {Variant:   '0',     AttrType: 'Stop',    AttrKey: 'stop'   },
         \ ])
 
-  this.Color = Rel.new('Color', {
+  this.Color: Rel = Rel.new('Color', {
         \   ColorName:       Str,
         \   GUIValue:        Str,
         \   Base256Value:    Str,
@@ -109,7 +109,7 @@ export class Database
         \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg', }
         \ ])
 
-  this.Discriminator = Rel.new('Discriminator', {
+  this.Discriminator: Rel = Rel.new('Discriminator', {
         \ DiscrName:  Str,
         \ Definition: Str,
         \ DiscrNum:   Int,
@@ -119,20 +119,20 @@ export class Database
         \   {DiscrName: '', Definition: '', DiscrNum: 0},
         \ ])
 
-  this.HiGroup = Rel.new('Highlight Group', {
+  this.HiGroup: Rel = Rel.new('Highlight Group', {
         \   HiGroupName: Str,
         \   DiscrName:   Str,
         \   IsLinked:    Bool,
         \ },
         \ 'HiGroupName')
 
-  this.LinkedGroup = Rel.new('Linked Group', {
+  this.LinkedGroup: Rel = Rel.new('Linked Group', {
         \   HiGroupName: Str,
         \   TargetGroup: Str,
         \ },
         \ ['HiGroupName'])
 
-  this.BaseGroup = Rel.new('Base Group', {
+  this.BaseGroup: Rel = Rel.new('Base Group', {
         \   HiGroupName: Str,
         \   Fg:          Str,
         \   Bg:          Str,
@@ -144,7 +144,7 @@ export class Database
         \ },
         \ ['HiGroupName'])
 
-  this.HiGroupOverride = Rel.new('Hi Group Override', {
+  this.HiGroupOverride: Rel = Rel.new('Hi Group Override', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
@@ -152,7 +152,7 @@ export class Database
         \ },
         \ ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.LinkedGroupOverride = Rel.new('Linked Group Override', {
+  this.LinkedGroupOverride: Rel = Rel.new('Linked Group Override', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,
@@ -160,7 +160,7 @@ export class Database
         \ },
         \ ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.BaseGroupOverride = Rel.new('Base Group Override', {
+  this.BaseGroupOverride: Rel = Rel.new('Base Group Override', {
         \   HiGroupName: Str,
         \   Variant:     Str,
         \   DiscrValue:  Str,

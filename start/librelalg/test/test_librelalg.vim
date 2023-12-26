@@ -9,6 +9,8 @@ import 'librelalg.vim'   as ra
 import 'libtinytest.vim' as tt
 
 # Aliases {{{
+type Rel = ra.Rel
+
 const AssertFails          = tt.AssertFails
 const AntiEquiJoin         = ra.AntiEquiJoin
 const AntiJoin             = ra.AntiJoin
@@ -49,7 +51,6 @@ const PartitionBy          = ra.PartitionBy
 const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
-const Rel                  = ra.Rel
 const RelEq                = ra.RelEq
 const Rename               = ra.Rename
 const Select               = ra.Select

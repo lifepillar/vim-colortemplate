@@ -2,7 +2,7 @@
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
-Note: Vim 9.0.1240 or later is required.
+Note: Vim 9.0.2185 or later is required.
 
 0. Quick start				|librelalg-quickstart|
 1. Tutorial				|librelalg-tutorial|

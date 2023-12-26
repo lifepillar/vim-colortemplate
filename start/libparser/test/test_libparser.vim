@@ -8,11 +8,13 @@ vim9script
 import 'libparser.vim' as parser
 import 'libtinytest.vim' as tt
 
+type Context = parser.Context
+type Result  = parser.Result
+
 const Apply        = parser.Apply
 const Blank        = parser.Blank
 const Bol          = parser.Bol
 const Call         = parser.Call
-const Context      = parser.Context
 const Eof          = parser.Eof
 const Eol          = parser.Eol
 const Eps          = parser.Eps
@@ -28,7 +30,6 @@ const OneOrMore    = parser.OneOrMore
 const Opt          = parser.Opt
 const Regex        = parser.Regex
 const RegexToken   = parser.RegexToken
-const Result       = parser.Result
 const Seq          = parser.Seq
 const Skip         = parser.Skip
 const Space        = parser.Space

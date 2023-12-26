@@ -15,10 +15,11 @@ vim9script
 
 # Context and result {{{
 export class Context
-  this.text:            string         # The text to be parsed
-  public this.index:    number    = 0  # Next position yet to be parsed
-  public this.farthest: number    = -1 # Position of farthest failure
-  public this.state:    dict<any> = {} # Arbitrary parser's state
+  var text: string # The text to be parsed
+
+  public var index:    number    = 0  # Next position yet to be parsed
+  public var farthest: number    = -1 # Position of farthest failure
+  public var state:    dict<any> = {} # Arbitrary parser's state
 
   def new(this.text, this.index = v:none)
   enddef
@@ -32,10 +33,10 @@ endclass
 export const FAIL: string = null_string  # Backtracking label
 
 export class Result
-  this.success: bool   = true
-  this.value:   any    = null
-  this.label:   string = FAIL
-  this.errpos:  number = -1
+  var success: bool   = true
+  var value:   any    = null
+  var label:   string = FAIL
+  var errpos:  number = -1
 
   def newSuccess(this.value = v:none)
     this.success = true

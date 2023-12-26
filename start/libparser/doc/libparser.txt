@@ -2,7 +2,7 @@
 
 A library to write simple parsers.
 
-Note: Vim 9.0.1321 or later is required.
+Note: Vim 9.0.2185 or later is required.
 
 0. Quick start				|libparser-quickstart|
 1. Tutorial				|libparser-tutorial|

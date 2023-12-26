@@ -972,9 +972,9 @@ enddef
 
 # Classes {{{
 export class Rgb
-  this.r:  number # 0–255
-  this.g:  number # 0–255
-  this.b:  number # 0–255
+  var r: number # 0–255
+  var g: number # 0–255
+  var b: number # 0–255
 
   def newHex(hexColor: string)
     [this.r, this.g, this.b] = Hex2Rgb(hexColor)
@@ -999,9 +999,9 @@ export class Rgb
 endclass
 
 export class Hsv
-  this.h:  number # 0–360°
-  this.s:  number # 0–100%
-  this.v:  number # 0–100%
+  var h: number # 0–360°
+  var s: number # 0–100%
+  var v: number # 0–100%
 
   def newHex(hexColor: string)
     [this.r, this.g, this.b] = Hex2Rgb(hexColor)

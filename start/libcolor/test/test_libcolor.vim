@@ -7,6 +7,9 @@ const TESTPATH = resolve(expand('<sfile>:p'))
 const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
+type Rgb = libcolor.Rgb
+type Hsv = libcolor.Hsv
+
 const EPS                  = 0.000001
 const AssertFails          = tt.AssertFails
 const ColorNumber2Hex      = libcolor.ColorNumber2Hex
@@ -21,8 +24,6 @@ const Rgb2Hsv              = libcolor.Rgb2Hsv
 const Hsv2Rgb              = libcolor.Hsv2Rgb
 const Rgb2Xyz              = libcolor.Rgb2Xyz
 const Rgb2Cielab           = libcolor.Rgb2Cielab
-const Rgb                  = libcolor.Rgb
-const Hsv                  = libcolor.Hsv
 const ColorDifference      = libcolor.ColorDifference
 const ContrastRatio        = libcolor.ContrastRatio
 const PerceptualDifference = libcolor.PerceptualDifference

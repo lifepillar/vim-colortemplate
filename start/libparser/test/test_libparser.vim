@@ -168,10 +168,10 @@ def Test_LP_Bol()
   endfor
 
   const T = TextToken(Blank)
-  const Parser = Seq(T('à'), Seq(Bol, T('b')))
+  const Parse = Seq(T('à'), Seq(Bol, T('b')))
 
   ctx = Context.new("à\rb")
-  result = Parser(ctx)
+  result = Parse(ctx)
 
   assert_true(result.success)
   assert_equal(-1, result.errpos)
@@ -488,8 +488,8 @@ def Test_LP_ParseAndMap()
   def F(L: list<string>, _: Context): number
     return len(L[2]) + 38
   enddef
-  const Parser = Seq(Text("x"), Text("yab"), Regex("u*"))
-  const result = Map(Parser, F)(ctx)
+  const Parse = Seq(Text("x"), Text("yab"), Regex("u*"))
+  const result = Map(Parse, F)(ctx)
   assert_true(result.success)
   assert_equal(42, result.value)
   assert_equal(8, ctx.index)
@@ -500,8 +500,8 @@ def Test_LP_ParseAndMapFails()
   def F(L: list<string>, _: Context): number
     return len(L[2]) + 38
   enddef
-  const Parser = Seq(Text("x"), Text("yab"), Regex('v\+'))
-  const result = Map(Parser, F)(ctx)
+  const Parse = Seq(Text("x"), Text("yab"), Regex('v\+'))
+  const result = Map(Parse, F)(ctx)
   assert_false(result.success)
   assert_true(result.label is FAIL)
   assert_equal(0, ctx.index)
@@ -510,10 +510,10 @@ enddef
 def Test_LP_MapThrows()
   var ctx = Context.new("12")
 
-  const Parser = Text("12")->Map((v, _): string => {
+  const Parse = Text("12")->Map((v, _): string => {
     throw 'Tsk'
   })
-  const result = Parser(ctx)
+  const result = Parse(ctx)
 
   assert_false(result.success)
   assert_equal('Tsk', result.label)
@@ -602,8 +602,8 @@ enddef
 def Test_LP_ParseExpectedColon001()
   var ctx = Context.new("Author=:")
   const S = Seq(OneOf(Text('Author'), Text('XYZ')), Skip(Text(':')))
-  const Parser = Many(OneOf(S, Text("Tsk")))
-  const result = Parser(ctx)
+  const Parse = Many(OneOf(S, Text("Tsk")))
+  const result = Parse(ctx)
   assert_true(result.success)
   assert_equal([], result.value)
   assert_equal(0, ctx.index)
@@ -612,8 +612,8 @@ enddef
 def Test_LP_ParseExpectedColon002()
   var ctx = Context.new("Author=:")
   const Dir = OneOf(Text('Foo'), Seq(Text('Author'), Lab(Text(':'), 'colon')))
-  const Parser = Many(OneOf(Dir, Text("Tsk")))
-  const result = Parser(ctx)
+  const Parse = Many(OneOf(Dir, Text("Tsk")))
+  const result = Parse(ctx)
   assert_false(result.success)
   assert_equal('colon', result.label)
   assert_equal(0, ctx.index)
@@ -621,8 +621,8 @@ enddef
 
 def Test_LP_ParseExpectedColon003()
   var ctx = Context.new("X:=")
-  const Parser = OneOf(Text('Y'), Seq(Text('X'), Lab(Text(':'), 'colon')))
-  const result = Parser(ctx)
+  const Parse = OneOf(Text('Y'), Seq(Text('X'), Lab(Text(':'), 'colon')))
+  const result = Parse(ctx)
   assert_true(result.success)
   assert_equal(['X', ':'], result.value)
   assert_equal(2, ctx.index)
@@ -643,15 +643,15 @@ def Test_LP_CustomTokenizer()
   const SpaceOrComment = Many(OneOf(Spaces, Comment))
   const MyToken        = Lexeme(SpaceOrComment)
   var   ctx            = Context.new("abc # XY\n ok")
-  var   Parser         = MyToken(Text("abc"))
-  var   result         = Parser(ctx)
+  var   Parse          = MyToken(Text("abc"))
+  var   result         = Parse(ctx)
   assert_true(result.success)
   assert_equal('abc', result.value)
   assert_equal(10, ctx.index)
 
   ctx    = Context.new("abc#XY")
-  Parser = MyToken(Text("abc"))
-  result = Parser(ctx)
+  Parse  = MyToken(Text("abc"))
+  result = Parse(ctx)
   assert_true(result.success)
   assert_equal('abc', result.value)
   assert_equal(6, ctx.index)
@@ -661,11 +661,11 @@ def Test_LP_Apply()
   var ctx = Context.new("12")
   ctx.state.expected = 0
 
-  const Parser = Text("12")->Apply((v, c: Context) => {
+  const Parse = Text("12")->Apply((v, c: Context) => {
     c.state.expected = 12
   })
 
-  const result = Parser(ctx)
+  const result = Parse(ctx)
 
   assert_true(result.success)
   assert_equal(null, result.value)
@@ -676,10 +676,10 @@ enddef
 def Test_LP_ApplyThrows()
   var ctx = Context.new("12")
 
-  const Parser = Text("12")->Apply((v, _) => {
+  const Parse = Text("12")->Apply((v, _) => {
     throw 'Tsk'
   })
-  const result = Parser(ctx)
+  const result = Parse(ctx)
 
   assert_false(result.success)
   assert_equal('Tsk', result.label)
@@ -691,8 +691,8 @@ def Test_LP_UnicodeText()
   const text     = expected .. "\n  endverb"
   var   ctx      = Context.new(text)
 
-  const Parser = Text(expected)
-  const result = Parser(ctx)
+  const Parse = Text(expected)
+  const result = Parse(ctx)
 
   assert_true(result.success)
   assert_equal(expected, result.value)
@@ -706,8 +706,8 @@ def Test_LP_UnicodeText2()
   const SpaceOrComment = Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
   const R              = RegexToken(SpaceOrComment)
   const VERBTEXT       = R('\_.\{-}\zeendverb')
-  const Parser         = Seq(VERBTEXT, Text('endverb'))
-  const result         = Parser(ctx)
+  const Parse          = Seq(VERBTEXT, Text('endverb'))
+  const result         = Parse(ctx)
   const expectedValue  = ["abc ▇\n  ", "endverb"]
 
   assert_equal(15, strchars(text))
@@ -728,8 +728,8 @@ def Test_LP_ComposingCharacters()
 
   const R             = RegexToken(Space)
   const Line          = R('[^\r\n]\+')
-  const Parser        = Seq(Text('X'), Text(':'), Line, Text('x'))
-  const result        = Parser(ctx)
+  const Parse         = Seq(Text('X'), Text(':'), Line, Text('x'))
+  const result        = Parse(ctx)
   const expectedValue = ['X', ':', 'ė̃', 'x']
 
   assert_true(result.success)

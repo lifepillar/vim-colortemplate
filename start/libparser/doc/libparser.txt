@@ -1,4 +1,4 @@
-*libparser.txt*	For Vim version 9.0	Last change: 2023 Feb 18
+*libparser.txt*	For Vim version 9.0	Last change: 2023 Dec 26
 
 A library to write simple parsers.
 
@@ -21,8 +21,8 @@ The following code parses the string "Vim" at the beginning of a given text:
 	import 'libparser.vim' as parser
 
 	var ctx      = parser.Context.new("Vim - the ubiquitous text editor")
-	const Parser = parser.Text("Vim")
-	const result = Parser(ctx)
+	const Parse  = parser.Text("Vim")
+	const result = Parse(ctx)
 
 	echo result.success  # true
 	echo result.value    # "Vim"
@@ -421,8 +421,8 @@ SoftFail({ctx})					*libparser.SoftFail()*
 		second choice, which in the case succeeds:
 >
 		var ctx = Context.new("abc", 0)
-		const Parser = OneOf(SoftFail, Text('ab'))
-		const result = Parser(ctx)
+		const Parse = OneOf(SoftFail, Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -501,12 +501,12 @@ Call({func})					*libparser.Call()*
 		enddef
 
 		var ctx = Context.new('abc')
-		const Parser = Seq(
+		const Parse = Seq(
 		    Call(Start),
 		    Text('ab')->Apply(Consume),
 		    Call(Stop)
 		)
-		const result = Parser(ctx)
+		const result = Parse(ctx)
 <
 		Output:
 >
@@ -525,8 +525,8 @@ Fail({msg})					*libparser.Fail()*
 		never succeeds:
 >
 		var ctx = Context.new('abc', 0)
-		const Parser = OneOf(Fail('@#$!'), Text('ab'))
-		const result = Parser(ctx)
+		const Parse = OneOf(Fail('@#$!'), Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -545,8 +545,8 @@ Regex({pat})					*libparser.Regex()*
 		matching follows the rules of |match()|.
 >
 		var ctx = Context.new('aaaabc', 0)
-		const Parser = Regex('a\+')
-		const result = Parser(ctx)
+		const Parse = Regex('a\+')
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -563,8 +563,8 @@ Text({string})					*libparser.Text()*
 		for case-insensitive match, use |libparser.Regex()| with |\c|.
 >
 		var ctx = Context.new('ab  c', 0)
-		const Parser = Text('ab')
-		const result = Parser(ctx)
+		const Parse = Text('ab')
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -598,8 +598,8 @@ Apply({parser}, {func})				*libparser.Apply()*
 		enddef
 
 		var   ctx    = Context.new('42 is the answer')
-		const Parser = Regex('\d\+')->Apply(StoreNumber)
-		const result = Parser(ctx)
+		const Parse  = Regex('\d\+')->Apply(StoreNumber)
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -622,11 +622,11 @@ Lab({parser}, {string})				*libparser.Lab()*
 		For instance, the following parses without errors:
 >
 		var ctx = Context.new('abc', 0)
-		const Parser = OneOf(
+		const Parse = OneOf(
 		                 Seq(Text('a'), Text('x')),
 		                     Regex('.bc')
 		               )
-		const result = Parser(ctx)
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -646,11 +646,11 @@ Lab({parser}, {string})				*libparser.Lab()*
 		as it fails to match `Text('x')`. The regex is not tried:
 >
 		var ctx = Context.new('abc', 0)
-		const Parser = OneOf(
+		const Parse = OneOf(
 		                 Seq(Text('a'), Lab(Text('x'), 'name "x"')),
 		                 Regex('.bc')
 		              )
-		const result = Parser(ctx)
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -672,8 +672,8 @@ LookAhead({parser})				*libparser.LookAhead()*
 		Apply {parser} without consuming any input. For example:
 >
 		var ctx = Context.new('abc', 0)
-		const Parser = LookAhead(Text('ab'))
-		const result = Parser(ctx)
+		const Parse = LookAhead(Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -695,8 +695,8 @@ Many({parser})					*libparser.Many()*
 		|libparser.Lab()|).
 >
 		var ctx = Context.new('aaaaabc', 0)
-		const Parser = Many(Text('a'))
-		const result = Parser(ctx)
+		const Parse = Many(Text('a'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -719,8 +719,8 @@ Map({parser}, {func})				*libparser.Map()*
 		Example:
 >
 		var ctx = Context.new('42', 0)
-		const Parser = Regex('\d\+')->Map((v, _) => str2nr(v))
-		const result = Parser(ctx)
+		const Parse = Regex('\d\+')->Map((v, _) => str2nr(v))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -740,8 +740,8 @@ NegLookAhead({parser})				*libparser.NegLookAhead()*
 		An example of failure turned into a success:
 >
 		var ctx = Context.new('abc', 0)
-		const Parser = NegLookAhead(Text('ax'))
-		const result = Parser(ctx)
+		const Parse = NegLookAhead(Text('ax'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -756,8 +756,8 @@ NegLookAhead({parser})				*libparser.NegLookAhead()*
 		An example of success turned into a backtracking failure:
 >
 		var ctx = Context.new('abc', 0)
-		const Parser = NegLookAhead(Text('ab'))
-		const result = Parser(ctx)
+		const Parse = NegLookAhead(Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -787,8 +787,8 @@ OneOf(...{parser})				*libparser.OneOf()*
 		An example in which the parser succeeds:
 >
 		var ctx = Context.new('abcd', 0)
-		const Parser = OneOf(Seq(Text('abc'), Eof), Text('abcd'))
-		const result = Parser(ctx)
+		const Parse = OneOf(Seq(Text('abc'), Eof), Text('abcd'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -810,8 +810,8 @@ OneOf(...{parser})				*libparser.OneOf()*
 >
 		var ctx = Context.new('abcd', 0)
 		const ErrEof = Lab(Eof, 'end of input')
-		const Parser = OneOf(Seq(Text("abc"), ErrEof), Text("ab"))
-		const result = Parser(ctx)
+		const Parse = OneOf(Seq(Text("abc"), ErrEof), Text("ab"))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -835,8 +835,8 @@ OneOf(...{parser})				*libparser.OneOf()*
 		failure:
 >
 		var ctx = Context.new('abcd', 0)
-		const Parser = OneOf(Seq(Text("abc"), Eof), Text("ax"))
-		const result = Parser(ctx)
+		const Parse = OneOf(Seq(Text("abc"), Eof), Text("ax"))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -861,8 +861,8 @@ OneOrMore(...{parser})				*libparser.OneOrMore()*
 		An example in which the parser succeeds:
 >
 		var ctx = Context.new('ababcd', 0)
-		const Parser = OneOrMore(Text('ab'))
-		const result = Parser(ctx)
+		const Parse = OneOrMore(Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -877,8 +877,8 @@ OneOrMore(...{parser})				*libparser.OneOrMore()*
 		An example in which the parser fails:
 >
 		var ctx = Context.new('acac', 0)
-		const Parser = OneOrMore(Text('ab'))
-		const result = Parser(ctx)
+		const Parse = OneOrMore(Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -899,8 +899,8 @@ Opt({parser})					*libparser.Opt()*
 		fail only if {parser} returns a labelled failure.
 >
 		var ctx = Context.new('abcd', 0)
-		const Parser = Opt(Text('abx'))
-		const result = Parser(ctx)
+		const Parse = Opt(Text('abx'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo printf("Value: '%s'", result.value)
@@ -919,8 +919,8 @@ Seq(...{parser})				*libparser.Seq()*
 		fails, report its failure. Examples:
 >
 		var ctx = Context.new('abcd', 0)
-		const Parser = Seq(Text('a'), Text('b'), Text('cd'))
-		const result = Parser(ctx)
+		const Parse = Seq(Text('a'), Text('b'), Text('cd'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -935,8 +935,8 @@ Seq(...{parser})				*libparser.Seq()*
 		The following parser fails:
 >
 		var ctx = Context.new('abcd', 0)
-		const Parser = Seq(Text('a'), Text('b'), Text('cx'))
-		const result = Parser(ctx)
+		const Parse = Seq(Text('a'), Text('b'), Text('cx'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Label:" result.label
@@ -955,8 +955,8 @@ Skip({parser})					*libparser.Skip()*
 		returned value in case of success is always |null|.
 >
 		var ctx = Context.new('abcd', 0)
-		const Parser = Skip(Text('ab'))
-		const result = Parser(ctx)
+		const Parse = Skip(Text('ab'))
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -990,8 +990,8 @@ RegexToken([{parser}])				*libparser.RegexToken()*
 >
 		var ctx = Context.new('ab  c', 0)
 		const R = RegexToken()
-		const Parser = R('\w\+')
-		const result = Parser(ctx)
+		const Parse = R('\w\+')
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value
@@ -1017,8 +1017,8 @@ TextToken([{parser}])				*libparser.TextToken()*
 >
 		var ctx = Context.new('a  b c', 0)
 		const T = TextToken()
-		const Parser = T('a')
-		const result = Parser(ctx)
+		const Parse = T('a')
+		const result = Parse(ctx)
 
 		echo result.success
 		echo "Value:" result.value

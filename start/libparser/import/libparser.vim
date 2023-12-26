@@ -5,15 +5,7 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
-# TODO: replace when `type` is implemented in Vim
-# type TSuccess dict<any>
-# type TFailure dict<any>
-# type TResult  TSuccess | TFailure
-# type TContext dict<any>
-# type TParser  func(TContext): TResult
-# type TParserState dict<any>
-
-# Context and result {{{
+# Context, Result and Parser {{{
 export class Context
   var text: string # The text to be parsed
 
@@ -62,6 +54,8 @@ def Failure(
 
   return Result.newFailure(errpos, label)
 enddef
+
+export type Parser = func(Context): Result
 # }}}
 
 # Basic parsers {{{
@@ -91,7 +85,7 @@ enddef
 # }}}
 
 # Parser generators {{{
-export def Fail(msg: string): func(Context): Result
+export def Fail(msg: string): Parser
   return (ctx: Context): Result => {
     return Failure(ctx, ctx.index, msg)
   }
@@ -101,7 +95,7 @@ enddef
 # Fails when not found.
 #
 # NOTE: the text should not match across lines.
-export def Text(text: string): func(Context): Result
+export def Text(text: string): Parser
   return (ctx: Context): Result => {
     const n = len(text)
 
@@ -114,7 +108,7 @@ export def Text(text: string): func(Context): Result
   }
 enddef
 
-export def Regex(pattern: string): func(Context): Result
+export def Regex(pattern: string): Parser
   return (ctx: Context): Result => {
     const match = matchstrpos(ctx.text, '^\%(' .. pattern .. '\)', ctx.index)
 
@@ -127,7 +121,7 @@ export def Regex(pattern: string): func(Context): Result
   }
 enddef
 
-export def Call(Fn: func(): void): func(Context): Result
+export def Call(Fn: func(): void): Parser
   return (ctx: Context): Result => {
     Fn()
     return Success()
@@ -136,12 +130,9 @@ enddef
 # }}}
 
 # Parser combinators {{{
-export def Lab(
-    Parser: func(Context): Result,
-    label: string
-): func(Context): Result
+export def Lab(P: Parser, label: string): Parser
   return (ctx: Context): Result => {
-    const result = Parser(ctx)
+    const result = P(ctx)
 
     if result.success || result.label isnot FAIL
       return result
@@ -151,15 +142,13 @@ export def Lab(
   }
 enddef
 
-export def Seq(
-    ...Parsers: list<func(Context): Result>
-): func(Context): Result
+export def Seq(...Parsers: list<Parser>): Parser
   return (ctx: Context): Result => {
     const startIndex = ctx.index
     var values: list<any> = []
 
-    for Parser in Parsers
-      const result = Parser(ctx)
+    for P in Parsers
+      const result = P(ctx)
 
       if result.success
         if result.value != null
@@ -175,14 +164,12 @@ export def Seq(
   }
 enddef
 
-export def OneOf(
-    ...Parsers: list<func(Context): Result>
-): func(Context): Result
+export def OneOf(...Parsers: list<Parser>): Parser
   return (ctx: Context): Result => {
     var farthestFailure = ctx.index
 
-    for Parser in Parsers
-      const result = Parser(ctx)
+    for P in Parsers
+      const result = P(ctx)
 
       if result.success || result.label isnot FAIL
         return result
@@ -195,26 +182,22 @@ export def OneOf(
   }
 enddef
 
-export def OneOrMore(
-    Parser: func(Context): Result
-): func(Context): Result
-  return Seq(Parser, Many(Parser))->Map((v, _) => flattennew(v, 1))
+export def OneOrMore(P: Parser): Parser
+  return Seq(P, Many(P))->Map((v, _) => flattennew(v, 1))
 enddef
 
-export def Opt(
-    Parser: func(Context): Result
-): func(Context): Result
-  return OneOf(Parser, Eps)
+export def Opt(P: Parser): Parser
+  return OneOf(P, Eps)
 enddef
 
-export def Many(Parser: func(Context): Result): func(Context): Result
+export def Many(P: Parser): Parser
   return (ctx: Context): Result => {
     const startIndex = ctx.index
     var values: list<any> = []
 
     while (true)
       const currIndex = ctx.index
-      const result = Parser(ctx)
+      const result = P(ctx)
 
       if result.success
         if result.value != null
@@ -239,26 +222,26 @@ export def Many(Parser: func(Context): Result): func(Context): Result
   }
 enddef
 
-export def Skip(Parser: func(Context): Result): func(Context): Result
+export def Skip(P: Parser): Parser
   return (ctx: Context): Result => {
-    const result = Parser(ctx)
+    const result = P(ctx)
     return result.success ? Success() : result
   }
 enddef
 
-export def LookAhead(Parser: func(Context): Result): func(Context): Result
+export def LookAhead(P: Parser): Parser
   return (ctx: Context): Result => {
     const startIndex = ctx.index
-    const result = Skip(Parser)(ctx)
+    const result = Skip(P)(ctx)
     ctx.index = startIndex
     return result
   }
 enddef
 
-export def NegLookAhead(Parser: func(Context): Result): func(Context): Result
+export def NegLookAhead(P: Parser): Parser
   return (ctx: Context): Result => {
     const startIndex = ctx.index
-    const result = Skip(Parser)(ctx)
+    const result = Skip(P)(ctx)
 
     if result.success
       const errPos = ctx.index
@@ -277,12 +260,9 @@ export const Eol   = Regex('[\r\n]')
 export const Space = Regex('\%(\s\|\r\|\n\)\+')
 export const Blank = Regex('\%(\s\|\r\|\n\)*')
 
-export def Map(
-    Parser: func(Context): Result,
-    Fn: func(any, Context): any
-): func(Context): Result
+export def Map(P: Parser, Fn: func(any, Context): any): Parser
   return (ctx: Context): Result => {
-    const result = Parser(ctx)
+    const result = P(ctx)
 
     if result.success
       try
@@ -296,12 +276,9 @@ export def Map(
   }
 enddef
 
-export def Apply(
-    Parser: func(Context): Result,
-    Fn: func(any, Context): void
-): func(Context): Result
+export def Apply(P: Parser, Fn: func(any, Context): void): Parser
   return (ctx: Context): Result => {
-    const result = Parser(ctx)
+    const result = P(ctx)
 
     if result.success
       try
@@ -315,19 +292,17 @@ export def Apply(
   }
 enddef
 
-export def Lexeme(
-    SkipParser: func(Context): Result
-): func(func(Context): Result): func(Context): Result
-  return (Parser: func(Context): Result): func(Context): Result => {
-    return Seq(Parser, SkipParser)->Map((x, _) => x[0])
+export def Lexeme(Skipper: Parser): func(Parser): Parser
+  return (P: Parser): Parser => {
+    return Seq(P, Skipper)->Map((x, _) => x[0])
   }
 enddef
 
-export def TextToken(SkipParser: func(Context): Result = Blank): func(string): func(Context): Result
-  return (token: string): func(Context): Result => Lexeme(SkipParser)(Text(token))
+export def TextToken(Skipper: Parser = Blank): func(string): Parser
+  return (token: string): Parser => Lexeme(Skipper)(Text(token))
 enddef
 
-export def RegexToken(SkipParser: func(Context): Result = Blank): func(string): func(Context): Result
-  return (pattern: string): func(Context): Result => Lexeme(SkipParser)(Regex(pattern))
+export def RegexToken(Skipper: Parser = Blank): func(string): Parser
+  return (pattern: string): Parser => Lexeme(Skipper)(Regex(pattern))
 enddef
 # }}}

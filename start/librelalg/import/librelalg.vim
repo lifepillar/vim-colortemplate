@@ -487,7 +487,8 @@ export def ForeignKey(
   Child:      Rel,
   fkey:       any,
   Parent:     Rel,
-  key:        any = null
+  key:        any = null,
+  verbphrase: string = 'references'
 ): void
   const fkey_: AttrList = Listify(fkey)
   const key_:  AttrList = key == null ? fkey_ : Listify(key)
@@ -506,11 +507,11 @@ export def ForeignKey(
     throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {ListStr(key_)} is not a key of {Parent.name}'
   endif
 
-  const fkStr = $'{Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}'
+  const fkStr = $'{Child.name} {verbphrase} {Parent.name}'
 
   const FkConstraint = (t: dict<any>): void => {
     if Parent.Lookup(key_, Values(t, fkey_)) is KEY_NOT_FOUND
-      throw $'{fkStr}: cannot insert {TupleStr(t)} in {Child.name} because {TupleStr(t, fkey_)} is not present in {Parent.name}{ListStr(key_)}'
+      throw $'{fkStr}: {TupleStr(t, fkey_)} is not present in {Parent.name}{ListStr(key_)}'
     endif
   }
 

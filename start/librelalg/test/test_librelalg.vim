@@ -475,26 +475,24 @@ def Test_RA_TransactionalDelete()
   assert_equal(instance, R.instance)
 enddef
 
-def Test_RA_ReferentialIntegrity()
+def Test_RA_ReferentialIntegrityDelete()
   var R = Rel.new('R', {A: Int}, ['A'])
   var S = Rel.new('S', {X: Str, Y: Int}, ['X'])
-  ForeignKey(S, ['Y'], R, ['A'])
+  ForeignKey(S, ['Y'], R, ['A'], 'flocks with')
   R.Insert({A: 2})
   S.Insert({X: 'a', Y: 2})
 
   AssertFails(() => {
     R.Delete()
-  }, "cannot delete {A: 2} from R because it is referenced by {X: a, Y: 2} in S")
+  }, "S flocks with R: cannot delete {A: 2} from R because it is referenced by {X: a, Y: 2} in S")
 
   S.Delete()
   R.Delete()
 
   assert_true(R.IsEmpty())
 enddef
-# }}}
 
-# Integrity constraints {{{
-def Test_RA_ForeignKey()
+def Test_RA_WrongForeignKeyDefinitions()
   var R = Rel.new('R', {A: Str}, 'A')
   var S = Rel.new('S', {B: Int, C: Str}, 'B')
 
@@ -510,22 +508,33 @@ def Test_RA_ForeignKey()
     ForeignKey(S, ['A'], R, ['A'])
   }, "Wrong foreign key: S[A] -> R[A]. A is not an attribute of S")
 
-  ForeignKey(S, 'C', R, 'A')
+enddef
 
-  R.InsertMany([{A: 'ab'}, {A: 'tm'}])
-  S.Insert({B: 10, C: 'tm'})
-  S.Insert({B: 20, C: 'tm'})
-  S.Insert({B: 30, C: 'ab'})
+def Test_RA_ReferentialIntegrityInsertUpdate()
+  var R = Rel.new('R', {A: Str}, 'A')
+  var S = Rel.new('S', {B: Int, C: Str}, 'B')
+
+  ForeignKey(S, 'C', R, 'A', 'smurfs')
+
+  R.InsertMany([
+    {A: 'ab'},
+    {A: 'tm'},
+  ])
+  S.InsertMany([
+    {B: 10, C: 'tm'},
+    {B: 20, C: 'tm'},
+    {B: 30, C: 'ab'},
+  ])
 
   AssertFails(() => {
     S.Insert({B: 40, C: 'xy'})
-  }, "{C: xy} is not present in R[A]")
+  }, "S smurfs R: {C: xy} is not present in R[A]")
 
   S.Update({B: 20, C: 'ab'})
 
   AssertFails(() => {
     S.Update({B: 30, C: 'wz'})
-  }, "{C: wz} is not present in R[A]")
+  }, "S smurfs R: {C: wz} is not present in R[A]")
 
   const expected = [
     {B: 10, C: 'tm'},

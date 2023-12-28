@@ -5,34 +5,60 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
+# Type Aliases {{{
+type Attr            = string
+type Domain          = number # v:t_number, v:t_string, etc.
+type Schema          = dict<Domain> # Map from Attr to Domain
+type AttrSet         = list<Attr> # When the order does not matter
+type AttrList        = list<Attr> # When the order matters
+type Tuple           = dict<any>
+type Relation        = list<Tuple>
+type Constraint      = func(Tuple): void # Raises if the constraint fails
+type Consumer        = func(Tuple): void
+type Continuation    = func(Consumer): void
+type UnaryPredicate  = func(Tuple): bool
+type BinaryPredicate = func(Tuple, Tuple): bool
+# }}}
+
 # Helper functions {{{
 # string() turns 'A' into a string of length 3, with quotes. We do not want that.
 def String(value: any): string
   return type(value) == v:t_string ? value : string(value)
 enddef
 
-def SchemaAsString(schema: dict<number>): string
-  const schemaStr = mapnew(schema, (attr, atype): string => printf("%s: %s", attr, TypeName(atype)))
-  return '{' .. join(values(schemaStr), ', ') .. '}'
+def ListStr(items: list<any>): string
+  const stringified = mapnew(items, (_, v) => String(v))
+  return '[' .. join(stringified, ', ') .. ']'
 enddef
 
-def All(items: list<any>, Pred: func(any): bool): bool
-  return reduce(items, (res, item) => res && Pred(item), true)
+def TupleStr(t: Tuple, attrs: AttrList = keys(t)): string
+  const stringified = mapnew(attrs, (_, a) => $'{a}: {String(t[a])}')
+  return '{' .. join(stringified, ', ') .. '}'
 enddef
 
-def Any(items: list<any>, Pred: func(any): bool): bool
-  return reduce(items, (res, item) => res || Pred(item), false)
+def SchemaStr(schema: Schema): string
+  const stringified = mapnew(schema, (a, d) => $'{a}: {DomainName(d)}')
+  return '{' .. join(values(stringified), ', ') .. '}'
+enddef
+
+def All(items: list<any>, P: func(any): bool): bool
+  return reduce(items, (res, item) => res && P(item), true)
+enddef
+
+def Any(items: list<any>, P: func(any): bool): bool
+  return reduce(items, (res, item) => res || P(item), false)
 enddef
 
 def IsFunc(X: any): bool
   return type(X) == v:t_func
 enddef
 
-def Listify(item: any): list<string>
+# Item must be an attribute or a list of attributes
+def Listify(item: any): list<Attr>
   return type(item) == v:t_list ? item : [item]
 enddef
 
-def ListifyKeys(keys: any): list<list<string>>
+def ListifyKeys(keys: any): list<AttrList>
   if type(keys) == v:t_string
     return [[keys]]  # One single-attribute key
   endif
@@ -63,50 +89,61 @@ def CompareValues(v1: any, v2: any, invert: bool = false): number
   endif
 enddef
 
-def CompareTuples(t: dict<any>, u: dict<any>, attrList: list<string>, invert: list<bool> = []): number
-  if empty(invert)
-    for a in attrList
+def CompareTuples(t: Tuple, u: Tuple, attrs: AttrSet, invert: list<bool> = []): number
+  if empty(invert) # fast path
+    for a in attrs
       const cmp = CompareValues(t[a], u[a])
+
       if cmp == 0
         continue
       endif
+
       return cmp
     endfor
+
     return 0
   endif
 
-  const n = len(attrList)
-  var i = 0
+  const n = len(attrs)
+  var   i = 0
+
   while i < n
-    const a = attrList[i]
+    const a   = attrs[i]
     const cmp = CompareValues(t[a], u[a], invert[i])
+
     if cmp == 0
       i += 1
       continue
     endif
+
     return cmp
   endwhile
+
   return 0
 enddef
 
-def ProjectTuple(t: dict<any>, attrList: list<string>): dict<any>
-  var u = {}
-  for attr in attrList
-    u[attr] = t[attr]
+def ProjectTuple(t: Tuple, attrs: AttrSet): Tuple
+  var u: Tuple = {}
+
+  for a in attrs
+    u[a] = t[a]
   endfor
+
   return u
 enddef
 
-def Values(t: dict<any>, attrList: list<string>): list<any>
+def Values(t: Tuple, attrs: AttrSet): list<any>
   var values = []
-  for a in attrList
+
+  for a in attrs
     values->add(t[a])
   endfor
+
   return values
 enddef
 
 
-def NumArgs(Fn: func): number   # Number of arguments of a function
+def NumArgs(Fn: func): number # Number of arguments of a function
   return len(split(matchstr(typename(Fn), '([^)]\+)'), ','))
 enddef
 
@@ -139,14 +176,7 @@ enddef
 # }}}
 
 # Data definition and manipulation {{{
-# type TType        number
-# type TTupleSchema dict<TType>
-# type TRelSchema   dict<any>
-# type TKey         list<TAttr>
-# type TConstraint  func(Tuple, string): void
-# type TIndex       dict<any>
-
-# Data types  {{{
+# Domains {{{
 export const Int     = v:t_number
 export const Str     = v:t_string
 export const Bool    = v:t_bool
@@ -154,7 +184,7 @@ export const Float   = v:t_float
 export const Func    = v:t_func
 export const List    = v:t_list
 
-const TypeString = {
+const DomainStr = {
   [Int]:         'integer',
   [Str]:         'string',
   [Float]:       'float',
@@ -168,126 +198,23 @@ const TypeString = {
   [v:t_blob]:    'blob'
 }
 
-def TypeName(atype: number): string
-  return get(TypeString, atype, 'unknown')
-enddef
-# }}}
-
-# Error messages {{{
-
-
-def ErrAttributeType(t: dict<any>, schema: dict<number>, attr: string): string
-  const value = t[attr]
-  const wrongType = TypeName(type(value))
-  const rightType = TypeName(schema[attr])
-  return printf("Attribute %s is of type %s, but value '%s' of type %s was provided",
-                attr, rightType, value, wrongType)
-enddef
-
-def ErrConstraintNotSatisfied(relname: string, t: dict<any>, msg: string): string
-  return printf("%s violates a constraint of %s: %s", t, relname, msg)
-enddef
-
-def ErrKeyAlreadyDefined(name: string, key: list<string>): string
-  return printf('Key %s already defined in %s', key, name)
-enddef
-
-def ErrDuplicateKey(key: list<string>, t: dict<any>): string
-  const tStr = join(mapnew(key, (_, v) => string(t[v])), ', ')
-  return printf('Duplicate key value: %s = (%s) already exists', key, tStr)
-enddef
-
-def ErrEquiJoinAttributes(attrList: list<string>, otherList: list<string>): string
-  return printf("Join on lists of attributes of different length: %s vs %s", attrList, otherList)
-enddef
-
-def ErrReferentialIntegrity(
-    child:      string,
-    verbphrase: string,
-    parent:     string,
-    fkey:       list<string>,
-    key:        list<string>,
-    t:          dict<any>
-): string
-    const tStr = join(mapnew(fkey, (_, v) => string(t[v])), ', ')
-    return printf("%s %s %s: %s%s = (%s) is not present in %s%s",
-                  child, verbphrase, parent, child, fkey, tStr, parent, key)
-enddef
-
-def ErrReferentialIntegrityDeletion(
-    child:      string,
-    verbphrase: string,
-    parent:     string,
-    fkey:       list<string>,
-    key:        list<string>,
-    t_c:        dict<any>,
-    t_p:        dict<any>
-): string
-  const keyVal  = join(mapnew(key,  (_, v) => string(t_p[v])), ', ')
-  return printf("%s %s %s: %s%s = (%s) is referenced by %s",
-                child, verbphrase, parent, parent, key, keyVal, t_c)
-enddef
-
-def ErrForeignKeySize(child: string, fkey: list<string>, parent: string, key: list<string>): string
-  return printf("Wrong foreign key size: %s%s -> %s%s", child, fkey, parent, key)
-enddef
-
-def ErrForeignKeySource(child: string, fkey: list<string>, parent: string, key: list<string>): string
-  return printf("Wrong foreign key: %s%s -> %s%s. %s is not an attribute of %s",
-                child, fkey, parent, key, '%s', child)
-enddef
-
-def ErrForeignKeyTarget(child: string, fkey: list<string>, parent: string, key: list<string>): string
-  return printf("Wrong foreign key: %s%s -> %s%s. %s is not a key of %s",
-                child, fkey, parent, key, key, parent)
-enddef
-
-def ErrIncompatibleTuple(t: dict<any>, schema: dict<number>): string
-  const schemaStr = SchemaAsString(schema)
-  return printf("Expected a tuple on schema %s: got %s instead", schemaStr, t)
-enddef
-
-def ErrKeyNotFound(relname: string, key: list<string>, keyValue: list<any>): string
-  return printf("Tuple with %s = %s not found in %s", key, keyValue, relname)
-enddef
-
-def ErrNoKey(relname: string): string
-  return printf("No key specified for relation %s", relname)
-enddef
-
-def ErrInvalidAttribute(relname: string, attr: string): string
-  return printf("%s is not an attribute of %s", attr, relname)
-enddef
-
-def ErrNotAKey(relname: string, key: list<string>): string
-  return printf("%s is not a key of %s", key, relname)
-enddef
-
-def ErrUpdateKeyAttribute(relname: string, attr: string, t: dict<any>, oldt: dict<any>): string
-  return printf("Key attribute %s in %s cannot be changed (trying to update %s with %s)", attr, relname, oldt, t)
-enddef
-
-def ErrInvalidConstraintClause(op: string): string
-  return printf("Expected one of 'I' (insert), 'U' (update), 'D' (deletion), but got %s", op)
+def DomainName(domain: Domain): string
+  return get(DomainStr, domain, 'unknown')
 enddef
 # }}}
 
 # Indexes {{{
-export const KEY_NOT_FOUND: dict<bool> = {}
+export const KEY_NOT_FOUND: Tuple = {}
 
 class UniqueIndex
-  var key: list<string> = []
-  var _index: dict<dict<any>> = {}
-
-  def GetRawIndex(): dict<dict<any>>
-    return this._index
-  enddef
+  var key:    AttrList    = []
+  var _index: dict<Tuple> = {} # Map from key to tuple
 
   def IsEmpty(): bool
     return empty(this._index)
   enddef
 
-  def Add(t: dict<any>)
+  def Add(t: Tuple)
     const keyValues = string(Values(t, this.key))
     this._index[keyValues] = t
   enddef
@@ -296,37 +223,35 @@ class UniqueIndex
     this._index->remove(string(keyValue))
   enddef
 
-  def Search(keyValue: list<any>): dict<any>
+  def Search(keyValue: list<any>): Tuple
     return get(this._index, string(keyValue), KEY_NOT_FOUND)
   enddef
 endclass
 
 class NonUniqueIndex
-  var key: list<string> = []
-  var _index: dict<list<dict<any>>> = {}
-
-  def GetRawIndex(): dict<list<dict<any>>>
-    return this._index
-  enddef
+  var key:    AttrList          = []
+  var _index: dict<list<Tuple>> = {} # Map from key to tuples
 
   def IsEmpty(): bool
     return empty(this._index)
   enddef
 
-  def Add(t: dict<any>)
+  def Add(t: Tuple)
     const keyValues = string(Values(t, this.key))
+
     if !this._index->has_key(keyValues)
       this._index[keyValues] = []
     endif
+
     this._index[keyValues]->add(t)
   enddef
 
-  def Remove(t: dict<any>)
+  def Remove(t: Tuple)
     const keyValues = string(Values(t, this.key))
     filter(get(this._index, keyValues, []), (u) => t == u)
   enddef
 
-  def Search(keyValue: list<any>): list<dict<any>>
+  def Search(keyValue: list<any>): list<Tuple>
     return get(this._index, string(keyValue), [])
   enddef
 endclass
@@ -335,62 +260,56 @@ endclass
 # Relations {{{
 export class Rel
   var name:          string
-  var schema:        dict<number>
-  var instance:      list<dict<any>> = []
-  var keys:          list<list<string>>
-  var attributes:    list<string>
-  var keyAttributes: list<string>
-  var descriptors:   list<string>
-  var _attrtype:     list<number> = []
+  var schema:        Schema
+  var keys:          list<AttrList>
+  var instance:      list<Tuple> = []
+  var attributes:    AttrSet
+  var keyAttributes: AttrSet
+  var descriptors:   AttrSet
+
   var _indexes:      dict<UniqueIndex> = {}
-  var _constraints:  dict<list<func(dict<any>): void>> = {'I': [], 'U': [], 'D': []}
+  var _constraints:  dict<list<Constraint>> = {'I': [], 'U': [], 'D': []}
 
   def new(this.name, this.schema, relKeys: any, checkType = true)
-    if checkType
-      this.TypeCheck_()
-    endif
-
     if empty(relKeys)
-      throw ErrNoKey(this.name)
+      throw $'No key specified for relation {this.name}'
     endif
 
-    const keys_: list<list<string>> = ListifyKeys(relKeys)
+    if checkType
+      this.EnableTypeChecking_()
+    endif
 
-    this.attributes = keys(this.schema)->sort()
+    const keys_: list<AttrList> = ListifyKeys(relKeys)
+
+    this.attributes    = keys(this.schema)->sort()
     this.keyAttributes = flattennew(keys_)->sort()->uniq()
-    this.descriptors = filter(copy(this.attributes), (_, v) => index(this.keyAttributes, v) == -1)
-
-    for attr in this.attributes
-      this._attrtype->add(this.schema[attr])
-    endfor
+    this.descriptors   = filter(copy(this.attributes), (_, v) => index(this.keyAttributes, v) == -1)
 
     for key in keys_
-      this.Key(key)
+      this.AddKeyConstraint_(key)
     endfor
   enddef
 
-  def Key(key: any)
-    const key_: list<string> = Listify(key)
-
-    if index(this.keys, key_) != -1
-      throw ErrKeyAlreadyDefined(this.name, key_)
+  def AddKeyConstraint_(key: AttrList)
+    if index(this.keys, key) != -1
+      throw $'Key {ListStr(key)} already defined in {this.name}'
     endif
 
-    for attr in key_
+    for attr in key
       if index(this.attributes, attr) == -1
-        throw ErrInvalidAttribute(this.name, attr)
+        throw $'{attr} is not an attribute of {this.name}'
       endif
     endfor
 
-    this.keys->add(key_)
+    this.keys->add(key)
 
-    var index = UniqueIndex.new(key_)
+    var keyIndex = UniqueIndex.new(key)
 
-    this._indexes[string(key_)] = index
+    this._indexes[string(key)] = keyIndex
 
-    const KeyConstraint = (t: dict<any>): void => {
-      if index.Search(Values(t, key_)) isnot KEY_NOT_FOUND
-        throw ErrDuplicateKey(key_, t)
+    const KeyConstraint = (t: Tuple): void => {
+      if keyIndex.Search(Values(t, key)) isnot KEY_NOT_FOUND
+        throw $'Duplicate key value: {TupleStr(t, key)} already exists in {this.name}'
       endif
     }
 
@@ -405,7 +324,7 @@ export class Rel
     return this._indexes[string(Listify(key))]
   enddef
 
-  def Insert(t: dict<any>): any
+  def Insert(t: Tuple): any
     for CheckConstraint in this._constraints.I
       CheckConstraint(t)
     endfor
@@ -419,9 +338,9 @@ export class Rel
     return this
   enddef
 
-  def InsertMany(tuples: list<dict<any>>, atomic: bool = false): any
+  def InsertMany(tuples: list<Tuple>, atomic: bool = false): any
     if atomic
-      var inserted: list<dict<any>> = []
+      var inserted: list<Tuple> = []
 
       for t in tuples
         try
@@ -441,12 +360,12 @@ export class Rel
     return this
   enddef
 
-  def RollbackInsertion_(tuples: list<dict<any>>)
-    const DeletePred = (i: number, t: dict<any>): bool => {
+  def RollbackInsertion_(tuples: list<Tuple>)
+    const DeletePred = (i: number, t: Tuple): bool => {
       if t->In(tuples)
-        for index in values(this._indexes)
-          const keyValue = Values(t, index.key)
-          index.Remove(keyValue)
+        for ind in values(this._indexes)
+          const keyValue = Values(t, ind.key)
+          ind.Remove(keyValue)
         endfor
 
         return false
@@ -458,23 +377,24 @@ export class Rel
     filter(this.instance, DeletePred)
   enddef
 
-  def Update(t: dict<any>, upsert = false): any
-    const key = this.keys[0]
+  def Update(t: Tuple, upsert = false): any
+    const key      = this.keys[0]
     const keyValue = Values(t, key)
-    const oldt = this.Lookup(key, keyValue)
+    const oldt     = this.Lookup(key, keyValue)
 
     if oldt is KEY_NOT_FOUND
       if upsert
         this.Insert(t)
       else
-        throw ErrKeyNotFound(this.name, key, keyValue)
+        throw $'Update failed: no tuple with key {TupleStr(t, key)} exists in {this.name}'
       endif
+
       return this
     endif
 
     for attr in this.keyAttributes
       if t[attr] != oldt[attr]
-        throw ErrUpdateKeyAttribute(this.name, attr, t, oldt)
+        throw $'Updating key attributes not allowed: failed to replace {TupleStr(oldt)} with {TupleStr(t)} ({attr} is a key attribute)'
       endif
     endfor
 
@@ -491,19 +411,16 @@ export class Rel
     return this
   enddef
 
-  def Delete(
-      Pred: func(dict<any>): bool = (t) => true,
-      atomic: bool = false
-  ): any
-    const DeletePred = (i: number, t: dict<any>): bool => {
+  def Delete(Pred: func(Tuple): bool = (t) => true, atomic: bool = false): any
+    const DeletePred = (i: number, t: Tuple): bool => {
       if Pred(t)
         for CheckConstraint in this._constraints.D
           CheckConstraint(t)
         endfor
 
-        for index in values(this._indexes)
-          const keyValue = Values(t, index.key)
-          index.Remove(keyValue)
+        for ind in values(this._indexes)
+          const keyValue = Values(t, ind.key)
+          ind.Remove(keyValue)
         endfor
 
         return false
@@ -521,43 +438,97 @@ export class Rel
     return this
   enddef
 
-  def Lookup(key: list<string>, value: list<any>): dict<any>
+  def Lookup(key: AttrSet, value: list<any>): Tuple
     if index(this.keys, key) == -1
-      throw ErrNotAKey(this.name, key)
+      throw $'{key} is not a key of {this.name}'
     endif
-    const index = this._indexes[String(key)]
-    return index.Search(value)
+
+    const ind = this._indexes[String(key)]
+    return ind.Search(value)
   enddef
 
-  def Check(Constraint: func(dict<any>), opList: list<string> = ['I', 'U'])
+  def Check(C: Constraint, opList: list<string> = ['I', 'U'])
     for op in opList
       if index(['I', 'U', 'D'], op) == -1
-        throw ErrInvalidConstraintClause(op)
+        throw $"Expected one of 'I' (insert), 'U' (update), 'D' (deletion), got {op}"
       endif
 
-      this._constraints[op]->add(Constraint)
+      this._constraints[op]->add(C)
     endfor
   enddef
 
 
-  def TypeCheck_()
-    const TypeConstraint = (t: dict<any>): void => {
+  def EnableTypeChecking_()
+    const TC: Constraint = (t: Tuple): void => {
       const schema = this.schema
 
       if sort(keys(t)) != this.attributes
-        throw ErrIncompatibleTuple(t, schema)
+        throw $'Expected a tuple on schema {SchemaStr(schema)}: got {TupleStr(t)} instead'
       endif
 
-      for [attr, atype] in items(schema)
-        if type(t[attr]) != atype
-          throw ErrAttributeType(t, schema, attr)
+      for [attr, domain] in items(schema)
+        const v = t[attr]
+
+        if type(v) != domain
+          const wrong    = DomainName(type(v))
+          const expected = DomainName(schema[attr])
+          throw $"Attribute {attr} is of type {expected}, but value '{v}' of type {wrong} was provided"
         endif
       endfor
     }
 
-    this.Check(TypeConstraint, ['I', 'U'])
+    this.Check(TC, ['I', 'U'])
   enddef
 endclass
+# }}}
+
+# Integrity constraints {{{
+export def ForeignKey(
+  Child:      Rel,
+  fkey:       any,
+  Parent:     Rel,
+  key:        any = null
+): void
+  const fkey_: AttrList = Listify(fkey)
+  const key_:  AttrList = key == null ? fkey_ : Listify(key)
+
+  if len(fkey_) != len(key_)
+    throw $'Foreign key size mismatch: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}'
+  endif
+
+  for attr in fkey_
+    if index(Child.attributes, attr) == -1
+      throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {attr} is not an attribute of {Child.name}'
+    endif
+  endfor
+
+  if index(Parent.keys, key_) == -1
+    throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {ListStr(key_)} is not a key of {Parent.name}'
+  endif
+
+  const fkStr = $'{Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}'
+
+  const FkConstraint = (t: dict<any>): void => {
+    if Parent.Lookup(key_, Values(t, fkey_)) is KEY_NOT_FOUND
+      throw $'{fkStr}: cannot insert {TupleStr(t)} in {Child.name} because {TupleStr(t, fkey_)} is not present in {Parent.name}{ListStr(key_)}'
+    endif
+  }
+
+  Child.Check(FkConstraint, ['I', 'U'])
+
+  const FkPred = EquiJoinPred(fkey_, key_)
+
+  const DelConstraint = (t_p: dict<any>): void => {
+    for t_c in Child.instance
+      if FkPred(t_c, t_p)
+        throw $'{fkStr}: cannot delete {TupleStr(t_p)} from {Parent.name} because it is referenced by {TupleStr(t_c)} in {Child.name}'
+      endif
+    endfor
+  }
+
+  Parent.Check(DelConstraint, ['D'])
+enddef
+# }}}
 # }}}
 
 # Rel related helper functions {{{
@@ -569,72 +540,13 @@ def IsRel(R: any): bool
   return type(R) == v:t_object
 enddef
 
-def Instance(R: any): list<dict<any>>
+def Instance(R: any): Relation
   return type(R) == v:t_object ? AsRel(R).instance : R
 enddef
 
-def IsKeyOf(attrs: list<string>, R: Rel): bool
+def IsKeyOf(attrs: AttrList, R: Rel): bool
   return index(R.keys, attrs) != -1
 enddef
-# }}}
-
-# Integrity constraints {{{
-def SameSize(l1: any, l2: any, errMsg: string): void
-  if len(l1) != len(l2)
-    throw errMsg
-  endif
-enddef
-
-def Conforms(attrList: list<string>, R: Rel, errMsg: string): void
-  const schema = R.attributes
-  for attr in attrList
-    if index(schema, attr) == -1
-      throw printf(errMsg, attr)
-    endif
-  endfor
-enddef
-
-def HasKey(R: Rel, key: list<string>, errMsg: string): void
-  if index(R.keys, key) == -1
-    throw errMsg
-  endif
-enddef
-
-export def ForeignKey(
-  Child:      Rel,
-  verbphrase: string,
-  Parent:     Rel,
-  fkey:       any,
-  key:        any = null
-): void
-  const fkey_: list<string> = Listify(fkey)
-  const key_:  list<string> = key == null ? fkey_ : Listify(key)
-
-  fkey_->SameSize(key_,  ErrForeignKeySize(Child.name, fkey_, Parent.name, key_))
-  fkey_->Conforms(Child, ErrForeignKeySource(Child.name, fkey_, Parent.name, key_))
-  Parent->HasKey(key_,   ErrForeignKeyTarget(Child.name, fkey_, Parent.name, key_))
-
-  const FkConstraint = (t: dict<any>): void => {
-    if Parent.Lookup(key_, Values(t, fkey_)) is KEY_NOT_FOUND
-      throw ErrReferentialIntegrity(Child.name, verbphrase, Parent.name, fkey_, key_, t)
-    endif
-  }
-
-  Child.Check(FkConstraint, ['I', 'U'])
-
-  const FkPred = EquiJoinPred(fkey_, key_)
-
-  const DelConstraint = (t_p: dict<any>): void => {
-    for t_c in Child.instance
-      if FkPred(t_c, t_p)
-        throw ErrReferentialIntegrityDeletion(Child.name, verbphrase, Parent.name, fkey_, key_, t_c, t_p)
-      endif
-    endfor
-  }
-
-  Parent.Check(DelConstraint, ['D'])
-enddef
-# }}}
 # }}}
 
 # Relational Algebra {{{
@@ -646,66 +558,68 @@ enddef
 #
 # and references therein.
 
-# type Attr         string
-# type Tuple        dict<any>
-# type Rel          list<Tuple>
-# type Consumer     func(Tuple): void
-# type Continuation func(Consumer): void
 
-# Root operators (requiring a relation as input) {{{
-export def From(Arg: any): func(func(dict<any>))
+# Root operators (accepting a relation as input) {{{
+export def From(Arg: any): Continuation
   if IsFunc(Arg)
     return Arg
   endif
 
-  const rel: list<dict<any>> = Instance(Arg)
+  const rel: Relation = Instance(Arg)
 
-  return (Emit: func(dict<any>)) => {
+  return (Emit: Consumer) => {
     for t in rel
       Emit(t)
     endfor
   }
 enddef
 
-export def Scan(Arg: any): func(func(dict<any>))
+export def Scan(Arg: any): Continuation
   return From(Arg)
 enddef
 
-export def Foreach(Arg: any): func(func(dict<any>))
+export def Foreach(Arg: any): Continuation
   return From(Arg)
 enddef
 # }}}
 
 # Leaf operators (returning a relation) {{{
-def Materialize(Cont: func(func(dict<any>))): list<dict<any>>
-  var rel: list<dict<any>> = []
+def Materialize(Cont: Continuation): Relation
+  var rel: Relation = []
+
   Cont((t) => {
     add(rel, t)
   })
+
   return rel
 enddef
 
-export def Query(Arg: any): list<dict<any>>
-  return IsFunc(Arg) ? Materialize(Arg) : Instance(Arg)
+export def Query(Arg: any): Relation
+  if IsFunc(Arg)
+    return Materialize(Arg)
+  else
+    return Instance(Arg)
+  endif
 enddef
 
-export def Build(Arg: any): list<dict<any>>
+export def Build(Arg: any): Relation
   return Query(Arg)
 enddef
 
-export def Sort(Arg: any, ComparisonFn: func(dict<any>, dict<any>): number): list<dict<any>>
+export def Sort(Arg: any, ComparisonFn: func(Tuple, Tuple): number): Relation
   var rel = Query(Arg)
   return sort(rel, ComparisonFn)
 enddef
 
-export def SortBy(Arg: any, attrs: any, opts: list<string> = []): list<dict<any>>
+export def SortBy(Arg: any, attrs: any, opts: list<string> = []): Relation
   const invert: list<bool> = mapnew(opts, (_, v) => v == 'd')
-  const attrList: list<string> = Listify(attrs)
-  const SortAttrPred = (t: dict<any>, u: dict<any>): number => CompareTuples(t, u, attrList, invert)
+  const attrList: AttrList = Listify(attrs)
+  const SortAttrPred = (t: Tuple, u: Tuple): number => CompareTuples(t, u, attrList, invert)
+
   return Sort(Arg, SortAttrPred)
 enddef
 
-export def Union(Arg1: any, Arg2: any): list<dict<any>>
+export def Union(Arg1: any, Arg2: any): Relation
   if IsFunc(Arg1)
     return Materialize(Arg1)->extend(Query(Arg2))->sort()->uniq()
   else
@@ -713,51 +627,45 @@ export def Union(Arg1: any, Arg2: any): list<dict<any>>
   endif
 enddef
 
-export def Filter(Arg: any, Pred: func(dict<any>): bool): list<dict<any>>
+export def Filter(Arg: any, Pred: func(Tuple): bool): Relation
   var rel = IsFunc(Arg) ? Materialize(Arg) : copy(Instance(Arg))
   return filter(rel, (_, t) => Pred(t))
 enddef
 
-export def SumBy(
-    Arg: any,
-    groupBy: any,
-    attr: string,
-    aggrName = 'sum'
-): list<dict<any>>
-  var   aggr: dict<dict<any>> = {}
-  const groupBy_: list<string> = Listify(groupBy)
+export def SumBy(Arg: any, groupBy: any, attr: Attr, aggrName = 'sum'): Relation
+  var   aggr: dict<Tuple> = {}
+  const groupBy_: AttrSet = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
-  Cont((t: dict<any>) => {
+  Cont((t: Tuple) => {
     var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
+
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: 0})
     endif
+
     aggr[group][aggrName] += t[attr]
   })
 
   return empty(groupBy_) && empty(aggr) ? [{[aggrName]: 0}] : values(aggr)
 enddef
 
-export def CountBy(
-    Arg: any,
-    groupBy: any,
-    attr: string = null_string,
-    aggrName = 'count'
-): list<dict<any>>
-  var   aggrCount: dict<dict<any>> = {}
+export def CountBy(Arg: any, groupBy: any, attr: Attr = null_string, aggrName = 'count'): Relation
+  var   aggrCount: dict<Tuple> = {}
   var   aggrDistinct: dict<dict<bool>> = {}
-  const groupBy_: list<string> = Listify(groupBy)
+  const groupBy_: AttrSet = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
-  Cont((t: dict<any>) => {
+  Cont((t: Tuple) => {
     var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
+
     if !aggrCount->has_key(group)
       aggrCount[group] = tp->extend({[aggrName]: 0})
       aggrDistinct[group] = {}
     endif
+
     if attr is null_string
       ++aggrCount[group][aggrName]
     elseif !aggrDistinct[group]->has_key(string(t[attr]))
@@ -769,22 +677,19 @@ export def CountBy(
   return empty(groupBy_) && empty(aggrCount) ? [{[aggrName]: 0}] : values(aggrCount)
 enddef
 
-export def MaxBy(
-    Arg: any,
-    groupBy: any,
-    attr: string,
-    aggrName = 'max'
-): list<dict<any>>
-  var   aggr: dict<dict<any>> = {}  # Map group => tuple
-  const groupBy_: list<string> = Listify(groupBy)
+export def MaxBy(Arg: any, groupBy: any, attr: Attr, aggrName = 'max'): Relation
+  var   aggr: dict<Tuple> = {}
+  const groupBy_: AttrSet = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
-  Cont((t: dict<any>) => {
+  Cont((t: Tuple) => {
     var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
+
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: t[attr]})
     endif
+
     if aggr[group][aggrName] < t[attr]
       aggr[group][aggrName] = t[attr]
     endif
@@ -793,19 +698,15 @@ export def MaxBy(
   return values(aggr)
 enddef
 
-export def MinBy(
-    Arg: any,
-    groupBy: any,
-    attr: string,
-    aggrName = 'min'
-): list<dict<any>>
-  var   aggr: dict<dict<any>> = {}  # Map group => tuple
-  const groupBy_: list<string> = Listify(groupBy)
+export def MinBy(Arg: any, groupBy: any, attr: Attr, aggrName = 'min'): Relation
+  var   aggr: dict<Tuple> = {}
+  const groupBy_: AttrSet = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
-  Cont((t: dict<any>) => {
+  Cont((t: Tuple) => {
     var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
+
     if !aggr->has_key(group)
       aggr[group] = tp->extend({[aggrName]: t[attr]})
     endif
@@ -817,24 +718,21 @@ export def MinBy(
   return values(aggr)
 enddef
 
-export def AvgBy(
-    Arg: any,
-    groupBy: any,
-    attr: string,
-    aggrName = 'avg'
-): list<dict<any>>
-  var   aggrAvg: dict<dict<any>> = {}
+export def AvgBy(Arg: any, groupBy: any, attr: Attr, aggrName = 'avg'): Relation
+  var   aggrAvg: dict<Tuple> = {}
   var   aggrCnt: dict<number> = {}
-  const groupBy_: list<string> = Listify(groupBy)
+  const groupBy_: AttrSet = Listify(groupBy)
   const Cont = IsFunc(Arg) ? Arg : From(Arg)
 
-  Cont((t: dict<any>) => {
+  Cont((t: Tuple) => {
     var tp = ProjectTuple(t, groupBy_)
     const group = string(values(tp))
+
     if !aggrAvg->has_key(group)
       aggrAvg[group] = tp->extend({[aggrName]: 0.0})
       aggrCnt[group] = 0
     endif
+
     aggrAvg[group][aggrName] += t[attr]
     ++aggrCnt[group]
   })
@@ -848,18 +746,20 @@ enddef
 # }}}
 
 # Pipeline operators {{{
-export def Rename(Arg: any, old: list<string>, new: list<string>): func(func(dict<any>))
+export def Rename(Arg: any, old: AttrList, new: AttrList): Continuation
   const Cont = From(Arg)
 
-  return (Emit: func(dict<any>)) => {
-    def RenameAttr(t: dict<any>)
+  return (Emit: Consumer) => {
+    def RenameAttr(t: Tuple)
       var i = 0
       var tnew = copy(t)
+
       while i < len(old)
         tnew[new[i]] = tnew[old[i]]
         tnew->remove(old[i])
-        i += 1
+        ++i
       endwhile
+
       Emit(tnew)
     enddef
 
@@ -867,11 +767,11 @@ export def Rename(Arg: any, old: list<string>, new: list<string>): func(func(dic
   }
 enddef
 
-export def Select(Arg: any, Pred: func(dict<any>): bool): func(func(dict<any>))
+export def Select(Arg: any, Pred: UnaryPredicate): Continuation
   const Cont = From(Arg)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       if Pred(t)
         Emit(t)
       endif
@@ -879,14 +779,14 @@ export def Select(Arg: any, Pred: func(dict<any>): bool): func(func(dict<any>))
   }
 enddef
 
-export def Project(Arg: any, attrs: any): func(func(dict<any>))
+export def Project(Arg: any, attrs: any): Continuation
   const Cont = From(Arg)
   const attrList = Listify(attrs)
 
-  return (Emit: func(dict<any>)) => {
+  return (Emit: Consumer) => {
     var seen: dict<bool> = {}
 
-    def Proj(t: dict<any>)
+    def Proj(t: Tuple)
       var u = ProjectTuple(t, attrList)
       const v = string(values(u))
       if !seen->has_key(v)
@@ -899,26 +799,26 @@ export def Project(Arg: any, attrs: any): func(func(dict<any>))
   }
 enddef
 
-def MakeTupleMerger(prefix: string): func(dict<any>, dict<any>): dict<any>
-  return (t: dict<any>, u: dict<any>): dict<any> => {
-    var tnew: dict<any> = {}
+def MakeTupleMerger(prefix: string): func(Tuple, Tuple): Tuple
+  return (t: Tuple, u: Tuple): Tuple => {
+    var tnew: Tuple = {}
+
     for attr in keys(t)
       const newAttr = u->has_key(attr) ? prefix .. attr : attr
       tnew[newAttr] = t[attr]
     endfor
+
     return tnew->extend(u, 'error')
   }
 enddef
 
-export def Join(
-    Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool, prefix = '_'
-): func(func(dict<any>))
+export def Join(Arg1: any, Arg2: any, Pred: BinaryPredicate, prefix = '_'): Continuation
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         if Pred(t, u)
           Emit(MergeTuples(t, u))
@@ -928,47 +828,44 @@ export def Join(
   }
 enddef
 
-export def EquiJoinPred(
-    lftAttrList: list<string>, rgtAttrList: list<string> = null_list
-): func(dict<any>, dict<any>): bool
-  const n = len(lftAttrList)
-  const rgt = rgtAttrList == null ? lftAttrList : rgtAttrList
+export def EquiJoinPred(lAttrs: AttrList, rAttrs: AttrList = null_list): BinaryPredicate
+  const n = len(lAttrs)
+  const rgt = rAttrs == null ? lAttrs : rAttrs
 
   if n != len(rgt)
-    throw ErrEquiJoinAttributes(lftAttrList, rgt)
+    throw $'Join on sets of attributes of different length: {ListStr(lAttrs)} vs {ListStr(rgt)}'
   endif
 
-  return (t: dict<any>, u: dict<any>): bool => {
+  return (t: Tuple, u: Tuple): bool => {
     var i = 0
+
     while i < n
-      if t[lftAttrList[i]] != u[rgt[i]]
+      if t[lAttrs[i]] != u[rgt[i]]
         return false
       endif
-      i += 1
+      ++i
     endwhile
+
     return true
   }
 enddef
 
 # TODO: build index on the fly
 export def EquiJoin(
-    Arg1: any,
-    Arg2: any,
-    lftAttrs: any,
-    rgtAttrs: any = lftAttrs,
-    prefix = '_'
-    ): func(func(dict<any>))
-  const lftAttrList = Listify(lftAttrs)
-  const rgtAttrList = Listify(rgtAttrs)
+    Arg1: any, Arg2: any, lAttrs: any, rAttrs: any = lAttrs, prefix = '_'
+): Continuation
+  const lAttrList = Listify(lAttrs)
+  const rAttrList = Listify(rAttrs)
 
-  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2) # Fast path
+  if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
     const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
     const Cont = From(Arg1)
     const rel: Rel = Arg2
 
-    return (Emit: func(dict<any>)) => {
-      Cont((t: dict<any>) => {
-        const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
+    return (Emit: Consumer) => {
+      Cont((t: Tuple) => {
+        const u = rel.Lookup(rAttrList, Values(t, lAttrList))
+
         if u isnot KEY_NOT_FOUND
           Emit(MergeTuples(t, u))
         endif
@@ -976,12 +873,12 @@ export def EquiJoin(
     }
   endif
 
-  const Pred = EquiJoinPred(lftAttrList, rgtAttrList)
+  const Pred = EquiJoinPred(lAttrList, rAttrList)
 
   return Join(Arg1, Arg2, Pred, prefix)
 enddef
 
-def NatJoinPred(t: dict<any>, u: dict<any>): bool
+def NatJoinPred(t: Tuple, u: Tuple): bool
   for a in keys(t)
     if u->has_key(a)
       if t[a] != u[a]
@@ -989,15 +886,16 @@ def NatJoinPred(t: dict<any>, u: dict<any>): bool
       endif
     endif
   endfor
+
   return true
 enddef
 
-export def NatJoin(Arg1: any, Arg2: any): func(func(dict<any>))
+export def NatJoin(Arg1: any, Arg2: any): Continuation
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         if NatJoinPred(t, u)
           Emit(t->extendnew(u))
@@ -1007,13 +905,13 @@ export def NatJoin(Arg1: any, Arg2: any): func(func(dict<any>))
   }
 enddef
 
-export def Product(Arg1: any, Arg2: any, prefix = '_'): func(func(dict<any>))
+export def Product(Arg1: any, Arg2: any, prefix = '_'): Continuation
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         Emit(MergeTuples(t, u))
       endfor
@@ -1021,12 +919,12 @@ export def Product(Arg1: any, Arg2: any, prefix = '_'): func(func(dict<any>))
   }
 enddef
 
-export def Intersect(Arg1: any, Arg2: any): func(func(dict<any>))
+export def Intersect(Arg1: any, Arg2: any): Continuation
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         if t == u
           Emit(t)
@@ -1037,30 +935,29 @@ export def Intersect(Arg1: any, Arg2: any): func(func(dict<any>))
   }
 enddef
 
-export def Minus(Arg1: any, Arg2: any): func(func(dict<any>))
+export def Minus(Arg1: any, Arg2: any): Continuation
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         if t == u
           return
         endif
       endfor
+
       Emit(t)
     })
   }
 enddef
 
-export def SemiJoin(
-    Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool
-): func(func(dict<any>))
+export def SemiJoin(Arg1: any, Arg2: any, Pred: BinaryPredicate): Continuation
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         if Pred(t, u)
           Emit(t)
@@ -1071,62 +968,58 @@ export def SemiJoin(
   }
 enddef
 
-export def AntiJoin(
-    Arg1: any, Arg2: any, Pred: func(dict<any>, dict<any>): bool
-): func(func(dict<any>))
+export def AntiJoin(Arg1: any, Arg2: any, Pred: BinaryPredicate): Continuation
   const rel  = Query(Arg2)
   const Cont = From(Arg1)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       for u in rel
         if Pred(t, u)
           return
         endif
       endfor
+
       Emit(t)
     })
   }
 enddef
 
-export def AntiEquiJoin(
-    Arg1: any,
-    Arg2: any,
-    lftAttrs: any,
-    rgtAttrs: any = lftAttrs
-): func(func(dict<any>))
-  const lftAttrList = Listify(lftAttrs)
-  const rgtAttrList = Listify(rgtAttrs)
-  const Cont        = From(Arg1)
+export def AntiEquiJoin(Arg1: any, Arg2: any, lAttrs: any, rAttrs: any = lAttrs): Continuation
+  const lAttrList = Listify(lAttrs)
+  const rAttrList = Listify(rAttrs)
+  const Cont = From(Arg1)
 
-  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2) # Fast path
+  if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
     const rel: Rel = Arg2
 
-    return (Emit: func(dict<any>)) => {
-      Cont((t: dict<any>) => {
-        const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
+    return (Emit: Consumer) => {
+      Cont((t: Tuple) => {
+        const u = rel.Lookup(rAttrList, Values(t, lAttrList))
+
         if u is KEY_NOT_FOUND
           Emit(t)
         endif
+
         return
       })
     }
   endif
 
-  const Pred = EquiJoinPred(lftAttrList, rgtAttrList)
+  const Pred = EquiJoinPred(lAttrList, rAttrList)
 
   return AntiJoin(Arg1, Arg2, Pred)
 enddef
 
 # See: C. Date & H. Darwen, Outer Join with No Nulls and Fewer Tears, Ch. 20,
 # Relational Database Writings 1989–1991
-export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): func(func(dict<any>))
+export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): Continuation
   const rel    = Query(Arg2)
   const Cont   = From(Arg1)
   const filler = Query(Filler)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       var joined: bool = false
 
       for u in rel
@@ -1146,25 +1039,21 @@ export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): func(func(dict<any>))
 enddef
 
 export def LeftEquiJoin(
-  Arg1:     any,
-  Arg2:     any,
-  lftAttrs: any,
-  rgtAttrs: any,
-  Filler:   any,
-  prefix = '_',
-): func(func(dict<any>))
-  const lftAttrList = Listify(lftAttrs)
-  const rgtAttrList = Listify(rgtAttrs)
+    Arg1: any, Arg2: any, lAttrs: any, rAttrs: any, Filler: any, prefix = '_',
+): Continuation
+  const lAttrList = Listify(lAttrs)
+  const rAttrList = Listify(rAttrs)
   const Cont        = From(Arg1)
   const filler      = Query(Filler)
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
 
-  if IsRel(Arg2) && rgtAttrList->IsKeyOf(Arg2) # Fast path
+  if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
     const rel: Rel = Arg2
 
-    return (Emit: func(dict<any>)) => {
-      Cont((t: dict<any>) => {
-        const u = rel.Lookup(rgtAttrList, Values(t, lftAttrList))
+    return (Emit: Consumer) => {
+      Cont((t: Tuple) => {
+        const u = rel.Lookup(rAttrList, Values(t, lAttrList))
+
         if u isnot KEY_NOT_FOUND
           Emit(MergeTuples(t, u))
         else
@@ -1177,10 +1066,10 @@ export def LeftEquiJoin(
   endif
 
   const rel  = Query(Arg2)
-  const Pred = EquiJoinPred(lftAttrList, rgtAttrList)
+  const Pred = EquiJoinPred(lAttrList, rAttrList)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       var joined: bool = false
 
       for u in rel
@@ -1199,11 +1088,11 @@ export def LeftEquiJoin(
   }
 enddef
 
-export def Extend(Arg: any, Fn: func(dict<any>): dict<any>): func(func(dict<any>))
+export def Extend(Arg: any, Fn: func(Tuple): Tuple): Continuation
   const Cont = From(Arg)
 
-  return (Emit: func(dict<any>)) => {
-    Cont((t: dict<any>) => {
+  return (Emit: Consumer) => {
+    Cont((t: Tuple) => {
       Emit(Fn(t)->extend(t, 'error'))
     })
   }
@@ -1211,23 +1100,21 @@ enddef
 
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
-export def Frame(
-    Arg: any,
-    attrs: any,
-    name: string = 'fid'
-): func(func(dict<any>))
+export def Frame(Arg: any, attrs: any, name: string = 'fid'): Continuation
   var fid = 0  # Frame identifier
   var seen: dict<number> = {}
-  const attrList: list<string> = Listify(attrs)
+  const attrList: AttrSet = Listify(attrs)
   const Cont = From(Arg)
 
-  return (Emit: func(dict<any>)) => {
-    def FrameTuple(t: dict<any>)
+  return (Emit: Consumer) => {
+    def FrameTuple(t: Tuple)
       const groupby = string(ProjectTuple(t, attrList))
+
       if !seen->has_key(groupby)
         seen[groupby] = fid
         ++fid
       endif
+
       Emit(extendnew(t, {[name]: seen[groupby]}, 'error'))
     enddef
 
@@ -1236,23 +1123,22 @@ export def Frame(
 enddef
 
 export def GroupBy(
-    Arg: any,
-    groupBy: any,
-    AggregateFn: func(...list<any>): any,
-    aggrName = 'aggrValue'
-): func(func(dict<any>))
-  var   fid:      dict<list<dict<any>>> = PartitionBy(Arg, groupBy)
-  const groupBy_: list<string>          = Listify(groupBy)
+    Arg: any, groupBy: any, AggrFn: func(...list<any>): any, aggrName = 'aggrValue'
+): Continuation
+  var fid: dict<Relation> = PartitionBy(Arg, groupBy)
+  const groupBy_: AttrSet = Listify(groupBy)
 
-  return (Emit: func(dict<any>)) => {
-    # Apply aggregate function to each subrelation
+  return (Emit: Consumer) => {
+    # Apply the aggregate function to each subrelation
     for groupKey in keys(fid)
       const subrel = fid[groupKey]
-      var t0: dict<any> = {}
+      var t0: Tuple = {}
+
       for attr in groupBy_
         t0[attr] = subrel[0][attr]
       endfor
-      t0[aggrName] = Scan(subrel)->AggregateFn()
+
+      t0[aggrName] = Scan(subrel)->AggrFn()
       Emit(t0)
     endfor
   }
@@ -1265,7 +1151,7 @@ enddef
 #
 # where r₁ = π_K(r) and s₁ = π_K((s × r₁) - r), with K the set of attributes
 # appearing in r but not in s.
-export def CoddDivide(Arg1: any, Arg2: any, divisorAttrList: list<string> = []): func(func(dict<any>))
+export def CoddDivide(Arg1: any, Arg2: any, divisorAttrs: AttrSet = []): Continuation
   const r = Query(Arg1)
 
   if empty(r)
@@ -1277,7 +1163,8 @@ export def CoddDivide(Arg1: any, Arg2: any, divisorAttrList: list<string> = []):
   if empty(s)
     const K = IsRel(Arg2)
       ? filter(keys(r[0]), (i, v) => index(AsRel(Arg2).attributes, v) == -1)
-      : filter(keys(r[0]), (i, v) => index(divisorAttrList, v) == -1)
+      : filter(keys(r[0]), (i, v) => index(divisorAttrs, v) == -1)
+
     return Project(r, K)
   endif
 
@@ -1313,7 +1200,7 @@ enddef
 # Relational Database Writings 1989–1991.
 # C Date, An Introduction to Database Systems
 # M Levene and G Loizou, A Guided Tour of Relational Databases and Beyond, Ex. 3.4
-export def Divide(Arg1: any, Arg2: any): func(func(dict<any>))
+export def Divide(Arg1: any, Arg2: any): Continuation
   const r = Query(Arg1)
 
   if empty(r)
@@ -1338,17 +1225,19 @@ enddef
 # }}}
 
 # Aggregate functions {{{
-def Aggregate(Arg: any, initValue: any, Fn: func(dict<any>, any): any): any
+def Aggregate(Arg: any, initValue: any, Fn: func(Tuple, any): any): any
   const Cont = From(Arg)
 
   var Res: any = initValue
+
   Cont((t) => {
     Res = Fn(t, Res)
   })
+
   return Res
 enddef
 
-def ListAgg_(Arg: any, attr: string, How: any, unique: bool): list<any>
+def ListAgg_(Arg: any, attr: Attr, How: any, unique: bool): list<any>
   var agg: list<any> = []
   const Cont = From(Arg)
 
@@ -1367,7 +1256,7 @@ enddef
 
 export const ListAgg = Curry(ListAgg_)
 
-def StringAgg_(Arg: any, attr: string, sep: string, How: any, unique: bool): string
+def StringAgg_(Arg: any, attr: Attr, sep: string, How: any, unique: bool): string
   return ListAgg_(Arg, attr, How, unique)->join(sep)
 enddef
 
@@ -1384,13 +1273,14 @@ export def Count(...ArgList: list<any>): number
   return count
 enddef
 
-def CountDistinct_(Arg: any, attr: string): number
+def CountDistinct_(Arg: any, attr: Attr): number
   var count = 0
   var seen: dict<bool> = {}
   const Cont = From(Arg)
 
   Cont((t) => {
     const v = String(t[attr])
+
     if !seen->has_key(v)
       ++count
       seen[v] = true
@@ -1402,13 +1292,14 @@ enddef
 
 export const CountDistinct = Curry(CountDistinct_)
 
-def Max_(Arg: any, attr: string): any
+def Max_(Arg: any, attr: Attr): any
   var first = true
   var max: any = null
   const Cont = From(Arg)
 
   Cont((t) => {
     const v = t[attr]
+
     if first
       max = v
       first = false
@@ -1416,18 +1307,20 @@ def Max_(Arg: any, attr: string): any
       max = v
     endif
   })
+
   return max
 enddef
 
 export const Max = Curry(Max_)
 
-def Min_(Arg: any, attr: string): any
+def Min_(Arg: any, attr: Attr): any
   var first = true
   var min: any = null
   const Cont = From(Arg)
 
   Cont((t) => {
     const v = t[attr]
+
     if first
       min = v
       first = false
@@ -1435,26 +1328,28 @@ def Min_(Arg: any, attr: string): any
       min = v
     endif
   })
+
   return min
 enddef
 
 export const Min = Curry(Min_)
 
-def Sum_(Arg: any, attr: string): any
+def Sum_(Arg: any, attr: Attr): any
   return Aggregate(Arg, 0, (t, sum) => sum + t[attr])
 enddef
 
 export const Sum = Curry(Sum_)
 
-def Avg_(Arg: any, attr: string): any
+def Avg_(Arg: any, attr: Attr): any
   var sum: float = 0.0
   var count = 0
   const Cont = From(Arg)
 
-  Cont((t: dict<any>) => {
+  Cont((t: Tuple) => {
     sum += t[attr]
     ++count
   })
+
   return count == 0 ? null : sum / count
 enddef
 
@@ -1463,18 +1358,18 @@ export const Avg = Curry(Avg_)
 # }}}
 
 # Convenience functions {{{
-export def In(t: dict<any>, R: any): bool
+export def In(t: Tuple, R: any): bool
   return index(Instance(R), t) != -1
 enddef
 
-export def NotIn(t: dict<any>, R: any): bool
+export def NotIn(t: Tuple, R: any): bool
   return !(t->In(R))
 enddef
 
-export def Split(Arg: any, Pred: func(dict<any>): bool): list<list<dict<any>>>
+export def Split(Arg: any, Pred: UnaryPredicate): list<Relation>
   const Cont = From(Arg)
-  var ok:  list<dict<any>> = []
-  var tsk: list<dict<any>> = []
+  var ok:  Relation = []
+  var tsk: Relation = []
 
   Cont((t) => {
     if Pred(t)
@@ -1487,11 +1382,8 @@ export def Split(Arg: any, Pred: func(dict<any>): bool): list<list<dict<any>>>
   return [ok, tsk]
 enddef
 
-export def PartitionBy(
-    Arg: any,
-    groupBy: any
-): dict<list<dict<any>>>
-  var   fid: dict<list<dict<any>>> = {}
+export def PartitionBy(Arg: any, groupBy: any): dict<Relation>
+  var   fid: dict<Relation> = {}
   const Cont = From(Arg)
 
   if type(groupBy) == v:t_string
@@ -1520,12 +1412,13 @@ export def PartitionBy(
   return fid
 enddef
 
-export def Transform(Arg: any, F: func(dict<any>): any): list<any>
+export def Transform(Arg: any, Fn: func(Tuple): any): list<any>
   const Cont = From(Arg)
   var result = []
 
   Cont((t) => {
-    const value = F(t)
+    const value = Fn(t)
+
     if value == null
       return
     elseif type(value) == v:t_list
@@ -1538,23 +1431,22 @@ export def Transform(Arg: any, F: func(dict<any>): any): list<any>
   return result
 enddef
 
-def ExtendByMerging(d1: dict<any>, d2: dict<any>)
+def ExtendByMerging(d1: Tuple, d2: Tuple)
   for k in keys(d2)
     if !d1->has_key(k)
       d1[k] = []
     endif
+
     d1[k]->add(d2[k])
   endfor
 enddef
 
-export def DictTransform(
-    Arg: any, F: func(dict<any>): dict<any>, flatten = false
-): dict<any>
+export def DictTransform(Arg: any, Fn: func(Tuple): Tuple, flatten = false): dict<any>
   const Cont = From(Arg)
   var result: dict<any> = {}
 
   Cont((t) => {
-    ExtendByMerging(result, F(t))
+    ExtendByMerging(result, Fn(t))
   })
 
   if flatten
@@ -1569,30 +1461,35 @@ export def DictTransform(
 enddef
 
 # NOTE: l2 may be longer than l1 (extra elements are simply ignored)
-export def Zip(l1: list<any>, l2: list<any>): dict<any>
+export def Zip(l1: list<any>, l2: list<any>): Tuple
   const n = len(l1)
-  var zipdict: dict<any> = {}
+  var t: Tuple = {}
   var i = 0
+
   while i < n
-    zipdict[String(l1[i])] = l2[i]
+    t[String(l1[i])] = l2[i]
     ++i
   endwhile
-  return zipdict
+
+  return t
 enddef
 
 export def RelEq(R: any, S: any): bool
-  const rel1: list<dict<any>> = Instance(R)
-  const rel2: list<dict<any>> = Instance(S)
+  const rel1: Relation = Instance(R)
+  const rel2: Relation = Instance(S)
+
   return sort(copy(rel1)) == sort(copy(rel2))
 enddef
 
 # Returns a textual representation of a relation
-export def Table(R: any, columns: any = null, name = null_string, gap = 1, sep = '─'): string
+export def Table(
+    R: any, columns: any = null, name = null_string, gap = 1, sep = '─'
+): string
   if strchars(sep) != 1
-    throw printf("A table separator must be a single character. Got %s", sep)
+    throw $'A table separator must be a single character. Got {sep}'
   endif
 
-  var rel: list<dict<any>>
+  var rel: Relation
   var relname: string
 
   if IsRel(R)
@@ -1607,7 +1504,7 @@ export def Table(R: any, columns: any = null, name = null_string, gap = 1, sep =
     return printf(" %s\n%s\n", relname, repeat(sep, 2 + strwidth(relname)))
   endif
 
-  const attributes: list<string> = columns == null ? keys(rel[0]) : Listify(columns)
+  const attributes: AttrList = columns == null ? keys(rel[0]) : Listify(columns)
   var width: dict<number> = {}
 
   for attr in attributes
@@ -1642,7 +1539,7 @@ export def Table(R: any, columns: any = null, name = null_string, gap = 1, sep =
     return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), a)), '')
   enddef
 
-  def FmtTuple(t: dict<any>): string
+  def FmtTuple(t: Tuple): string
     return join(mapnew(attributes, (_, a) => printf(Fmt(width[a]), String(t[a]))), '')
   enddef
 

@@ -2328,7 +2328,7 @@ def Test_RA_Table()
 ================
 END
 
-  assert_equal(expectedTable, split(Table(R, null, 'Empty Instance', 1, '='), "\n"))
+  assert_equal(expectedTable, split(Table(R, 'Empty Instance', null, 1, '='), "\n"))
 
   R.InsertMany([
     {AAAAAAAAA: 1, B: 'XYWZ'},
@@ -2355,7 +2355,7 @@ END
         ABC         2
 END
 
-  assert_equal(expectedTable, split(Table(R, null, 'Very Long Table Name'), "\n"))
+  assert_equal(expectedTable, split(Table(R, 'Very Long Table Name'), "\n"))
 
   expectedTable =<< END
  R
@@ -2366,7 +2366,7 @@ END
           ABC                 2
 END
 
-  assert_equal(expectedTable, split(Table(R, null, null_string, 9), "\n"))
+  assert_equal(expectedTable, split(Table(R, v:none, v:none, 9), "\n"))
 enddef
 
 
@@ -2402,7 +2402,7 @@ def Test_RA_TableColumns()
  5 11
 END
 
-  assert_equal(expected, split(Table(r, ['B', 'A'], 'Test'), "\n"))
+  assert_equal(expected, split(Table(r, 'Test', ['B', 'A']), "\n"))
 
   expected =<< END
 ───
@@ -2412,7 +2412,7 @@ END
  5
 END
 
-  assert_equal(expected, split(Table(r, ['B']), "\n"))
+  assert_equal(expected, split(Table(r, v:none, ['B']), "\n"))
 
   expected =<< END
 ────
@@ -2422,7 +2422,7 @@ END
  11
 END
 
-  assert_equal(expected, split(Table(r, 'A'), "\n"))
+  assert_equal(expected, split(Table(r, v:none, 'A'), "\n"))
 enddef
 
 

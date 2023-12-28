@@ -1484,7 +1484,7 @@ enddef
 
 # Returns a textual representation of a relation
 export def Table(
-    R: any, columns: any = null, name = null_string, gap = 1, sep = '─'
+    R: any, name = null_string, columns: any = null, gap = 1, sep = '─'
 ): string
   if strchars(sep) != 1
     throw $'A table separator must be a single character. Got {sep}'

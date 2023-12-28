@@ -6,18 +6,18 @@ vim9script
 # License:      Vim License (see `:help license`)
 
 # Type Aliases {{{
-type Attr            = string
-type Domain          = number # v:t_number, v:t_string, etc.
-type Schema          = dict<Domain> # Map from Attr to Domain
-type AttrSet         = list<Attr> # When the order does not matter
-type AttrList        = list<Attr> # When the order matters
-type Tuple           = dict<any>
-type Relation        = list<Tuple>
-type Constraint      = func(Tuple): void # Raises if the constraint fails
-type Consumer        = func(Tuple): void
-type Continuation    = func(Consumer): void
-type UnaryPredicate  = func(Tuple): bool
-type BinaryPredicate = func(Tuple, Tuple): bool
+export type Attr            = string
+export type Domain          = number # v:t_number, v:t_string, etc.
+export type Schema          = dict<Domain> # Map from Attr to Domain
+export type AttrSet         = list<Attr> # When the order does not matter
+export type AttrList        = list<Attr> # When the order matters
+export type Tuple           = dict<any>
+export type Relation        = list<Tuple>
+export type Constraint      = func(Tuple): void # Raises if the constraint fails
+export type Consumer        = func(Tuple): void
+export type Continuation    = func(Consumer): void
+export type UnaryPredicate  = func(Tuple): bool
+export type BinaryPredicate = func(Tuple, Tuple): bool
 # }}}
 
 # Helper functions {{{

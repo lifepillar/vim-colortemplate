@@ -9,7 +9,7 @@ const Hex2Rgb      = libcolor.Hex2Rgb
 const Neighbours   = libcolor.Neighbours
 const ColorsWithin = libcolor.ColorsWithin
 const ColorParser  = parser.ColorParser
-const Context      = libparser.Context
+type  Context      = libparser.Context
 
 # Get info about the Color definition under the cursor.
 #

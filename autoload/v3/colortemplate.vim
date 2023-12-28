@@ -7,9 +7,9 @@ import './parser.vim'      as parser
 import './generator.vim'   as g
 import './colorstats.vim'  as stats
 
-const Colorscheme = themes.Colorscheme
-const Result      = libparser.Result
-const Generator   = g.Generator
+type Colorscheme = themes.Colorscheme
+type Result      = libparser.Result
+type Generator   = g.Generator
 
 # Cache for generated color schemes
 var theme_cache: dict<Colorscheme>
@@ -160,8 +160,8 @@ enddef
 
 # Toolbar {{{
 class Toolbar
-  public this.entries: list<string>
-  public this.actions: dict<string>
+  public var entries: list<string>
+  public var actions: dict<string>
 
   def new()
     this.entries = [

@@ -17,7 +17,7 @@ const Transform            = ra.Transform
 
 const VERSION        = version.VERSION
 const NO_DISCR_VALUE = colorscheme.DEFAULT_DISCR_VALUE
-const Database       = colorscheme.Database
+type  Database       = colorscheme.Database
 const Metadata       = colorscheme.Metadata
 const BASE_FILLER    = [{Fg: '', Bg: '', Special: '', Style: '', Font: '', Start: '', Stop: ''}]
 const LINK_FILLER    = [{TargetGroup: ''}]

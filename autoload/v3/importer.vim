@@ -15,8 +15,8 @@ const Approximate       = libcolor.Approximate
 const CtermColorNumber  = libcolor.CtermColorNumber
 const RgbName2Hex       = libcolor.RgbName2Hex
 const Xterm2Hex         = libcolor.Xterm2Hex
-const Colorscheme       = themes.Colorscheme
 const NO_DISCR          = themes.DEFAULT_DISCR_VALUE
+type  Colorscheme       = themes.Colorscheme
 
 const ADJECTIVES = [
   'bald',

@@ -12,9 +12,11 @@ const RgbName2Hex         = libcolor.RgbName2Hex
 const Rgb2Hex             = libcolor.Rgb2Hex
 const Xterm2Hex           = libcolor.Xterm2Hex
 const ColorDifference     = libcolor.ColorDifference
+
+type  Context             = parser.Context
+type  Result              = parser.Result
 const Apply               = parser.Apply
 const Bol                 = parser.Bol
-const Context             = parser.Context
 const Eof                 = parser.Eof
 const Lab                 = parser.Lab
 const LookAhead           = parser.LookAhead
@@ -23,15 +25,15 @@ const Map                 = parser.Map
 const OneOf               = parser.OneOf
 const OneOrMore           = parser.OneOrMore
 const Opt                 = parser.Opt
-const Result              = parser.Result
 const Seq                 = parser.Seq
 const Skip                = parser.Skip
 const SpaceOrComment      = parser.Regex('\%([ \n\t\r]*\%(;[^\n\r]*\)\=\)*')
 const Regex               = parser.Regex
 const R                   = parser.RegexToken(SpaceOrComment)
 const T                   = parser.TextToken(SpaceOrComment)
-const Colorscheme         = themes.Colorscheme
-const Database            = themes.Database
+
+type  Colorscheme         = themes.Colorscheme
+type  Database            = themes.Database
 const DEFAULT_DISCR_VALUE = themes.DEFAULT_DISCR_VALUE
 # }}}
 

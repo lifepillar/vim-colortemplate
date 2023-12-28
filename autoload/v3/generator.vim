@@ -6,7 +6,7 @@ import 'librelalg.vim'     as ra
 
 const VERSION        = version.VERSION
 const NO_DISCR_VALUE = themes.DEFAULT_DISCR_VALUE
-const Colorscheme    = themes.Colorscheme
+type  Colorscheme    = themes.Colorscheme
 const Sort           = ra.Sort
 const Transform      = ra.Transform
 
@@ -155,14 +155,14 @@ enddef
 # }}}
 
 export class Generator
-  this.theme:  Colorscheme
+  var theme:  Colorscheme
 
-  this._backend:      string
-  this._shiftwidth:   number
-  this._comment:      string = '#'
-  this._letKeyword:   string = ''
-  this._constKeyword: string = 'const '
-  this._varPrefix:    string = ''
+  var _backend:      string
+  var _shiftwidth:   number
+  var _comment:      string = '#'
+  var _letKeyword:   string = ''
+  var _constKeyword: string = 'const '
+  var _varPrefix:    string = ''
 
   def new(this.theme)
     this._backend    = this.theme.options.backend

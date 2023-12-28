@@ -3,6 +3,11 @@ vim9script
 import 'librelalg.vim' as ra
 
 # Aliases {{{
+type Attr           = ra.Attr
+type Tuple          = ra.Tuple
+type Rel            = ra.Rel
+type Relation       = ra.Relation
+
 const Bool          = ra.Bool
 const DictTransform = ra.DictTransform
 const EquiJoin      = ra.EquiJoin
@@ -12,7 +17,6 @@ const Int           = ra.Int
 const LeftEquiJoin  = ra.LeftEquiJoin
 const PartitionBy   = ra.PartitionBy
 const Query         = ra.Query
-const Rel           = ra.Rel
 const Select        = ra.Select
 const SortBy        = ra.SortBy
 const Str           = ra.Str
@@ -29,168 +33,168 @@ const ColorKind = {
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
 
 # Integrity constraints {{{
-def IsValidColorName(t: dict<any>)
+def IsValidColorName(t: Tuple)
   if t.ColorName == 'none' ||
      t.ColorName == 'fg'   ||
      t.ColorName == 'bg'   ||
      t.ColorName == 'omit'
-    throw printf("'%s' is a reserved name and cannot be used as a color name", t.ColorName)
+    throw $"'{t.ColorName}' is a reserved name and cannot be used as a color name"
   endif
 enddef
 
-def IsValidBase256Value(t: dict<any>)
+def IsValidBase256Value(t: Tuple)
   const n = str2nr(t.Base256Value)
   if n > 255 || n < 0
-    throw printf('Base-256 value must be in [0,255]: %s is invalid', t.Base256Value)
+    throw $'Base-256 value must be in [0,255]: {t.Base256Value} is invalid'
   endif
 enddef
 # }}}
 
 export class Database
-  public this.background:   string
-  public this.termcolors:   list<string> = []
-  public this.verbatimtext: list<string> = []
+  public var background:   string
+  public var termcolors:   list<string> = []
+  public var verbatimtext: list<string> = []
 
-  this.Variant: Rel = Rel.new('Variant', {
-        \   Variant:   Str,
-        \   NumColors: Int,
-        \ },
-        \ 'Variant').InsertMany([
-        \   {Variant:     'gui', NumColors: 16777216},
-        \   {Variant:     '256', NumColors:      256},
-        \   {Variant:      '88', NumColors:       88},
-        \   {Variant:      '16', NumColors:       16},
-        \   {Variant:       '8', NumColors:        8},
-        \   {Variant:       '0', NumColors:        0},
-        \ ])
+  var Variant: Rel = Rel.new('Variant', {
+    Variant:   Str,
+    NumColors: Int,
+  },
+  'Variant').InsertMany([
+    {Variant:     'gui', NumColors: 16777216},
+    {Variant:     '256', NumColors:      256},
+    {Variant:      '88', NumColors:       88},
+    {Variant:      '16', NumColors:       16},
+    {Variant:       '8', NumColors:        8},
+    {Variant:       '0', NumColors:        0},
+  ])
 
-  this.VariantAttribute: Rel = Rel.new("Variant's Attribute", {
-        \   Variant:  Str,
-        \   AttrType: Str,
-        \   AttrKey:  Str,
-        \ },
-        \ [['Variant', 'AttrKey'], ['Variant', 'AttrType']]).InsertMany([
-        \   {Variant: 'gui',     AttrType: 'Fg',      AttrKey: 'guifg'  },
-        \   {Variant: 'gui',     AttrType: 'Bg',      AttrKey: 'guibg'  },
-        \   {Variant: 'gui',     AttrType: 'Special', AttrKey: 'guisp'  },
-        \   {Variant: 'gui',     AttrType: 'Style',   AttrKey: 'gui'    },
-        \   {Variant: 'gui',     AttrType: 'Font',    AttrKey: 'font'   },
-        \   {Variant: '256',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
-        \   {Variant: '256',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
-        \   {Variant: '256',     AttrType: 'Special', AttrKey: 'ctermul'},
-        \   {Variant: '256',     AttrType: 'Style',   AttrKey: 'cterm'  },
-        \   {Variant:  '88',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
-        \   {Variant:  '88',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
-        \   {Variant:  '88',     AttrType: 'Special', AttrKey: 'ctermul'},
-        \   {Variant:  '88',     AttrType: 'Style',   AttrKey: 'cterm'  },
-        \   {Variant:  '16',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
-        \   {Variant:  '16',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
-        \   {Variant:  '16',     AttrType: 'Special', AttrKey: 'ctermul'},
-        \   {Variant:  '16',     AttrType: 'Style',   AttrKey: 'cterm'  },
-        \   {Variant:   '8',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
-        \   {Variant:   '8',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
-        \   {Variant:   '8',     AttrType: 'Special', AttrKey: 'ctermul'},
-        \   {Variant:   '8',     AttrType: 'Style',   AttrKey: 'cterm'  },
-        \   {Variant:   '0',     AttrType: 'Style',   AttrKey: 'term'   },
-        \   {Variant:   '0',     AttrType: 'Start',   AttrKey: 'start'  },
-        \   {Variant:   '0',     AttrType: 'Stop',    AttrKey: 'stop'   },
-        \ ])
+  var VariantAttribute: Rel = Rel.new("Variant's Attribute", {
+    Variant:  Str,
+    AttrType: Str,
+    AttrKey:  Str,
+  },
+  [['Variant', 'AttrKey'], ['Variant', 'AttrType']]).InsertMany([
+    {Variant: 'gui',     AttrType: 'Fg',      AttrKey: 'guifg'  },
+    {Variant: 'gui',     AttrType: 'Bg',      AttrKey: 'guibg'  },
+    {Variant: 'gui',     AttrType: 'Special', AttrKey: 'guisp'  },
+    {Variant: 'gui',     AttrType: 'Style',   AttrKey: 'gui'    },
+    {Variant: 'gui',     AttrType: 'Font',    AttrKey: 'font'   },
+    {Variant: '256',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+    {Variant: '256',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+    {Variant: '256',     AttrType: 'Special', AttrKey: 'ctermul'},
+    {Variant: '256',     AttrType: 'Style',   AttrKey: 'cterm'  },
+    {Variant:  '88',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+    {Variant:  '88',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+    {Variant:  '88',     AttrType: 'Special', AttrKey: 'ctermul'},
+    {Variant:  '88',     AttrType: 'Style',   AttrKey: 'cterm'  },
+    {Variant:  '16',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+    {Variant:  '16',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+    {Variant:  '16',     AttrType: 'Special', AttrKey: 'ctermul'},
+    {Variant:  '16',     AttrType: 'Style',   AttrKey: 'cterm'  },
+    {Variant:   '8',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
+    {Variant:   '8',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
+    {Variant:   '8',     AttrType: 'Special', AttrKey: 'ctermul'},
+    {Variant:   '8',     AttrType: 'Style',   AttrKey: 'cterm'  },
+    {Variant:   '0',     AttrType: 'Style',   AttrKey: 'term'   },
+    {Variant:   '0',     AttrType: 'Start',   AttrKey: 'start'  },
+    {Variant:   '0',     AttrType: 'Stop',    AttrKey: 'stop'   },
+  ])
 
-  this.Color: Rel = Rel.new('Color', {
-        \   ColorName:       Str,
-        \   GUIValue:        Str,
-        \   Base256Value:    Str,
-        \   Base256HexValue: Str,
-        \   Base16Value:     Str,
-        \ }, 'ColorName').InsertMany([
-        \   {ColorName: '',     GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',   },
-        \   {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE'},
-        \   {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg', },
-        \   {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg', }
-        \ ])
+  var Color: Rel = Rel.new('Color', {
+    ColorName:       Str,
+    GUIValue:        Str,
+    Base256Value:    Str,
+    Base256HexValue: Str,
+    Base16Value:     Str,
+  }, 'ColorName').InsertMany([
+    {ColorName: '',     GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',   },
+    {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE'},
+    {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg', },
+    {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg', }
+  ])
 
-  this.Discriminator: Rel = Rel.new('Discriminator', {
-        \ DiscrName:  Str,
-        \ Definition: Str,
-        \ DiscrNum:   Int,
-        \ }, [
-        \ ['DiscrName'], ['DiscrNum']
-        \ ]).InsertMany([
-        \   {DiscrName: '', Definition: '', DiscrNum: 0},
-        \ ])
+  var Discriminator: Rel = Rel.new('Discriminator', {
+    DiscrName:  Str,
+    Definition: Str,
+    DiscrNum:   Int,
+  }, [
+  ['DiscrName'], ['DiscrNum']
+  ]).InsertMany([
+    {DiscrName: '', Definition: '', DiscrNum: 0},
+  ])
 
-  this.HiGroup: Rel = Rel.new('Highlight Group', {
-        \   HiGroupName: Str,
-        \   DiscrName:   Str,
-        \   IsLinked:    Bool,
-        \ },
-        \ 'HiGroupName')
+  var HiGroup: Rel = Rel.new('Highlight Group', {
+    HiGroupName: Str,
+    DiscrName:   Str,
+    IsLinked:    Bool,
+  },
+  'HiGroupName')
 
-  this.LinkedGroup: Rel = Rel.new('Linked Group', {
-        \   HiGroupName: Str,
-        \   TargetGroup: Str,
-        \ },
-        \ ['HiGroupName'])
+  var LinkedGroup: Rel = Rel.new('Linked Group', {
+    HiGroupName: Str,
+    TargetGroup: Str,
+  },
+  ['HiGroupName'])
 
-  this.BaseGroup: Rel = Rel.new('Base Group', {
-        \   HiGroupName: Str,
-        \   Fg:          Str,
-        \   Bg:          Str,
-        \   Special:     Str,
-        \   Style:       Str,
-        \   Font:        Str,
-        \   Start:       Str,
-        \   Stop:        Str,
-        \ },
-        \ ['HiGroupName'])
+  var BaseGroup: Rel = Rel.new('Base Group', {
+    HiGroupName: Str,
+    Fg:          Str,
+    Bg:          Str,
+    Special:     Str,
+    Style:       Str,
+    Font:        Str,
+    Start:       Str,
+    Stop:        Str,
+  },
+  ['HiGroupName'])
 
-  this.HiGroupOverride: Rel = Rel.new('Hi Group Override', {
-        \   HiGroupName: Str,
-        \   Variant:     Str,
-        \   DiscrValue:  Str,
-        \   IsLinked:    Bool,
-        \ },
-        \ ['HiGroupName', 'Variant', 'DiscrValue'])
+  var HiGroupOverride: Rel = Rel.new('Hi Group Override', {
+    HiGroupName: Str,
+    Variant:     Str,
+    DiscrValue:  Str,
+    IsLinked:    Bool,
+  },
+  ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.LinkedGroupOverride: Rel = Rel.new('Linked Group Override', {
-        \   HiGroupName: Str,
-        \   Variant:     Str,
-        \   DiscrValue:  Str,
-        \   TargetGroup: Str,
-        \ },
-        \ ['HiGroupName', 'Variant', 'DiscrValue'])
+  var LinkedGroupOverride: Rel = Rel.new('Linked Group Override', {
+    HiGroupName: Str,
+    Variant:     Str,
+    DiscrValue:  Str,
+    TargetGroup: Str,
+  },
+  ['HiGroupName', 'Variant', 'DiscrValue'])
 
-  this.BaseGroupOverride: Rel = Rel.new('Base Group Override', {
-        \   HiGroupName: Str,
-        \   Variant:     Str,
-        \   DiscrValue:  Str,
-        \   Fg:          Str,
-        \   Bg:          Str,
-        \   Special:     Str,
-        \   Style:       Str,
-        \   Font:        Str,
-        \   Start:       Str,
-        \   Stop:        Str,
-        \ },
-        \ ['HiGroupName', 'Variant', 'DiscrValue'])
+  var BaseGroupOverride: Rel = Rel.new('Base Group Override', {
+    HiGroupName: Str,
+    Variant:     Str,
+    DiscrValue:  Str,
+    Fg:          Str,
+    Bg:          Str,
+    Special:     Str,
+    Style:       Str,
+    Font:        Str,
+    Start:       Str,
+    Stop:        Str,
+  },
+  ['HiGroupName', 'Variant', 'DiscrValue'])
 
   def new(this.background)
     this.Color.Check(IsValidColorName)
     this.Color.Check(IsValidBase256Value)
 
-    ForeignKey(this.HiGroup,             'must be classified by a valid',     this.Discriminator,    ['DiscrName'])
-    ForeignKey(this.LinkedGroup,         'must be a',                         this.HiGroup,          ['HiGroupName'])
-    ForeignKey(this.BaseGroup,           'must be a',                         this.HiGroup,          ['HiGroupName'])
-    ForeignKey(this.BaseGroup,           'must use as foreground a valid',    this.Color,            ['Fg'], ['ColorName'])
-    ForeignKey(this.BaseGroup,           'must use as background a valid',    this.Color,            ['Bg'], ['ColorName'])
-    ForeignKey(this.BaseGroup,           'must use as special color a valid', this.Color,            ['Special'], ['ColorName'])
-    ForeignKey(this.HiGroupOverride,     'must override an existing',         this.HiGroup,          ['HiGroupName'])
-    ForeignKey(this.HiGroupOverride,     'must refer to a valid',             this.Variant,          ['Variant'])
-    ForeignKey(this.LinkedGroupOverride, 'must be a',                         this.HiGroupOverride,  ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.BaseGroupOverride,   'must be a',                         this.HiGroupOverride,  ['HiGroupName', 'Variant', 'DiscrValue'])
-    ForeignKey(this.BaseGroupOverride,   'must use as foreground a valid',    this.Color,            ['Fg'], ['ColorName'])
-    ForeignKey(this.BaseGroupOverride,   'must use as background a valid',    this.Color,            ['Bg'], ['ColorName'])
-    ForeignKey(this.BaseGroupOverride,   'must use as special color a valid', this.Color,            ['Special'], ['ColorName'])
+    ForeignKey(this.HiGroup,     'DiscrName',   this.Discriminator, v:none,      'is classified by')
+    ForeignKey(this.LinkedGroup, 'HiGroupName', this.HiGroup,       v:none,      'is a')
+    ForeignKey(this.BaseGroup,   'HiGroupName', this.HiGroup,       v:none,      'is a')
+    ForeignKey(this.BaseGroup,   'Fg',          this.Color,         'ColorName', 'uses as foreground a')
+    ForeignKey(this.BaseGroup,   'Bg',          this.Color,         'ColorName', 'must use as background a valid')
+    ForeignKey(this.BaseGroup,   'Special',     this.Color,         'ColorName', 'must use as special color a valid')
+    ForeignKey(this.HiGroupOverride, 'HiGroupName', this.HiGroup, v:none, 'must override an existing')
+    ForeignKey(this.HiGroupOverride, 'Variant', this.Variant, v:none, 'must refer to a valid')
+    ForeignKey(this.LinkedGroupOverride, ['HiGroupName', 'Variant', 'DiscrValue'], this.HiGroupOverride, v:none, 'must be a')
+    ForeignKey(this.BaseGroupOverride,   ['HiGroupName', 'Variant', 'DiscrValue'], this.HiGroupOverride, v:none, 'must be a')
+    ForeignKey(this.BaseGroupOverride,   'Fg', this.Color, 'ColorName', 'must use as foreground a valid')
+    ForeignKey(this.BaseGroupOverride,   'Bg', this.Color, 'ColorName', 'must use as background a valid')
+    ForeignKey(this.BaseGroupOverride,   'Special', this.Color, 'ColorName', 'must use as special color a valid')
   enddef
 
   def GetColor(name: string, kind: string): string
@@ -379,7 +383,7 @@ export class Database
   #   discriminator value.
   def HiGroupDef(
       hiGroupName: string, variant: string, discrValue: string = DEFAULT_DISCR_VALUE
-  ): dict<any>
+  ): Tuple
     if discrValue == DEFAULT_DISCR_VALUE
       return this.GetDefaultDef(hiGroupName, variant)
     endif
@@ -399,7 +403,7 @@ export class Database
   # Returns:
   #   a tuple containing the pieces of information that are needed to build
   #   the requested highlight group definition.
-  def GetDefaultDef(hiGroupName: string, variant: string): dict<any>
+  def GetDefaultDef(hiGroupName: string, variant: string): Tuple
     var t = this.GetOverrideDef(hiGroupName, variant, DEFAULT_DISCR_VALUE)
 
     if empty(t)  # Look for the global default definition
@@ -429,7 +433,7 @@ export class Database
   #   matching the input cannot be found, an empty tuple is returned.
   def GetOverrideDef(
       hiGroupName: string, variant: string, discrValue: string
-  ): dict<any>
+  ): Tuple
     const t = this.HiGroupOverride.Lookup(
       ['HiGroupName', 'Variant', 'DiscrValue'],
       [hiGroupName, variant, discrValue]
@@ -499,29 +503,29 @@ export class Database
 endclass
 
 export class Colorscheme
-  this.dark:  Database
-  this.light: Database
+  var dark:  Database
+  var light: Database
 
-  public this.author:       list<string>       = []
-  public this.description:  list<string>       = []
-  public this.fullname:     string             = ''
-  public this.license:      string             = ''
-  public this.maintainer:   list<string>       = []
-  public this.shortname:    string             = ''
-  public this.url:          list<string>       = []
-  public this.version:      string             = ''
-  public this.variants:     list<string>       = ['gui']
-  public this.backgrounds:  dict<bool>         = {'dark': false, 'light': false}
-  public this.verbatimtext: list<string>       = []
-  public this.auxfiles:     dict<list<string>> = {}  # path => content
-  public this.prefix:       string             = ''
-  public this.options:      dict<any>          = {
-        \ backend:    'vim9',
-        \ creator:    true,
-        \ palette:    false,
-        \ shiftwidth: 2,
-        \ timestamp:  true,
-        \ }
+  public var author:       list<string>       = []
+  public var description:  list<string>       = []
+  public var fullname:     string             = ''
+  public var license:      string             = ''
+  public var maintainer:   list<string>       = []
+  public var shortname:    string             = ''
+  public var url:          list<string>       = []
+  public var version:      string             = ''
+  public var variants:     list<string>       = ['gui']
+  public var backgrounds:  dict<bool>         = {'dark': false, 'light': false}
+  public var verbatimtext: list<string>       = []
+  public var auxfiles:     dict<list<string>> = {}  # path => content
+  public var prefix:       string             = ''
+  public var options:      dict<any>          = {
+    backend:    'vim9',
+    creator:    true,
+    palette:    false,
+    shiftwidth: 2,
+    timestamp:  true,
+  }
 
   def new()
     this.dark = Database.new('dark')
@@ -543,6 +547,6 @@ export class Colorscheme
       return this.light
     endif
 
-    throw 'Invalid background: ' .. background
+    throw $'Invalid background: {background}'
   enddef
 endclass

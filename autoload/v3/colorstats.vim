@@ -4,13 +4,16 @@ import 'libcolor.vim'      as libcolor
 import 'librelalg.vim'     as ra
 import './colorscheme.vim' as themes
 
-const Colorscheme          = themes.Colorscheme
+type Colorscheme           = themes.Colorscheme
 const NO_DISCR             = themes.DEFAULT_DISCR_VALUE
+
 const BrightnessDifference = libcolor.BrightnessDifference
 const ColorDifference      = libcolor.ColorDifference
 const ContrastRatio        = libcolor.ContrastRatio
 const Hex2Rgb              = libcolor.Hex2Rgb
 const PerceptualDifference = libcolor.PerceptualDifference
+
+type Rel                   = ra.Rel
 const AntiEquiJoin         = ra.AntiEquiJoin
 const EquiJoin             = ra.EquiJoin
 const Extend               = ra.Extend
@@ -18,7 +21,6 @@ const GroupBy              = ra.GroupBy
 const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
-const Rel                  = ra.Rel
 const Select               = ra.Select
 const Sort                 = ra.Sort
 const SortBy               = ra.SortBy

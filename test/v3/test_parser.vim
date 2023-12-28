@@ -7,8 +7,8 @@ import '../../autoload/v3/parser.vim' as colortemplateParser
 import '../../autoload/v3/colorscheme.vim' as themes
 
 const Parse       = colortemplateParser.Parse
-const Result      = libparser.Result
-const Colorscheme = themes.Colorscheme
+type  Result      = libparser.Result
+type  Colorscheme = themes.Colorscheme
 
 
 def Test_PS_Background()

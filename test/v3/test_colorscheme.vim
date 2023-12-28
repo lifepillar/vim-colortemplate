@@ -6,7 +6,7 @@ import '../../autoload/v3/colorscheme.vim' as themes
 
 const Parse       = parser.Parse
 const NO_DISCR    = themes.DEFAULT_DISCR_VALUE
-const Colorscheme = themes.Colorscheme
+type  Colorscheme = themes.Colorscheme
 
 def Test_CS_GetVariantMetadata()
   const template =<< trim END

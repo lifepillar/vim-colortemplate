@@ -57,5 +57,6 @@ librelalg.Table()	librelalg.txt	/*librelalg.Table()*
 librelalg.Transform()	librelalg.txt	/*librelalg.Transform()*
 librelalg.Union()	librelalg.txt	/*librelalg.Union()*
 librelalg.Zip()	librelalg.txt	/*librelalg.Zip()*
+librelalg.operators	librelalg.txt	/*librelalg.operators*
 librelalg.txt	librelalg.txt	/*librelalg.txt*
 not	librelalg.txt	/*not*

@@ -1,4 +1,4 @@
-*librelalg.txt*	For Vim version 9.0	Last change: 2023 Jan 25
+*librelalg.txt*	For Vim version 9.0	Last change: 2023 Dec 28
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
@@ -58,21 +58,23 @@ with built-in integrity. For that, start by defining a Relational schema:
 
 	import "librelalg.vim" as ra
 
-	const Int   = ra.Int
-	const Str   = ra.Str
-	const Float = ra.Float
+	type Rel         = ra.Rel
+	const Int        = ra.Int
+	const Str        = ra.Str
+	const Float      = ra.Float
+	const ForeignKey = ra.ForeignKey
 
-	#                   Name  Schema               Keys
-	var R = ra.Rel.new('R',   {A: Int, B: Float},  'A')
-	var S = ra.Rel.new('S',   {X: Str, Y: Int},    'X')
+	#               Name   Schema               Keys
+	var R = Rel.new('R',   {A: Int, B: Float},  'A')
+	var S = Rel.new('S',   {X: Str, Y: Int},    'X')
 
 	R.Check((t) => {
 	  if t.B <= 0.0
-	   throw printf('B must be greater than zero: got %s', t.B)
+	   throw $'B must be greater than zero: got {t.B}'
 	  endif
 	})
 
-	ra.ForeignKey(S, 'references', R, 'Y', 'A')  # FK: S[Y] -> R[A]
+	ForeignKey(S, 'Y', R, 'A')  # FK: S[Y] -> R[A]
 <
 Populate the database:
 >
@@ -89,12 +91,12 @@ Populate the database:
 <
 Query the database:
 >
-	# Find all X that are related to a tuple in R with B > 1.5,
+	# Find all X in S that are related to a tuple in R with B > 1.5,
 	# sorted lexicographically:
 
 	var rel = ra.Query(
-	    ra.EquiJoin(S, R, ['Y'], ['A'])
-	    ->ra.Select((t) => t.B > 1.5)
+	    ra.Select(R, (t) => t.B > 1.5)
+	    ->ra.EquiJoin(S, ['A'], ['Y'])
 	    ->ra.Project('X')
 	    ->ra.SortBy('X')
 	)
@@ -110,9 +112,9 @@ Output:
 <
 Update the database:
 >
-	R.Insert({A: 30, B: 4.3})
-	S.Update({X: 'klm', Y: 30})
-	S.Delete((t) => t.Y == 10)
+	R.Insert({A: 30, B: 4.3})   # Add a new tuple
+	S.Update({X: 'klm', Y: 30}) # Update tuple with key X = 'klm'
+	S.Delete((t) => t.Y == 10)  # Delete based on predicate
 	rel = ra.Query(ra.EquiJoin(R, S, ['A'], ['Y']))
 	echo ra.Table(rel)
 <
@@ -216,10 +218,12 @@ straightforward task:
 
 	import 'librelalg.vim' as ra
 
-	const Bool   = ra.Bool
-	const Int    = ra.Int
-	const Str    = ra.Str
-	const Rel    = ra.Rel
+	type  Rel        = ra.Rel
+	const Bool       = ra.Bool
+	const Int        = ra.Int
+	const Str        = ra.Str
+	const ForeignKey = ra.ForeignKey
+	const Table      = ra.Table
 	# etc.
 <
    Note: in the following, for clarity and conciseness, we will write
@@ -259,8 +263,14 @@ straightforward task:
 3. Add the relevant constraints:
 >
 	Tag.Check((t) => {
-	   if t.Line <= 0 || t.Column <= 0
-	      throw 'Line and column numbers must be positive'
+	   if t.Line <= 0
+	      throw $'Line numbers must be positive: got {t.Line}'
+	   endif
+	})
+
+	Tag.Check((t) => {
+	   if t.Column <= 0
+	      throw $'Column numbers must be positive: got {t.Column}'
 	   endif
 	})
 <
@@ -268,15 +278,15 @@ straightforward task:
    a lambda that, given a tuple t, checks for some condition depending on t,
    and throws an error if the condition is not satisfied.
 >
-	ForeignKey(Tag, 'must appear in', Buffer, 'BufId')
+	ForeignKey(Tag, 'BufId', Buffer, 'BufId', 'must appear in')
 <
    |librelalg.ForeignKey()| defines a foreign key constraint, in this case
-   from `BufId` in `Tag` to `BufId` in `Buffer`. The second argument is the
-   verb phrase associated to the constraint as read from the child to the
-   parent entity in the data model—see |librelalg-tutorial|: the verb phrase
-   is used in error messages when the referential integrity is violated. Using
-   a mode of obligation ("must") typically makes the constraint violation
-   easier to understand.
+   from `BufId` in `Tag` to `BufId` in `Buffer`. The last argument is the verb
+   phrase associated to the constraint as read from the child to the parent
+   entity in the data model—see |librelalg-tutorial|: the verb phrase is used
+   in error messages when the referential integrity is violated (see an
+   example below). Using a mode of obligation ("must") typically makes the
+   constraint violation easier to understand.
 
 Data Manipulation ~
 
@@ -328,19 +338,19 @@ The output looks as follows (note that the columns are in an arbitrary order):
 	     abc      3    6     3
 <
 Of course, any attempt to violate a constraint is rejected with an error. For
-example, trying to insert another buffer called `foobar` will fail with
+example, trying to insert another buffer called `foo` will fail with
 a duplicate key error, because `BufName` is a key:
 >
-	Buffer.Insert({BufId: 2, BufName: 'foobar'})
+	Buffer.Insert({BufId: 4, BufName: 'foo'})
 
-	# Duplicate key value: ['BufId'] = (2) already exists
+	# Duplicate key value: {BufName: foo} already exists in Buffer
 <
 Referential integrity is also guaranteed. For instance:
 >
 	Tag.Insert({BufId: 5, TagName: 'x', Line: 3, Column: 9})
 
 	# Tag must appear in Buffer:
-	# Tag['BufId'] = (5) is not present in Buffer['BufId']
+	# {BufId: 5} is not present in Buffer[BufId]
 <
 And, of course, you are not allowed to insert an invalid line number either:
 >
@@ -348,7 +358,7 @@ And, of course, you are not allowed to insert an invalid line number either:
 <
 This insertion is rejected with:
 >
-	Line and column numbers must be positive
+	Line numbers must be positive: got 0
 <
 Updates and deletions are possible, too:
 >
@@ -397,7 +407,17 @@ Queries are expressions that are typically used as an argument to
 	echo Table(result)
 <
 This query uses |librelalg.From()| to scan a relation and |librelalg.Select()|
-to filter it. Output:
+to filter it. The query has been written using chain notation (->), but that
+is not mandatory. Besides, using |librelalg.From()| is optional. So, the query
+can be alternatively written like this:
+>
+	const result = Query(Tag->Select((t) => t.BufId == 1 && t.Line <= 6))
+<
+or like this:
+>
+	const result = Query(Select(Tag, (t) => t.BufId == 1 && t.Line <= 6))
+<
+In each case, the output is:
 >
 	───────────────────────────
 	 TagName Column Line BufId
@@ -431,15 +451,16 @@ This query also uses |librelalg.Project()|. Output:
 As another example, the natural join of `Buffer` and `Tag`, sorted by `BufId`
 and `TagName`, can be written as follows:
 >
-	const btags = Query(
-	      From(Buffer)
-	    ->NatJoin(Tag)
-	    ->SortBy(['BufId', 'TagName'])
-	)
-        echo Table(btags, 'Buffer tags')
+	const btags = NatJoin(Buffer, Tag)->SortBy(['BufId', 'TagName'])
+	echo Table(btags, 'Buffer tags')
 <
-This query uses |librelalg.NatJoin()| to perform the join,  and
-|librelalg.SortBy()| to sort the result. Output:
+This query uses |librelalg.NatJoin()| to join buffers with tags, and
+|librelalg.SortBy()| to sort the result. Since |librelalg.SortBy()| is
+a materializing operator (that is, it returns a relation instance), it is not
+necessary to wrap the query inside |librelalg.Query()|, although it is not an
+error to do so. See |librelalg-ra| for more details.
+
+Output:
 >
 	 Buffer tags
 	───────────────────────────────────
@@ -461,8 +482,8 @@ new{name}, {schema}, {keys} [, {typecheck}])
 		Define a base relation (aka "relation object"). A base
 		relation has a descriptive {name} (a |string| used in error
 		messages) and is defined over a {schema}, which is a |dict|
-		mapping attributes to their corresponding data types. The
-		supported data types are:
+		mapping attributes to their corresponding domains. The
+		supported domains are:
 
 		- Int: integers;
 		- Str: strings;
@@ -486,11 +507,10 @@ new{name}, {schema}, {keys} [, {typecheck}])
 		When a relation has only one key, the outermost list can
 		be omitted:
 >
-		var S = Rel.new('S', {A: Int, B: Str}, ['A'])
+		var S = Rel.new('S', {A: Int, B: Str}, ['A', 'B'])
 <
 		When a key has only one attribute, it may be denoted by
-		a |string|. So, the above definition is equivalent to the
-		following:
+		a |string|: 
 >
 		var S = Rel.new('S', {A: Int, B: Str}, 'A')
 <
@@ -564,20 +584,6 @@ Delete([, {func}, {flag}])
 		error occurs while deletion is executing, there is no
 		guarantee on how the resulting instance will look like.
 
-Key({key})
-		Add a {key} to this base relation.
-
-		In general, using this function is unnecessary, because
-		multiple keys can be specified when a base relation is created
-		(see |librelalg.Rel|). For example:
->
-		var R = Rel.new('R', {A: Int, B: Str}, [['A'], ['B']])
-<
-		is equivalent to:
->
-		var R = Rel.new('R', {A: Int, B: Str}, 'A')
-		R.Key('B')
-<
 Insert({tuple})
 		Insert a {tuple} into this base relation. Return the updated
 		relation object.
@@ -600,9 +606,9 @@ IsEmpty()
 
 Lookup({key}, {list})
 		Search for a tuple in this base relation whose {key}
-		attributes match the values specified by the given {list}. A special
-		`KEY_NOT_FOUND` value is returned if no tuple with the given
-		value of the key can be found.
+		attributes match the values specified by the given {list}.
+		A special KEY_NOT_FOUND value is returned if no tuple with
+		the given value of the key can be found.
 
 		For example:
 >
@@ -648,7 +654,7 @@ Update({tuple} [, {upsert}])
 
 Functions ~
 						*librelalg.ForeignKey()*
-ForeignKey({relobj1}, {verb}, {relobj2}, {list}[, {key})
+ForeignKey({relobj1}, {list}, {relobj2}[, {key}, {verb}])
 		Define a referential integrity constraint between the list of
 		attributes {list} in base relation {relobj1} and a key in base
 		relation {relobj2}. When {key} is omitted, the target key is
@@ -666,7 +672,8 @@ ForeignKey({relobj1}, {verb}, {relobj2}, {list}[, {key})
 The following paragraphs provide a high-level description of the inner working
 of the Relational Algebra operators as defined by this library. Such
 understanding is not strictly necessary to be able to use the library; it may
-help, however, to make the most out of it.
+help, however, to make the most out of it. Feel free to skip to
+|librelalg.operators| for the reference documentation about each operator.
 
 This section uses the following terminology:
 
@@ -691,18 +698,18 @@ expressed using chaining:
 <
 When executed, |librelalg.From()| returns a continuation that looks like this:
 >
-	def Cont(Emit: func(dict<any>): void): void
+	def Cont(Emit: Consumer)
 	  for t in relation
 	    Emit(t)
 	  endfor
 	enddef
 <
-where `Emit()` is a consumer. The continuation `Cont` is passed to
-|librelalg.Select()| together with a filter `Pred`. Select() builds and
-returns another continuation, which look as follows:
+The continuation `Cont` is passed to |librelalg.Select()| together with
+a filter `Pred`. Select() builds and returns another continuation, which looks
+as follows:
 >
-	def Cont2(Emit: func(dict<any>): void): void
-	  def Consumer(t: dict<any>)
+	def Cont2(Emit: Consumer)
+	  def Consumer(t: Tuple)
 	    if Pred(t)
 	      Emit(t)
 	    endif
@@ -716,19 +723,19 @@ input predicate `Pred`, and then applies its input continuation `Cont` to that
 consumer.
 
 Finally, continuation `Cont2` is passed to |librelalg.Query()|, which defines
-a consumer to materialize a relation, by generating code similar to the
+another consumer to materialize a relation, by generating code similar to the
 following:
 >
-	var rel: list<dict<any>> = []
+	var rel: Relation = []
 
-	def Consumer2(t: dict<any>)
+	def Consumer2(t: Tuple)
 	  add(rel, t)
 	enddef
 
 	Cont2(Consumer2)
 <
-Again, what this operator does is define a consumer (`Consumer2`) and apply
-a continuation (`Cont2`) to that consumer.
+Again, what Query() does is define a consumer (`Consumer2`) and apply
+the input continuation (`Cont2`) to that consumer.
 
 The original chained call:
 >
@@ -742,7 +749,7 @@ Taking into account the foregoing discussion, if you try to expand the latter
 expression, you will realize that the result is equivalent to the following
 loop:
 >
-	var rel: list<dict<any>> = []
+	var rel: Relation = []
 
 	for t in Relation
 	  if Pred(t)
@@ -753,7 +760,7 @@ loop:
 which is pretty much what one would have written by hand (short of using
 a built-in function such as |filternew()|, that is).
 
-It should be clear at this point how Relatinal operators conceptually
+It should be clear at this point how Relational operators conceptually
 transform relations into relations. Most operators fall into one of three
 categories:
 
@@ -763,11 +770,10 @@ categories:
 - "pipeline" operators: these process tuples and emit (transformed) tuples.
 
 The most important rule is that each query should start (or end, if you use
-the chaining notation `->`) with a leaf operator, such as |librelalg.Query()|
-(other commonly used leaf operators are |librelalg.Sort()| and
-|librelalg.SortBy()|, and there are others), which "materialize" a result.
-Without a leaf operator, a query will just return a continuation—that is,
-a function.
+the chaining notation `->`) with a leaf operator, such as |librelalg.Query()|,
+which materializes a result (other commonly used leaf operators are
+|librelalg.Sort()| and |librelalg.SortBy()|, and there are others). Without
+a leaf operator, a query will just return a continuation—that is, a function.
 
 To simplify writing queries, most operators accept base relations, relation
 instances, and continuations transparently, so the user should not typically
@@ -784,7 +790,8 @@ already a relation, of course). This is something worth keeping in mind in
 order to avoid writing queries that unnecessarily create temporary objects.
 
 Note: some of the examples in the rest of this section are based on the sample
-instance at the end of |librelalg-tutorial|, which we report again here:
+instance at the end of |librelalg-tutorial|, which we report again here for
+reference:
 >
 	 Buffer
 	───────────────
@@ -805,6 +812,7 @@ instance at the end of |librelalg-tutorial|, which we report again here:
 	     abc     15   14     2
 	     abc      3    6     3
 <
+						*librelalg.operators*
 Functions ~
 						*librelalg.AntiEquiJoin()*
 AntiEquiJoin({rel1}, {rel2}, {list1}[, {list2}])
@@ -830,7 +838,7 @@ AntiEquiJoin({rel1}, {rel2}, {list1}[, {list2}])
 		Result:
 >
 		─────
-		 A B                                                                                                                                                                   
+		 A B
 		─────
 		 1 2
 
@@ -2292,7 +2300,7 @@ Split({rel}, {func})				*librelalg.Split()*
 		 7
 <
 						*librelalg.Table()*
-Table({rel} [, {columns}, {name}, {spacing}, {sep}])
+Table({rel} [, {name}, {columns}, {spacing}, {sep}])
 		Return a tabular representation of a base or derived relation
 		{rel} as a |string|. The title of the table may be specified
 		with {name}: the default is to use the relation name for base
@@ -2303,8 +2311,8 @@ Table({rel} [, {columns}, {name}, {spacing}, {sep}])
 		a subset of the columns, specify the |list| of {columns}. When
 		{columns} is a single attribute, it can also be a |string|.
 
-		The {spacing} determines the gap between columns: the default
-		is one character.
+		The {spacing} is a number that determines the gap between
+		columns: the default is one character.
 
 		The horizontal separator symbol can be set with {sep}, and
 		must be a single character.

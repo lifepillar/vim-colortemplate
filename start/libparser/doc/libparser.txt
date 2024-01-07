@@ -1,4 +1,4 @@
-*libparser.txt*	For Vim version 9.0	Last change: 2023 Dec 26
+*libparser.txt*	For Vim version 9.0	Last change: 2024 Jan 07
 
 A library to write simple parsers.
 
@@ -80,12 +80,13 @@ This grammar can be translated into Vim 9 script as follows:
 
 	import 'libparser.vim' as parser
 
-	const Context = parser.Context
+	type  Context = parser.Context
+	type  Result  = parser.Result
+
 	const Eof     = parser.Eof
 	const Lab     = parser.Lab
 	const Many    = parser.Many
 	const OneOf   = parser.OneOf
-	const Result  = parser.Result
 	const Seq     = parser.Seq
 	const R       = parser.RegexToken(parser.Blank)
 	const T       = parser.TextToken(parser.Blank)

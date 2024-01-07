@@ -1,6 +1,6 @@
-librelalg-aggr	librelalg.txt	/*librelalg-aggr*
+librelalg-aggregates	librelalg.txt	/*librelalg-aggregates*
 librelalg-ddl	librelalg.txt	/*librelalg-ddl*
-librelalg-other	librelalg.txt	/*librelalg-other*
+librelalg-other-functions	librelalg.txt	/*librelalg-other-functions*
 librelalg-quickstart	librelalg.txt	/*librelalg-quickstart*
 librelalg-ra	librelalg.txt	/*librelalg-ra*
 librelalg-tutorial	librelalg.txt	/*librelalg-tutorial*

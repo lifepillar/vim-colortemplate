@@ -8,8 +8,8 @@ Note: Vim 9.0.2185 or later is required.
 1. Tutorial				|librelalg-tutorial|
 2. Data definition language		|librelalg-ddl|
 3. Relational Algebra			|librelalg-ra|
-4. Aggregate functions			|librelalg-aggr|
-5. Other functions			|librelalg-other|
+4. Aggregate functions			|librelalg-aggregates|
+5. Other functions			|librelalg-other-functions|
 
 ==============================================================================
 0. Quick start					*librelalg-quickstart*
@@ -1312,7 +1312,8 @@ GroupBy({rel}, {groupby}, {func} [, {name}])	*librelalg.GroupBy()*
 		        1     3
 <
 		|librelalg.Min()| and |librelalg.Count()| are aggregate
-		functions. For more aggregate functions, see |librelalg-aggr|.
+		functions. For more aggregate functions, see
+		|librelalg-aggregates|.
 
 		For the most common aggregate functions, specialized operators
 		exist, which are generally preferrable over GroupBy(): see
@@ -2018,7 +2019,7 @@ Union({rel1}, {rel2})				*librelalg.Union()*
 		This is a leaf operator, returning a relation instance.
 
 ==============================================================================
-4. Aggregate functions				*librelalg-aggr*
+4. Aggregate functions				*librelalg-aggregates*
 
 An aggregate function is a special type of leaf operator: instead of returning
 a relation instance, an aggregate function returns a scalar. These functions
@@ -2165,7 +2166,7 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 		const colSum = From(Tag)->Sum('Column')         # 40
 <
 ==============================================================================
-5. Other functions				*librelalg-other*
+5. Other functions				*librelalg-other-functions*
 
 DictTransform({rel}, {func}[, {flatten}])	*librelalg.DictTransform()*
 		Transform a base or derived relation {rel} into a |dict|

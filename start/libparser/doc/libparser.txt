@@ -9,7 +9,7 @@ Note: Vim 9.0.2185 or later is required.
 2. Basic parsers			|libparser-basic|
 3. Parser generators			|libparser-generators|
 4. Parser combinators			|libparser-combinators|
-5. Other functions			|libparser-other|
+5. Other functions			|libparser-other-functions|
 6. Classes				|libparser-classes|
 
 ==============================================================================
@@ -294,7 +294,7 @@ initializing the context:
 	  var ctx = Context.new(e)
 	  ctx.state = {x: 42, foo: 0}
 	  const result = ParseExp(ctx)
-	  # The rest of the function is defined as before
+	  # The rest of the functions is defined as before
 <
 Then, the `AtomExp` rule can be updated as follows:
 >
@@ -352,7 +352,7 @@ Bol({ctx})					*libparser.Bol()*
 
 		echo result.success
 		echo "Value:" result.value
-		echo "Current index: " .. ctx.index
+		echo "Current index:" ctx.index
 <
 		Output:
 >
@@ -370,7 +370,7 @@ Eol({ctx})					*libparser.Eol()*
 
 		echo result.success
 		echo "Value:" char2nr(result.value)
-		echo "Current index: " .. ctx.index
+		echo "Current index:" ctx.index
 <
 		Output:
 >
@@ -419,7 +419,7 @@ SoftFail({ctx})					*libparser.SoftFail()*
 
 		In the following example, the first choice fails
 		unconditionally, so the parser backtracks and always tries the
-		second choice, which in the case succeeds:
+		second choice, which in this case succeeds:
 >
 		var ctx = Context.new("abc", 0)
 		const Parse = OneOf(SoftFail, Text('ab'))
@@ -498,7 +498,7 @@ Call({func})					*libparser.Call()*
 		enddef
 
 		def Consume(value: string, _: Context)
-		    echo "Parsed value: " .. value
+		    echo "Parsed value:" value
 		enddef
 
 		var ctx = Context.new('abc')
@@ -516,14 +516,13 @@ Call({func})					*libparser.Call()*
 		Finished!
 <
 		Note that |libparser.Apply()| or |libparser.Map()| should be
-		used if the parsed value an/or the context must be made
+		used if the parsed value and/or the context must be made
 		available to the called function.
 
 Fail({msg})					*libparser.Fail()*
 		Return a parser that always fails with a failure labelled by
-		{msg}, preventing backtracking. Therefore, this parser is
-		equivalent to Lab(SoftFail, {msg}). For example, this parser
-		never succeeds:
+		{msg}, preventing backtracking. This parser is equivalent to
+		Lab(SoftFail, {msg}). For example, this parser never succeeds:
 >
 		var ctx = Context.new('abc', 0)
 		const Parse = OneOf(Fail('@#$!'), Text('ab'))
@@ -605,7 +604,7 @@ Apply({parser}, {func})				*libparser.Apply()*
 		echo result.success
 		echo "Value:" result.value
 		echo "Index:" ctx.index
-		echo printf("Parsed number: %d", ctx.state.storedNumber)
+		echo $'Parsed number: {ctx.state.storedNumber}'
 <
 		Output:
 >
@@ -782,8 +781,8 @@ OneOf(...{parser})				*libparser.OneOf()*
 		returned result is the result of the first parser that
 		succeeds or fails with an error that prevents backtracking
 		(see |libparser.Lab()|). If no parser succeeds or generates
-		a labelled failure then a unlabelled (backtracking) failure is
-		returned.
+		a labelled failure then an unlabelled (backtracking) failure
+		is returned.
 
 		An example in which the parser succeeds:
 >
@@ -904,7 +903,7 @@ Opt({parser})					*libparser.Opt()*
 		const result = Parse(ctx)
 
 		echo result.success
-		echo printf("Value: '%s'", result.value)
+		echo $"Value: '{result.value}'"
 		echo "Index:" ctx.index
 <
 		Output:
@@ -970,7 +969,7 @@ Skip({parser})					*libparser.Skip()*
 		Index: 2
 <
 ==============================================================================
-5. Other functions				*libparser-other*
+5. Other functions				*libparser-other-functions*
 
 Lexeme({parser})				*libparser.Lexeme()*
 		Return a function that transforms a parser P into another
@@ -1068,7 +1067,8 @@ Reset([{index}])
 						*libparser.Result*
 newSuccess([{value}])
 		Instantiate a parser's result representing successful parsing
-		producing the given {value}.
+		producing the given {value}. If a value is not provided,
+		|null| is used.
 
 		A Result object built with this function has a state
 		initialized as follows:

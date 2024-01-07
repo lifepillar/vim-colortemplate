@@ -2,7 +2,7 @@ libparser-basic	libparser.txt	/*libparser-basic*
 libparser-classes	libparser.txt	/*libparser-classes*
 libparser-combinators	libparser.txt	/*libparser-combinators*
 libparser-generators	libparser.txt	/*libparser-generators*
-libparser-other	libparser.txt	/*libparser-other*
+libparser-other-functions	libparser.txt	/*libparser-other-functions*
 libparser-quickstart	libparser.txt	/*libparser-quickstart*
 libparser-tutorial	libparser.txt	/*libparser-tutorial*
 libparser.Apply()	libparser.txt	/*libparser.Apply()*

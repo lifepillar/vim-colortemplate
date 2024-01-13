@@ -20,7 +20,9 @@ Include: _help.colortemplate
 
 ; Common linked groups {{{
 ; Other conventional group names (see `:help group-name`)
+Added             -> diffAdded
 Boolean           -> Constant
+Changed           -> diffChanged
 Character         -> Constant
 Conditional       -> Statement
 CurSearch         -> IncSearch
@@ -35,6 +37,8 @@ Function          -> Identifier
 Include           -> PreProc
 Keyword           -> Statement
 Label             -> Statement
+LineNrAbove       -> LineNr
+LineNrBelow       -> LineNr
 Macro             -> PreProc
 MessageWindow     -> WarningMsg
 Number            -> Constant
@@ -47,6 +51,7 @@ PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
 QuickFixLine      -> Search
+Removed           -> diffRemoved
 Repeat            -> Statement
 SpecialChar       -> Special
 SpecialComment    -> Special
@@ -57,6 +62,8 @@ String            -> Constant
 Structure         -> Type
 Tag               -> Special
 Typedef           -> Type
+debugBreakpoint   -> SignColumn
+debugPC           -> SignColumn
 ; See `:help lCursor`
 lCursor           -> Cursor
 ; }}}

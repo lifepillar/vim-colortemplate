@@ -18,8 +18,10 @@ Include: _help.colortemplate
 ; }}}
 
 ; Global definitions - put at the top of the colorscheme {{{
+Added                -> diffAdded
 Boolean              -> Constant
 Character            -> Constant
+Changed              -> diffChanged
 Conditional          -> Statement
 CurSearch            -> IncSearch
 CursorLineFold       -> FoldColumn
@@ -33,6 +35,8 @@ Function             -> Identifier
 Include              -> PreProc
 Keyword              -> Statement
 Label                -> Statement
+LineNrAbove          -> LineNr
+LineNrBelow          -> LineNr
 Macro                -> PreProc
 MessageWindow        -> WarningMsg
 Number               -> Constant
@@ -45,6 +49,7 @@ PopupNotification    -> WarningMsg
 PopupSelected        -> PmenuSel
 PreCondit            -> PreProc
 QuickFixLine         ->  Search
+Removed              -> diffRemoved
 Repeat               -> Statement
 SpecialChar          -> Special
 SpecialComment       -> Special
@@ -55,6 +60,8 @@ String               -> Constant
 Structure            -> Type
 Tag                  -> Special
 Typedef              -> Type
+debugBreakpoint      -> SignColumn
+debugPC              -> SignColumn
 ; See `:help lCursor`
 lCursor              -> Cursor
 ; }}}

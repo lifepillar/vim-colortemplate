@@ -16,13 +16,14 @@ syn match   colortemplateSpecial        "\<sp\?="
 syn match   colortemplateTermCode     "\<st\%(art\|op\)="
 syn match   colortemplateHiGroupDef   "^\h\w*\>" contains=colortemplateHiGroup
 syn match   colortemplateHiGroup      contained "\<Conceal\>"
-syn keyword colortemplateHiGroup      contained Boolean Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
-syn keyword colortemplateHiGroup      contained CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter DiffAdd DiffChange DiffDelete DiffText Directory
+syn keyword colortemplateHiGroup      contained Added Boolean Changed Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
+syn keyword colortemplateHiGroup      contained CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter
+syn keyword colortemplateHiGroup      contained DiffAdd diffAdded DiffChange diffChanged DiffDelete diffRemoved DiffText Directory
 syn keyword colortemplateHiGroup      contained EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
 syn keyword colortemplateHiGroup      contained IncSearch Include Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
 syn keyword colortemplateHiGroup      contained Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuSbar PmenuSel PmenuThumb
 syn keyword colortemplateHiGroup      contained PopupNotification PopupSelected PreCondit PreProc Question
-syn keyword colortemplateHiGroup      contained QuickFixLine Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
+syn keyword colortemplateHiGroup      contained QuickFixLine Removed Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup      contained SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
 syn keyword colortemplateHiGroup      contained Structure TabLine TabLineFill TabLineSel Tag Terminal Title Todo Type Typedef Underlined VertSplit
 syn keyword colortemplateHiGroup      contained debugPC debugBreakpoint ToolbarLine ToolbarButton

@@ -56,7 +56,7 @@ def SimilarityTable(theme: Colorscheme, background: string): list<string>
 
   var output = [printf('{{{ Color Similarity Table (%s)', background)]
   output += split(Table(
-    colors, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Xterm RGB', 'Delta'], null_string, 2
+    colors, null_string, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Xterm RGB', 'Delta'], 2
   ), '\n')
   output->add('}}} Color Similarity Table')
 
@@ -108,8 +108,8 @@ def CriticalPairs(theme: Colorscheme, background: string, gui: bool): list<strin
   output->add('')
   output += split(Table(
     pairs,
-    ['Fg', 'Bg', 'ContrastRatio', 'BrightnessDiff', 'ColorDiff', 'HighlightGroup', 'Definition'],
     printf('%s (%s)', gui ? 'GUI' : 'Terminal', background),
+    ['Fg', 'Bg', 'ContrastRatio', 'BrightnessDiff', 'ColorDiff', 'HighlightGroup', 'Definition'],
     2
   ), '\n')
   output->add('}}} Critical Pairs')

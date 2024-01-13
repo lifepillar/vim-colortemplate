@@ -246,7 +246,7 @@ export class Generator
           sourceComments->add(printf('%s Background: %s', commentSymbol, background))
           sourceComments->add(commentSymbol)
           sourceComments += map(split(
-            ra.Table(palette, ['ColorName', 'GUIValue', 'Base256Value', 'Base256HexValue', 'Base16Value']),
+            ra.Table(palette, null_string, ['ColorName', 'GUIValue', 'Base256Value', 'Base256HexValue', 'Base16Value']),
             "\n"), (_, v) => commentSymbol .. ' ' .. v)
           sourceComments->add('')
         endif

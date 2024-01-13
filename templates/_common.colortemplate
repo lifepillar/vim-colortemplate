@@ -2,7 +2,9 @@
 
 #const transp_bg = get(g:, 'transp_bg', 0)
 
+Added                -> diffAdded
 Boolean              -> Constant
+Changed              -> diffChanged
 Character            -> Constant
 Conditional          -> Statement
 CurSearch            -> IncSearch
@@ -32,7 +34,8 @@ PmenuExtraSel        -> PmenuSel
 PopupNotification    -> WarningMsg
 PopupSelected        -> PmenuSel
 PreCondit            -> PreProc
-QuickFixLine         ->  Search
+QuickFixLine         -> Search
+Removed              -> diffRemoved
 Repeat               -> Statement
 SpecialChar          -> Special
 SpecialComment       -> Special

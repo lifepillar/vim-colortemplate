@@ -21,7 +21,9 @@ Background: light
 
 ; Common linked groups {{{
 ; Other conventional group names (see `:help group-name`)
+Added             -> diffAdded
 Boolean           -> Constant
+Changed           -> diffChanged
 Character         -> Constant
 Conditional       -> Statement
 CurSearch         -> IncSearch
@@ -50,6 +52,7 @@ PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
 QuickFixLine      -> Search
+Removed           -> diffRemoved
 Repeat            -> Statement
 SpecialChar       -> Special
 SpecialComment    -> Special

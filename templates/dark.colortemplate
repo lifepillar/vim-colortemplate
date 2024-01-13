@@ -50,6 +50,8 @@ endverbatim
 
 ; Linked groups do not depend on colors, so they may be
 ; defined before defining colors:
+Added             -> diffAdded
+Changed           -> diffChanged
 Character         -> Constant
 Boolean           -> Constant
 Conditional       -> Statement
@@ -81,6 +83,7 @@ PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
 QuickFixLine      -> Search
+Removed           -> diffRemoved
 Repeat            -> Statement
 SpecialChar       -> Special
 SpecialComment    -> Special

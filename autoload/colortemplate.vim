@@ -395,6 +395,8 @@ endf
 " }}}
 " Highlight groups {{{
 let s:default_hi_groups = [
+      \ 'Added',
+      \ 'Changed',
       \ 'ColorColumn',
       \ 'Comment',
       \ 'Conceal',
@@ -436,6 +438,7 @@ let s:default_hi_groups = [
       \ 'PreProc',
       \ 'Question',
       \ 'QuickFixLine',
+      \ 'Removed',
       \ 'Search',
       \ 'SignColumn',
       \ 'Special',

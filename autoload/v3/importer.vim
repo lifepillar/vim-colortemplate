@@ -160,10 +160,10 @@ def Shuffle(x: list<string>): list<string>
 enddef
 
 class NameGenerator
-  this._colmap:     dict<string> = {} # Color name => Hex value
-  this._invmap:     dict<string> = {} # Hex value => Color name
-  this._n                        = 0
-  this._fancyNames: list<string>
+  var _colmap:     dict<string> = {} # Color name => Hex value
+  var _invmap:     dict<string> = {} # Hex value => Color name
+  var _n                        = 0
+  var _fancyNames: list<string>
 
   def new()
     this._fancyNames = Shuffle(FancyNames())
@@ -313,11 +313,11 @@ def GetAttributes(synid: number, mode: string): string
 enddef
 
 class Importer
-  this.theme: Colorscheme
-  this.background: string
-  this._nameGenerator: NameGenerator
-  this._hiGroupWidth: number = 0 # Maximum length of a highlight group's name
-  this._colorWidth: number = 0 # Maximum length of a color name
+  var theme: Colorscheme
+  var background: string
+  var _nameGenerator: NameGenerator
+  var _hiGroupWidth: number = 0 # Maximum length of a highlight group's name
+  var _colorWidth: number = 0 # Maximum length of a color name
 
   def new()
     this.theme                              = Colorscheme.new()

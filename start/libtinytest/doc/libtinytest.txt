@@ -1,4 +1,4 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2023 Jul 17
+*libtinytest.txt*	For Vim version 9.0	Last change: 2024 Jan 28
 
 Note: Vim 9.0.1501 or later is recommended.
 
@@ -17,32 +17,39 @@ name starts with `Test`. Typically, tests contain Vim assertions (see
 
 	const success = tt.Run()
 <
-The tests may also be sourced (not imported!) from a separate file:
->
-	vim9script
-
-	import 'libtinytest.vim' as tt
-	source <sfile>:h/my_tests.vim
-
-	const success = tt.Run()
-<
-If the imported file executes `Run()` the tests will be executed twice, once
-when sourcing the script and another time by `tt.Run()`. To avoid that, set
-`dryrun` to `true` before sourcing the tests, and set it back to `false`
-afterwards:
->
-	vim9script
-
-	import 'libtinytest.vim' as tt
-
-	tt.dryrun = true
-	source <sfile>:h/my_tests.vim
-	tt.dryrun = false
-
-	const success = tt.Run()
-<
 The output always appears in a new scratch buffer.
 
+The tests may also be read from another file using |libtinytest.Import|. For
+example, this is how you may import a file `tests.vim` in the same directory
+as the main test file:
+>
+	vim9script
+
+	import 'libtinytest.vim' as tt
+	tt.Import($"{expand('<sfile>:h')}/tests.vim")
+
+	const success = tt.Run()
+<
+Using |:source| is also possible, but |libtinytest.Import| avoids running the
+tests twice if the imported file contains a `Run()` statement.
+
+It is possible to automatically execute a function before or after each test.
+The functions must be assigned to |libtinytest.Setup| and
+|libtinytest.Teardown|, respectively. For example:
+>
+	vim9script
+	import 'libtinytest.vim' as tt
+
+	tt.Setup = () => {
+	  echo $'Before starting test {tt.done + 1}'
+	}
+	tt.Teardown = () => {
+	  echo $'After finishing test {tt.done}'
+	}
+
+	# Tests here
+	tt.Run()
+<
 Obviously, all the names that are used in tests must be visible to the tests.
 Names that are exported by the script to be tested can be imported in the test
 script. Sometimes, however, it is convenient to be able to test the private,
@@ -63,6 +70,28 @@ purpose:
 	# Write the tests here
 <
 Then, to run the tests just set `g:test_mode` to `true` and source the script.
+
+Variables ~
+
+					*libtinytest.done*
+done
+		Counter of the number of tests that have been executed.
+
+					*libtinytest.fail*
+fail
+		Counter of the number of tests that have failed.
+
+					*libtinytest.Setup*
+Setup
+		This variable may be set to a function with no arguments and
+		no return value, which is executed before each test.
+
+					*libtinytest.Teardown*
+Teardown
+		This variable may be set to a function with no arguments and
+		no return value, which is executed after each test. The
+		function is executed no matter whether a test succeeds or
+		fails.
 
 Functions ~
 
@@ -110,6 +139,9 @@ AssertFails({func}, {msg})		*libtinytest.AssertFails()*
 		    throw 'This is a silly error'
 		}, 'fatal')
 <
+Import({path})				*libtinytest.Import()*
+		Import tests from {path}.
+
 Round({num}, {digits})			*libtinytest.Round()*
 		Round the given number to the specified number of {digits}.
 		For example:

@@ -1,6 +1,11 @@
 g:tinytest_highlight	libtinytest.txt	/*g:tinytest_highlight*
 libtinytest.AssertApprox()	libtinytest.txt	/*libtinytest.AssertApprox()*
 libtinytest.AssertFails()	libtinytest.txt	/*libtinytest.AssertFails()*
+libtinytest.Import()	libtinytest.txt	/*libtinytest.Import()*
 libtinytest.Round()	libtinytest.txt	/*libtinytest.Round()*
 libtinytest.Run()	libtinytest.txt	/*libtinytest.Run()*
+libtinytest.Setup	libtinytest.txt	/*libtinytest.Setup*
+libtinytest.Teardown	libtinytest.txt	/*libtinytest.Teardown*
+libtinytest.done	libtinytest.txt	/*libtinytest.done*
+libtinytest.fail	libtinytest.txt	/*libtinytest.fail*
 libtinytest.txt	libtinytest.txt	/*libtinytest.txt*

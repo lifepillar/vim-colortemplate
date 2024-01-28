@@ -13,8 +13,6 @@ endif
 const  OK = '✔︎'
 const TSK = '✘'
 
-export var dryrun = false
-
 # Local state {{{
 var mesg = []
 var erro = []
@@ -148,6 +146,14 @@ enddef
 # }}}
 
 # Public interface {{{
+var dryrun = false
+
+export def Import(path: string)
+  dryrun = true
+  execute 'source' path
+  dryrun = false
+enddef
+
 export def Round(num: float, digits: number): float
   return str2float(printf('%.0' .. digits .. 'f', num))
 enddef

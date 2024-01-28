@@ -18,8 +18,8 @@ export var dryrun = false
 # Local state {{{
 var mesg = []
 var erro = []
-var done = 0
-var fail = 0
+export var done = 0
+export var fail = 0
 
 def Init()
   mesg = []

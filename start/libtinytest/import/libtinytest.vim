@@ -54,21 +54,30 @@ def FindTests(pattern: string): list<dict<string>>
   return tests
 enddef
 
+def Noop()
+enddef
+
+export var Setup:    func() = Noop
+export var Teardown: func() = Noop
+
 # test: the full function invocation (e.g., '<SNR>1_Test_Foobar()')
 # name: the test name (e.g., 'Foobar')
 def RunTest(test: string, name: string)
-  done += 1
-
   var message = name
   const start_time = reltime()
 
   v:errors = []
+
+  Setup()
 
   try
     execute test
   catch
     add(v:errors, printf('Caught exception in %S: %S @ %S', name, v:exception, v:throwpoint))
   endtry
+
+  done += 1
+  Teardown()
 
   message ..= printf(' (%.01fms)', 1000.0 * reltimefloat(reltime(start_time)))
 
@@ -123,6 +132,9 @@ def FinishTesting(time_spent: float): bool
 
   normal G
   nunmenu WinBar
+  Setup = Noop
+  Teardown = Noop
+
   return (fail == 0)
 enddef
 

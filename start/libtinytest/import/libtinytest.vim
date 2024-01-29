@@ -171,20 +171,13 @@ enddef
 export def AssertApprox(
     expected: float, value: float, rtol = 0.001, atol = 0.0
 )
-  assert_true(
-    rtol >= 0.0 && atol >= 0.0, printf(
-    "rtol and atol must be non-negative. Got: rtol≅%.5f, atol≅%.5f",
-    rtol, atol
-    )
-  )
-
   const tmin = Min(expected - rtol * expected, expected - atol)
   const tmax = Max(expected + rtol * expected, expected + atol)
 
   assert_inrange(tmin, tmax, value)
 enddef
 
-export def AssertFails(F: func(): void, expectedError: string)
+export def AssertFails(F: func(), expectedError: string)
   try
     F()
     assert_false(1, 'Function should have thrown an error, but succeeded')
@@ -193,7 +186,6 @@ export def AssertFails(F: func(): void, expectedError: string)
   endtry
 enddef
 
-# Returns true on success, false on failure
 export def Run(pattern: string = ''): bool
   if dryrun
     return true

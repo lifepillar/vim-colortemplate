@@ -180,7 +180,7 @@ enddef
 export def AssertFails(F: func(), expectedError: string)
   try
     F()
-    assert_false(1, 'Function should have thrown an error, but succeeded')
+    assert_false(true, 'Function should have thrown an error, but succeeded')
   catch
     assert_exception(expectedError)
   endtry

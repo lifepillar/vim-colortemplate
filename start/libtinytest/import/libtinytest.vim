@@ -103,13 +103,18 @@ def RunTest(test: string, name: string)
 enddef
 
 def FinishTesting(time_spent: float): bool
+  const succeeded = (fail == 0)
+
   add(mesg, '')
   add(mesg, printf('%d test%s run in %.03fs', done, (done == 1 ? '' : 's'), time_spent))
-  if fail == 0
+
+  if succeeded
     add(mesg, OK .. ' ALL TESTS PASSED!')
   else
     add(mesg, printf('%d test%s failed', fail, (fail == 1 ? '' : 's')))
   endif
+
+  const lnum = len(mesg)
 
   botright new +setlocal\ buftype=nofile\ bufhidden=wipe\ nobuflisted\ noswapfile\ wrap
   append(0, strftime('--- %c ---'))
@@ -128,12 +133,17 @@ def FinishTesting(time_spent: float): bool
     matchadd('ErrorMsg',   'Caught exception')
   endif
 
-  normal G
+  if succeeded
+    normal G
+  else
+    execute $'normal {lnum}Gzt'
+  endif
+
   nunmenu WinBar
   Setup = Noop
   Teardown = Noop
 
-  return (fail == 0)
+  return succeeded
 enddef
 
 def Min(a: float, b: float): float

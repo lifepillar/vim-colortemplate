@@ -555,7 +555,7 @@ const HEXCOL        = R('#[A-Fa-f0-9]\{6}')
 const GUICOL        = OneOf(HEXCOL, IDENTIFIER)
 const STRING        = R('"[^"]*"')
 const TEXTLINE      = R('[^\r\n]\+')
-const THEMENAME     = R('\w\+')
+const THEMENAME     = R('[0-9A-Z-a-z_-]\+')
 const VERBTEXT      = R('\_.\{-}\ze\%(end\%(verbatim\|help\|auxfile\)\)')
 
 const L_ATTRIBUTE   = Lab(ATTRIBUTE,            "Expected an attribute")
@@ -825,7 +825,7 @@ enddef
 # Maintainer      ::= 'Maintainer'    ':' TEXTLINE
 # Options         ::= 'Options'       ':' (OPTNAME '=' OPTVALUE)+
 # Prefix          ::= 'Prefix'        ':' IDENT
-# Shortname       ::= 'Short' 'name'  ':' IDENT
+# Shortname       ::= 'Short' 'name'  ':' THEMENAME
 # TermColors      ::= 'Term' 'colors' ':' IDENT{16}
 # URL             ::= 'URL'           ':' TEXTLINE
 # Variants        ::= 'Variants'      ':' VARIANT+

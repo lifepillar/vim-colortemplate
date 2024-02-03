@@ -426,6 +426,21 @@ def Test_PS_UnicodeMetadata()
   assert_equal('', result.label)
 enddef
 
+def Test_PS_ColoschemeNameWithHyphens()
+  const template =<< trim END
+    Full name: Base16-3024
+    Short name: base16-3024
+    Background: dark
+  END
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_true(result.success)
+  assert_equal('Base16-3024', theme.fullname)
+  assert_equal('base16-3024', theme.shortname)
+  assert_equal('', result.label)
+
+enddef
+
 tt.Run('_PS_')
 
 # vim: tw=100

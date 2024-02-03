@@ -468,8 +468,8 @@ def Test_PS_BoldItalicHigGroups()
     db.BaseGroup->ra.Select((t) => t.HiGroupName == 'Italic')
   )
 
-  assert_equal(1, len(r))
-  assert_equal('italic', r[0]['Style'])
+  assert_equal(1, len(s))
+  assert_equal('italic', s[0]['Style'])
 enddef
 
 tt.Run('_PS_')

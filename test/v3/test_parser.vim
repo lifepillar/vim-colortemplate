@@ -438,7 +438,38 @@ def Test_PS_ColoschemeNameWithHyphens()
   assert_equal('Base16-3024', theme.fullname)
   assert_equal('base16-3024', theme.shortname)
   assert_equal('', result.label)
+enddef
 
+def Test_PS_BoldItalicHigGroups()
+  const template =<< trim END
+    Full name: **Bold** *Italic*
+    Short name: bold-italic
+    Background: dark
+    ; Bold and Italic are valid highlight group names
+    ; and should not be confused with keywords
+    Added  none none
+    Bold   none none bold
+    Italic none none italic
+  END
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_true(result.success)
+  assert_equal('', result.label)
+
+  const db = theme.dark
+  const r = ra.Query(
+    db.BaseGroup->ra.Select((t) => t.HiGroupName == 'Bold')
+  )
+
+  assert_equal(1, len(r))
+  assert_equal('bold', r[0]['Style'])
+
+  const s = ra.Query(
+    db.BaseGroup->ra.Select((t) => t.HiGroupName == 'Italic')
+  )
+
+  assert_equal(1, len(r))
+  assert_equal('italic', r[0]['Style'])
 enddef
 
 tt.Run('_PS_')

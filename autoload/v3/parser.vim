@@ -532,7 +532,7 @@ const DISCRNAME     = IDENTIFIER
 const COLORNAME     = IDENTIFIER
 const FGCOLOR       = COLORNAME
 const BGCOLOR       = COLORNAME
-const ATTRIBUTE     = R(printf('\%(%s\)\>',
+const ATTRIBUTE     = R(printf('\C\%(%s\)\>',
                       join(['bold',
                         'italic',
                         'underline',

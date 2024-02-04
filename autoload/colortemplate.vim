@@ -771,8 +771,8 @@ fun! s:set_info(key, value)
       throw 'Missing value for short name key'
     elseif len(a:value) > 24
       throw 'The short name must be at most 24 characters long'
-    elseif a:value !~? '\m^\w\+$'
-      throw 'The short name may contain only letters, numbers and underscore'
+    elseif a:value !~? '\m^[0-9A-Za-z_-]\+$'
+      throw 'The short name may contain only letters, numbers, underscores, and hyphens'
     endif
     if empty(s:info['optionprefix'])
       let s:info['optionprefix'] = s:info['shortname']

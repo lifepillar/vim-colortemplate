@@ -13,6 +13,8 @@ let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
 hi! link PopupSelected PmenuSel
 hi! link QuickFixLine Search
 
+" @suppress Added
+" @suppress Changed
 " @suppress ColorColumn
 " @suppress Comment
 " @suppress Conceal
@@ -51,6 +53,7 @@ hi! link QuickFixLine Search
 " @suppress PopupNotification
 " @suppress PreProc
 " @suppress Question
+" @suppress Removed
 " @suppress Search
 " @suppress SignColumn
 " @suppress Special

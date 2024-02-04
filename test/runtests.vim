@@ -1120,6 +1120,11 @@ fun! Test_CT_short_name_with_hyphens()
   call s:assert_build('test-93')
 endf
 
+fun! Test_CT_bold_and_italic_are_valid_highlight_group_names()
+  call s:assert_build('test94')
+endf
+
+
 "
 " Runner!
 "

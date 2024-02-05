@@ -1,4 +1,4 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2024 Jan 28
+*libtinytest.txt*	For Vim version 9.0	Last change: 2024 Feb 05
 
 Note: Vim 9.0.1501 or later is recommended.
 
@@ -96,11 +96,12 @@ Teardown
 Functions ~
 
 					*libtinytest.AssertApprox()*
-AssertApprox({expected}, {num}[, {rtol}, {atol}])
+AssertApprox({expected}, {num}[, {rtol}, {atol}, {msg}])
 		Check that {num} is approximately equal to the {expected}
 		value, where "approximately" means within the relative
 		tolerance {rtol} or within the absolute tolerance {atol} (or
-		both).
+		within both). If {msg} is provided, it is prefixed to the
+		error message if the test fails.
 
 		The default relative threshold is 0.001 (1‰ tolerance), and
 		the default absolute tolerance is 0.0. So, by default only the

@@ -169,12 +169,12 @@ export def Round(num: float, digits: number): float
 enddef
 
 export def AssertApprox(
-    expected: float, value: float, rtol = 0.001, atol = 0.0
+    expected: float, value: float, rtol = 0.001, atol = 0.0, msg = ''
 )
   const tmin = Min(expected - rtol * expected, expected - atol)
   const tmax = Max(expected + rtol * expected, expected + atol)
 
-  assert_inrange(tmin, tmax, value)
+  assert_inrange(tmin, tmax, value, msg)
 enddef
 
 export def AssertFails(F: func(), expectedError: string)

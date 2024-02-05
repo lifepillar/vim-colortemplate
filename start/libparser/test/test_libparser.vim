@@ -737,4 +737,18 @@ def Test_LP_ComposingCharacters()
   assert_equal(strlen(text), ctx.index)
 enddef
 
+def Test_LP_CaseSensitiveRegex()
+  const text = 'AbCd'
+  var ctx = Context.new(text)
+  var result = Regex('\CAbCd')(ctx)
+
+  assert_true(result.success)
+  assert_equal('AbCd', result.value)
+  assert_equal(4, ctx.index)
+
+  ctx = Context.new(text)
+  result = Regex('\CAbCD')(ctx)
+  assert_false(result.success)
+enddef
+
 tt.Run('_LP_')

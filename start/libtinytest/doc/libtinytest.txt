@@ -115,7 +115,6 @@ AssertApprox({expected}, {num}[, {rtol}, {atol}, {msg}])
 		AssertApprox(10.0, 11.0, 0.0, 1.0)  # Absolute tolerance OK
 		AssertApprox(10.0, 11.0, 0.05)      # Fails
 		AssertApprox(10.0, 11.0, 0.05, 0.9) # Fails
-
 <
 AssertFails({func}, {msg})		*libtinytest.AssertFails()*
 		Check that {func} throws an error that contains the string
@@ -160,7 +159,6 @@ Run([{pattern}])			*libtinytest.Run()*
 		`Test_XYZ()`.
 
 Options ~
-
 					*g:tinytest_highlight*
 
 Flag to enable or disable syntax highlighting in the output.

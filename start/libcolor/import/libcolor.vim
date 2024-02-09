@@ -5,7 +5,7 @@ endif
 vim9script
 
 # Constants {{{
-export const PI = 3.14159265359
+export const PI = 3.1415926535897932384626
 
 # The 24 bit RGB values used for the 16 ANSI colors differ greatly for each
 # terminal implementation. Below is a system that is both consistent and 12
@@ -454,7 +454,7 @@ export def Scale(v: float, max = 255): number
 enddef
 
 export def DegToRad(degrees: float): float
-  return degrees * 3.14159265359 / 180.0
+  return degrees * PI / 180.0
 enddef
 
 # See:

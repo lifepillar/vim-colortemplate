@@ -10,7 +10,7 @@ const ANSI_COLORS         = libcolor.ANSI_COLORS
 const Approximate         = libcolor.Approximate
 const RgbName2Hex         = libcolor.RgbName2Hex
 const Rgb2Hex             = libcolor.Rgb2Hex
-const Xterm2Hex           = libcolor.Xterm2Hex
+const ColorNumber2Hex     = libcolor.ColorNumber2Hex
 const ColorDifference     = libcolor.ColorDifference
 
 type  Context             = parser.Context
@@ -203,7 +203,7 @@ def DefineColor(v: list<string>, ctx: Context)
     v256Hex = approxColor.hex
   else
     v256 = v[4]
-    v256Hex = Xterm2Hex(str2nr(v256))
+    v256Hex = ColorNumber2Hex(str2nr(v256))
   endif
 
   for db in ActiveDatabases(ctx)

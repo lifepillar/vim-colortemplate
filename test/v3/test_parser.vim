@@ -11,7 +11,7 @@ type  Result      = libparser.Result
 type  Colorscheme = themes.Colorscheme
 
 
-def Test_PS_Background()
+def Test_Parser_Background()
   const [result: Result, theme: Colorscheme] = Parse("Background: dark")
 
   assert_equal('', result.label)
@@ -20,7 +20,7 @@ def Test_PS_Background()
   assert_false(theme.backgrounds.light)
 enddef
 
-def Test_PS_Variants()
+def Test_Parser_Variants()
   const [result: Result, theme: Colorscheme] = Parse("Variants: 8")
 
   assert_equal('', result.label)
@@ -28,7 +28,7 @@ def Test_PS_Variants()
   assert_equal(['8', 'gui'], theme.variants)
 enddef
 
-def Test_PS_NoDefaultLinkedGroup()
+def Test_Parser_NoDefaultLinkedGroup()
   const template =<< trim END
     Background: dark
     Variants:   256
@@ -41,7 +41,7 @@ def Test_PS_NoDefaultLinkedGroup()
   assert_match('must override an existing Highlight Group', result.label)
 enddef
 
-def Test_PS_LinkedGroup()
+def Test_Parser_LinkedGroup()
   const template =<< trim END
     Background: dark
     Variants:   gui 256 16 8 0
@@ -75,7 +75,7 @@ def Test_PS_LinkedGroup()
   assert_equal('256',         s[0]['Variant'])
 enddef
 
-def Test_PS_VariantDiscriminatorOverride()
+def Test_Parser_VariantDiscriminatorOverride()
   const template =<< trim END
     Background: dark
     Variants:   gui 256 8
@@ -92,7 +92,7 @@ def Test_PS_VariantDiscriminatorOverride()
 enddef
 
 
-def Test_PS_DiscriminatorName()
+def Test_Parser_DiscriminatorName()
   const template =<< trim END
     Background: dark
     Variants: gui 8
@@ -109,7 +109,7 @@ def Test_PS_DiscriminatorName()
   assert_true(result.success)
 enddef
 
-def Test_PS_MissingDefaultDef()
+def Test_Parser_MissingDefaultDef()
   const template =<< trim END
     Background: dark
     Variants: gui 8
@@ -129,7 +129,7 @@ def Test_PS_MissingDefaultDef()
   assert_false(result.success)
 enddef
 
-def Test_PS_TranspBg()
+def Test_Parser_TranspBg()
   const template =<< trim END
     Variants: 256 8
     Background: light
@@ -149,7 +149,7 @@ def Test_PS_TranspBg()
   assert_true(result.success)
 enddef
 
-def Test_PS_GUIColor()
+def Test_Parser_GUIColor()
   const template =<< trim END
     Background: light
 
@@ -166,7 +166,7 @@ def Test_PS_GUIColor()
 enddef
 
 # A verbatim block before a background directive is stored as theme metadata
-def Test_PS_VerbatimMetadata()
+def Test_Parser_VerbatimMetadata()
   const template =<< trim END
     verbatim
       Hi!
@@ -181,7 +181,7 @@ def Test_PS_VerbatimMetadata()
 enddef
 
 # A verbatim block after a background directive is stored as database metadata
-def Test_PS_VerbatimDatabase()
+def Test_Parser_VerbatimDatabase()
   const template =<< trim END
     Background: dark
     verbatim
@@ -199,7 +199,7 @@ def Test_PS_VerbatimDatabase()
 enddef
 
 # Verbatim blocks are interpolated
-def Test_PS_VerbatimBlockInterpolation()
+def Test_Parser_VerbatimBlockInterpolation()
   const template =<< trim END
     Author: myself
     Short name: xyz
@@ -245,7 +245,7 @@ def Test_PS_VerbatimBlockInterpolation()
   assert_equal(expected2, theme.light.verbatimtext)
 enddef
 
-def Test_PS_VerbatimDateVersion()
+def Test_Parser_VerbatimDateVersion()
   const template =<< trim END
     verbatim
       Today is @date
@@ -266,7 +266,7 @@ def Test_PS_VerbatimDateVersion()
 enddef
 
 # Multiple verbatim blocks are concatenated
-def Test_PS_MultipleVerbatimBlocks()
+def Test_Parser_MultipleVerbatimBlocks()
   const template =<< trim END
   Background: dark
   Author:     Nemo
@@ -285,7 +285,7 @@ def Test_PS_MultipleVerbatimBlocks()
   assert_equal(expected, theme.dark.verbatimtext)
 enddef
 
-def Test_PS_VerbatimIdentifierWithNumbers()
+def Test_Parser_VerbatimIdentifierWithNumbers()
   const template =<< trim END
     Background: dark
     Color: base0    #839496   246     12
@@ -303,7 +303,7 @@ def Test_PS_VerbatimIdentifierWithNumbers()
   assert_equal(expected, theme.dark.verbatimtext)
 enddef
 
-def Test_PS_auxfile()
+def Test_Parser_auxfile()
   const template =<< trim END
     auxfile foo/bar
     abc '▇' def
@@ -317,7 +317,7 @@ def Test_PS_auxfile()
   assert_equal({'foo/bar': ["abc '▇' def"]}, theme.auxfiles)
 enddef
 
-def Test_PS_tilde()
+def Test_Parser_tilde()
   const template =<< trim END
   Background: dark
   Color: black #333334 ~ Black
@@ -329,7 +329,7 @@ def Test_PS_tilde()
   assert_true(result.success)
 enddef
 
-def Test_PS_Rgb()
+def Test_Parser_Rgb()
   const template =<< trim END
   Background: dark
   Color: black rgb(0, 255, 127) ~ Green
@@ -341,7 +341,7 @@ def Test_PS_Rgb()
   assert_true(result.success)
 enddef
 
-def Test_PS_MinimalColorDefinition()
+def Test_Parser_MinimalColorDefinition()
   const template =<< trim END
   Background: dark
   Color: black #000000 ~
@@ -353,7 +353,7 @@ def Test_PS_MinimalColorDefinition()
   assert_true(result.success)
 enddef
 
-def Test_PS_OptionalBase16()
+def Test_Parser_OptionalBase16()
   const template =<< trim END
   Background: dark
   Color: bg1             #ffffff     237 DarkGray
@@ -367,7 +367,7 @@ def Test_PS_OptionalBase16()
   assert_true(result.success)
 enddef
 
-def Test_PS_SingleDefMultipleVariants()
+def Test_Parser_SingleDefMultipleVariants()
   const template =<< trim END
     Background: dark
     #const italic = get(g:, 'italic', 1)
@@ -384,7 +384,7 @@ def Test_PS_SingleDefMultipleVariants()
   assert_true(result.success)
 enddef
 
-def Test_PS_ConditionalDef()
+def Test_Parser_ConditionalDef()
   const template =<< trim END
     Background: dark
     Color: red #ff0000 ~
@@ -400,7 +400,7 @@ def Test_PS_ConditionalDef()
   assert_true(result.success)
 enddef
 
-def Test_PS_Lookahead()
+def Test_Parser_Lookahead()
   const template =<< trim END
     Background: dark
     Color: red #ff0000 ~
@@ -413,7 +413,7 @@ def Test_PS_Lookahead()
   assert_true(result.success)
 enddef
 
-def Test_PS_UnicodeMetadata()
+def Test_Parser_UnicodeMetadata()
   const template =<< trim END
     Full name: àèì ėęčž 🚀 Scheme®
     Background: dark
@@ -426,7 +426,7 @@ def Test_PS_UnicodeMetadata()
   assert_equal('', result.label)
 enddef
 
-def Test_PS_ColoschemeNameWithHyphens()
+def Test_Parser_ColoschemeNameWithHyphens()
   const template =<< trim END
     Full name: Base16-3024
     Short name: base16-3024
@@ -440,7 +440,7 @@ def Test_PS_ColoschemeNameWithHyphens()
   assert_equal('', result.label)
 enddef
 
-def Test_PS_BoldItalicHigGroups()
+def Test_Parser_BoldItalicHigGroups()
   const template =<< trim END
     Full name: **Bold** *Italic*
     Short name: bold-italic
@@ -472,6 +472,35 @@ def Test_PS_BoldItalicHigGroups()
   assert_equal('italic', s[0]['Style'])
 enddef
 
-tt.Run('_PS_')
+def Test_Parser_Base256Color0_15()
+  const template =<< trim END
+    Full name: C15
+    Short name: c15
+    Background: dark
+    Color: C0  #000000 0  0
+    Color: C15 #000000 15 15
+  END
+  const [result: Result, theme: Colorscheme] = Parse(join(template, "\n"))
+
+  assert_true(result.success)
+  assert_equal('C15', theme.fullname)
+  assert_equal('c15', theme.shortname)
+  assert_equal('', result.label)
+
+  const expected = [
+    {ColorName: 'C0',  Base256Value:  '0'},
+    {ColorName: 'C15', Base256Value: '15'},
+  ]
+  const db = theme.dark
+
+  for i in ['0', '15']
+    const r = ra.Query(ra.Select(db.Color, (t) => t.Base256Value == i))
+
+    assert_equal(1, len(r))
+    assert_equal($'C{i}', r[0].ColorName)
+  endfor
+enddef
+
+tt.Run('_Parser_')
 
 # vim: tw=100

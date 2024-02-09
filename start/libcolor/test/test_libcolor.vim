@@ -29,7 +29,7 @@ const Rgb2Cielab           = libcolor.Rgb2Cielab
 const ColorDifference      = libcolor.ColorDifference
 const ContrastRatio        = libcolor.ContrastRatio
 const PerceptualDifference = libcolor.PerceptualDifference
-const DeltaCIE2000         = libcolor.DeltaCIE2000
+const DeltaE2000           = libcolor.DeltaE2000
 const Approximate          = libcolor.Approximate
 const ColorsWithin         = libcolor.ColorsWithin
 const Neighbours           = libcolor.Neighbours
@@ -342,14 +342,15 @@ enddef
 
 def Test_Color_PerceptualDifference()
   const fixture = [
-    [0.5442200, PerceptualDifference('#eeeeef', '#eeeeee')],
-    [7.8896850, PerceptualDifference('#767676', '#7c6f64')],
-    [38.040076, PerceptualDifference('#444444', '#ff0000')],
+    [ 0.5442, PerceptualDifference('#eeeeef', '#eeeeee')],
+    [ 7.8897, PerceptualDifference('#767676', '#7c6f64')],
+    [38.0400, PerceptualDifference('#444444', '#ff0000')],
   ]
+  const tol = pow(10, -4)
 
   for pair in fixture
     assert_equal(v:t_float, type(pair[1]))
-    tt.AssertApprox(pair[0], pair[1], 0.0, EPS)
+    tt.AssertApprox(pair[0], pair[1], 0.0, tol)
   endfor
 enddef
 
@@ -469,7 +470,7 @@ def Test_Color_Neighbours()
   assert_equal(88,  neighbours[1].xterm)
 enddef
 
-# Delta CIEDE2000 {{{
+# Delta CIEDE2000 - Reference implementation {{{
 # G. Sharma, W. Wu, and E. N. Dalal.
 # The CIEDE2000 color-difference formula: Implementation notes, supplementary test data, and mathematical observations.
 # Color Research and Applications, 30(1):21–30, Feb. 2004.
@@ -639,7 +640,7 @@ def R_T(L1: float, a1: float, b1: float, L2: float, a2: float, b2: float): float
   return -R_C(L1, a1, b1, L2, a2, b2) * sin(DegToRad(2 * Delta_theta(L1, a1, b1, L2, a2, b2)))
 enddef
 
-def CIE2000(L1: float, a1: float, b1: float, L2: float, a2: float, b2: float): float
+def TestDeltaE(L1: float, a1: float, b1: float, L2: float, a2: float, b2: float): float
   # Eq (22)
   const k_L = 1.0
   const k_C = 1.0
@@ -747,7 +748,8 @@ def Test_Color_DeltaCIEDE2000()
     tt.AssertApprox(S_C_,          S_C(          L1, a1, b1, L2, a2, b2), 0.0, tol, printf(msg, 'S_C'))
     tt.AssertApprox(S_H_,          S_H(          L1, a1, b1, L2, a2, b2), 0.0, tol, printf(msg, 'S_H'))
     tt.AssertApprox(R_T_,          R_T(          L1, a1, b1, L2, a2, b2), 0.0, tol, printf(msg, 'R_T'))
-    tt.AssertApprox(CIE2000_,      CIE2000(      L1, a1, b1, L2, a2, b2), 0.0, tol, printf(msg, 'Delta'))
+    tt.AssertApprox(CIE2000_,      TestDeltaE(   L1, a1, b1, L2, a2, b2), 0.0, tol, printf(msg, 'Delta (test)'))
+    tt.AssertApprox(TestDeltaE(L1, a1, b1, L2, a2, b2), DeltaE2000(L1, a1, b1, L2, a2, b2), 0.0, tol, printf(msg, 'Delta (prod)'))
   endfor
 enddef
 
@@ -798,7 +800,7 @@ def Test_Color_DeltaCIEDE2000Simplified()
     const [L2, a2, b2]  = [t[3], t[4], t[5]]
     const delta = t[6]
 
-    tt.AssertApprox(delta, CIE2000(L1, a1, b1, L2, a2, b2), 0.0, tol, printf('Test case: %s', t))
+    tt.AssertApprox(delta, TestDeltaE(L1, a1, b1, L2, a2, b2), 0.0, tol, printf('Test case: %s', t))
   endfor
 enddef
 

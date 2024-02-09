@@ -711,108 +711,130 @@ export def Hex2Cielab(hexColor: string): list<float>
   return Rgb2Cielab(r, g, b)
 enddef
 
+# Delta CIEDE2000 {{{
 # See: https://en.wikipedia.org/wiki/Color_difference
-# See also: http://colormine.org/delta-e-calculator/cie2000
-def DeltaCIE2000(
-    L1: float, a1: float, b1: float, L2: float, a2: float, b2: float): float
-  const k_L = 1.0
-  const k_C = 1.0
-  const k_H = 1.0
+# See: https://hajim.rochester.edu/ece/sites/gsharma/ciede2000/
+export def DeltaE2000(
+    L1: float, a1: float, b1: float,
+    L2: float, a2: float, b2: float,
+    k_L = 1.0, k_C = 1.0, k_H = 1.0
+    ): float
+  const C_star_1 = sqrt(a1 * a1 + b1 * b1)     # Eq (2)
+  const C_star_2 = sqrt(a2 * a2 + b2 * b2)     # Eq (2)
+  const C_bar    = 0.5 * (C_star_1 + C_star_2) # Eq (3)
 
-  const delta_L_prime = L2 - L1
-  const L_bar = (L1 + L2) / 2.0
-
-  const C_star_1 = sqrt(a1 * a1 + b1 * b1)
-  const C_star_2 = sqrt(a2 * a2 + b2 * b2)
-  const C_bar = (C_star_1 + C_star_2) / 2.0
+  # Eq (4)
   const C_bar_pow_7 = pow(C_bar, 7)
+  const G = 0.5 * (1.0 - sqrt(C_bar_pow_7 / (C_bar_pow_7 + 6103515625)))
 
-  const G = 0.5 * (1 - sqrt(C_bar_pow_7 / (C_bar_pow_7 + 6103515625))) # 6103515625 = 25^7
-  const a_prime_1 = (1 + G) * a1
-  const a_prime_2 = (1 + G) * a2
+  # Eq (5)
+  const a_prime_1 = (1.0 + G) * a1
+  const a_prime_2 = (1.0 + G) * a2
 
+  # Eq (6)
   const C_prime_1 = sqrt(a_prime_1 * a_prime_1 + b1 * b1)
   const C_prime_2 = sqrt(a_prime_2 * a_prime_2 + b2 * b2)
-  const C_bar_prime = (C_prime_1 + C_prime_2) / 2.0
-  const delta_C_prime = C_prime_2 - C_prime_1
 
-  # Angles in degrees
-  # The inverse tangent is indeterminate if both a and b are zero.
-  # In that case, the hue angle must be set to zero (atan2(0,0) is 0.0).
-  var h_prime_1 = atan2(b1, a_prime_1) * 180.0 / PI
+  # Eq (7) - See note 1 on page 23 of G Sharma et al., 2005
+  var h_prime_1 = atan2(b1, a_prime_1) * 180.0 / PI # atan2(0.0, 0.0) == 0.0 by definition
+  var h_prime_2 = atan2(b2, a_prime_2) * 180.0 / PI
 
   if h_prime_1 < 0.0
     h_prime_1 += 360.0
   endif
 
-  var h_prime_2 = atan2(b2, a_prime_2) * 180.0 / PI
-
   if h_prime_2 < 0.0
-    h_prime_1 += 360.0
+    h_prime_2 += 360.0
   endif
 
+  # Eq (8)
+  const delta_L_prime = L2 - L1
+
+  # Eq (9)
+  const delta_C_prime = C_prime_2 - C_prime_1
+
+  # Eq (10)
+  var delta_h_prime: float = 0.0
   const h_prime_abs_delta = abs(h_prime_1 - h_prime_2)
 
-  var delta_h_prime: float
-  var H_bar_prime:   float
-
-  if C_prime_1 * C_prime_2 == 0.0
-    delta_h_prime = 0.0
-  else
-    if (h_prime_abs_delta <= 180.0)
+  if C_prime_1 * C_prime_2 != 0.0
+    if h_prime_abs_delta <= 180.0
       delta_h_prime = h_prime_2 - h_prime_1
-    elseif h_prime_2 <= h_prime_1
-      delta_h_prime = h_prime_2 - h_prime_1 + 360.0
-    else
+    elseif h_prime_2 - h_prime_1 > 180
       delta_h_prime = h_prime_2 - h_prime_1 - 360.0
+    else
+      delta_h_prime = h_prime_2 - h_prime_1 + 360.0
     endif
   endif
 
+  # Eq (11)
   const delta_H_prime = 2.0 * sqrt(C_prime_1 * C_prime_2) * sin(delta_h_prime * PI / 360.0)
 
+  # Eq (12)
+  const L_bar_prime = 0.5 * (L1 + L2)
+
+  # Eq (13)
+  const C_bar_prime = 0.5 * (C_prime_1 + C_prime_2)
+
+  # Eq (14)
+  var h_bar_prime: float
+
   if C_prime_1 * C_prime_2 == 0.0
-    H_bar_prime = h_prime_1 + h_prime_2
+    h_bar_prime = h_prime_1 + h_prime_2
   else
     if (h_prime_abs_delta <= 180.0)
-      H_bar_prime = (h_prime_1 + h_prime_2) / 2.0
+      h_bar_prime = 0.5 * (h_prime_1 + h_prime_2)
     elseif h_prime_1 + h_prime_2 < 360.0
-      H_bar_prime = (h_prime_1 + h_prime_2 + 360.0) / 2.0
+      h_bar_prime = 0.5 * (h_prime_1 + h_prime_2 + 360.0)
     else
-      H_bar_prime = (h_prime_1 + h_prime_2 - 360.0) / 2.0
+      h_bar_prime = 0.5 * (h_prime_1 + h_prime_2 - 360.0)
     endif
   endif
 
+  # Eq (15)
   const T = 1.0
-        \ - 0.17 * cos(DegToRad(H_bar_prime - 30.0))
-        \ + 0.24 * cos(DegToRad(H_bar_prime * 2.0))
-        \ + 0.32 * cos(DegToRad(H_bar_prime * 3.0 + 6.0))
-        \ - 0.20 * cos(DegToRad(H_bar_prime * 4.0 - 63.0))
+    - 0.17 * cos(DegToRad(h_bar_prime - 30.0))
+    + 0.24 * cos(DegToRad(h_bar_prime * 2.0))
+    + 0.32 * cos(DegToRad(h_bar_prime * 3.0 + 6.0))
+    - 0.20 * cos(DegToRad(h_bar_prime * 4.0 - 63.0))
 
-  const L_bar_minus_50_square = (L_bar - 50.0) * (L_bar - 50.0)
-  const S_L = 1.0 + ((0.015 * L_bar_minus_50_square) / sqrt(20.0 + L_bar_minus_50_square))
+  # Eq (16)
+  var h_bar_prime_minus_275_div_25_square = (h_bar_prime - 275.0) / 25.0
+  h_bar_prime_minus_275_div_25_square = h_bar_prime_minus_275_div_25_square * h_bar_prime_minus_275_div_25_square
+  const delta_theta = 60.0 * exp(-h_bar_prime_minus_275_div_25_square)
+
+  # Eq (17)
+  const C_bar_prime_pow_7 = pow(C_bar_prime, 7)
+  const R_C = 2.0 * sqrt(C_bar_prime_pow_7 / (C_bar_prime_pow_7 + 6103515625))
+
+  # Eq (18)
+  var L_bar_prime_minus_50_squared = L_bar_prime - 50.0
+  L_bar_prime_minus_50_squared = L_bar_prime_minus_50_squared * L_bar_prime_minus_50_squared
+  const S_L = 1.0 + ((0.015 * L_bar_prime_minus_50_squared) / sqrt(20.0 + L_bar_prime_minus_50_squared))
+
+  # Eq (19)
   const S_C = 1.0 + 0.045 * C_bar_prime
+
+  # Eq (20)
   const S_H = 1.0 + 0.015 * T * C_bar_prime
 
-  var H_bar_prime_minus_275_div_25_square = (H_bar_prime - 275.0) / 25.0
-  H_bar_prime_minus_275_div_25_square = H_bar_prime_minus_275_div_25_square * H_bar_prime_minus_275_div_25_square
+  # Eq (21)
+  const R_T = -R_C * sin(DegToRad(delta_theta))
 
-  const delta_theta = 60.0 * exp(-H_bar_prime_minus_275_div_25_square)
-  const C_bar_prime_pow_7 = pow(C_bar_prime, 7)
-  const R_C = 2.0 * sqrt(C_bar_prime_pow_7 / (C_bar_prime_pow_7 + 6103515625)) # 25^7
-  const R_T = -R_C * sin(s:DegToRad(delta_theta))
-
+  # Eq (22)
   const delta_L_prime_div_k_L_S_L = delta_L_prime / (S_L * k_L)
   const delta_C_prime_div_k_C_S_C = delta_C_prime / (S_C * k_C)
   const delta_H_prime_div_k_H_S_H = delta_H_prime / (S_H * k_H)
-  const CIEDE2000 = sqrt(
-        \   delta_L_prime_div_k_L_S_L * delta_L_prime_div_k_L_S_L
-        \ + delta_C_prime_div_k_C_S_C * delta_C_prime_div_k_C_S_C
-        \ + delta_H_prime_div_k_H_S_H * delta_H_prime_div_k_H_S_H
-        \ + R_T * delta_C_prime_div_k_C_S_C * delta_H_prime_div_k_H_S_H
-        \ )
+  const deltaE = sqrt(
+    delta_L_prime_div_k_L_S_L * delta_L_prime_div_k_L_S_L
+    + delta_C_prime_div_k_C_S_C * delta_C_prime_div_k_C_S_C
+    + delta_H_prime_div_k_H_S_H * delta_H_prime_div_k_H_S_H
+    + R_T * delta_C_prime_div_k_C_S_C * delta_H_prime_div_k_H_S_H
+  )
 
-  return CIEDE2000
+  return deltaE
 enddef
+# }}}
 
 var cache: dict<any> = {}
 
@@ -833,7 +855,7 @@ export def Approximate(hexColor: string): dict<any>
 
   while i < N
     const [L2, a2, b2] = XTERM_CIELAB[i]
-    const new_delta = DeltaCIE2000(L1, a1, b1, L2, a2, b2)
+    const new_delta = DeltaE2000(L1, a1, b1, L2, a2, b2)
 
     if new_delta < delta
       delta = new_delta
@@ -858,7 +880,7 @@ enddef
 # colorsList: an optional list of candidate hex colors
 export def ColorsWithin(
     hexColor: string, threshold: float, colorsList: list<string> = []
-): list<number>
+    ): list<number>
   const [L1, a1, b1]             = Hex2Cielab(hexColor)
   const candidates               = empty(colorsList) ? XTERM256_COLORS : colorsList
   const N                        = len(candidates)
@@ -869,7 +891,7 @@ export def ColorsWithin(
   while i < N
     const color = candidates[i]
     const [L2, a2, b2] = Hex2Cielab(color)
-    const delta = DeltaCIE2000(L1, a1, b1, L2, a2, b2)
+    const delta = DeltaE2000(L1, a1, b1, L2, a2, b2)
 
     if delta <= threshold
       neighbours->add(i + 16)
@@ -895,7 +917,7 @@ enddef
 # NOTE: this is a highly inefficient implementation!
 export def Neighbours(
     hexColor: string, k: number, colorsList: list<string> = []
-): list<dict<any>>
+    ): list<dict<any>>
   const [L1, a1, b1] = Hex2Cielab(hexColor)
   const candidates   = empty(colorsList) ? XTERM256_COLORS : colorsList
   const N            = len(candidates)
@@ -924,7 +946,7 @@ export def Neighbours(
 
       const xtermColor   = candidates[i]
       const [L2, a2, b2] = Hex2Cielab(xtermColor)
-      const new_delta    = DeltaCIE2000(L1, a1, b1, L2, a2, b2)
+      const new_delta    = DeltaE2000(L1, a1, b1, L2, a2, b2)
 
       if new_delta < delta
         delta = new_delta
@@ -1073,7 +1095,7 @@ export def PerceptualDifference(col1: any, col2: any): float
   const [L1, a1, b1] = type(col1) == v:t_string ? Hex2Cielab(col1) : Rgb2Cielab(col1.r, col1.g, col1.b)
   const [L2, a2, b2] = type(col2) == v:t_string ? Hex2Cielab(col2) : Rgb2Cielab(col2.r, col2.g, col2.b)
 
-  return DeltaCIE2000(L1, a1, b1, L2, a2, b2)
+  return DeltaE2000(L1, a1, b1, L2, a2, b2)
 enddef
 
 # vim: foldmethod=marker nowrap et ts=2 sw=2

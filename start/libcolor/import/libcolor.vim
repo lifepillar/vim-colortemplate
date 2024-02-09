@@ -1,3 +1,7 @@
+if v:version < 901
+  finish
+endif
+
 vim9script
 
 # Constants {{{

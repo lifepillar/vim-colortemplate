@@ -14,7 +14,7 @@ Note: Vim 9.0.2185 or later is required.
 
 ==============================================================================
 0. Quick start					*libparser-quickstart*
->
+
 The following code parses the string "Vim" at the beginning of a given text:
 >
 	vim9script

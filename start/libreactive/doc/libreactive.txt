@@ -1,0 +1,456 @@
+*libreactive.txt*	For Vim version 9.1	Last change: 2024 Feb 10
+
+Note: Vim 9.1 or later is required.
+
+0. Basics				|libreactive-basics|
+1. Transactional updates		|libreactive-transactions|
+2. Cascading effects			|libreactive-effects|
+3. Caching computations			|libreactive-caching|
+4. Pools				|libreactive-pools|
+5. Tips and tricks			|libreactive-tips|
+6. API					|libreactive-api|
+7. Options				|libreactive-options|
+
+==============================================================================
+0. Basics					*libreactive-basics*
+
+This library allows you to automatically execute arbitrary code ("effects")
+whenever the value of a "reactive" variable is updated. For example:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	var what = react.Property.new('pizza')
+
+	react.CreateEffect(() => {
+	  echo $'I love {what.Get()}!'
+	})
+
+	what.Set('nature')
+	what.Set('Vim')
+<
+Output:
+>
+	I love pizza!
+	I love nature!
+	I love Vim!
+<
+"Reactive variables" are called "properties" and they are instances of the
+|libreactive.Property| class. They are basically thin wrappers around a value
+of any type, which can be accessed with `Get()` and modified with `Set()`.
+
+"Effects" are functions or lambdas that read, and possibly write, properties.
+Effects are automatically bound to the properties they access, so that they
+are notified of their changes. In the example above, the effect reads the
+value of the `what` property: that is enough to make the effect an observer of
+`what`. As such, the effect is re-executed every time the value of `what` is
+updated.
+
+The link between properties and effects is dynamic. Every time an effect is
+executed, the first thing that happens is that the list of properties it
+observes is cleared. Then, every property that is read during that execution
+of the effect is bound to the effect again. This is best understood with an
+example:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	var name = react.Property.new('Jack')
+	var show = react.Property.new(true)
+	var count = 0
+
+	react.CreateEffect(() => {
+	  ++count
+
+	  if show.Get()
+	    echo name.Get()
+	  endif
+	})
+
+	echo count       # 1 (The effect is run upon creation, echoing 'Jack')
+	name.Set('Stan') # The effect is triggered, and echoes 'Stan'
+	show.Set(false)  # The effect is triggered, nothing echoed
+	name.Set('Roy')  # Name is updated, but the effect is not triggered
+	name.Set('Gus')  # Name is updated, but the effect is not triggered
+	name.Set('Lee')  # Name is udpated, but the effect is not triggered
+	show.Set(true)   # The effect is triggered, and echoes 'Lee'
+	echo count       # <== 4
+
+In this example, `count` is used to keep track of how many times the effect is
+run. The first thing to notice is that |libreactive.CreateEffect()| executes
+its argument: since `show` is `true`, the current value of `name` ('Jack') is
+echoed. As the effect has accessed both `show` and `name`, it becomes an
+observer of both properties. Therefore, when `name` is changed to 'Stan', the
+effect is executed again, and it is set again to observe both properties.
+
+Then, `show` is set to `false`. This triggers the effect once more, but this
+time only `show` is read during the execution of the effect, hence the effect
+starts observing only `show`. Therefore, subsequent updates of `name` do not
+trigger any effect.
+
+Eventually, `show` is set to `true` again, which triggers the effect (which
+was observing `show`): the current value of `name` is echoed, and the effect
+starts observing both properties again.
+
+==============================================================================
+1. Transactional updates			*libreactive-transactions*
+
+By default, the effects observing a property are triggered immediately after
+the value of that property is updated. In circumstances in which such
+behaviour is undesirable, it is possible to postpone the execution of the
+effects at the end of a transaction.
+
+Consider this example:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	var firstName = react.Property.new('John')
+	var lastName  = react.Property.new('Doe')
+
+	react.CreateEffect(() => {
+	  echo $'{firstName.Get()} {lastName.Get()}'
+	})
+
+	firstName.Set('Jane') # <== Triggers the effect
+	lastName.Set('Smith') # <== Triggers the effect again
+<
+The code above will echo an intermediate name 'Jane Doe'. If the intent of the
+user is to update first and last names atomically, then the updates must be
+wrapped into a transaction:
+>
+	react.Transaction(() => {
+	  firstName.Set('Jane')
+	  lastName.Set('Smith')
+	}) # <== Effect triggered once at commit time
+<
+Then, only 'John Doe' and 'Jane Smith' will be echoed.
+
+See also |libreactive.Transaction()|.
+
+==============================================================================
+2. Cascading effects				*libreactive-effects*
+
+An effect may contain arbitrary code, including statements that update some
+properties. In general, that causes other effects to be executed in cascade.
+For example:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	var A = react.Property.new(2)
+	var B = react.Property.new(1)
+	var result = -1
+
+	react.CreateEffect(() => { # Effect 1
+	  result = B.Get()
+	})
+
+	react.CreateEffect(() => { # Effect 2
+	  B.Set(A.Get())
+	})
+
+	echo result # <== 2
+<
+Since Effect 1 becomes an observer of property `B`, when Effect 2 is executed,
+it will trigger Effect 1, because Effect 2 modifies the value of property `B`.
+So, the code above will actually run:
+>
+	result = B.Get() # result == 1
+	B.Set(A.Get())   # B == 2
+	result = B.Get() # result == 2
+<
+One should be careful not to create cycles of effects. The library implements
+a heuristic to detect infinite recursion (see |g:libreactive_queue_size|).
+This trivial example will fail:
+>
+	var p = react.Property.new(0)
+
+	react.CreateEffect(() => {
+	  p.Set(p.Get() + 1)
+	})
+<
+This effect becomes an observer of `p`, but it also updates `p`, endlessly
+triggering itself.
+
+NOTE: there are no restrictions in reading or writing properties outside of
+effects. The following snippet is perfectly fine:
+>
+	var p = react.Property.new(1)
+
+	react.CreateEffect(() => {
+	  echo $'The current value of p is {p.Get()}'
+	})
+
+	for i in range(10)
+	  p.Set(p.Get() * 2)
+	endfor
+<
+Effects are executed in a transaction. Therefore, no matter how many other
+properties they change, each of their associated effects is run exactly once
+and only at the end of the effect's block. Besides, the values read during an
+execution of an effect are guaranteed not to change within the span of that
+execution (read consistency).
+
+Effects' propagation is breadth-first: if effect E1 updates property P1, which
+is observed by effects E2 and E3, then at the end of E1:
+
+- both E2 and E3 are executed to completion, one after another;
+- only then, the effects of E2 and E3 (if any) are evaluated recursively in
+  a breadth-first manner.
+
+This semantics makes it easy to reason about effects, because each effect is
+treated as an atomic unit. Evaluation is done by repeatedly performing the
+following three steps until all cascading effects have been executed:
+
+1. run the current effect to completion, keeping track of each property that
+   is modified by the effect;
+2. for each such property, enqueue its effects in the order in which
+   the properties were updated, skipping effects that are already in the
+   queue;
+3. take the effect at the top of the queue, and go to step 1.
+
+NOTE: in step 2, you should not rely on the order in which the effects of
+a given property are enqueued.
+
+==============================================================================
+3. Caching computations				*libreactive-caching*
+
+Sometimes, an effect performs an expensive computation, and it would be
+wasteful to redo the computation if the properties observed by the effect have
+not changed. For example, this is inefficient:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	var p = react.Property.new(0.0)
+
+	def F(): float
+	  echo 'Executing F()...'
+	  sleep 3 # Simulate some expensive computation that depends on p
+	  return sin(p.Get())
+	enddef
+
+	react.CreateEffect(() => {
+	  echo $'Effect 1: {F()}'
+	})
+
+	react.CreateEffect(() => {
+	  echo $'Effect 2: {F()}'
+	})
+
+	p.Set(1.23)
+<
+In the code above, F() is executed four times: twice when Effect 1 and Effect
+2 are created, and two more times when `p` is updated (once for each effect).
+
+In such cases, it is convenient to cache the result of a computed property.
+This can be done by using |libreactive.CreateMemo()|, which takes as input
+a function or lambda F and returns another function that allows you to access
+the cached result of F. The cached result is automatically recomputed whenever
+the properties on which F depends are updated.
+
+The example above can be rewritten as follows:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	var p = react.Property.new(0.0)
+
+	def F(): float
+	  echo 'Executing F()...'
+	  sleep 3 # Simulate some expensive computation that depends on p
+	  return sin(p.Get())
+	enddef
+
+	const CachedF = react.CreateMemo((): float => {
+	  return F()
+	})
+
+	react.CreateEffect(() => {
+	  echo $'Effect 1: {CachedF()}'
+	})
+
+	react.CreateEffect(() => {
+	  echo $'Effect 2: {CachedF()}'
+	})
+
+	p.Set(1.3)
+<
+Now, F() is executed only if necessary: once when the first effect is executed
+(to compute F(0.0)) and once more when `p` is updated (to compute F(1.3)).
+
+Under the hood, |libreactive.CreateMemo()| creates a property to store
+the value of F(), and an effect that is triggered whenever F() needs to be
+recomputed. See the source code if you want to understand how this magic
+works.
+
+==============================================================================
+4. Pools					*libreactive-pools*
+
+So far we have talked about creating properties that trigger some effects. In
+practice, one will also want to stop properties to trigger effects.
+
+The simplest way is to call the Clear() method of |libreactive.Property()|.
+That will unsubscribe all the effects that are currently observing the
+affected property. When there are many properties, however, that may become
+a bit cumbersome. Besides, it is not possible to clear the hidden property
+created by |libreactive.CreateMemo()| in this way.
+
+With the global function |libreactive.Clear()|, all the properties, including
+the hidden ones, are cleared. That is a way to guarantee that the properties
+in your script will stop triggering effects (until effects are run that read
+them again).
+
+But your script is not the only one in Vimland. Other scripts may be using
+libreactive, and it would not be polite to clear their state, too.
+
+One way to go around that is to create properties within a "pool". Simply
+define a unique name for your pool (e.g., `my_script_name_pool`) and pass that
+name when creating a property. Then, when you want to clear your properties,
+pass the pool's name to |libreactive.Clear()|:
+>
+	const MY_POOL = 'some globally unique name'
+	var p = react.Property.new(value, MY_POOL)
+
+	# Later on...
+	react.Clear(MY_POOL)
+<
+This way, only the objects that your script creates will be cleared.
+
+==============================================================================
+5. Tips and tricks				*libreactive-tips*
+
+- Effects and/or memos cannot be nested: that will raise an error. Note that
+  |libreactive.CreateMemo()| creates an effect, too.
+
+- If you need a property whose value is a list or dictionary, you have at
+  least two options. The first option is just the straightforward way:
+>
+	var p = react.Property.new([])
+	var newValue: list<...> = ...
+	p.Set(newValue)
+<
+  Note that, if `newValue` is a modified version of `p.Get()`, it is not
+  enough to update the list: you still need to call `p.Set()`:
+>
+	var theList = p.Get()
+	theList->add(someValue)
+	p.Set(theList) # <== This is necessary
+<
+  The other option is to wrap the value into a lambda, which is a bit more
+  verbose, but cleaner in terms of semantics, as the lambda is immutable:
+>
+	var p = react.Property.new((): list<number> => [])
+	var V = p.Get()
+	var newValue = V()->add(42)
+	p.Set(() => newValue)
+	echo p.Get()() # [42]
+<
+- If you prefer a functional syntax for properties, you may create them with
+  the following small helper function:
+>
+	def GetSet(value: any): list<func>
+	  var p = react.Property.new(value)
+	  return [p.Get, p.Set]
+	enddef
+
+	var [P1, SetP1] = GetSet(value1)
+<
+  Then, you may access the value of the property with `P1()` and set it with
+  `SetP1()`.
+
+- Generally speaking, your properties should probably be script variables.
+
+- If you think you need to read and write the same property inside an effect,
+  you are doing it wrong. Rethink about your problem.
+
+- Always define your own pool in your scripts. Do not define properties in the
+  default pool, as that may be shared with other scripts.
+
+==============================================================================
+6. API					*libreactive-api*
+
+Classes ~
+					*libreactive.Property()*
+new([{value}, {pool}])
+		Create a new property with the given {value}. {value} can be
+		of any type. If no value is provided, the property is
+		initialized with |null|. The property remains associated to
+		the given {pool}, or to the default pool is {pool} is not
+		specified. Specifying a pool is useful to clear properties:
+		see |libreactive.Clear()|.
+
+Get()
+		Obtain the value of the property. If this method is called
+		within an effect's block, that effect is automatically
+		registered as an observer of the property.
+
+Set()
+		Update the value of the property and execute all the effects
+		currently associated with this property, if any. The effects
+		are executed immediately unless the update is performed within
+		a transaction or within an effect, in which case the effects
+		are run only at the end of the transaction or at the end of
+		the effect's block, respectively.
+
+Clear()
+		Un-register all the effects currently observing this property.
+		After this, updating this property will not trigger any effect
+		until the property is read again by some effect.
+
+Effects()
+		Return the names of the effects currently observing this
+		property as a |list| of |string|s. Mainly useful for debugging.
+
+Functions ~
+
+					*libreactive.Clear()*
+Clear([{pool}, {hard}])
+		Clear the effects associated to any existing property in the
+		given {pool}. If {pool} is not provided, the default pool is
+		used. If {pool} is the empty string, all pools are cleared:
+		that is mainly for testing. When {hard} is |true|, also clear
+		the internal references to the properties themselves. Note:
+		you should not use properties after they have been cleared
+		with {hard} set to |true|: create new ones.
+
+					*libreactive.CreateEffect()*
+CreateEffect({func})
+		Create a new effect running {func} and execute it once. {func}
+		must be a function with no parameters and no return value.
+
+					*libreactive.CreateMemo()*
+CreateMemo({func})
+		Create an effect that executes {func} and caches its result
+		inside an internal property. Return the property's Get()
+		method, which can be used to obtain the cached function's
+		value. {func} must be a function with no parameters and an
+		arbitrary return value. The function's value is automatically
+		recomputed—and its result cached—whenever any property which
+		the function depends upon is updated.
+
+					*libreactive.Reinit()*
+Reinit()
+		Re-initialize the internal state of libreactive, in case it
+		gets corrupted. Do not use this function in your scripts: this
+		is mainly for development and testing!
+
+					*libreactive.Transaction()*
+Transaction({func})
+		Execute {func} atomically: any property updates performed by
+		{func} trigger their effects only once and only at the end of
+		the transaction. 
+
+==============================================================================
+6. Options					*libreactive-options*
+
+					*g:libreactive_queue_size*
+
+The maximum size of the internal effects' queue. This value should be
+increased only if libreactive emits false positive errors about the recursion
+limit being exceeded. (But then, how many effects do your properties have?!)
+>
+	g:libreactive_queue_size = 10000
+<
+ vim:tw=78:ts=8:noet:ft=help:norl:

@@ -1,8 +1,5 @@
 vim9script
 
-# A minimal reactive library. Loosely inspired by this tutorial:
-# https://dev.to/ryansolid/building-a-reactive-library-from-scratch-1i0p
-
 # Helper functions {{{
 def NotIn(v: any, items: list<any>): bool
   return indexof(items, (_, u) => u is v) == -1
@@ -115,19 +112,11 @@ enddef
 # }}}
 
 # Transactions {{{
-# By default, when a signal is updated, its effects are triggered
-# synchronously. It is possible, however, to perform several changes to one or
-# more signals within a transaction, in which case notifications are sent only
-# when the transaction commits. The gTransaction counter signals whether
-# a (nested) transaction is running. The queue is where the effects to be
-# executed are pushed. The queue is emptied when the transaction commits (see
-# Commit()).
-
-def Begin()
+export def Begin()
   gTransaction += 1
 enddef
 
-def Commit()
+export def Commit()
   if gTransaction == 1
     while !gQueue.Empty()
       gQueue.Pop().Execute()
@@ -137,10 +126,6 @@ def Commit()
   gTransaction -= 1
 enddef
 
-# Clients use this function to perform changes to signals in an atomic way.
-# Notifications are postponed until commit time. Also, each effect is notified
-# exactly once, even if several changes to the signal (or signals) it observes
-# have happened inside the transaction.
 export def Transaction(Body: func())
   Begin()
   Body()

@@ -369,6 +369,11 @@ This way, only the objects that your script creates will be cleared.
 - Always define your own pool in your scripts. Do not define properties or
   memos in the default pool, as that may be shared with other scripts.
 
+- Prefer |libreactive.Transaction()| to |libreactive.Begin()| and
+  |libreactive.Commit()|. The latter two are useful in limited circumstances,
+  e.g., when one needs to wrap in a transaction a call to a base class method,
+  prefixed with "super." (|E1356|).
+
 ==============================================================================
 6. API					*libreactive-api*
 
@@ -407,6 +412,11 @@ Effects()
 
 Functions ~
 
+					*libreactive.Begin()*
+Begin()
+		Start a transaction. This must always be paired with Commit().
+		In most cases, |libreactive.Transaction()| is preferrable.
+
 					*libreactive.Clear()*
 Clear([{pool}, {hard}])
 		Clear the effects associated to any existing property in the
@@ -416,6 +426,11 @@ Clear([{pool}, {hard}])
 		the internal references to the properties themselves. Note:
 		you should not use properties after they have been cleared
 		with {hard} set to |true|: create new ones.
+
+					*libreactive.Commit()*
+Commit()
+		Commit a transaction. This must always be paired with Begin().
+		In most cases, |libreactive.Transaction()| is preferrable.
 
 					*libreactive.CreateEffect()*
 CreateEffect({func})

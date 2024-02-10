@@ -86,12 +86,11 @@ endclass
 # }}}
 
 # Global state {{{
-const DEFAULT_POOL = '__DEFAULT__'
 var gActiveEffect: Effect = null_object
 var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
 var gCreatingEffect = false
 var gQueue = EffectsQueue.new()
-var gPropertyRegistry: dict<list<IProperty>> = {DEFAULT_POOL: []}
+var gPropertyRegistry: dict<list<IProperty>> = {'__DEFAULT__': []}
 
 export def Reinit()
   gActiveEffect   = null_object
@@ -100,7 +99,7 @@ export def Reinit()
   gQueue.Reset()
 enddef
 
-export def Clear(poolName = DEFAULT_POOL, hard = false)
+export def Clear(poolName = '__DEFAULT__', hard = false)
   const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
 
   for pool in pools
@@ -152,7 +151,7 @@ enddef
 # Properties {{{
 export class Property implements IProperty
   var _value: any = null
-  var _pool = DEFAULT_POOL
+  var _pool = '__DEFAULT__'
   var _effects: list<Effect> = []
 
   def new(this._value = v:none, this._pool = v:none)

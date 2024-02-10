@@ -207,8 +207,8 @@ export def CreateEffect(Fn: func())
   gCreatingEffect = false
 enddef
 
-export def CreateMemo(Fn: func(): any): func(): any
-  var signal = Property.new()
+export def CreateMemo(Fn: func(): any, pool = '__DEFAULT__'): func(): any
+  var signal = Property.new(v:none, pool)
   CreateEffect(() => signal.Set(Fn()))
   return signal.Get
 enddef

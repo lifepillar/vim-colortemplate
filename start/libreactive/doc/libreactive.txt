@@ -305,13 +305,14 @@ them again).
 But your script is not the only one in Vimland. Other scripts may be using
 libreactive, and it would not be polite to clear their state, too.
 
-One way to go around that is to create properties within a "pool". Simply
-define a unique name for your pool (e.g., `my_script_name_pool`) and pass that
-name when creating a property. Then, when you want to clear your properties,
-pass the pool's name to |libreactive.Clear()|:
+One way to go around that is to create properties and memos within a "pool".
+Simply define a unique name for your pool (e.g., `my_script_name_pool`) and
+pass that name when creating a property or a memo. Then, when you want to
+clear your properties, pass the pool's name to |libreactive.Clear()|:
 >
 	const MY_POOL = 'some globally unique name'
 	var p = react.Property.new(value, MY_POOL)
+	var F  = react.CreateMemo(() => ..., MY_POOL)
 
 	# Later on...
 	react.Clear(MY_POOL)

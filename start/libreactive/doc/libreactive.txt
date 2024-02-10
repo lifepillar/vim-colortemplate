@@ -351,8 +351,8 @@ This way, only the objects that your script creates will be cleared.
 - If you prefer a functional syntax for properties, you may create them with
   the following small helper function:
 >
-	def GetSet(value: any): list<func>
-	  var p = react.Property.new(value)
+	def GetSet(value: any, pool = 'my_pool'): list<func>
+	  var p = react.Property.new(value, pool)
 	  return [p.Get, p.Set]
 	enddef
 
@@ -361,13 +361,13 @@ This way, only the objects that your script creates will be cleared.
   Then, you may access the value of the property with `P1()` and set it with
   `SetP1()`.
 
-- Generally speaking, your properties should probably be script variables.
+- Your properties should probably be script variables.
 
 - If you think you need to read and write the same property inside an effect,
   you are doing it wrong. Rethink about your problem.
 
-- Always define your own pool in your scripts. Do not define properties in the
-  default pool, as that may be shared with other scripts.
+- Always define your own pool in your scripts. Do not define properties or
+  memos in the default pool, as that may be shared with other scripts.
 
 ==============================================================================
 6. API					*libreactive-api*
@@ -379,8 +379,9 @@ new([{value}, {pool}])
 		of any type. If no value is provided, the property is
 		initialized with |null|. The property remains associated to
 		the given {pool}, or to the default pool is {pool} is not
-		specified. Specifying a pool is useful to clear properties:
-		see |libreactive.Clear()|.
+		specified. Specifying a pool is useful to clear properties
+		without interfering with other scripts: see
+		|libreactive.Clear()|.
 
 Get()
 		Obtain the value of the property. If this method is called

@@ -411,13 +411,9 @@ export def CtermColorNumber(name: string, t_Co: number): number
     throw $'CtermColorNumber: t_Co must be 8 or 16. Got: {t_Co}'
   endif
 
-  const num = get(CTERM_COLOR_MAP[t_Co], name, -1)
+  const num = get(CTERM_COLOR_MAP[t_Co], tolower(name), -1)
 
-  if num < 0
-    throw $"Invalid color name: '{name}'"
-  endif
-
-  if t_Co == 16
+  if t_Co == 16 || num < 0
     return num
   endif
 

@@ -193,8 +193,8 @@ export def CreateEffect(Fn: func())
 enddef
 
 export def CreateMemo(Fn: func(): any, pool = '__DEFAULT__'): func(): any
-  var signal = Property.new(v:none, pool)
-  CreateEffect(() => signal.Set(Fn()))
-  return signal.Get
+  var memo = Property.new(v:none, pool)
+  CreateEffect(() => memo.Set(Fn()))
+  return memo.Get
 enddef
 # }}}

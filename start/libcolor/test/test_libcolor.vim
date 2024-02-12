@@ -125,189 +125,72 @@ def Test_Color_Hex2Gray()
 enddef
 
 def Test_Color_Rgb2Hsv()
-  var h: number
-  var s: number
-  var v: number
+  const testCases = [
+    [  0,   0,   0,    0,   0,   0],
+    [255, 255, 255,    0,   0, 100],
+    [128, 128, 128,    0,   0,  50],
+    [255,   0,   4,  359, 100, 100],
+    [255,   0,   0,    0, 100, 100],
+    [255, 128,   0,   30, 100, 100],
+    [255, 255,   0,   60, 100, 100],
+    [128, 255,   0,   90, 100, 100],
+    [  0, 255,   0,  120, 100, 100],
+    [  0, 255, 128,  150, 100, 100],
+    [  0, 255, 255,  180, 100, 100],
+    [  0, 128, 255,  210, 100, 100],
+    [  0,   0, 255,  240, 100, 100],
+    [128,   0, 255,  270, 100, 100],
+    [255,   0, 255,  300, 100, 100],
+    [255,   0, 128,  330, 100, 100],
+    [  1,   1,   1,    0,   0,   0],
+    [  3,   3,   3,    0,   0,   1],
+    [252,   3,   7,  359,  99,  99],
+    [255, 255, 254,   60,   0, 100],
+    [197, 128,  63,   29,  68,  77],
+    [ 33, 197,  99,  144,  83,  77],
+    [239,   7, 131,  328,  97,  94],
+    [135,  38,  39,  359,  72,  53],
+    [ 40,  40,  40,    0,   0,  16],
+  ]
 
-  [h,s,v] = Rgb2Hsv(0, 0, 0)
-  assert_equal(  0, h)
-  assert_equal(  0, s)
-  assert_equal(  0, v)
-  [h,s,v] = Rgb2Hsv(255, 255, 255)
-  assert_equal(  0, h)
-  assert_equal(  0, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(128, 128, 128)
-  assert_equal(  0, h)
-  assert_equal(  0, s)
-  assert_equal( 50, v)
-  [h,s,v] = Rgb2Hsv(255, 0, 4)
-  assert_equal(359, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(255, 0, 0)
-  assert_equal(  0, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(255, 128, 0)
-  assert_equal( 30, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(255, 255, 0)
-  assert_equal( 60, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(128, 255, 0)
-  assert_equal( 90, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(0, 255, 0)
-  assert_equal(120, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(0, 255, 128)
-  assert_equal(150, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(0, 255, 255)
-  assert_equal(180, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(0, 128, 255)
-  assert_equal(210, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(0, 0, 255)
-  assert_equal(240, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(128, 0, 255)
-  assert_equal(270, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(255, 0, 255)
-  assert_equal(300, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(255, 0, 128)
-  assert_equal(330, h)
-  assert_equal(100, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(1, 1, 1)
-  assert_equal(  0, h)
-  assert_equal(  0, s)
-  assert_equal(  0, v)
-  [h,s,v] = Rgb2Hsv(3, 3, 3)
-  assert_equal(  0, h)
-  assert_equal(  0, s)
-  assert_equal(  1, v)
-  [h,s,v] = Rgb2Hsv(252, 3, 7)
-  assert_equal(359, h)
-  assert_equal( 99, s)
-  assert_equal( 99, v)
-  [h,s,v] = Rgb2Hsv(255, 255, 254)
-  assert_equal( 60, h)
-  assert_equal(  0, s)
-  assert_equal(100, v)
-  [h,s,v] = Rgb2Hsv(197, 128, 63)
-  assert_equal( 29, h)
-  assert_equal( 68, s)
-  assert_equal( 77, v)
-  [h,s,v] = Rgb2Hsv(33, 197, 99)
-  assert_equal(144, h)
-  assert_equal( 83, s)
-  assert_equal( 77, v)
-  [h,s,v] = Rgb2Hsv(239, 7, 131)
-  assert_equal(328, h)
-  assert_equal( 97, s)
-  assert_equal( 94, v)
-  [h,s,v] = Rgb2Hsv(135, 38, 39)
-  assert_equal(359, h)
-  assert_equal( 72, s)
-  assert_equal( 53, v)
+  for t in testCases
+    const [h, s, v] = Rgb2Hsv(t[0], t[1], t[2])
+    assert_equal(t[3], h)
+    assert_equal(t[4], s)
+    assert_equal(t[5], v)
+  endfor
 enddef
 
 def Test_Color_Hsv2Rgb()
-   var [r,g,b] = Hsv2Rgb(0, 0, 0)
-   assert_equal(  0, r)
-   assert_equal(  0, g)
-   assert_equal(  0, b)
-   [r,g,b] = Hsv2Rgb(0, 0, 100)
-   assert_equal(255, r)
-   assert_equal(255, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(300, 0, 50)
-   assert_equal(128, r)
-   assert_equal(128, g)
-   assert_equal(128, b)
-   [r,g,b] = Hsv2Rgb(359, 100, 100)
-   assert_equal(255, r)
-   assert_equal(  0, g)
-   assert_equal(  4, b)
-   [r,g,b] = Hsv2Rgb(360, 100, 100)  # 360° == 0°
-   assert_equal(255, r)
-   assert_equal(  0, g)
-   assert_equal(  0, b)
-   [r,g,b] = Hsv2Rgb(30, 100, 100)
-   assert_equal(255, r)
-   assert_equal(128, g)
-   assert_equal(  0, b)
-   [r,g,b] = Hsv2Rgb(60, 100, 100)
-   assert_equal(255, r)
-   assert_equal(255, g)
-   assert_equal(  0, b)
-   [r,g,b] = Hsv2Rgb(90, 100, 100)
-   assert_equal(128, r)
-   assert_equal(255, g)
-   assert_equal(  0, b)
-   [r,g,b] = Hsv2Rgb(120, 100, 100)
-   assert_equal(  0, r)
-   assert_equal(255, g)
-   assert_equal(  0, b)
-   [r,g,b] = Hsv2Rgb(150, 100, 100)
-   assert_equal(  0, r)
-   assert_equal(255, g)
-   assert_equal(128, b)
-   [r,g,b] = Hsv2Rgb(180, 100, 100)
-   assert_equal(  0, r)
-   assert_equal(255, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(210, 100, 100)
-   assert_equal(  0, r)
-   assert_equal(128, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(240, 100, 100)
-   assert_equal(  0, r)
-   assert_equal(  0, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(270, 100, 100)
-   assert_equal(128, r)
-   assert_equal(  0, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(300, 100, 100)
-   assert_equal(255, r)
-   assert_equal(  0, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(300, 100, 100)
-   assert_equal(255, r)
-   assert_equal(  0, g)
-   assert_equal(255, b)
-   [r,g,b] = Hsv2Rgb(330, 100, 100)
-   assert_equal(255, r)
-   assert_equal(  0, g)
-   assert_equal(128, b)
-   [r,g,b] = Hsv2Rgb(279, 57, 99)
-   assert_equal(202, r)
-   assert_equal(109, g)
-   assert_equal(252, b)
-   [r,g,b] = Hsv2Rgb(1, 1, 1)
-   assert_equal(  3, r)
-   assert_equal(  3, g)
-   assert_equal(  3, b)
-   [r,g,b] = Hsv2Rgb(359, 99, 99)
-   assert_equal(252, r)
-   assert_equal(  3, g)
-   assert_equal(  7, b)
+  const testCases = [
+    [  0,   0,   0,    0,   0,   0],
+    [  0,   0, 100,  255, 255, 255],
+    [300,   0,  50,  128, 128, 128],
+    [359, 100, 100,  255,   0,   4],
+    [360, 100, 100,  255,   0,   0], # 360° == 0°
+    [ 30, 100, 100,  255, 128,   0],
+    [ 60, 100, 100,  255, 255,   0],
+    [ 90, 100, 100,  128, 255,   0],
+    [120, 100, 100,    0, 255,   0],
+    [150, 100, 100,    0, 255, 128],
+    [180, 100, 100,    0, 255, 255],
+    [210, 100, 100,    0, 128, 255],
+    [240, 100, 100,    0,   0, 255],
+    [270, 100, 100,  128,   0, 255],
+    [300, 100, 100,  255,   0, 255],
+    [300, 100, 100,  255,   0, 255],
+    [330, 100, 100,  255,   0, 128],
+    [279,  57,  99,  202, 109, 252],
+    [  1,   1,   1,    3,   3,   3],
+    [359,  99,  99,  252,   3,   7],
+  ]
+
+  for t in testCases
+   var [r, g, b] = Hsv2Rgb(t[0], t[1], t[2])
+   assert_equal(t[3], r, $'({t[3]},{t[4]},{t[5]}) ≠ ({r},{g},{b})')
+   assert_equal(t[4], g, $'({t[3]},{t[4]},{t[5]}) ≠ ({r},{g},{b})')
+   assert_equal(t[5], b, $'({t[3]},{t[4]},{t[5]}) ≠ ({r},{g},{b})')
+  endfor
 enddef
 
 

@@ -119,13 +119,21 @@ export def Begin()
 enddef
 
 export def Commit()
-  if gTransaction == 1
-    while !gQueue.Empty()
-      gQueue.Pop().Execute()
-    endwhile
-    gQueue.Reset()
+  if gTransaction > 1
+    --gTransaction
+    return
   endif
-  gTransaction -= 1
+
+  if gTransaction == 1
+    try
+      while !gQueue.Empty()
+        gQueue.Pop().Execute()
+      endwhile
+      gQueue.Reset()
+    finally
+      gTransaction = 0
+    endtry
+  endif
 enddef
 
 export def Transaction(Body: func())

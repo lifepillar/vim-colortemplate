@@ -12,6 +12,7 @@ libreactive.Clear()	libreactive.txt	/*libreactive.Clear()*
 libreactive.Commit()	libreactive.txt	/*libreactive.Commit()*
 libreactive.CreateEffect()	libreactive.txt	/*libreactive.CreateEffect()*
 libreactive.CreateMemo()	libreactive.txt	/*libreactive.CreateMemo()*
+libreactive.DEFAULT_POOL	libreactive.txt	/*libreactive.DEFAULT_POOL*
 libreactive.Property()	libreactive.txt	/*libreactive.Property()*
 libreactive.Reinit()	libreactive.txt	/*libreactive.Reinit()*
 libreactive.Transaction()	libreactive.txt	/*libreactive.Transaction()*

@@ -83,11 +83,13 @@ endclass
 # }}}
 
 # Global state {{{
+export const DEFAULT_POOL = '__DEFAULT__'
+
 var gActiveEffect: Effect = null_object
 var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
 var gCreatingEffect = false
 var gQueue = EffectsQueue.new()
-var gPropertyRegistry: dict<list<IProperty>> = {'__DEFAULT__': []}
+var gPropertyRegistry: dict<list<IProperty>> = {DEFAULT_POOL: []}
 
 export def Reinit()
   gActiveEffect   = null_object
@@ -96,7 +98,7 @@ export def Reinit()
   gQueue.Reset()
 enddef
 
-export def Clear(poolName = '__DEFAULT__', hard = false)
+export def Clear(poolName: string, hard = false)
   const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
 
   for pool in pools
@@ -136,7 +138,7 @@ enddef
 # Properties {{{
 export class Property implements IProperty
   var _value: any = null
-  var _pool = '__DEFAULT__'
+  var _pool = '__DEFAULT__' # See https://github.com/vim/vim/issues/14011
   var _effects: list<Effect> = []
 
   def new(this._value = v:none, this._pool = v:none)
@@ -192,7 +194,7 @@ export def CreateEffect(Fn: func())
   gCreatingEffect = false
 enddef
 
-export def CreateMemo(Fn: func(): any, pool = '__DEFAULT__'): func(): any
+export def CreateMemo(Fn: func(): any, pool = DEFAULT_POOL): func(): any
   var memo = Property.new(v:none, pool)
   CreateEffect(() => memo.Set(Fn()))
   return memo.Get

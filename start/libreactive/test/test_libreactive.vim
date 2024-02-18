@@ -23,6 +23,25 @@ def Test_React_SimpleProperty()
   assert_equal(DoubleCount(), 10)
 enddef
 
+def Test_React_DefaultPool()
+  assert_true(!empty(react.DEFAULT_POOL))
+
+  var p0 = react.Property.new(0)
+
+  react.CreateEffect(() => {
+    p0.Get()
+  })
+
+  const M = react.CreateMemo((): number => p0.Get())
+
+  assert_equal(2, len(p0.Effects()))
+
+  react.Clear(react.DEFAULT_POOL)
+
+  assert_equal(0, len(p0.Effects()))
+enddef
+
+
 def Test_React_SimpleEffect()
   var result = 0
   const [Count, SetCount] = GetSet(1)
@@ -525,7 +544,7 @@ enddef
 def Test_React_PropertyInsideFunction()
   var result = ''
   const F = (): react.Property => {
-    var p = react.Property.new('a', 'FOO')
+    var p = react.Property.new('a', 'FOO_POOL')
 
     react.CreateEffect(() => {
       result ..= p.Get()
@@ -538,7 +557,7 @@ def Test_React_PropertyInsideFunction()
 
   assert_equal('ab', result)
 
-  react.Clear('FOO')
+  react.Clear('FOO_POOL')
   q.Set('c')
 
   assert_equal('ab', result)

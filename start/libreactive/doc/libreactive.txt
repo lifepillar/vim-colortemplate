@@ -300,15 +300,15 @@ created by |libreactive.CreateMemo()| in this way.
 With the global function |libreactive.Clear()|, all the properties, including
 the hidden ones, are cleared. That is a way to guarantee that the properties
 in your script will stop triggering effects (until effects are run that read
-them again).
+them again). The function requires the name of a "pool": a pool defines
+a scope for your properties, allowing libreactive to distinguish between the
+properties of your script and the properties of other scripts. Using pools is
+the polite way to use libreactive in Vimland.
 
-But your script is not the only one in Vimland. Other scripts may be using
-libreactive, and it would not be polite to clear their state, too.
-
-One way to go around that is to create properties and memos within a "pool".
-Simply define a unique name for your pool (e.g., `my_script_name_pool`) and
-pass that name when creating a property or a memo. Then, when you want to
-clear your properties, pass the pool's name to |libreactive.Clear()|:
+Therefore, you should always create properties and memos within a pool. Simply
+define a unique name for your pool (e.g., `my_script_name_pool`) and pass that
+name when creating a property or a memo. Then, when you want to clear your
+properties, pass the pool's name to |libreactive.Clear()|:
 >
 	const MY_POOL = 'some globally unique name'
 	var p = react.Property.new(value, MY_POOL)
@@ -317,7 +317,10 @@ clear your properties, pass the pool's name to |libreactive.Clear()|:
 	# Later on...
 	react.Clear(MY_POOL)
 <
-This way, only the objects that your script creates will be cleared.
+This way, all and only the objects that your script creates will be cleared.
+
+Note: when a pool is not specified, the properties are created in a default
+pool, whose name can be accessed via |libreactive.DEFAULT_POOL|.
 
 ==============================================================================
 5. Tips and tricks				*libreactive-tips*
@@ -377,6 +380,12 @@ This way, only the objects that your script creates will be cleared.
 ==============================================================================
 6. API					*libreactive-api*
 
+Constants ~
+					*libreactive.DEFAULT_POOL*
+		The name of the default pool. The default pool is mainly for
+		convenience when testing or during development. Avoid using
+		the default pool in your scripts.
+
 Classes ~
 					*libreactive.Property()*
 new([{value}, {pool}])
@@ -418,14 +427,16 @@ Begin()
 		In most cases, |libreactive.Transaction()| is preferrable.
 
 					*libreactive.Clear()*
-Clear([{pool}, {hard}])
+Clear({pool}[, {hard}])
 		Clear the effects associated to any existing property in the
-		given {pool}. If {pool} is not provided, the default pool is
-		used. If {pool} is the empty string, all pools are cleared:
-		that is mainly for testing. When {hard} is |true|, also clear
-		the internal references to the properties themselves. Note:
-		you should not use properties after they have been cleared
-		with {hard} set to |true|: create new ones.
+		given {pool}. If {pool} is the empty string, all pools are
+		cleared: that is mainly for testing: do not use an empty
+		string in your scripts!
+
+		When {hard} is |true|, also clear the internal references to
+		the properties themselves. Note: you should not use properties
+		after they have been cleared with {hard} set to |true|: create
+		new ones instead.
 
 					*libreactive.Commit()*
 Commit()

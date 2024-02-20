@@ -246,9 +246,9 @@ In the code above, F() is executed four times: twice when Effect 1 and Effect
 
 In such cases, it is convenient to cache the result of a computed property.
 This can be done by using |libreactive.CreateMemo()|, which takes as input
-a function or lambda F and returns another function that allows you to access
-the cached result of F. The cached result is automatically recomputed whenever
-the properties on which F depends are updated.
+a property and a function or lambda F whose current value is stored inside the
+property. The cached result is automatically recomputed whenever the
+properties on which F depends are updated.
 
 The example above can be rewritten as follows:
 >
@@ -256,6 +256,7 @@ The example above can be rewritten as follows:
 	import 'libreactive.vim' as react
 
 	var p = react.Property.new(0.0)
+	var cachedF = react.Property.new() # No need to assign a value
 
 	def F(): float
 	  echo 'Executing F()...'
@@ -263,27 +264,23 @@ The example above can be rewritten as follows:
 	  return sin(p.Get())
 	enddef
 
-	const CachedF = react.CreateMemo((): float => {
-	  return F()
+	# Compute F() and store its result in cachedF:
+	react.CreateMemo(cachedF, F)
+
+	react.CreateEffect(() => {
+	  echo $'Effect 1: {cachedF.Get()}'
 	})
 
 	react.CreateEffect(() => {
-	  echo $'Effect 1: {CachedF()}'
-	})
-
-	react.CreateEffect(() => {
-	  echo $'Effect 2: {CachedF()}'
+	  echo $'Effect 2: {cachedF.Get()}'
 	})
 
 	p.Set(1.3)
 <
-Now, F() is executed only if necessary: once when the first effect is executed
-(to compute F(0.0)) and once more when `p` is updated (to compute F(1.3)).
-
-Under the hood, |libreactive.CreateMemo()| creates a property to store
-the value of F(), and an effect that is triggered whenever F() needs to be
-recomputed. See the source code if you want to understand how this magic
-works.
+Now, F() is executed only if necessary: once when the memo is created (to
+cache the initial value F(0.0)) and once more when `p` is updated (to compute
+the updated value F(1.3)). The function F is not executed when Effect 1 and
+Effect 2 are run: those effects just retrieve the cached value.
 
 ==============================================================================
 4. Pools					*libreactive-pools*
@@ -294,26 +291,21 @@ practice, one will also want to stop properties to trigger effects.
 The simplest way is to call the Clear() method of |libreactive.Property()|.
 That will unsubscribe all the effects that are currently observing the
 affected property. When there are many properties, however, that may become
-a bit cumbersome. Besides, it is not possible to clear the hidden property
-created by |libreactive.CreateMemo()| in this way.
+a bit cumbersome. For that reason, libreactive also provides a global function
+|libreactive.Clear()| to clear all the properties, guaranteeing that they will
+stop triggering effects (until effects are run that read them again). The
+function requires the name of a "pool": a pool defines a scope for your
+properties, allowing libreactive to distinguish between the properties of your
+script and the properties of other scripts. Using pools is the polite way to
+use libreactive in Vimland.
 
-With the global function |libreactive.Clear()|, all the properties, including
-the hidden ones, are cleared. That is a way to guarantee that the properties
-in your script will stop triggering effects (until effects are run that read
-them again). The function requires the name of a "pool": a pool defines
-a scope for your properties, allowing libreactive to distinguish between the
-properties of your script and the properties of other scripts. Using pools is
-the polite way to use libreactive in Vimland.
-
-Therefore, you should always create properties and memos within a pool. Simply
-define a unique name for your pool (e.g., `my_script_name_pool`) and pass that
-name when creating a property or a memo. Then, when you want to clear your
-properties, pass the pool's name to |libreactive.Clear()|:
+Therefore, you should always create properties within a pool. Simply define
+a unique name for your pool (e.g., `my_script_name_pool`) and pass that name
+when creating a property. Then, when you want to clear your properties, pass
+the pool's name to |libreactive.Clear()|:
 >
 	const MY_POOL = 'some globally unique name'
 	var p = react.Property.new(value, MY_POOL)
-	var F  = react.CreateMemo(() => ..., MY_POOL)
-
 	# Later on...
 	react.Clear(MY_POOL)
 <
@@ -364,13 +356,13 @@ pool, whose name can be accessed via |libreactive.DEFAULT_POOL|.
   Then, you may access the value of the property with `P1()` and set it with
   `SetP1()`.
 
-- Your properties should probably be script variables.
+- Properties should most likely be defined as script variables.
 
 - If you think you need to read and write the same property inside an effect,
   you are doing it wrong. Rethink about your problem.
 
-- Always define your own pool in your scripts. Do not define properties or
-  memos in the default pool, as that may be shared with other scripts.
+- Always define your own pool in your scripts. Do not define properties in the
+  default pool, as that may be shared with other scripts.
 
 - Prefer |libreactive.Transaction()| to |libreactive.Begin()| and
   |libreactive.Commit()|. The latter two are useful in limited circumstances,
@@ -449,20 +441,20 @@ CreateEffect({func})
 		must be a function with no parameters and no return value.
 
 					*libreactive.CreateMemo()*
-CreateMemo({func})
+CreateMemo({property}, {func})
 		Create an effect that executes {func} and caches its result
-		inside an internal property. Return the property's Get()
-		method, which can be used to obtain the cached function's
-		value. {func} must be a function with no parameters and an
-		arbitrary return value. The function's value is automatically
-		recomputed—and its result cached—whenever any property which
-		the function depends upon is updated.
+		inside {property}. {func} must be a function with no
+		parameters and an arbitrary return value. The function's value
+		is automatically recomputed—and its result stored in
+		{property}—whenever any property which the function depends
+		upon is updated.
 
 					*libreactive.Reinit()*
 Reinit()
-		Re-initialize the internal state of libreactive, in case it
-		gets corrupted. Do not use this function in your scripts: this
-		is mainly for development and testing!
+		Re-initialize the internal state of libreactive. Do not use
+		this function in your scripts: this is mainly for development,
+		to restore libreactive to a clean state after runtime errors
+		leaving libreactive in an inconsistent state.
 
 					*libreactive.Transaction()*
 Transaction({func})

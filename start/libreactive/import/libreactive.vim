@@ -212,9 +212,7 @@ export def CreateEffect(Fn: func())
   gCreatingEffect = false
 enddef
 
-export def CreateMemo(Fn: func(): any, pool = DEFAULT_POOL): func(): any
-  var memo = Property.new(v:none, pool)
-  CreateEffect(() => memo.Set(Fn()))
-  return memo.Get
+export def CreateMemo(p: Property, Fn: func(): any)
+  CreateEffect(() => p.Set(Fn()))
 enddef
 # }}}

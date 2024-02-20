@@ -27,12 +27,13 @@ def Test_React_DefaultPool()
   assert_true(!empty(react.DEFAULT_POOL))
 
   var p0 = react.Property.new(0)
+  var c0 = react.Property.new()
 
   react.CreateEffect(() => {
     p0.Get()
   })
 
-  const M = react.CreateMemo((): number => p0.Get())
+  c0->react.CreateMemo((): number => p0.Get())
 
   assert_equal(2, len(p0.Effects()))
 
@@ -136,8 +137,10 @@ def Test_React_CachedComputation()
   const [LastName, SetLastName] = GetSet('Smith')
   var run = 0
   var name = ''
+  var fullName = react.Property.new()
+  const FullName = fullName.Get
 
-  const FullName = react.CreateMemo((): string => {
+  fullName->react.CreateMemo((): string => {
     ++run
     return $'{FirstName()} {LastName()}'
   })
@@ -176,8 +179,10 @@ def Test_React_FineGrainedReaction()
   const [ShowFullName, SetShowFullName] = GetSet(true)
   var name = ''
   var run = 0
+  var displayName = react.Property.new()
+  const DisplayName = displayName.Get
 
-  const DisplayName = react.CreateMemo((): string => {
+  react.CreateMemo(displayName, (): string => {
     ++run
     if !ShowFullName() # When ShowFullName() is false, only first name is tracked
       return FirstName()
@@ -330,8 +335,9 @@ def Test_React_VStack()
     var stacked: list<Reader>
 
     for V in views
-      const VRead: Reader = react.CreateMemo(V) # Creates an effect that tracks V's signals
-      stacked->add(VRead)
+      var view = react.Property.new()
+      view->react.CreateMemo(V) # Creates an effect that tracks V's signals
+      stacked->add(view.Get)
     endfor
 
     return (): list<string> => {
@@ -563,6 +569,84 @@ def Test_React_PropertyInsideFunction()
   assert_equal('ab', result)
 enddef
 
+
+def Test_React_TwoEffectsOneLambda()
+  var p = react.Property.new('x', 'LambdaCopies')
+  var result = ''
+
+  const F = () => {
+    result ..= p.Get()
+  }
+
+  react.CreateEffect(F)
+  react.CreateEffect(F)
+  p.Set('y')
+  const effects = p.Effects()
+
+  assert_equal(2, len(effects))
+  assert_notequal(effects[0], effects[1]) # Same lambda, but effects are distinct
+  assert_equal('xxyy', result)
+enddef
+
+
+def Test_React_ReuseLambda()
+  var p = react.Property.new('x', 'LambdaCopies')
+  var result = ''
+
+  const F = () => {
+    result ..= p.Get()
+  }
+
+  const E = () => {
+    react.CreateEffect(F)
+  }
+
+  E()
+
+  assert_equal('x', result)
+  assert_equal(1, len(p.Effects()))
+
+  p.Set('y')
+
+  assert_equal('xy', result)
+  assert_equal(1, len(p.Effects()))
+
+  E()
+  var effects = p.Effects()
+
+  assert_equal('xyy', result)
+  assert_equal(2, len(effects))
+  assert_notequal(effects[0], effects[1])
+
+  p.Set('z')
+
+  assert_equal('xyyzz', result)
+  assert_equal(2, len(effects))
+  assert_notequal(effects[0], effects[1])
+
+  p.Clear()
+  E()
+  assert_equal('xyyzzz', result)
+  assert_equal(1, len(p.Effects()))
+enddef
+
+
+def Test_React_Cache()
+  var p0 = react.Property.new(2)
+  var c0 = react.Property.new()
+
+  const F = (): number => {
+    return p0.Get() * p0.Get()
+  }
+
+  react.CreateMemo(c0, F)
+
+  assert_equal(4, c0.Get())
+
+  p0.Set(3)
+
+  assert_equal(9, c0.Get())
+enddef
 
 tt.Setup = () => {
   react.Reinit() # Reset libreactive's internal state

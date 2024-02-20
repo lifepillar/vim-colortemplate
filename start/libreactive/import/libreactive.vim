@@ -25,6 +25,13 @@ endinterface
 class Effect
   var Fn: func()
   public var dependentProperties: list<IProperty> = []
+  var _n = 0
+  static var _count = 0
+
+  def new(this.Fn)
+    this._n = Effect._count
+    Effect._count += 1
+  enddef
 
   def Execute()
     var prevActive = gActiveEffect
@@ -44,7 +51,7 @@ class Effect
   enddef
 
   def String(): string
-    return substitute(printf('%s', this.Fn), 'function(''\(.\+\)'')', '\1', '')
+    return $'E{this._n}:' .. substitute(printf('%s', this.Fn), 'function(''\(.\+\)'')', '\1', '')
   enddef
 endclass
 

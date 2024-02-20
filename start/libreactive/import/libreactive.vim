@@ -96,7 +96,7 @@ var gActiveEffect: Effect = null_object
 var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
 var gCreatingEffect = false
 var gQueue = EffectsQueue.new()
-var gPropertyRegistry: dict<list<IProperty>> = {DEFAULT_POOL: []}
+var gPropertyRegistry: dict<list<IProperty>> = {}
 
 export def Reinit()
   gActiveEffect   = null_object
@@ -153,14 +153,17 @@ enddef
 # Properties {{{
 export class Property implements IProperty
   var _value: any = null
-  var _pool = '__DEFAULT__' # See https://github.com/vim/vim/issues/14011
   var _effects: list<Effect> = []
 
-  def new(this._value = v:none, this._pool = v:none)
-    if !gPropertyRegistry->has_key(this._pool)
-      gPropertyRegistry[this._pool] = []
+  def new(this._value = v:none, pool = DEFAULT_POOL)
+    this.Register(pool)
+  enddef
+
+  def Register(pool: string)
+    if !gPropertyRegistry->has_key(pool)
+      gPropertyRegistry[pool] = []
     endif
-    gPropertyRegistry[this._pool]->add(this)
+    gPropertyRegistry[pool]->add(this)
   enddef
 
   def Get(): any

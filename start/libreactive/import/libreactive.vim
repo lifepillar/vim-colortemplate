@@ -105,12 +105,14 @@ export def Clear(poolName: string, hard = false)
   const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
 
   for pool in pools
-    for property in gPropertyRegistry[pool]
-      property.Clear()
-    endfor
+    if gPropertyRegistry->has_key(pool)
+      for property in gPropertyRegistry[pool]
+        property.Clear()
+      endfor
 
-    if hard
-      gPropertyRegistry[pool] = []
+      if hard
+        gPropertyRegistry[pool] = []
+      endif
     endif
   endfor
 enddef

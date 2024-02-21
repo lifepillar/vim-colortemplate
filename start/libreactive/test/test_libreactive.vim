@@ -687,6 +687,11 @@ def Test_React_Cache()
   assert_equal(9, c0.Get())
 enddef
 
+def Test_React_ClearingNonExistingPool()
+  react.Clear('I_dont-exist', false)
+  react.Clear('I-dont_either', true)
+enddef
+
 tt.Teardown = () => {
   react.Clear('', true) # Clean up after each test
 }

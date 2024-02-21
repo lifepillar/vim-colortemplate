@@ -181,7 +181,7 @@ export def AssertFails(F: func(), expectedError: string, msg = '')
   try
     F()
     assert_false(true,
-      'Function should have thrown an error, but succeeded' .. (empty(msg) ? '' : $': {msg}')
+      'Function should have thrown an error, but succeeded' .. (empty(msg) ? '' : $'. {msg}')
     )
   catch
     assert_exception(expectedError, msg)

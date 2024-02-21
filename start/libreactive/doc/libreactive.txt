@@ -320,6 +320,16 @@ pool, whose name can be accessed via |libreactive.DEFAULT_POOL|.
 - Effects and/or memos cannot be nested: that will raise an error. Note that
   |libreactive.CreateMemo()| creates an effect, too.
 
+- Put a snippet similar to the following somewhere in your script before
+  defining any property:
+>
+	const REACTIVE_POOL = 'MyScriptNamePool'
+	react.Clear(REACTIVE_POOL, true)
+<
+  This will hard-reset your script's pool every time the script is sourced,
+  clearing any references to previous properties, if any, and making sure that
+  you start with a clean slate.
+
 - If you need a property whose value is a list or dictionary, you have at
   least two options. The first option is just the straightforward way:
 >

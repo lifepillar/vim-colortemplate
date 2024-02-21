@@ -34,4 +34,21 @@ def Test_TT_AssertFails()
   }, 'err')
 enddef
 
+def Test_TT_AssertFailsNestedLambda()
+  def F(G: func())
+    const H = () => {
+      G()
+    }
+    H()
+  enddef
+
+  AssertFails(() => {
+    F(() => {
+      throw 'error'
+    })
+  }, 'error')
+
+enddef
+
+
 tt.Run('_TT_')

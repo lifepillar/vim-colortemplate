@@ -177,12 +177,14 @@ export def AssertApprox(
   assert_inrange(tmin, tmax, value, msg)
 enddef
 
-export def AssertFails(F: func(), expectedError: string)
+export def AssertFails(F: func(), expectedError: string, msg = '')
   try
     F()
-    assert_false(true, 'Function should have thrown an error, but succeeded')
+    assert_false(true,
+      'Function should have thrown an error, but succeeded' .. (empty(msg) ? '' : $': {msg}')
+    )
   catch
-    assert_exception(expectedError)
+    assert_exception(expectedError, msg)
   endtry
 enddef
 

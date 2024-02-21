@@ -46,7 +46,7 @@ def Test_TT_AssertFailsNestedLambda()
     F(() => {
       throw 'error'
     })
-  }, 'error')
+  }, 'error', 'Assertion of failure failed')
 
 enddef
 

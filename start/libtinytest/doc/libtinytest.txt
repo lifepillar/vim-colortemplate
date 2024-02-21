@@ -116,9 +116,10 @@ AssertApprox({expected}, {num}[, {rtol}, {atol}, {msg}])
 		AssertApprox(10.0, 11.0, 0.05)      # Fails
 		AssertApprox(10.0, 11.0, 0.05, 0.9) # Fails
 <
-AssertFails({func}, {msg})		*libtinytest.AssertFails()*
+AssertFails({func}, {errmsg}[, {msg}])	*libtinytest.AssertFails()*
 		Check that {func} throws an error that contains the string
-		{msg}. {func} must be a function or lambda with no arguments
+		{errmsg}. {msg} is an optional message shown when the test
+		fails. {func} must be a function or lambda with no arguments
 		and no return value. For example this assertion succeeds:
 >
 		AssertFails(() => {

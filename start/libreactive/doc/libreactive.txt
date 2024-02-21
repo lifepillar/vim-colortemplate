@@ -449,13 +449,6 @@ CreateMemo({property}, {func})
 		{property}—whenever any property which the function depends
 		upon is updated.
 
-					*libreactive.Reinit()*
-Reinit()
-		Re-initialize the internal state of libreactive. Do not use
-		this function in your scripts: this is mainly for development,
-		to restore libreactive to a clean state after runtime errors
-		leaving libreactive in an inconsistent state.
-
 					*libreactive.Transaction()*
 Transaction({func})
 		Execute {func} atomically: any property updates performed by

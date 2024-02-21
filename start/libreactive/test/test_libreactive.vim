@@ -62,6 +62,45 @@ def Test_React_SimpleEffect()
   assert_equal(6, result)
 enddef
 
+def Test_React_EffectRaisingException()
+  var result = 0
+  var count = react.Property.new(1)
+  const [Count, SetCount] = [count.Get, count.Set]
+
+  tt.AssertFails(() => {
+    react.CreateEffect(() => {
+      result = Count()
+      throw 'Aaaaargh!'
+      result += 1 # Not executed
+    })
+  }, 'Aaaaargh!', 'AssertFails #0')
+
+  react.CreateEffect(() => {
+    # Dummy effect: this is here only to make sure that gCreatingEffect has
+    # not remained true after the previous effect has thrown an exception.
+    })
+
+  assert_equal(1, Count())
+  assert_equal(1, len(count.Effects()))
+  assert_equal(1, result)
+
+  tt.AssertFails(() => {
+    SetCount(2)
+  }, 'Aaaaargh!', 'AssertFails #1')
+
+  assert_equal(2, Count())
+  assert_equal(1, len(count.Effects()))
+  assert_equal(2, result)
+
+  tt.AssertFails(() => {
+    SetCount(Count() * 3)
+  }, 'Aaaaargh!', 'AssertFails #2')
+
+  assert_equal(6, Count(), 'Count() should be 6')
+  assert_equal(1, len(count.Effects()))
+  assert_equal(6, result, 'result should be 6')
+enddef
+
 def Test_React_SetWithTimer()
   const [Count, SetCount] = GetSet(2)
   const [Multiplier, _] = GetSet(3)
@@ -544,7 +583,7 @@ def Test_React_EffectString()
 
   assert_equal('a', result)
   assert_equal(1, len(effects))
-  assert_match('<lambda>\d\+', effects[0])
+  assert_match('E\d\+:<lambda>\d\+', effects[0])
 enddef
 
 def Test_React_PropertyInsideFunction()
@@ -648,9 +687,6 @@ def Test_React_Cache()
   assert_equal(9, c0.Get())
 enddef
 
-tt.Setup = () => {
-  react.Reinit() # Reset libreactive's internal state
-}
 tt.Teardown = () => {
   react.Clear('', true) # Clean up after each test
 }

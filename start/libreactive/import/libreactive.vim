@@ -38,9 +38,12 @@ class Effect
     gActiveEffect = this
     this.ClearDependencies()
     Begin()
-    this.Fn()
-    Commit()
-    gActiveEffect = prevActive
+    try
+      this.Fn()
+    finally
+      Commit()
+      gActiveEffect = prevActive
+    endtry
   enddef
 
   def ClearDependencies()
@@ -51,7 +54,7 @@ class Effect
   enddef
 
   def String(): string
-    return $'E{this._n}:' .. substitute(printf('%s', this.Fn), 'function(''\(.\+\)'')', '\1', '')
+    return $'E{this._n}:' .. substitute(string(this.Fn), 'function(''\(.\+\)'')', '\1', '')
   enddef
 endclass
 
@@ -98,13 +101,6 @@ var gCreatingEffect = false
 var gQueue = EffectsQueue.new()
 var gPropertyRegistry: dict<list<IProperty>> = {}
 
-export def Reinit()
-  gActiveEffect   = null_object
-  gTransaction    = 0
-  gCreatingEffect = false
-  gQueue.Reset()
-enddef
-
 export def Clear(poolName: string, hard = false)
   const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
 
@@ -131,16 +127,14 @@ export def Commit()
     return
   endif
 
-  if gTransaction == 1
-    try
-      while !gQueue.Empty()
-        gQueue.Pop().Execute()
-      endwhile
-      gQueue.Reset()
-    finally
-      gTransaction = 0
-    endtry
-  endif
+  try
+    while !gQueue.Empty()
+      gQueue.Pop().Execute()
+    endwhile
+  finally
+    gTransaction = 0
+    gQueue.Reset()
+  endtry
 enddef
 
 export def Transaction(Body: func())
@@ -204,12 +198,18 @@ endclass
 # Functions {{{
 export def CreateEffect(Fn: func())
   if gCreatingEffect
+    gCreatingEffect = false
     throw 'Nested CreateEffect() calls detected'
   endif
+
   var runningEffect = Effect.new(Fn)
+
   gCreatingEffect = true
-  runningEffect.Execute() # Necessary to bind to dependent signals
-  gCreatingEffect = false
+  try
+    runningEffect.Execute() # Necessary to bind to dependent signals
+  finally
+    gCreatingEffect = false
+  endtry
 enddef
 
 export def CreateMemo(p: Property, Fn: func(): any)

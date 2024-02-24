@@ -199,6 +199,10 @@ export class Property implements IProperty
     return mapnew(this._effects, (_, eff: Effect): string => eff.String())
   enddef
 endclass
+
+export def Memo(pool = DEFAULT_POOL): Property
+  return Property.new(v:none, pool)
+enddef
 # }}}
 
 # Functions {{{

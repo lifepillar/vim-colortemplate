@@ -663,6 +663,16 @@ Effects()
 		Return the names of the effects currently observing this
 		property as a |list| of |string|s. Mainly useful for debugging.
 
+String()
+		Return a |string| representation of this property. The string
+		has the form <value> [<effects>], where <value> is the current
+		value of the property, and <effects> is the list of functions
+		or lambdas that are the current effects of this property. Each
+		effect is prefix with E<n>:, where <n> is a number uniquely
+		identifying each effect, so that it is possible to distinguish
+		distinct effect instances that execute the same function or
+		lambda.
+
 Functions ~
 
 					*libreactive.Begin()*

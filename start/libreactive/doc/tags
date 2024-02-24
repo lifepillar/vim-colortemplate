@@ -3,6 +3,7 @@ libreactive-api	libreactive.txt	/*libreactive-api*
 libreactive-basics	libreactive.txt	/*libreactive-basics*
 libreactive-caching	libreactive.txt	/*libreactive-caching*
 libreactive-effects	libreactive.txt	/*libreactive-effects*
+libreactive-examples	libreactive.txt	/*libreactive-examples*
 libreactive-options	libreactive.txt	/*libreactive-options*
 libreactive-pools	libreactive.txt	/*libreactive-pools*
 libreactive-tips	libreactive.txt	/*libreactive-tips*
@@ -13,6 +14,7 @@ libreactive.Commit()	libreactive.txt	/*libreactive.Commit()*
 libreactive.CreateEffect()	libreactive.txt	/*libreactive.CreateEffect()*
 libreactive.CreateMemo()	libreactive.txt	/*libreactive.CreateMemo()*
 libreactive.DEFAULT_POOL	libreactive.txt	/*libreactive.DEFAULT_POOL*
+libreactive.Memo()	libreactive.txt	/*libreactive.Memo()*
 libreactive.Property()	libreactive.txt	/*libreactive.Property()*
 libreactive.Transaction()	libreactive.txt	/*libreactive.Transaction()*
 libreactive.txt	libreactive.txt	/*libreactive.txt*

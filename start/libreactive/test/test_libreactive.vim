@@ -334,6 +334,25 @@ def Test_React_SelfRecursionIsDetected()
   }, 'recursive effects')
 enddef
 
+def Test_React_EffectTriggeringItselfWithoutChangingValue()
+  var p1 = react.Property.new(7)
+
+  # As the value is not changed, the effect is not triggered recursively.
+  react.CreateEffect(() => {
+    p1.Set(p1.Get())
+  })
+
+  assert_equal(7, p1.Get())
+
+  # If, however, effects are forcefully triggered, this goes into an infinite
+  # loop.
+  tt.AssertFails(() => {
+    react.CreateEffect(() => {
+      p1.Set(p1.Get(), true)
+    })
+  }, 'recursive effects')
+enddef
+
 def Test_React_RecursiveEffectsAreDetected()
   const [V2, SetV2] = GetSet(3)
   const [V3, SetV3] = GetSet(5)
@@ -474,7 +493,7 @@ def Test_React_EffectOrdering()
   # (3)
   react.CreateEffect(() => {
     ++n
-    # When updating a value inside an effect, its effects should be updated
+    # When updating a value inside an effect, its effects should be run
     # only once and only after this effect has run completely
     SetV2(V1() + 1)
     SetV2(-100)
@@ -669,6 +688,154 @@ def Test_React_ReuseLambda()
   assert_equal(1, len(p.Effects()))
 enddef
 
+def Test_React_TransactionEffects()
+  # This is an example from the help file
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+  var result = 0
+
+  react.CreateEffect(() => { # Effect 1
+    p1.Set(p2.Get())
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    result = p1.Get()
+  })
+
+  react.Transaction(() => {
+    p1.Set(1)
+    p2.Set(2)
+  })
+
+  assert_equal(2, p1.Get())
+  assert_equal(2, p2.Get())
+  assert_equal(2, result)
+enddef
+
+def Test_React_TransactionEffectsBis()
+  # This is an example from the help file
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+  var result = 0
+
+  react.CreateEffect(() => { # Effect 1
+    p1.Set(p2.Get())
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    result = p1.Get()
+  })
+
+  react.Transaction(() => {
+    p1.Clear()
+    p1.Set(1)
+    p2.Set(2)
+  })
+
+  assert_equal(2, p1.Get())
+  assert_equal(2, p2.Get())
+  assert_equal(0, result)
+enddef
+
+def Test_React_TransactionEffectsTer()
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+  var result = 0
+
+  react.CreateEffect(() => { # Effect 1
+    p1.Set(p2.Get())
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    result = p1.Get()
+  })
+
+  react.Transaction(() => {
+    p1.Set(1)
+    p2.Clear()
+    p2.Set(2)
+  })
+
+  assert_equal(1, p1.Get())
+  assert_equal(2, p2.Get())
+  assert_equal(1, result)
+enddef
+
+def Test_React_TransactionEffectsQuater()
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+  var result = 0
+
+  react.CreateEffect(() => { # Effect 1
+    p1.Set(p2.Get())
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    result = p1.Get()
+  })
+
+  react.Transaction(() => {
+    p2.Set(2)
+    p1.Set(1)
+  })
+
+  assert_equal(2, p1.Get())
+  assert_equal(2, p2.Get())
+  assert_equal(2, result)
+enddef
+
+def Test_React_TwoValuesCanTrackEachOther()
+  # This works because no effect is triggered if Set() does not change the
+  # current value.
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+
+  react.CreateEffect(() => { # Effect 1
+    p1.Set(p2.Get())
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    p2.Set(p1.Get())
+  })
+
+  p1.Set(1)
+
+  assert_equal(1, p1.Get())
+  assert_equal(p2.Get(), p1.Get())
+
+  p2.Set(2)
+
+  assert_equal(2, p2.Get())
+  assert_equal(p2.Get(), p1.Get())
+
+  p1.Set(p2.Get() + 1)
+
+  assert_equal(3, p1.Get())
+  assert_equal(p2.Get(), p1.Get())
+enddef
+
+def Test_React_PropertyIsAlwaysDoubleOfAnother()
+  var p1 = react.Property.new(1.0)
+  var p2 = react.Property.new(2.0)
+
+  react.CreateEffect(() => { # Effect 1
+    p1.Set(p2.Get() / 2.0)
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    p2.Set(p1.Get() * 2.0)
+  })
+
+  p1.Set(5.0)
+
+  assert_equal(5.0, p1.Get())
+  assert_equal(10.0, p2.Get())
+
+  p2.Set(p1.Get() * 5.0)
+
+  assert_equal(25.0, p2.Get())
+  assert_equal(12.5, p1.Get())
+enddef
 
 def Test_React_Cache()
   var p0 = react.Property.new(2)
@@ -687,7 +854,7 @@ def Test_React_Cache()
   assert_equal(9, c0.Get())
 enddef
 
-def Test_React_ClearingNonExistingPool()
+def Test_React_ClearingNonExistingPoolIsNotAnError()
   react.Clear('I_dont-exist', false)
   react.Clear('I-dont_either', true)
 enddef

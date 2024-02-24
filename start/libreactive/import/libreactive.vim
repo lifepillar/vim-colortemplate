@@ -17,7 +17,7 @@ enddef
 # Effects {{{
 interface IProperty
   def Get(): any
-  def Set(value: any)
+  def Set(value: any, force: bool)
   def Clear()
   def RemoveEffect(effect: any)
 endinterface
@@ -171,7 +171,11 @@ export class Property implements IProperty
     return this._value
   enddef
 
-  def Set(value: any)
+  def Set(value: any, force = false)
+    if !force && (value == this._value)
+      return
+    endif
+
     this._value = value
 
     Begin()

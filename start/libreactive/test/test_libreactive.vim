@@ -605,6 +605,20 @@ def Test_React_EffectString()
   assert_match('E\d\+:<lambda>\d\+', effects[0])
 enddef
 
+def Test_React_PropertyString()
+  var property = react.Property.new('value')
+
+  react.CreateEffect(() => {
+    property.Get()
+  })
+  react.CreateEffect(() => {
+    property.Get()
+  })
+  echomsg property.String()
+
+  assert_match('value \[E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+\]', property.String())
+enddef
+
 def Test_React_PropertyInsideFunction()
   var result = ''
   const F = (): react.Property => {

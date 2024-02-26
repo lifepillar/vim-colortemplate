@@ -200,7 +200,7 @@ export class Property implements IProperty
   enddef
 
   def String(): string
-    return printf("%s", this._value) .. ' ' .. printf("%s", this.Effects())
+    return printf('%s', this._value) .. ' [' .. printf('%s', join(this.Effects(), ', ')) .. ']'
   enddef
 endclass
 

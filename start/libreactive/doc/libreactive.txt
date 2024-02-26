@@ -721,8 +721,8 @@ Memo([{pool}])
 					*libreactive.Transaction()*
 Transaction({func})
 		Execute {func} atomically: any property updates performed by
-		{func} trigger their effects only once and only at the end of
-		the transaction.
+		{func} trigger their direct effects only once and only at the
+		end of the transaction.
 
 ==============================================================================
 8. Options					*libreactive-options*

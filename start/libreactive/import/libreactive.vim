@@ -150,12 +150,8 @@ enddef
 export class Property implements IProperty
   var _value: any = null
   var _effects: list<Effect> = []
-  var _n = 0
-  static var _count = 0
 
   def new(this._value = v:none, pool = DEFAULT_POOL)
-    this._n = Property._count
-    Property._count += 1
     this.Register(pool)
   enddef
 
@@ -204,7 +200,7 @@ export class Property implements IProperty
   enddef
 
   def String(): string
-    return $'P{this._n}={printf("%s", this._value)} {printf("%s", this.Effects())}'
+    return printf("%s", this._value) .. ' ' .. printf("%s", this.Effects())
   enddef
 endclass
 

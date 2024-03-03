@@ -203,10 +203,6 @@ export class Property implements IProperty
     return printf('%s', this._value) .. ' [' .. printf('%s', join(this.Effects(), ', ')) .. ']'
   enddef
 endclass
-
-export def Memo(pool = DEFAULT_POOL): Property
-  return Property.new(v:none, pool)
-enddef
 # }}}
 
 # Functions {{{
@@ -226,7 +222,12 @@ export def CreateEffect(Fn: func())
   endtry
 enddef
 
-export def CreateMemo(p: Property, Fn: func(): any)
+export def Memo(pool = DEFAULT_POOL): Property
+  return Property.new(v:none, pool)
+enddef
+
+export def CreateMemo(p: Property, Fn: func(): any): func(): any
   CreateEffect(() => p.Set(Fn()))
+  return p.Get
 enddef
 # }}}

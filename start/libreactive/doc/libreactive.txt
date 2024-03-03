@@ -663,13 +663,13 @@ Effects()
 
 String()
 		Return a |string| representation of this property. The string
-		has the form <value> [<effects>], where <value> is the current
-		value of the property, and <effects> is the list of functions
-		or lambdas that are the current effects of this property. Each
-		effect is prefix with E<n>:, where <n> is a number uniquely
-		identifying each effect, so that it is possible to distinguish
-		distinct effect instances that execute the same function or
-		lambda.
+		has the form '<value> [<effects>]', where <value> is the
+		current value of the property, and <effects> is the list of
+		functions or lambdas that are the current effects of this
+		property. Each effect is prefix with E<n>:, where <n> is
+		a number uniquely identifying each effect, so that it is
+		possible to distinguish distinct effect instances that execute
+		the same function or lambda.
 
 Functions ~
 
@@ -708,6 +708,8 @@ CreateMemo({property}, {func})
 		is automatically recomputed—and its result stored in
 		{property}—whenever any property which the function depends
 		upon is updated.
+
+		Returns a reference to the property's Get() method.
 
 					*libreactive.CreateMemo()*
 Memo([{pool}])

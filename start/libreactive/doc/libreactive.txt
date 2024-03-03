@@ -358,9 +358,9 @@ pool, whose name can be accessed via |libreactive.DEFAULT_POOL|.
 ==============================================================================
 5. Examples					*libreactive-examples*
 
-An obvious application of libreactive is to create UIs in Vim, such as
-interactive popup windows or palettes. A straightforward way to achieve that
-is with a rendering loop. Example:
+An obvious application of libreactive is to support interactive UIs in Vim,
+such as interactive popup windows or palettes. A straightforward way to
+achieve that is with a rendering loop. Example:
 >
 	vim9script
 	import 'libreactive.vim' as react
@@ -432,13 +432,11 @@ apparent by looking at the counter next to each emoji (the counter is not to
 be considered part of the internal state: it exists only to make it apparent
 when the popup is redrawn).
 
-This is a way to build a simple reactive UI. Although a similar result may be
-achieved without libreactive with more or less the same amount of code, for
-complex UIs libreactive allows you to focus on your data (the state) and your
-views (the appearance), without the need to continuously update the code that
-glues them together. To extend the example above, you just need to add more
-effects (state manipulation) and expand the view: the rendering loop will work
-as is.
+A simple interactive popup like the above can be easily built without
+libreactive (try simplifying the script above by getting rid of libreactive!).
+The benefits of using libreactive manifest themselves when the complexity
+increases, there are cascading effects or efficiency can be improved by
+caching computations.
 
 Another possibility is to perform the rendering as part of one or more
 effects. This is more complex, but provides finer control, than the previous

@@ -700,7 +700,7 @@ CreateEffect({func})
 		Create a new effect running {func} and execute it once. {func}
 		must be a function with no parameters and no return value.
 
-					*libreactive.Memo()*
+					*libreactive.CreateMemo()*
 CreateMemo({property}, {func})
 		Create an effect that executes {func} and caches its result
 		inside {property}. {func} must be a function with no
@@ -711,7 +711,7 @@ CreateMemo({property}, {func})
 
 		Returns a reference to the property's Get() method.
 
-					*libreactive.CreateMemo()*
+					*libreactive.Memo()*
 Memo([{pool}])
 		Instantiates a property to be used with CreateMemo(). This is
 		just a shorthand for:

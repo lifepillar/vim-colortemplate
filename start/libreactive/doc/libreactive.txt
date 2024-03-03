@@ -296,7 +296,7 @@ The example above can be rewritten as follows:
 	var p = react.Property.new(0.0)
 
 	# Create a property to use with CreateMemo()
-	# This is the same as 'react.Property.new()'.
+	# Memo() is just a shorthand for react.Property.new(v:none).
 	var cachedF = react.Memo()
 
 	def F(): float
@@ -590,13 +590,13 @@ limited to the two techniques described above. Be creative!
 	  p2.Set(p1.Get() * 2.0)
 	})
 
-	p1.Set(5.0) # Set p2 to 10.0
-	p2.Set(p1.Get() * 5) # Set p2 to 25.0, p1 to 12.5
+	p1.Set(5.0) # Sets p1 to 5.0 and p2 to 10.0
+	p2.Set(p1.Get() * 5) # Sets p2 to 25.0, p1 to 12.5
 <
   This does not go into an infinite loop because if Set() does not actually
-  change a value, the property's effects are not triggered by default (it is
-  possible to forcefully run the effects also for such updates, however: see
-  |libreactive.Property()|).
+  change the current value of the property, the property's effects are not
+  triggered by default (it is possible to forcefully run the effects also for
+  such updates, however: see |libreactive.Property()|).
 
 - All properties should be defined as script variables. This avoids polluting
   libreactive's pools with properties that are not used any longer.

@@ -62,10 +62,28 @@ def Test_React_SimpleEffect()
   assert_equal(6, result)
 enddef
 
+# Setting the same value should not trigger any effect
+def Test_React_SetSameValue()
+  var p0 = react.Property.new('hello')
+  var result = 49
+
+  react.CreateEffect(() => {
+    p0.Get()
+    result += 1
+  })
+
+  assert_equal(50, result)
+
+  var s0 = p0.Get()
+  p0.Set(s0)
+
+  assert_equal(50, result)
+enddef
+
 def Test_React_EffectRaisingException()
   var result = 0
-  var count = react.Property.new(1)
-  const [Count, SetCount] = [count.Get, count.Set]
+  var counter = react.Property.new(1)
+  const [Count, SetCount] = [counter.Get, counter.Set]
 
   tt.AssertFails(() => {
     react.CreateEffect(() => {
@@ -81,7 +99,7 @@ def Test_React_EffectRaisingException()
     })
 
   assert_equal(1, Count())
-  assert_equal(1, len(count.Effects()))
+  assert_equal(1, len(counter.Effects()))
   assert_equal(1, result)
 
   tt.AssertFails(() => {
@@ -89,7 +107,7 @@ def Test_React_EffectRaisingException()
   }, 'Aaaaargh!', 'AssertFails #1')
 
   assert_equal(2, Count())
-  assert_equal(1, len(count.Effects()))
+  assert_equal(1, len(counter.Effects()))
   assert_equal(2, result)
 
   tt.AssertFails(() => {
@@ -97,7 +115,7 @@ def Test_React_EffectRaisingException()
   }, 'Aaaaargh!', 'AssertFails #2')
 
   assert_equal(6, Count(), 'Count() should be 6')
-  assert_equal(1, len(count.Effects()))
+  assert_equal(1, len(counter.Effects()))
   assert_equal(6, result, 'result should be 6')
 enddef
 
@@ -859,13 +877,79 @@ def Test_React_Cache()
     return p0.Get() * p0.Get()
   }
 
-  react.CreateMemo(c0, F)
+  const C0 = react.CreateMemo(c0, F)
 
   assert_equal(4, c0.Get())
+  assert_equal(4, C0())
+  assert_true(C0 == c0.Get, 'C0 should be the same function as c0.Get')
 
   p0.Set(3)
 
   assert_equal(9, c0.Get())
+enddef
+
+def Test_React_ListProperty()
+  var l0 = react.Property.new([])
+  var result = ''
+
+  react.CreateEffect(() => {
+    var items = l0.Get()
+    result ..= join(items, '')
+  })
+
+  var value: list<string> = l0.Get() # Obtain value by reference
+
+  for ch in ['A', 'B', 'C']
+    value->add(ch)
+    l0.Set(value, true) # true necessary to trigger effects
+  endfor
+
+  assert_equal(['A', 'B', 'C'], l0.Get())
+  assert_equal('AABABC', result)
+
+
+  for ch in ['D', 'E', 'F']
+    value = copy(l0.Get()) # This must be inside the transaction
+    value->add(ch)
+    l0.Set(value) # true not needed as we are acting on a copy
+  endfor
+
+  assert_equal(['A', 'B', 'C', 'D', 'E', 'F'], l0.Get())
+  assert_equal('AABABCABCDABCDEABCDEF', result)
+enddef
+
+def Test_React_ListPropertyTransaction()
+  var l0 = react.Property.new([])
+  var result = ''
+
+  react.CreateEffect(() => {
+    var items = l0.Get()
+    result ..= join(items, '')
+  })
+
+  var value: list<string> = l0.Get() # Obtain value by reference
+
+  react.Transaction(() => {
+    for ch in ['A', 'B', 'C']
+      value->add(ch)
+      l0.Set(value, true) # true necessary to trigger effects
+    endfor
+  })
+
+  assert_equal(['A', 'B', 'C'], l0.Get())
+  assert_equal('ABC', result)
+
+  value = copy(l0.Get())
+
+  react.Transaction(() => {
+    for ch in ['D', 'E', 'F']
+      value->add(ch)
+      l0.Set(value) # true not needed
+    endfor
+  })
+
+  assert_equal(['A', 'B', 'C', 'D', 'E', 'F'], l0.Get())
+  assert_equal('ABCABCDEF', result)
 enddef
 
 def Test_React_ClearingNonExistingPoolIsNotAnError()

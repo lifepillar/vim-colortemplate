@@ -538,28 +538,56 @@ limited to the two techniques described above. Be creative!
   pool every time the script is sourced, clearing any references to previous
   properties, if any, and making sure that you start with a clean slate.
 
-- If you need a property whose value is a list or dictionary, you have at
-  least two options. The first option is just the straightforward way:
+- Properties may contain collections such as lists or dictionaries. Some care
+  is needed to manipulate them, though, because such values are returned by
+  reference by `Property.Get()`. Effects by default are triggered only if the
+  property value changes, but changing a value obtained by reference will also
+  update the value stored inside the property (because it is the same object).
+  Hence, when `Property.Set()` is invoked, the method will not detect any
+  change and will not trigger any effect.
+
+  This is not problematic:
 >
 	var p = react.Property.new([])
-	var newValue: list<...> = ...
-	p.Set(newValue)
+	var newValue = ['a'] # Another list
+	p.Set(newValue) # Will trigger effects
 <
-  Note that, if `newValue` is a modified version of `p.Get()`, it is not
-  enough to update the list: you still need to call `p.Set()`:
+  Here, `newValue` is a different object than the stored property value. But
+  the following will NOT trigger any effect:
 >
-	var theList = p.Get()
-	theList->add(someValue)
-	p.Set(theList) # <== This is necessary
+	var p0 = react.Property.new([])
+	var newValue = p0.Get()
+	assert_true(newValue is p0.Get()) # true
+	newValue->add('a') # Also updates p0's value
+	p0.Set(newValue) # No change detected, no effects triggered
 <
-  The other option is to wrap the value into a lambda, which is a bit more
-  verbose, but cleaner in terms of semantics, as the lambda is immutable:
+  The correct way to update a collection property is to force the update:
 >
-	var p = react.Property.new((): list<number> => [])
-	var V = p.Get()
-	var newValue = V()->add(42)
-	p.Set(() => newValue)
-	echo p.Get()() # [42]
+	p0.Set(newValue, true)
+<
+  By adding a second argument of `Property.Set()` set to |true|, the effects
+  associated to `p0` will be executed unconditionally.
+
+  Note: using lambdas to wrap collections, as is done in other languages, in
+  general does not work with libreactive, because Vim treats different
+  closures as equal if they correspond to the same syntactic definition:
+>
+	def MakeLambda(x: list<string>): func(): list<string>
+	  return () => x
+	enddef
+
+	const F0 = MakeLambda(['a'])
+	const F1 = MakeLambda(['b'])
+	
+	echo F0 == F1 # true
+<
+  Therefore, the following will not work without forcing the update as
+  explained above (at which point, one may just use a list):
+>
+	var p0 = react.Property.new(MakeLambda([]))
+	var newValue: list<string> = p0.Get()()
+	newValue->add('a')
+	p0.Set(MakeLambda(newValue)) # No effects triggered
 <
 - If you prefer a functional syntax for properties, you may create them with
   the following small helper function:
@@ -649,8 +677,8 @@ Set({value}[, {force}])
 		By default, the effects are triggered only if the new value of
 		the property is different from the current value (== is used
 		for the comparison). When {force} is |true|, though, the
-		effects are triggered even if the update does not change the
-		value of the property.
+		effects are always executed, even if the update does not
+		change the value of the property.
 
 Clear()
 		Un-register all the effects currently observing this property.

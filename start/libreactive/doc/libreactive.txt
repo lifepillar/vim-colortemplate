@@ -627,7 +627,79 @@ limited to the two techniques described above. Be creative!
   such updates, however: see |libreactive.Property()|).
 
 - All properties should be defined as script variables. This avoids polluting
-  libreactive's pools with properties that are not used any longer.
+  libreactive's pools with references to properties that are not used any
+  longer. If you want to use a property as an instance variable in a class, do
+  it as follows:
+>
+	class C
+	  var _p: react.Property
+	  # ...
+	endclass
+
+	var p0 = react.Property.new(42)
+
+	def Main()
+	  var c0 = C.new(p0)
+	enddef
+<
+  That is, define the property at the script-level, and initialize the class
+  with the script property.
+
+  Alternatively, define properties only inside functions and classes and
+  hard-reset your pool before creating class instances and invoking functions.
+  For example:
+>
+	const POOL = 'my pool'
+
+	class C
+	  var _p = react.Property.new(42, POOL)
+	  # ...
+	endclass
+
+	def F()
+	  var p0 = react.Property.new(0, POOL)
+	  # ...
+	enddef
+
+	def Main()
+	  react.Clear(POOL, true)
+	  var c0 = C.new()
+	  F()
+	enddef
+<
+  Mixing script-level and local properties works, but then you cannot
+  hard-reset your pool (because libreactive would lose track of the
+  script-level properties, unless the script containing them is sourced
+  again), so the pool will keep accumulating references to local-level
+  properties, wasting resources.
+
+- Always assign a value to your properties at declaration time. Thet is,
+  instead of doing this:
+>
+	var p0 = react.Property.new() # Initial value is null
+
+	def F()
+	  p0.Set('some value')
+	enddef
+<
+  do this:
+ >
+	var p0 = react.Property.new('') # Initial value of type string
+
+	def F()
+	  p0.Set('some value')
+	enddef
+<
+  The reason is that the latter will help detecting type mismatch errors. If
+  you write this by mistake:
+ >
+	var p0 = react.Property.new('')
+
+	def F()
+	  p0.Set(0)
+	enddef
+<
+  an error will be raised when `F()` is executed.
 
 - If you think you need to read and write the same property inside an effect,
   you are doing it wrong. Rethink about your problem.

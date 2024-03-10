@@ -187,6 +187,10 @@ effects. The following snippet is perfectly fine:
 	  p.Set(p.Get() * 2)
 	endfor
 <
+NOTE: in the limited circumstances where one does want to access the value of
+a property without any side effects even within an effect, it is possible to
+access the read-only `value` attribute of the property.
+
 Effects are executed in a transaction. Therefore, no matter how many
 properties they change, each of their direct effects is run exactly once and
 only at the end of the effect's block. Besides, the values read during an
@@ -732,6 +736,11 @@ new([{value}, {pool}])
 		specified. Specifying a pool is useful to clear properties
 		without interfering with other scripts: see
 		|libreactive.Clear()|.
+
+value
+		The read-only value of the property. Accessing this cannot
+		trigger any effects. You should prefer Get() in most
+		circumstances.
 
 Get()
 		Obtain the value of the property. If this method is called

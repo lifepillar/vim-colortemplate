@@ -148,10 +148,10 @@ enddef
 
 # Properties {{{
 export class Property implements IProperty
-  var _value: any = null
+  var value: any = null
   var _effects: list<Effect> = []
 
-  def new(this._value = v:none, pool = DEFAULT_POOL)
+  def new(this.value = v:none, pool = DEFAULT_POOL)
     this.Register(pool)
   enddef
 
@@ -168,15 +168,15 @@ export class Property implements IProperty
       gActiveEffect.dependentProperties->add(this)
     endif
 
-    return this._value
+    return this.value
   enddef
 
   def Set(value: any, force = false)
-    if !force && (value == this._value)
+    if !force && (value == this.value)
       return
     endif
 
-    this._value = value
+    this.value = value
 
     Begin()
     for effect in this._effects
@@ -200,7 +200,7 @@ export class Property implements IProperty
   enddef
 
   def String(): string
-    return printf('%s', this._value) .. ' [' .. printf('%s', join(this.Effects(), ', ')) .. ']'
+    return printf('%s', this.value) .. ' [' .. printf('%s', join(this.Effects(), ', ')) .. ']'
   enddef
 endclass
 # }}}

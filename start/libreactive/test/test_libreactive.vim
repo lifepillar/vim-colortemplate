@@ -8,6 +8,15 @@ def GetSet(value: any): list<func>
   return [p.Get, p.Set]
 enddef
 
+def Test_React_PropertyAttributes()
+  var p0 = react.Property.new('x')
+
+  assert_equal('x',    p0.value)
+  assert_equal('x',    p0.Get())
+  assert_equal([],     p0.Effects())
+  assert_equal('x []', p0.String())
+enddef
+
 def Test_React_SimpleProperty()
   var cnt = react.Property.new(2)
   const DoubleCount = () => cnt.Get() * 2

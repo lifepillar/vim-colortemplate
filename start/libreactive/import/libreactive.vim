@@ -97,7 +97,6 @@ export const DEFAULT_POOL = '__DEFAULT__'
 
 var gActiveEffect: Effect = null_object
 var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
-var gCreatingEffect = false
 var gQueue = EffectsQueue.new()
 var gPropertyRegistry: dict<list<IProperty>> = {}
 
@@ -207,19 +206,13 @@ endclass
 
 # Functions {{{
 export def CreateEffect(Fn: func())
-  if gCreatingEffect
-    gCreatingEffect = false
-    throw 'Nested CreateEffect() calls detected'
+  if gActiveEffect != null
+    throw 'Nested effects detected: creating an effect within another effect is not allowed.'
   endif
 
   var runningEffect = Effect.new(Fn)
 
-  gCreatingEffect = true
-  try
-    runningEffect.Execute() # Necessary to bind to dependent signals
-  finally
-    gCreatingEffect = false
-  endtry
+  runningEffect.Execute() # Necessary to bind to dependent signals
 enddef
 
 export def Memo(pool = DEFAULT_POOL): Property

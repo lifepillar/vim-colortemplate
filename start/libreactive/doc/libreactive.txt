@@ -529,8 +529,8 @@ limited to the two techniques described above. Be creative!
 ==============================================================================
 6. Tips and tricks				*libreactive-tips*
 
-- Effects and/or memos cannot be nested: that will raise an error. Note that
-  |libreactive.CreateMemo()| creates an effect, too.
+- Effects and/or memos cannot be nested: that will result in a runtime error.
+  Note that |libreactive.CreateMemo()| creates an effect, too.
 
 - Put a snippet similar to the following somewhere in your script before
   defining any property:

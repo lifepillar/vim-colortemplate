@@ -103,8 +103,8 @@ def Test_React_EffectRaisingException()
   }, 'Aaaaargh!', 'AssertFails #0')
 
   react.CreateEffect(() => {
-    # Dummy effect: this is here only to make sure that gCreatingEffect has
-    # not remained true after the previous effect has thrown an exception.
+    # Dummy effect: this is here only to make sure that gActiveEffect has not
+    # remained non-null after the previous effect has thrown an exception.
     })
 
   assert_equal(1, Count())
@@ -403,7 +403,32 @@ def Test_React_NestedCreateEffectIsAnError()
       react.CreateEffect(() => {
         })
     })
-  }, 'Nested CreateEffect()')
+  }, 'Nested effects detected')
+enddef
+
+def Test_React_ConditionalNestedEffect()
+  var flag = react.Property.new(false)
+  var result = 0
+
+  def F(): number
+    react.CreateEffect(() => {
+      })
+    return 2
+  enddef
+
+  react.CreateEffect(() => {
+    if flag.Get()
+      result = F()
+    endif
+  })
+
+  # No error, because flag is false and no nested effect is created
+  assert_equal(0, result)
+
+
+  tt.AssertFails(() => {
+    flag.Set(true) # Triggers the creation of a nested effect
+  }, 'Nested effects detected')
 enddef
 
 type View = func(): list<string>

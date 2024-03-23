@@ -636,7 +636,7 @@ limited to the two techniques described above. Be creative!
 
   If you need to initialize the properties at runtime—for instance, every time
   a command is executed—still define the properties at the script level and
-  set their values in a function. For example:
+  initialize them in a function. For example:
 >
 	const kPool = 'my pool'
 	react.Clear(kPool, true)
@@ -651,10 +651,37 @@ limited to the two techniques described above. Be creative!
 
 	command -nargs=0 Foo F()
 <
-  Memory management of local properties, that is, properties defined inside
-  classes and functions, is in general much more involved and therefore
-  discouraged.
-
+- Memory management of local properties, that is, properties defined inside
+  classes and functions, is in general much more involved than for script
+  properties, and therefore discouraged. Anyway, the basic idea is that local
+  properties that have the same lifespan should be defined in their own pool.
+  For instance:
+>
+	class X
+	  var px: react.Property
+	
+	  def new(property_value: string, pool: string)
+	    this.px = react.Property.new(property_value, pool)
+	  enddef
+	endclass
+	
+	def F()
+	  var localPool = 'my_script_F'
+	  var p0 = react.Property.new("hello", localPool)
+	  var x0 = X.new("bonjour", localPool)
+	
+	  # Use p0 and x0
+	  echo $'p0 = {p0.Get()} x0.px = {x0.px.Get()}'
+	
+	  echo 'Pool before clearing:' react.PoolStats(localPool)
+	
+	  react.Clear(localPool, true)  # Destroy the properties
+	
+	  echo 'Pools after clearing:' react.PoolStats()
+	enddef
+	
+	command -nargs=0 Foo F()
+<
 - Always assign a value to your properties at declaration time. Thet is,
   instead of doing this:
 >
@@ -746,10 +773,10 @@ Clear()
 
 Effects()
 		Return the names of the effects currently observing this
-		property as a |list| of |string|s. Mainly useful for debugging.
+		property as a |List| of |String|s. Mainly useful for debugging.
 
 String()
-		Return a |string| representation of this property. The string
+		Return a |String| representation of this property. The string
 		has the form '<value> [<effects>]', where <value> is the
 		current value of the property, and <effects> is the list of
 		functions or lambdas that are the current effects of this
@@ -762,7 +789,8 @@ Functions ~
 
 					*libreactive.Begin()*
 Begin()
-		Start a transaction. This must always be paired with Commit().
+		Start a transaction. This must always be paired with
+		|libreactive.Commit()|.
 		In most cases, |libreactive.Transaction()| is preferrable.
 
 					*libreactive.Clear()*
@@ -773,13 +801,14 @@ Clear({pool}[, {hard}])
 		string in your scripts!
 
 		When {hard} is |true|, also clear the internal references to
-		the properties themselves. Note: you should not use properties
-		after they have been cleared with {hard} set to |true|: create
-		new ones instead.
+		the properties themselves and destroy the pool.
+		Note: you should not use properties after their pool has been
+		hard-reset.
 
 					*libreactive.Commit()*
 Commit()
-		Commit a transaction. This must always be paired with Begin().
+		Commit a transaction. This must always be paired with
+		|libreactive.Begin()|.
 		In most cases, |libreactive.Transaction()| is preferrable.
 
 					*libreactive.CreateEffect()*
@@ -805,6 +834,16 @@ Memo([{pool}])
 >
 		Property.new(v:none, pool)
 <
+					*libreactive.PoolStats()*
+PoolStats([{pool}])
+		Return a summary of the content of all the pools, or of the
+		given {pool}, in the form of a |List| of |Dictionaries|. Each
+		dictionary has these entries:
+
+		pool		The name of the pool.
+		n_properties	The number of properties in the pool.
+		values		The values of each property.
+
 					*libreactive.Transaction()*
 Transaction({func})
 		Execute {func} atomically: any property updates performed by

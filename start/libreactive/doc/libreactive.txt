@@ -627,55 +627,33 @@ limited to the two techniques described above. Be creative!
 <
   This does not go into an infinite loop because if Set() does not actually
   change the current value of the property, the property's effects are not
-  triggered by default (it is possible to forcefully run the effects also for
-  such updates, however: see |libreactive.Property()|).
+  triggered by default.
 
 - All properties should be defined as script variables. This avoids polluting
   libreactive's pools with references to properties that are not used any
-  longer. If you want to use a property as an instance variable in a class, do
-  it as follows:
+  longer. The content of libreactive's registry may be inspected with
+  |libreactive.PoolStats()|.
+
+  If you need to initialize the properties at runtime—for instance, every time
+  a command is executed—still define the properties at the script level and
+  set their values in a function. For example:
 >
-	class C
-	  var _p: react.Property
-	  # ...
-	endclass
+	const kPool = 'my pool'
+	react.Clear(kPool, true)
 
-	var p0 = react.Property.new(42)
-
-	def Main()
-	  var c0 = C.new(p0)
-	enddef
-<
-  That is, define the property at the script-level, and initialize the class
-  with the script property.
-
-  Alternatively, define properties only inside functions and classes and
-  hard-reset your pool before creating class instances and invoking functions.
-  For example:
->
-	const POOL = 'my pool'
-
-	class C
-	  var _p = react.Property.new(42, POOL)
-	  # ...
-	endclass
+	var p0 = react.Property.new(0, kPool)
 
 	def F()
-	  var p0 = react.Property.new(0, POOL)
-	  # ...
+	  p0.Set(42)
+	  echo $'The initial value of p0 is {p0.Get()}'
+	  echo react.PoolStats(kPool)  # Should always contain one property
 	enddef
 
-	def Main()
-	  react.Clear(POOL, true)
-	  var c0 = C.new()
-	  F()
-	enddef
+	command -nargs=0 Foo F()
 <
-  Mixing script-level and local properties works, but then you cannot
-  hard-reset your pool (because libreactive would lose track of the
-  script-level properties, unless the script containing them is sourced
-  again), so the pool will keep accumulating references to local-level
-  properties, wasting resources.
+  Memory management of local properties, that is, properties defined inside
+  classes and functions, is in general much more involved and therefore
+  discouraged.
 
 - Always assign a value to your properties at declaration time. Thet is,
   instead of doing this:

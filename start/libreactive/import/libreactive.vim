@@ -99,22 +99,6 @@ var gActiveEffect: Effect = null_object
 var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
 var gQueue = EffectsQueue.new()
 var gPropertyRegistry: dict<list<IProperty>> = {}
-
-export def Clear(poolName: string, hard = false)
-  const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
-
-  for pool in pools
-    if gPropertyRegistry->has_key(pool)
-      for property in gPropertyRegistry[pool]
-        property.Clear()
-      endfor
-
-      if hard
-        gPropertyRegistry[pool] = []
-      endif
-    endif
-  endfor
-enddef
 # }}}
 
 # Transactions {{{
@@ -222,5 +206,39 @@ enddef
 export def CreateMemo(p: Property, Fn: func(): any): func(): any
   CreateEffect(() => p.Set(Fn()))
   return p.Get
+enddef
+
+export def Clear(poolName: string, hard = false)
+  const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
+
+  for pool in pools
+    if gPropertyRegistry->has_key(pool)
+      for property in gPropertyRegistry[pool]
+        property.Clear()
+      endfor
+
+      if hard
+        gPropertyRegistry[pool] = []
+      endif
+    endif
+  endfor
+enddef
+
+export def PoolStats(poolName = null_string): list<dict<any>>
+  var stats: list<dict<any>> = []
+  var pools = (poolName == null ? keys(gPropertyRegistry) : [poolName])
+
+  for pool in pools
+    var n = len(gPropertyRegistry[pool])
+
+    stats->add({
+      pool: pool,
+      n_properties: n,
+      values: mapnew(gPropertyRegistry[pool], (_, p: Property) => p.String()),
+      description: $'Pool "{pool}" has {n} propert{n == 1  ? "y" : "ies"}',
+    })
+  endfor
+
+  return stats
 enddef
 # }}}

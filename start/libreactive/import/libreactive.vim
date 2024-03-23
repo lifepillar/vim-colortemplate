@@ -219,6 +219,7 @@ export def Clear(poolName: string, hard = false)
 
       if hard
         gPropertyRegistry[pool] = []
+        gPropertyRegistry->remove(pool)
       endif
     endif
   endfor
@@ -235,7 +236,6 @@ export def PoolStats(poolName = null_string): list<dict<any>>
       pool: pool,
       n_properties: n,
       values: mapnew(gPropertyRegistry[pool], (_, p: Property) => p.String()),
-      description: $'Pool "{pool}" has {n} propert{n == 1  ? "y" : "ies"}',
     })
   endfor
 

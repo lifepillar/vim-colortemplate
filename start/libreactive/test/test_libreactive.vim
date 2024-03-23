@@ -666,7 +666,6 @@ def Test_React_PropertyString()
   react.CreateEffect(() => {
     property.Get()
   })
-  echomsg property.String()
 
   assert_match('value \[E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+\]', property.String())
 enddef

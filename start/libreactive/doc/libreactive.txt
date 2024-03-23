@@ -21,14 +21,14 @@ whenever the value of a "reactive" variable is updated. For example:
 	vim9script
 	import 'libreactive.vim' as react
 
-	var what = react.Property.new('pizza')
+	var love = react.Property.new('pizza')
 
 	react.CreateEffect(() => {
-	  echo $'I love {what.Get()}!'
+	  echo $'I love {love.Get()}!'
 	})
 
-	what.Set('nature')
-	what.Set('Vim')
+	love.Set('nature')
+	love.Set('Vim')
 <
 Output:
 >
@@ -44,7 +44,7 @@ of any type, which can be accessed with `Get()` and modified with `Set()`.
 Effects are automatically bound to the properties they access, so that they
 are notified of their changes. In the example above, the effect reads the
 value of the `what` property: that is enough to make the effect an observer of
-`what`. As such, the effect is re-executed every time the value of `what` is
+`love`. As such, the effect is re-executed every time the value of `love` is
 updated.
 
 The link between properties and effects is dynamic. Every time an effect is
@@ -75,23 +75,24 @@ example:
 	name.Set('Gus')  # Name is updated, but the effect is not triggered
 	name.Set('Lee')  # Name is udpated, but the effect is not triggered
 	show.Set(true)   # The effect is triggered, and echoes 'Lee'
-	echo count       # <== 4
+	echo count       # <== Overall, the effect was executed 4 times
 
 In this example, `count` is used to keep track of how many times the effect is
 run. The first thing to notice is that |libreactive.CreateEffect()| executes
-its argument: since `show` is `true`, the current value of `name` ('Jack') is
-echoed. As the effect has accessed both `show` and `name`, it becomes an
-observer of both properties. Therefore, when `name` is changed to 'Stan', the
-effect is executed again, and it is set again to observe both properties.
+its argument: since `show` is `true` at the time the effect is created, the
+current value of `name` ('Jack') is echoed. As the effect has accessed both
+`show` and `name`, it becomes an observer of both properties. Therefore, when
+`name` is changed to 'Stan', the effect is executed again, and it is set again
+to observe both properties.
 
-Then, `show` is set to `false`. This triggers the effect once more, but this
-time only `show` is read during the execution of the effect, hence the effect
-starts observing only `show`. Therefore, subsequent updates of `name` do not
-trigger any effect.
+Then, `show` is set to `false`. This causes the effect to be executed a third
+time, but this time only `show` is read during the execution of the effect,
+hence the effect starts observing only `show`. Therefore, subsequent updates
+of `name` do not trigger any effect.
 
 Eventually, `show` is set to `true` again, which triggers the effect (which
-was observing `show`): the current value of `name` is echoed, and the effect
-starts observing both properties again.
+was observing `show`): since `show` is now `true, the current value of `name`
+is echoed, and the effect starts observing both properties again.
 
 ==============================================================================
 1. Transactional updates			*libreactive-transactions*
@@ -189,13 +190,23 @@ effects. The following snippet is perfectly fine:
 <
 NOTE: in the limited circumstances where one does want to access the value of
 a property without any side effects even within an effect, it is possible to
-access the read-only `value` attribute of the property.
+access the read-only `value` attribute of the property:
+>
+	var p = react.Property.new(0)
 
-Effects are executed in a transaction. Therefore, no matter how many
+	react.CreateEffect(() => {
+	  p.Set(p.value + 1)
+	})
+
+	echo p.Get() # 1
+<
+The above works and sets the value of the property to 1.
+
+Effects are executed inside a transaction. Therefore, no matter how many
 properties they change, each of their direct effects is run exactly once and
-only at the end of the effect's block. Besides, the values read during an
-execution of an effect are guaranteed not to change within the span of that
-execution (read consistency).
+only at the end of the effect's block. Besides, the properties accessed with
+Get() during the execution of an effect are guaranteed not to change within
+the span of that execution (read consistency).
 
 Effects' propagation is breadth-first: if effect E1 updates property P1, which
 is observed by effects E2 and E3, then at the end of E1:
@@ -215,8 +226,8 @@ following three steps until all cascading effects have been executed:
    queue;
 3. pop the effect at the top of the queue, and go to step 1.
 
-NOTE: in step 2, you should not rely on the order in which the effects of
-a given property are enqueued.
+NOTE: in step 2, you should not rely on the order in which the effects
+associated to a given property are enqueued.
 
 It is worth pointing out that the algorithm above does not prevent the same
 effect to be executed multiple times during the same cascading propagation
@@ -249,7 +260,7 @@ Then, during the commit of the transaction, Effect 2 is popped from the queue
 first and executed, which sets result to 1. Then, Effect 1 is popped from the
 queue and executed, which sets p1 to 2. At this point, Effect 2 is pushed into
 the queue again, because p1 has been updated. Therefore, at commit time,
-Effect 2 is executed twice and the final value of result is 2.
+Effect 2 is executed twice and the final result is 2.
 
 If you are now wondering whether two properties can track each other so that
 when one changes the other is automatically updated, the answer is they can:
@@ -288,9 +299,10 @@ In the code above, F() is executed four times: twice when Effect 1 and Effect
 
 In such cases, it is convenient to cache the result of the expensive function.
 This can be done by using |libreactive.CreateMemo()|, which takes as input
-a property and a function or lambda F whose current value is stored inside the
-property. The cached result is automatically recomputed whenever the
-properties on which F depends are updated.
+a function or lambda F whose current value is computed and stored inside
+a property automatically instantiated by CreateMemo(), which then returns
+a reference to the property's Get() method. The cached result is automatically
+recomputed whenever the properties on which F depends are updated.
 
 The example above can be rewritten as follows:
 >
@@ -299,25 +311,20 @@ The example above can be rewritten as follows:
 
 	var p = react.Property.new(0.0)
 
-	# Create a property to use with CreateMemo()
-	# Memo() is just a shorthand for react.Property.new(v:none).
-	var cachedF = react.Memo()
-
 	def F(): float
 	  echo 'Executing F()...'
 	  sleep 3 # Simulate some expensive computation that depends on p
-	  return sin(p.Get())
+	  return cos(p.Get())
 	enddef
 
-	# Compute F() and store its result in cachedF:
-	react.CreateMemo(cachedF, F)
+	var CachedF = react.CreateMemo(F)
 
 	react.CreateEffect(() => {
-	  echo $'Effect 1: {cachedF.Get()}'
+	  echo $'Effect 1: {CachedF()}'
 	})
 
 	react.CreateEffect(() => {
-	  echo $'Effect 2: {cachedF.Get()}'
+	  echo $'Effect 2: {CachedF()}'
 	})
 
 	p.Set(1.3)
@@ -325,7 +332,8 @@ The example above can be rewritten as follows:
 Now, F() is executed only if necessary: once when the memo is created (to
 cache the initial value F(0.0)) and once more when `p` is updated (to compute
 the updated value F(1.3)). The function F is not executed when Effect 1 and
-Effect 2 are run: those effects just retrieve the cached value.
+Effect 2 are run: those effects just retrieve the cached value from the memo
+property.
 
 ==============================================================================
 4. Pools					*libreactive-pools*
@@ -333,31 +341,80 @@ Effect 2 are run: those effects just retrieve the cached value.
 So far we have talked about creating properties that trigger some effects. In
 practice, one will also want to stop properties to trigger effects.
 
-The simplest way is to call the Clear() method of |libreactive.Property()|.
-That will unsubscribe all the effects that are currently observing the
-affected property. When there are many properties, however, that may become
-a bit cumbersome. For that reason, libreactive also provides a global function
-|libreactive.Clear()| to clear all the properties, guaranteeing that they will
-stop triggering effects (until effects are run that read them again). The
-function requires the name of a "pool": a pool defines a scope for your
-properties, allowing libreactive to distinguish between the properties of your
-script and the properties of other scripts. Using pools is the polite way to
-use libreactive in Vimland.
+That is done by calling the Clear() method of |libreactive.Property()|, which
+unsubscribes all the effects that are currently observing the affected
+property.
 
-Therefore, you should always create properties within a pool. Simply define
-a unique name for your pool (e.g., `my_script_name_pool`) and pass that name
-when creating a property. Then, when you want to clear your properties, pass
-the pool's name to |libreactive.Clear()|:
+Let us see why sometimes it is necessary to clear the properties. The
+following script defines a :Foo command that creates an effect and prints the
+value of a property with its observing effects:
 >
-	const MY_POOL = 'some globally unique name'
-	var p = react.Property.new(value, MY_POOL)
-	# Later on...
-	react.Clear(MY_POOL)
-<
-This way, all and only the objects that your script creates will be cleared.
+	vim9script
+	import 'libreactive.vim' as react
 
-Note: when a pool is not specified, the properties are created in a default
-pool, whose name can be accessed via |libreactive.DEFAULT_POOL|.
+	var p0 = react.Property.new(0)
+
+	def Foo()
+	  react.CreateEffect(() => {
+	    p0.Get()
+	  })
+
+	  echo p0.String()
+	enddef
+
+	command! -nargs=0 Foo Foo()
+<
+If you execute :Foo multiple times, you will see that each time a new "phantom
+effect" (executing the same lambda) is added to the property's observers. If
+the value of the property is updated, the same code will be run multiple
+times. This is in general not what one wants. By clearing the property before
+recreating the effect fixes the issue:
+>
+	def Foo()
+	  p0.Clear()
+	  react.CreateEffect(() => {
+	    p0.Get()
+	  })
+	enddef
+<
+When there are many properties, clearing each and every one may become a bit
+cumbersome. For that reason, the constructor of |libreactive.Property()| takes
+an optional argument of type |List|, which can be used to store references to
+the properties created by your script. Such list is called a "pool". If the
+constructor is provided with a pool, it will add the new property to that
+pool.
+
+A pool allows you to quickly iterate over all the properties in your script.
+For example:
+>
+	vim9script
+	import 'libreactive.vim' as react
+
+	# Define a pool:
+	var pool: list<react.Property> = []
+
+	# New properties are added to the pool:
+	var p0 = react.Property.new(0, pool)
+	var p1 = react.Property.new(1, pool)
+
+	react.CreateEffect(() => {
+	  p0.Get()
+	  p1.Get()
+	})
+
+	# Inspect the value and effects of each property
+	echo mapnew(pool, (_, p: react.Property) => p.String())
+
+	# Clear all the effects
+	for property in pool
+	  property.Clear()
+	endfor
+
+	# Check that the effects have been cleared
+	echo mapnew(pool, (_, p: react.Property) => p.String())
+<
+The pool is under the complete control of your script: you may use it in any
+way you want.
 
 ==============================================================================
 5. Examples					*libreactive-examples*
@@ -372,12 +429,16 @@ achieve that is with a rendering loop. Example:
 	var n = 0  # Counts how many times the UI is redrawn
 
 	# Internal state:
-	const POOL = 'my_pool'
-	var cmd    = react.Property.new('', POOL)
-	var animal = react.Property.new('', POOL)
-	var plant  = react.Property.new('', POOL)
+	var pool: list<react.Property> = []
+	var cmd    = react.Property.new('', pool)
+	var animal = react.Property.new('', pool)
+	var plant  = react.Property.new('', pool)
 
 	def InitProperties()
+	  for property in pool
+	    property.Clear()
+	  endfor
+
 	  cmd.Set('')
 	  animal.Set('-')
 	  plant.Set('-')
@@ -418,7 +479,6 @@ achieve that is with a rendering loop. Example:
 
 	def Main()
 	  n = 0
-	  react.Clear(POOL)
 	  InitProperties()
 	  InitEffects()
 	  const winID = popup_create(
@@ -451,13 +511,16 @@ the unit of update of a popup is a full line). Example:
 	vim9script
 	import 'libreactive.vim' as react
 
-	const POOL = 'my_pool'
-
-	var cmd    = react.Property.new('', POOL)
-	var animal = react.Property.new('', POOL)
-	var plant  = react.Property.new('', POOL)
+	var pool: list<react.Property> = []
+	var cmd    = react.Property.new('', pool)
+	var animal = react.Property.new('', pool)
+	var plant  = react.Property.new('', pool)
 
 	def InitProperties()
+	  for property in pool
+	    property.Clear()
+	  endfor
+
 	  cmd.Set('')
 	  animal.Set('-')
 	  plant.Set('-')
@@ -505,14 +568,14 @@ the unit of update of a popup is a full line). Example:
 	  })
 	enddef
 
+	# Update the state and render the parts of the UI needing an update
 	def Filter(winID: number, key: string): bool
-	  cmd.Set(key, true) # Update and render the needed parts of the UI
+	  cmd.Set(key, true) 
 	  return true
 	enddef
 
 	def Main()
 	  const winID = popup_create('', {close: 'click', filter: Filter})
-	  react.Clear(POOL)
 	  InitProperties()
 	  InitEffects(winID)
 	enddef
@@ -521,7 +584,7 @@ the unit of update of a popup is a full line). Example:
 <
 Again, the same popup could be created without libreactive, but you would need
 to manually keep track of what must be updated when. For moderately complex
-UIs, that may quickly become cumbersome.
+UIs, that may quickly become difficult and prone to errors.
 
 Of course, libreactive is not limited to building popups, and its use is not
 limited to the two techniques described above. Be creative!
@@ -531,16 +594,6 @@ limited to the two techniques described above. Be creative!
 
 - Effects and/or memos cannot be nested: that will result in a runtime error.
   Note that |libreactive.CreateMemo()| creates an effect, too.
-
-- Put a snippet similar to the following somewhere in your script before
-  defining any property:
->
-	const REACTIVE_POOL = 'MyScriptNamePool'
-	react.Clear(REACTIVE_POOL, true)
-<
-  This should appear at the script level. It will hard-reset your script's
-  pool every time the script is sourced, clearing any references to previous
-  properties, if any, and making sure that you start with a clean slate.
 
 - Properties may contain collections such as lists or dictionaries. Some care
   is needed to manipulate them, though, because such values are returned by
@@ -552,9 +605,9 @@ limited to the two techniques described above. Be creative!
 
   This is not problematic:
 >
-	var p = react.Property.new([])
+	var p0 = react.Property.new([])
 	var newValue = ['a'] # Another list
-	p.Set(newValue) # Will trigger effects
+	p0.Set(newValue) # Will trigger effects
 <
   Here, `newValue` is a different object than the stored property value. But
   the following will NOT trigger any effect:
@@ -569,8 +622,8 @@ limited to the two techniques described above. Be creative!
 >
 	p0.Set(newValue, true)
 <
-  By adding a second argument of `Property.Set()` set to |true|, the effects
-  associated to `p0` will be executed unconditionally.
+  The optional argument of `Property.Set()`, when set to |true|, forces the
+  effects associated to the property to be executed unconditionally.
 
   Note: using lambdas to wrap collections, as is done in other languages, in
   general does not work with libreactive, because Vim treats different
@@ -596,19 +649,21 @@ limited to the two techniques described above. Be creative!
 - If you prefer a functional syntax for properties, you may create them with
   the following small helper function:
 >
-	def GetSet(value: any, pool = 'my_pool'): list<func>
+	def GetSet(
+	  value: any, pool: list<react.Property> = null_list
+	): list<func>
 	  var p = react.Property.new(value, pool)
 	  return [p.Get, p.Set]
 	enddef
 
-	var [P1, SetP1] = GetSet(value1)
+	var [P1, SetP1] = GetSet(42)
 <
   Then, you may access the value of the property with `P1()` and set it with
   `SetP1()`.
 
 - It is easy to keep two or more properties in sync. Let's say that your
   script has the following invariant: "p2 is always twice as p1". This can be
-  obtained as follows (careful with typing: number and float are distinct!):
+  enforced as follows:
 >
 	# The invariant holds to begin with
 	var p1 = react.Property.new(1.0)
@@ -629,59 +684,6 @@ limited to the two techniques described above. Be creative!
   change the current value of the property, the property's effects are not
   triggered by default.
 
-- All properties should be defined as script variables. This avoids polluting
-  libreactive's pools with references to properties that are not used any
-  longer. The content of libreactive's registry may be inspected with
-  |libreactive.PoolStats()|.
-
-  If you need to initialize the properties at runtime—for instance, every time
-  a command is executed—still define the properties at the script level and
-  initialize them in a function. For example:
->
-	const kPool = 'my pool'
-	react.Clear(kPool, true)
-
-	var p0 = react.Property.new(0, kPool)
-
-	def F()
-	  p0.Set(42)
-	  echo $'The initial value of p0 is {p0.Get()}'
-	  echo react.PoolStats(kPool)  # Should always contain one property
-	enddef
-
-	command -nargs=0 Foo F()
-<
-- Memory management of local properties, that is, properties defined inside
-  classes and functions, is in general much more involved than for script
-  properties, and therefore discouraged. Anyway, the basic idea is that local
-  properties that have the same lifespan should be defined in their own pool.
-  For instance:
->
-	class X
-	  var px: react.Property
-	
-	  def new(property_value: string, pool: string)
-	    this.px = react.Property.new(property_value, pool)
-	  enddef
-	endclass
-	
-	def F()
-	  var localPool = 'my_script_F'
-	  var p0 = react.Property.new("hello", localPool)
-	  var x0 = X.new("bonjour", localPool)
-	
-	  # Use p0 and x0
-	  echo $'p0 = {p0.Get()} x0.px = {x0.px.Get()}'
-	
-	  echo 'Pool before clearing:' react.PoolStats(localPool)
-	
-	  react.Clear(localPool, true)  # Destroy the properties
-	
-	  echo 'Pools after clearing:' react.PoolStats()
-	enddef
-	
-	command -nargs=0 Foo F()
-<
 - Always assign a value to your properties at declaration time. Thet is,
   instead of doing this:
 >
@@ -711,10 +713,14 @@ limited to the two techniques described above. Be creative!
   an error will be raised when `F()` is executed.
 
 - If you think you need to read and write the same property inside an effect,
-  you are doing it wrong. Rethink about your problem.
+  you are probably doing it wrong: rethink about your problem. An exception
+  may be collection properties, because most often the new value is obtained
+  by adding elements to or removing elements from the current value. which you
+  must read from the property but without side effects.
 
-- Always define your own pool in your scripts. Do not define properties in the
-  default pool, as that may be shared with other scripts.
+- Always define a pool in your scripts and clear all your properties in the
+  initialization step of your script. This will avoid the "phantom effect"
+  described in |libreactive-pools|.
 
 - Prefer |libreactive.Transaction()| to |libreactive.Begin()| and
   |libreactive.Commit()|. The latter two are useful in limited circumstances,
@@ -725,31 +731,24 @@ limited to the two techniques described above. Be creative!
 ==============================================================================
 7. API					*libreactive-api*
 
-Constants ~
-					*libreactive.DEFAULT_POOL*
-		The name of the default pool. The default pool is mainly for
-		convenience when testing or during development. Avoid using
-		the default pool in your scripts.
-
 Classes ~
 					*libreactive.Property()*
 new([{value}, {pool}])
 		Create a new property with the given {value}. {value} can be
 		of any type. If no value is provided, the property is
-		initialized with |null|. The property remains associated to
-		the given {pool}, or to the default pool is {pool} is not
-		specified. Specifying a pool is useful to clear properties
-		without interfering with other scripts: see
-		|libreactive.Clear()|.
+		initialized with |null|.
+
+		If {pool} is provided, it must be a |List| of Properties. The
+		new property is added to {pool} by the constructor.
 
 value
-		The read-only value of the property. Accessing this cannot
+		The read-only value of the property. Accessing this does not
 		trigger any effects. You should prefer Get() in most
 		circumstances.
 
 Get()
 		Obtain the value of the property. If this method is called
-		within an effect's block, that effect is automatically
+		inside an effect's block, that effect is automatically
 		registered as an observer of the property.
 
 Set({value}[, {force}])
@@ -761,8 +760,8 @@ Set({value}[, {force}])
 		the effect's block, respectively.
 
 		By default, the effects are triggered only if the new value of
-		the property is different from the current value (== is used
-		for the comparison). When {force} is |true|, though, the
+		the property is different from the current value (where == is
+		used for the comparison). When {force} is |true|, though, the
 		effects are always executed, even if the update does not
 		change the value of the property.
 
@@ -777,7 +776,7 @@ Effects()
 
 String()
 		Return a |String| representation of this property. The string
-		has the form '<value> [<effects>]', where <value> is the
+		has the form '<value> {<effects>}', where <value> is the
 		current value of the property, and <effects> is the list of
 		functions or lambdas that are the current effects of this
 		property. Each effect is prefix with E<n>:, where <n> is
@@ -793,18 +792,6 @@ Begin()
 		|libreactive.Commit()|.
 		In most cases, |libreactive.Transaction()| is preferrable.
 
-					*libreactive.Clear()*
-Clear({pool}[, {hard}])
-		Clear the effects associated to any existing property in the
-		given {pool}. If {pool} is the empty string, all pools are
-		cleared: that is mainly for testing: do not use an empty
-		string in your scripts!
-
-		When {hard} is |true|, also clear the internal references to
-		the properties themselves and destroy the pool.
-		Note: you should not use properties after their pool has been
-		hard-reset.
-
 					*libreactive.Commit()*
 Commit()
 		Commit a transaction. This must always be paired with
@@ -817,38 +804,23 @@ CreateEffect({func})
 		must be a function with no parameters and no return value.
 
 					*libreactive.CreateMemo()*
-CreateMemo({property}, {func})
+CreateMemo({func})
 		Create an effect that executes {func} and caches its result
-		inside {property}. {func} must be a function with no
-		parameters and an arbitrary return value. The function's value
-		is automatically recomputed—and its result stored in
-		{property}—whenever any property which the function depends
-		upon is updated.
+		into a property. The property is created by CreateMemo().
+		{func} must be a function with no parameters and an arbitrary
+		return value. The function's value is automatically
+		recomputed—and its result cached—whenever any property which
+		the function depends upon is updated.
 
 		Returns a reference to the property's Get() method.
-
-					*libreactive.Memo()*
-Memo([{pool}])
-		Instantiates a property to be used with CreateMemo(). This is
-		just a shorthand for:
->
-		Property.new(v:none, pool)
-<
-					*libreactive.PoolStats()*
-PoolStats([{pool}])
-		Return a summary of the content of all the pools, or of the
-		given {pool}, in the form of a |List| of |Dictionaries|. Each
-		dictionary has these entries:
-
-		pool		The name of the pool.
-		n_properties	The number of properties in the pool.
-		values		The values of each property.
 
 					*libreactive.Transaction()*
 Transaction({func})
 		Execute {func} atomically: any property updates performed by
 		{func} trigger their direct effects only once and only at the
 		end of the transaction.
+
+		Note: transactions may be nested.
 
 ==============================================================================
 8. Options					*libreactive-options*

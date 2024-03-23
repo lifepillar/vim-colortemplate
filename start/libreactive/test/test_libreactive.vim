@@ -14,7 +14,7 @@ def Test_React_PropertyAttributes()
   assert_equal('x',    p0.value)
   assert_equal('x',    p0.Get())
   assert_equal([],     p0.Effects())
-  assert_equal('x []', p0.String())
+  assert_equal('x {}', p0.String())
 enddef
 
 def Test_React_SimpleProperty()
@@ -31,26 +31,6 @@ def Test_React_SimpleProperty()
 
   assert_equal(DoubleCount(), 10)
 enddef
-
-def Test_React_DefaultPool()
-  assert_true(!empty(react.DEFAULT_POOL))
-
-  var p0 = react.Property.new(0)
-  var c0 = react.Property.new()
-
-  react.CreateEffect(() => {
-    p0.Get()
-  })
-
-  c0->react.CreateMemo((): number => p0.Get())
-
-  assert_equal(2, len(p0.Effects()))
-
-  react.Clear(react.DEFAULT_POOL)
-
-  assert_equal(0, len(p0.Effects()))
-enddef
-
 
 def Test_React_SimpleEffect()
   var result = 0
@@ -203,10 +183,8 @@ def Test_React_CachedComputation()
   const [LastName, SetLastName] = GetSet('Smith')
   var run = 0
   var name = ''
-  var fullName = react.Property.new()
-  const FullName = fullName.Get
 
-  fullName->react.CreateMemo((): string => {
+  const FullName = react.CreateMemo((): string => {
     ++run
     return $'{FirstName()} {LastName()}'
   })
@@ -245,10 +223,8 @@ def Test_React_FineGrainedReaction()
   const [ShowFullName, SetShowFullName] = GetSet(true)
   var name = ''
   var run = 0
-  var displayName = react.Property.new()
-  const DisplayName = displayName.Get
 
-  react.CreateMemo(displayName, (): string => {
+  const DisplayName = react.CreateMemo((): string => {
     ++run
     if !ShowFullName() # When ShowFullName() is false, only first name is tracked
       return FirstName()
@@ -445,9 +421,8 @@ def Test_React_VStack()
     var stacked: list<Reader>
 
     for V in views
-      var view = react.Property.new()
-      view->react.CreateMemo(V) # Creates an effect that tracks V's signals
-      stacked->add(view.Get)
+      var VMemo = react.CreateMemo(V) # Creates an effect that tracks V's signals
+      stacked->add(VMemo)
     endfor
 
     return (): list<string> => {
@@ -667,13 +642,53 @@ def Test_React_PropertyString()
     property.Get()
   })
 
-  assert_match('value \[E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+\]', property.String())
+  assert_match('value {E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+}', property.String())
+enddef
+
+def Test_React_Pool()
+  var pool: list<react.Property> = []
+  var result = ''
+  var p0 = react.Property.new('o', pool)
+
+  assert_equal(1, len(pool))
+
+  def F(): react.Property
+    var p1 = react.Property.new('n', pool)
+
+    react.CreateEffect(() => {
+      result ..= p1.Get()
+    })
+
+    return p1
+  enddef
+
+  var pf = F()
+
+  assert_equal(2, len(pool))
+  assert_equal('n', pf.Get())
+  assert_equal('n', result)
+
+  react.CreateEffect(() => {
+    result ..= p0.Get()
+    pf.Set('w')
+  })
+
+  assert_equal('now', result)
+
+  for p in pool # Clear effects
+    p.Clear()
+  endfor
+  p0.Set('he')
+  pf.Set('re')
+
+  assert_equal('now', result)
 enddef
 
 def Test_React_PropertyInsideFunction()
   var result = ''
+  var pool: list<react.Property> = []
   const F = (): react.Property => {
-    var p = react.Property.new('a', 'FOO_POOL')
+    var p = react.Property.new('a', pool)
 
     react.CreateEffect(() => {
       result ..= p.Get()
@@ -682,11 +697,15 @@ def Test_React_PropertyInsideFunction()
     return p
   }
   var q = F()
+
+  assert_equal(1, len(pool))
+  assert_true(pool[0] is q)
+
   q.Set('b')
 
   assert_equal('ab', result)
 
-  react.Clear('FOO_POOL')
+  pool[0].Clear()
   q.Set('c')
 
   assert_equal('ab', result)
@@ -694,7 +713,7 @@ enddef
 
 
 def Test_React_TwoEffectsOneLambda()
-  var p = react.Property.new('x', 'LambdaCopies')
+  var p = react.Property.new('x')
   var result = ''
 
   const F = () => {
@@ -713,7 +732,7 @@ enddef
 
 
 def Test_React_ReuseLambda()
-  var p = react.Property.new('x', 'LambdaCopies')
+  var p = react.Property.new('x')
   var result = ''
 
   const F = () => {
@@ -904,21 +923,18 @@ enddef
 
 def Test_React_Cache()
   var p0 = react.Property.new(2)
-  var c0 = react.Property.new()
 
   const F = (): number => {
     return p0.Get() * p0.Get()
   }
 
-  const C0 = react.CreateMemo(c0, F)
+  const C0 = react.CreateMemo(F)
 
-  assert_equal(4, c0.Get())
   assert_equal(4, C0())
-  assert_true(C0 == c0.Get, 'C0 should be the same function as c0.Get')
 
   p0.Set(3)
 
-  assert_equal(9, c0.Get())
+  assert_equal(9, C0())
 enddef
 
 def Test_React_ListProperty()
@@ -949,6 +965,19 @@ def Test_React_ListProperty()
 
   assert_equal(['A', 'B', 'C', 'D', 'E', 'F'], l0.Get())
   assert_equal('AABABCABCDABCDEABCDEF', result)
+enddef
+
+def Test_React_CreateMemoWithPool()
+  var pool: list<react.Property> = []
+  var p0 = react.Property.new(3)
+  var F = react.CreateMemo(() =>  2 * p0.Get(), pool)
+
+  assert_equal(1, len(pool))
+  assert_equal(6, F())
+
+  p0.Set(21)
+
+  assert_equal(42, F())
 enddef
 
 def Test_React_ListPropertyTransaction()
@@ -984,15 +1013,6 @@ def Test_React_ListPropertyTransaction()
   assert_equal(['A', 'B', 'C', 'D', 'E', 'F'], l0.Get())
   assert_equal('ABCABCDEF', result)
 enddef
-
-def Test_React_ClearingNonExistingPoolIsNotAnError()
-  react.Clear('I_dont-exist', false)
-  react.Clear('I-dont_either', true)
-enddef
-
-tt.Teardown = () => {
-  react.Clear('', true) # Clean up after each test
-}
 
 tt.Run('_React_')
 

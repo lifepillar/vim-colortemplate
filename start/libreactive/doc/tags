@@ -9,13 +9,9 @@ libreactive-pools	libreactive.txt	/*libreactive-pools*
 libreactive-tips	libreactive.txt	/*libreactive-tips*
 libreactive-transactions	libreactive.txt	/*libreactive-transactions*
 libreactive.Begin()	libreactive.txt	/*libreactive.Begin()*
-libreactive.Clear()	libreactive.txt	/*libreactive.Clear()*
 libreactive.Commit()	libreactive.txt	/*libreactive.Commit()*
 libreactive.CreateEffect()	libreactive.txt	/*libreactive.CreateEffect()*
 libreactive.CreateMemo()	libreactive.txt	/*libreactive.CreateMemo()*
-libreactive.DEFAULT_POOL	libreactive.txt	/*libreactive.DEFAULT_POOL*
-libreactive.Memo()	libreactive.txt	/*libreactive.Memo()*
-libreactive.PoolStats()	libreactive.txt	/*libreactive.PoolStats()*
 libreactive.Property()	libreactive.txt	/*libreactive.Property()*
 libreactive.Transaction()	libreactive.txt	/*libreactive.Transaction()*
 libreactive.txt	libreactive.txt	/*libreactive.txt*

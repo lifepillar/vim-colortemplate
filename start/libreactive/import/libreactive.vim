@@ -20,6 +20,7 @@ interface IProperty
   def Set(value: any, force: bool)
   def Clear()
   def RemoveEffect(effect: any)
+  def String(): string
 endinterface
 
 class Effect
@@ -93,12 +94,9 @@ endclass
 # }}}
 
 # Global state {{{
-export const DEFAULT_POOL = '__DEFAULT__'
-
 var gActiveEffect: Effect = null_object
 var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
 var gQueue = EffectsQueue.new()
-var gPropertyRegistry: dict<list<IProperty>> = {}
 # }}}
 
 # Transactions {{{
@@ -134,15 +132,10 @@ export class Property implements IProperty
   var value: any = null
   var _effects: list<Effect> = []
 
-  def new(this.value = v:none, pool = DEFAULT_POOL)
-    this.Register(pool)
-  enddef
-
-  def Register(pool: string)
-    if !gPropertyRegistry->has_key(pool)
-      gPropertyRegistry[pool] = []
+  def new(this.value = v:none, pool: list<IProperty> = null_list)
+    if pool != null
+      pool->add(this)
     endif
-    gPropertyRegistry[pool]->add(this)
   enddef
 
   def Get(): any
@@ -183,7 +176,7 @@ export class Property implements IProperty
   enddef
 
   def String(): string
-    return printf('%s', this.value) .. ' [' .. printf('%s', join(this.Effects(), ', ')) .. ']'
+    return printf('%s', this.value) .. ' {' .. printf('%s', join(this.Effects(), ', ')) .. '}'
   enddef
 endclass
 # }}}
@@ -199,46 +192,9 @@ export def CreateEffect(Fn: func())
   runningEffect.Execute() # Necessary to bind to dependent signals
 enddef
 
-export def Memo(pool = DEFAULT_POOL): Property
-  return Property.new(v:none, pool)
-enddef
-
-export def CreateMemo(p: Property, Fn: func(): any): func(): any
-  CreateEffect(() => p.Set(Fn()))
-  return p.Get
-enddef
-
-export def Clear(poolName: string, hard = false)
-  const pools = empty(poolName) ? keys(gPropertyRegistry) : [poolName]
-
-  for pool in pools
-    if gPropertyRegistry->has_key(pool)
-      for property in gPropertyRegistry[pool]
-        property.Clear()
-      endfor
-
-      if hard
-        gPropertyRegistry[pool] = []
-        gPropertyRegistry->remove(pool)
-      endif
-    endif
-  endfor
-enddef
-
-export def PoolStats(poolName = null_string): list<dict<any>>
-  var stats: list<dict<any>> = []
-  var pools = (poolName == null ? keys(gPropertyRegistry) : [poolName])
-
-  for pool in pools
-    var n = len(gPropertyRegistry[pool])
-
-    stats->add({
-      pool: pool,
-      n_properties: n,
-      values: mapnew(gPropertyRegistry[pool], (_, p: Property) => p.String()),
-    })
-  endfor
-
-  return stats
+export def CreateMemo(Fn: func(): any, pool: list<IProperty> = null_list): func(): any
+  var memo = Property.new(v:none, pool)
+  CreateEffect(() => memo.Set(Fn()))
+  return memo.Get
 enddef
 # }}}

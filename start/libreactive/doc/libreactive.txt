@@ -91,7 +91,7 @@ hence the effect starts observing only `show`. Therefore, subsequent updates
 of `name` do not trigger any effect.
 
 Eventually, `show` is set to `true` again, which triggers the effect (which
-was observing `show`): since `show` is now `true, the current value of `name`
+was observing `show`): since `show` is now true, the current value of `name`
 is echoed, and the effect starts observing both properties again.
 
 ==============================================================================

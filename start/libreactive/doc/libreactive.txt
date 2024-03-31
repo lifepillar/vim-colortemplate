@@ -1,4 +1,4 @@
-*libreactive.txt*	For Vim version 9.1	Last change: 2024 Feb 10
+*libreactive.txt*	For Vim version 9.1	Last change: 2024 Mar 31
 
 Note: Vim 9.1 or later is required.
 
@@ -43,7 +43,7 @@ of any type, which can be accessed with `Get()` and modified with `Set()`.
 "Effects" are functions or lambdas that read, and possibly write, properties.
 Effects are automatically bound to the properties they access, so that they
 are notified of their changes. In the example above, the effect reads the
-value of the `what` property: that is enough to make the effect an observer of
+value of the `love` property: that is enough to make the effect an observer of
 `love`. As such, the effect is re-executed every time the value of `love` is
 updated.
 

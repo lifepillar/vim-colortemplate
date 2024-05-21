@@ -601,7 +601,7 @@ fun! s:has_gui_italics(hg)
 endf
 
 fun! s:is_neovim_group(name)
-  return a:name =~? '^TermCursor\%[NC]$'
+  return 0
 endf
 
 fun! s:add_term_attr(hg, attrlist)

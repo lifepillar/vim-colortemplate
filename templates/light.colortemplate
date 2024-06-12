@@ -47,6 +47,8 @@ PmenuKind         -> Pmenu
 PmenuKindSel      -> PmenuSel
 PmenuExtra        -> Pmenu
 PmenuExtraSel     -> PmenuSel
+PmenuMatch        -> Pmenu
+PmenuMatchSel     -> PmenuMatchSel
 PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc

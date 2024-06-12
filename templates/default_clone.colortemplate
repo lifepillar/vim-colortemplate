@@ -75,7 +75,9 @@ Term Colors: darkgrey red green yellow blue magenta cyan white
 Boolean           -> Constant
 Character         -> Constant
 Conditional       -> Statement
+CurSearch         -> Search
 CursorLineFold    -> FoldColumn
+CursorLineSign    -> SignColumn
 Search            -> Search
 Debug             -> Special
 Define            -> PreProc
@@ -95,6 +97,8 @@ PmenuKind         -> Pmenu
 PmenuKindSel      -> PmenuSel
 PmenuExtra        -> Pmenu
 PmenuExtraSel     -> PmenuSel
+PmenuMatch        -> Pmenu
+PmenuMatchSel     -> PmenuSel
 PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
@@ -167,6 +171,8 @@ FoldColumn           darkblue            grey
 Folded               darkblue            lightgreygrey
 IncSearch            none                none              reverse
 LineNr               brown               none
+LineNrAbove          none                none
+LineNrBelow          none                none
 MatchParen           none                cyan
 ModeMsg              none                none              bold
 MoreMsg              seagreen            none              g=bold
@@ -202,6 +208,9 @@ lCursor              white               fg
 ; See `:help window-toolbar`
 ToolbarLine          none                lightgrey
 ToolbarButton        white               grey40            bold
+; packadd termdebug
+debugBreakpoint      none                red
+debugPC              none                lightblue
 ; }}}
 
 Background: dark
@@ -260,6 +269,8 @@ FoldColumn           cyan                greydarkgrey
 Folded               cyan                darkgrey242
 IncSearch            none                none              reverse
 LineNr               yellow              none
+LineNrAbove          none                none
+LineNrBelow          none                none
 MatchParen           none                darkcyan
 ModeMsg              none                none              bold
 MoreMsg              lightseagreen       none              g=bold
@@ -296,6 +307,9 @@ lCursor           -> Cursor
 ; See `:help window-toolbar`
 ToolbarLine          none                grey50
 ToolbarButton        black               lightgrey         bold
+; packadd termdebug
+debugBreakpoint      none                red
+debugPC              none                lightblue
 ; }}}
 
 Background: any
@@ -366,5 +380,7 @@ Underlined           omit                omit              underline
 CursorIM             omit                omit
 ToolbarLine          omit                omit              underline
 ToolbarButton        omit                omit              bold
+debugBreakpoint      omit                omit              reverse
+debugPC              omit                omit              reverse
 ; }}}
 ; }}}

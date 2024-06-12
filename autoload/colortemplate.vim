@@ -430,6 +430,8 @@ let s:default_hi_groups = [
       \ 'NonText',
       \ 'Normal',
       \ 'Pmenu',
+      \ 'PmenuMatch',
+      \ 'PmenuMatchSel',
       \ 'PmenuSbar',
       \ 'PmenuSel',
       \ 'PmenuThumb',

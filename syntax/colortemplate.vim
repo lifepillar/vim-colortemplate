@@ -21,8 +21,8 @@ syn keyword colortemplateHiGroup      CursorLine CursorLineFold CursorLineSign C
 syn keyword colortemplateHiGroup      diffAdded DiffAdd diffChanged DiffChange diffRemoved DiffDelete DiffText Directory
 syn keyword colortemplateHiGroup      EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
 syn keyword colortemplateHiGroup      IncSearch Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
-syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuSbar PmenuSel PmenuThumb
-syn keyword colortemplateHiGroup      PopupNotification PopupSelected PreCondit PreProc Question
+syn keyword colortemplateHiGroup      Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuMatch PmenuMatchSel PmenuSbar
+syn keyword colortemplateHiGroup      PmenuSel PmenuThumb PopupNotification PopupSelected PreCondit PreProc Question
 syn keyword colortemplateHiGroup      QuickFixLine Removed Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup      SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
 syn keyword colortemplateHiGroup      Structure TabLine TabLineFill TabLineSel Tag Title Todo Type Typedef Underlined VertSplit

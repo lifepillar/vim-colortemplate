@@ -47,6 +47,8 @@ hi! link QuickFixLine Search
 " @suppress MoreMsg
 " @suppress NonText
 " @suppress Pmenu
+" @suppress PmenuMatch
+" @suppress PmenuMatchSel
 " @suppress PmenuSbar
 " @suppress PmenuSel
 " @suppress PmenuThumb

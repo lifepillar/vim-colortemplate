@@ -1,8 +1,8 @@
-*librelalg.txt*	For Vim version 9.0	Last change: 2023 Dec 28
+*librelalg.txt*	For Vim version 9.0	Last change: 2024 Jun 9
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
-Note: Vim 9.0.2185 or later is required.
+Note: Vim 9.1.0547 or later is required.
 
 0. Quick start				|librelalg-quickstart|
 1. Tutorial				|librelalg-tutorial|

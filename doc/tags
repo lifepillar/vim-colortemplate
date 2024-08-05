@@ -44,6 +44,7 @@ colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:colortemplate_backward_compatible	colortemplate.txt	/*g:colortemplate_backward_compatible*
 g:colortemplate_creator	colortemplate.txt	/*g:colortemplate_creator*
+g:colortemplate_date_format	colortemplate.txt	/*g:colortemplate_date_format*
 g:colortemplate_fancy_import	colortemplate.txt	/*g:colortemplate_fancy_import*
 g:colortemplate_higroup_balloon	colortemplate.txt	/*g:colortemplate_higroup_balloon*
 g:colortemplate_higroup_command_line	colortemplate.txt	/*g:colortemplate_higroup_command_line*

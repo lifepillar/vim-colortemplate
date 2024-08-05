@@ -804,6 +804,12 @@ output color scheme.
 >
 	let g:colortemplate_creator = 1
 <
+					*g:colortemplate_date_format*
+The date format for the last change metadata field. The default is the
+preferred date format for the Vim project.
+>
+	let g:colortemplate_date_format = '%Y %b %d'
+<
 					*g:colortemplate_fancy_import*
 When importing a color scheme (see |colortemplate#import#run()|),
 Colortemplate by default generates random fancy names for colors. Set this to

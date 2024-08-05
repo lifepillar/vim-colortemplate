@@ -203,7 +203,7 @@ export class Generator
     header->AddMeta('%s License:      %s', this._comment, theme.license)
 
     if theme.options.timestamp
-      header->AddMeta('%s Last Updated: %s', this._comment, strftime(this._dateformat))
+      header->AddMeta('%s Last Change:  %s', this._comment, strftime(this._dateformat))
     endif
 
     header->add('')

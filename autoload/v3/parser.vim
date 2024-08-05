@@ -91,6 +91,8 @@ def SetOption(v: list<string>, ctx: Context)
       theme.options[key] = false
     elseif val =~ '^\d\+$'
       theme.options[key] = str2nr(val)
+    elseif val =~ '^"'
+      theme.options[key] = matchstr(val, '^"\zs[^"]*\ze"')
     else
       theme.options[key] = val
     endif
@@ -500,8 +502,8 @@ const K_LICENSE     = T('License')
 const K_MAINTAINER  = T('Maintainer')
 const K_NAME        = R('[Nn]ame')
 const K_OPTIONS     = T('Options')
-const K_OPTN        = R('\%(backend\|creator\|palette\|shiftwidth\|timestamp\)\>')
-const K_OPTV        = R('\%(true\|false\)\>\|\d\+\|\w\+')
+const K_OPTN        = R('\%(backend\|creator\|dateformat\|palette\|shiftwidth\|timestamp\)\>')
+const K_OPTV        = R('\%(true\|false\)\>\|\d\+\|\w\+\|"[^"]*"')
 const K_PREFIX      = T('Prefix')
 const K_RGB         = R('rgb\>')
 const K_SHORT       = T('Short')

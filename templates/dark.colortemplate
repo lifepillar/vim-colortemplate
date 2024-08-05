@@ -17,8 +17,9 @@ Description:   More details may go here
 License:       Same as Vim
 ; The backend determines how the code is generated.
 ; 'vim9' is the default: use 'legacy' for legacy Vim script
-Options:       backend=vim9 ; Generate Vim 9 script code
-Options:       palette=true ; Append the color palette to the output as a comment
+Options:       backend=vim9    ; Generate Vim 9 script code
+Options:       palette=true    ; Append the color palette to the output as a comment
+Options:       dateformat="%c" ; Custom date format (strftime() syntax)
 
 ; Prefix for the color scheme's options (if any): short name
 ; is used if this key is not present:

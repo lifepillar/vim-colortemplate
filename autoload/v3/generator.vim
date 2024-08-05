@@ -158,6 +158,7 @@ export class Generator
   var theme:  Colorscheme
 
   var _backend:      string
+  var _dateformat:   string
   var _shiftwidth:   number
   var _comment:      string = '#'
   var _letKeyword:   string = ''
@@ -166,6 +167,7 @@ export class Generator
 
   def new(this.theme)
     this._backend    = this.theme.options.backend
+    this._dateformat = this.theme.options.dateformat
     this._shiftwidth = this.theme.options.shiftwidth
 
     if this._backend == 'legacy'
@@ -201,7 +203,7 @@ export class Generator
     header->AddMeta('%s License:      %s', this._comment, theme.license)
 
     if theme.options.timestamp
-      header->AddMeta('%s Last Updated: %s', this._comment, strftime("%c"))
+      header->AddMeta('%s Last Updated: %s', this._comment, strftime(this._dateformat))
     endif
 
     header->add('')

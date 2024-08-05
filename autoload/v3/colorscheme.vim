@@ -522,6 +522,7 @@ export class Colorscheme
   public var options:      dict<any>          = {
     backend:    'vim9',
     creator:    true,
+    dateformat: '%Y %b %d',
     palette:    false,
     shiftwidth: 2,
     timestamp:  true,

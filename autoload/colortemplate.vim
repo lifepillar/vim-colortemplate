@@ -395,6 +395,8 @@ endf
 " }}}
 " Highlight groups {{{
 let s:default_hi_groups = [
+      \ 'Added',
+      \ 'Changed',
       \ 'ColorColumn',
       \ 'Comment',
       \ 'Conceal',
@@ -428,6 +430,8 @@ let s:default_hi_groups = [
       \ 'NonText',
       \ 'Normal',
       \ 'Pmenu',
+      \ 'PmenuMatch',
+      \ 'PmenuMatchSel',
       \ 'PmenuSbar',
       \ 'PmenuSel',
       \ 'PmenuThumb',
@@ -436,6 +440,7 @@ let s:default_hi_groups = [
       \ 'PreProc',
       \ 'Question',
       \ 'QuickFixLine',
+      \ 'Removed',
       \ 'Search',
       \ 'SignColumn',
       \ 'Special',
@@ -598,7 +603,7 @@ fun! s:has_gui_italics(hg)
 endf
 
 fun! s:is_neovim_group(name)
-  return a:name =~? '^TermCursor\%[NC]$'
+  return 0
 endf
 
 fun! s:add_term_attr(hg, attrlist)
@@ -768,8 +773,8 @@ fun! s:set_info(key, value)
       throw 'Missing value for short name key'
     elseif len(a:value) > 24
       throw 'The short name must be at most 24 characters long'
-    elseif a:value !~? '\m^\w\+$'
-      throw 'The short name may contain only letters, numbers and underscore'
+    elseif a:value !~? '\m^[0-9A-Za-z_-]\+$'
+      throw 'The short name may contain only letters, numbers, underscores, and hyphens'
     endif
     if empty(s:info['optionprefix'])
       let s:info['optionprefix'] = s:info['shortname']

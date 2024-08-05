@@ -23,11 +23,11 @@ fun! s:verify(f)
 endf
 
 fun! s:assert_build(name)
-  execute 'edit' a:name.'.txt'
+  execute 'edit' a:name .. '.txt'
   Colortemplate!
   call assert_equal(0, get(g:, 'colortemplate_exit_status', 1))
   call s:verify(a:name)
-  execute 'bwipe' a:name.'.txt'
+  execute 'bwipe' a:name .. '.txt'
 endf
 
 "
@@ -699,7 +699,7 @@ fun! Test_CT_invalid_short_name()
   Colortemplate!
   let l:qflist = getqflist()
   call assert_equal(1, len(l:qflist))
-  call assert_equal("The short name may contain only letters, numbers and underscore", l:qflist[0]['text'])
+  call assert_equal("The short name may contain only letters, numbers, underscores, and hyphens", l:qflist[0]['text'])
   call assert_equal(3, l:qflist[0]['lnum'])
   call assert_equal(11, l:qflist[0]['col'])
   cclose
@@ -1114,6 +1114,14 @@ endf
 
 fun! Test_CT_supports_only_neovim_italics()
   call s:assert_build('test92')
+endf
+
+fun! Test_CT_short_name_with_hyphens()
+  call s:assert_build('test-93')
+endf
+
+fun! Test_CT_bold_and_italic_are_valid_highlight_group_names()
+  call s:assert_build('test94')
 endf
 
 

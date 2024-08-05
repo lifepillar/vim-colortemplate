@@ -64,4 +64,6 @@ Underlined    /0     omit omit    underline
 CursorIM      /0     omit omit
 ToolbarLine   /0     omit omit    reverse
 ToolbarButton /0     omit omit    bold,reverse
+debugBreakpoint/0    omit omit    reverse
+debugPC       /0     omit omit    reverse
 ; }}}

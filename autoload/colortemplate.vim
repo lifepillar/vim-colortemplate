@@ -2368,7 +2368,7 @@ fun! s:print_header(bufnr)
   endif
   call s:put(a:bufnr,           '" License:      ' . s:license())
   if s:getopt('timestamp')
-    call s:put(a:bufnr,         '" Last Updated: ' . strftime("%c"))
+    call s:put(a:bufnr,         '" Last Change:  ' . strftime(get(g:, 'colortemplate_date_format', '%Y %b %d')))
   endif
   if s:getopt('creator')
     call s:put(a:bufnr,         '')

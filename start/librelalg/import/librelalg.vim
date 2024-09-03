@@ -142,6 +142,16 @@ def Values(t: Tuple, attrs: AttrSet): list<any>
   return values
 enddef
 
+if has("patch-9.1.0547")
+  def NumArgs(Fn: func): number
+    return get(Fn, "arity").required
+  enddef
+else
+  def NumArgs(Fn: func): number
+    return len(split(matchstr(typename(Fn), '([^)]\+)'), ','))
+  enddef
+endif
+
 # Implement currying with a twist: if the last argument is a function,
 # put it at the beginning. This trick allows the following syntaxes to be
 # equivalent:
@@ -152,7 +162,8 @@ enddef
 #
 # besides, of course, allowing partial application.
 def Curry(Fn: func, ...values: list<any>): func
-  const n = get(Fn, "arity").required
+  # const n = get(Fn, "arity").required
+  const n = NumArgs(Fn)
 
   return (...args: list<any>) => {
     const totalArgs = values + args

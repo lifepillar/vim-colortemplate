@@ -9,7 +9,7 @@ hi clear
 let g:colors_name = 'test59'
 
 let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
-let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')
+let s:italics = has('gui_running') || (&t_ZH != '' && &t_ZH != '[7m' && !has('win32'))
 
 if s:t_Co >= 256
   hi Normal ctermfg=255 ctermbg=16 cterm=italic

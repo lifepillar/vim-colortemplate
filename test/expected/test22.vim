@@ -9,7 +9,7 @@ hi clear
 let g:colors_name = 'test22'
 
 let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
-let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')
+let s:italics = has('gui_running') || (&t_ZH != '' && &t_ZH != '[7m' && !has('win32'))
 
 hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
 hi ColorColumn guifg=fg guibg=NONE guisp=#ffffff gui=bold,italic,nocombine,standout,undercurl,underline cterm=bold,inverse,italic,nocombine,standout,underline

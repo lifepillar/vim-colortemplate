@@ -2406,11 +2406,13 @@ fun! s:print_header(bufnr)
     if s:supports_only_neovim()
       let l:itcheck =  printf("let s:italics = get(g:, '%s_italics', 1)", s:info['optionprefix'])
     else
-      let l:itcheck =  "let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')"
+      let l:itcheck = "let s:italics = has('gui_running')"
 
       if s:supports_neovim()
-        let l:itcheck .= " || has('nvim')"
+        let l:itcheck ..= " || has('nvim')"
       endif
+
+      let l:itcheck ..= " || (&t_ZH != '' && &t_ZH != '[7m' && !has('win32'))"
     endif
 
     call s:put(a:bufnr, l:itcheck)

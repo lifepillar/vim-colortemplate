@@ -9,7 +9,7 @@ hi clear
 let g:colors_name = 'test94'
 
 let s:t_Co = has('gui_running') ? -1 : (&t_Co ?? 0)
-let s:italics = (&t_ZH != '' && &t_ZH != '[7m') || has('gui_running')
+let s:italics = has('gui_running') || (&t_ZH != '' && &t_ZH != '[7m' && !has('win32'))
 
 hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
 hi Comment guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE

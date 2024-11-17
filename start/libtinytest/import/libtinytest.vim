@@ -188,6 +188,18 @@ export def AssertFails(F: func(), expectedError: string, msg = '')
   endtry
 enddef
 
+export def Benchmark(F: func(), nRepeat = 1): float
+  var start_time = reltime()
+  var i = 0
+
+  while i < nRepeat
+    F()
+    i += 1
+  endwhile
+
+  return reltimefloat(reltime(start_time)) / nRepeat
+enddef
+
 export def Run(pattern: string = ''): bool
   if dryrun
     return true

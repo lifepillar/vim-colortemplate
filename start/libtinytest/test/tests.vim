@@ -50,5 +50,16 @@ def Test_TT_AssertFailsNestedLambda()
 
 enddef
 
+def Test_TT_Benchmark()
+  def Measure(): float
+    return 1000 * tt.Benchmark(() => {
+      sleep 1m
+      }, 10)
+  enddef
+
+  assert_true(Measure() > 0.7)
+  assert_false(Measure() > 1.3)
+enddef
+
 
 tt.Run('_TT_')

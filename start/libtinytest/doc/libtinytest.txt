@@ -1,4 +1,4 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2024 Feb 05
+*libtinytest.txt*	For Vim version 9.0	Last change: 2024 Nov 17
 
 Note: Vim 9.0.1501 or later is recommended.
 
@@ -139,6 +139,15 @@ AssertFails({func}, {errmsg}[, {msg}])	*libtinytest.AssertFails()*
 		AssertFails(() => {
 		    throw 'This is a silly error'
 		}, 'fatal')
+<
+Benchmark({func}[, {repeat}])		*libtinytest.Benchmark()*
+		Measure the time needed to run {func}, in seconds. If {repeat}
+		is omitted, {func} is executed once, otherwise the average
+		over {repeat} executions of the function is returned.
+>
+		assert_true(Benchmark(() => {
+		              sleep 1m
+		            }, 10) > 0.9)
 <
 Import({path})				*libtinytest.Import()*
 		Import tests from {path}.

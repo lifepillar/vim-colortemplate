@@ -1,4 +1,4 @@
-*libreactive.txt*	For Vim version 9.1	Last change: 2024 Mar 31
+*libreactive.txt*	For Vim version 9.1	Last change: 2024 Dec 26
 
 Note: Vim 9.1 or later is required.
 
@@ -805,13 +805,16 @@ CreateEffect({func})
 		must be a function with no parameters and no return value.
 
 					*libreactive.CreateMemo()*
-CreateMemo({func})
+CreateMemo({func}[, {pool}])
 		Create an effect that executes {func} and caches its result
 		into a property. The property is created by CreateMemo().
 		{func} must be a function with no parameters and an arbitrary
 		return value. The function's value is automatically
 		recomputed—and its result cached—whenever any property which
 		the function depends upon is updated.
+
+		If {pool} is provided, it must be a |List| of Properties. The
+		property created by this function is appended to {pool}.
 
 		Returns a reference to the property's Get() method.
 

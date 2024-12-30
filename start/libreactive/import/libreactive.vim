@@ -133,6 +133,10 @@ export class Property implements IProperty
   var _effects: list<Effect> = []
 
   def new(this.value = v:none, pool: list<IProperty> = null_list)
+    this.Init(pool)
+  enddef
+
+  def Init(pool: list<IProperty>)
     if pool != null
       pool->add(this)
     endif

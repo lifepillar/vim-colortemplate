@@ -1,9 +1,9 @@
-g:libreactive_queue_size	libreactive.txt	/*g:libreactive_queue_size*
 libreactive-api	libreactive.txt	/*libreactive-api*
 libreactive-basics	libreactive.txt	/*libreactive-basics*
 libreactive-caching	libreactive.txt	/*libreactive-caching*
 libreactive-effects	libreactive.txt	/*libreactive-effects*
 libreactive-examples	libreactive.txt	/*libreactive-examples*
+libreactive-nested-effects	libreactive.txt	/*libreactive-nested-effects*
 libreactive-options	libreactive.txt	/*libreactive-options*
 libreactive-pools	libreactive.txt	/*libreactive-pools*
 libreactive-tips	libreactive.txt	/*libreactive-tips*
@@ -14,4 +14,6 @@ libreactive.CreateEffect()	libreactive.txt	/*libreactive.CreateEffect()*
 libreactive.CreateMemo()	libreactive.txt	/*libreactive.CreateMemo()*
 libreactive.Property()	libreactive.txt	/*libreactive.Property()*
 libreactive.Transaction()	libreactive.txt	/*libreactive.Transaction()*
+libreactive.debug_level	libreactive.txt	/*libreactive.debug_level*
+libreactive.queue_size	libreactive.txt	/*libreactive.queue_size*
 libreactive.txt	libreactive.txt	/*libreactive.txt*

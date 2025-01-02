@@ -1,4 +1,4 @@
-*libreactive.txt*	For Vim version 9.1	Last change: 2024 Dec 26
+*libreactive.txt*	For Vim version 9.1	Last change: 2025 Jan 02
 
 Note: Vim 9.1 or later is required.
 
@@ -163,7 +163,7 @@ So, the code above will actually run:
 	result = B.Get() # result == 2
 <
 One should be careful not to create cycles of effects. The library implements
-a heuristic to detect infinite recursion (see |g:libreactive_queue_size|).
+a heuristic to detect infinite recursion (see |libreactive.queue_size|).
 This trivial example will fail:
 >
 	var p = react.Property.new(0)
@@ -265,6 +265,39 @@ Effect 2 is executed twice and the final result is 2.
 If you are now wondering whether two properties can track each other so that
 when one changes the other is automatically updated, the answer is they can:
 see |libreactive-tips| (or, better, try doing that yourself!).
+
+						*libreactive-nested-effects*
+
+Effects by default can be nested—that is, an effect may create another effect
+or call a function or method that does it.
+
+Nested effects must be managed carefully, because they may result in an
+uncontrolled growth of function calls or even infinite loops. If effect E1
+calls a function that creates an effect E2 then every time E1 is executed
+a new instance of E2 is created. So, each time a dependency of E2 is updated,
+E2 is executed many times, one for each copy that has been created by E1. This
+may not be what one wants.
+
+Forbidding nested effects, however, may be limiting in some circumstances. For
+instance, this class creates an effect every time it is instantiated:
+>
+	class Foo
+	  var p: react.Property
+
+	  def new(this.p)
+	    react.CreateEffect(() => {
+	      echo $'Instance has value {this.p.Get()}'
+	    })
+	  enddef
+	endclass
+<
+In this case, it is expected for the effect created by `new()` to be called
+once for each instance. If nesting were not allowed it would not be possible
+to create instances of `Foo` within the scope of another effect.
+
+During development or for debugging purposes it may be useful to know if and
+when nested effects are created. You may set |libreactive.debug| to |true| to
+log such information into the message history.
 
 ==============================================================================
 3. Caching computations				*libreactive-caching*
@@ -593,9 +626,6 @@ limited to the two techniques described above. Be creative!
 ==============================================================================
 6. Tips and tricks				*libreactive-tips*
 
-- Effects and/or memos cannot be nested: that will result in a runtime error.
-  Note that |libreactive.CreateMemo()| creates an effect, too.
-
 - Properties may contain collections such as lists or dictionaries. Some care
   is needed to manipulate them, though, because such values are returned by
   reference by `Property.Get()`. Effects by default are triggered only if the
@@ -804,6 +834,10 @@ CreateEffect({func})
 		Create a new effect running {func} and execute it once. {func}
 		must be a function with no parameters and no return value.
 
+		Effects by default cannot be nested: that results in a runtime
+		error. To allow nested effects, set
+		|libreactive.nested_effects| to |true|.
+
 					*libreactive.CreateMemo()*
 CreateMemo({func}[, {pool}])
 		Create an effect that executes {func} and caches its result
@@ -827,14 +861,28 @@ Transaction({func})
 		Note: transactions may be nested.
 
 ==============================================================================
-8. Options					*libreactive-options*
+8. Options				*libreactive-options*
 
-					*g:libreactive_queue_size*
+For each of the following script variables, a global setting of the form
+`g:libreactive_<variable>` can also be defined. Script variables can be set
+anywhere in your scripts. Global variables have an effect only if they are
+defined before sourcing the library.
+
+					*libreactive.debug_level*
+
+Set the debug level:
+
+  - `0`: no logging;
+  - `1`: echo and log debugging information to the |message-history|.
+>
+	libreactive.debug_level = 0
+<
+					*libreactive.queue_size*
 
 The maximum size of the internal effects' queue. This value should be
 increased only if libreactive emits false positive errors about the recursion
 limit being exceeded. (But then, how many effects do your properties have?!)
 >
-	g:libreactive_queue_size = 10000
+	libreactive.queue_size = 10000
 <
  vim:tw=78:ts=8:noet:ft=help:norl:

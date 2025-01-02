@@ -1,15 +1,22 @@
 vim9script
 
+# Settings {{{
+export var debug_level = get(g:, 'libreactive_debug_level',     0)
+export var queue_size  = get(g:, 'libreactive_queue_size',  10000)
+# }}}
+
 # Helper functions {{{
 def NotIn(v: any, items: list<any>): bool
   return indexof(items, (_, u) => u is v) == -1
 enddef
 
 def RemoveFrom(v: any, items: list<any>)
-  const i = indexof(items, (_, e) => e is v)
+  var i = indexof(items, (_, e) => e is v)
+
   if i == -1
     return
   endif
+
   items->remove(i)
 enddef
 # }}}
@@ -38,6 +45,7 @@ class Effect
     var prevActive = gActiveEffect
     gActiveEffect = this
     this.ClearDependencies()
+
     Begin()
     try
       this.Fn()
@@ -63,7 +71,7 @@ class EffectsQueue
   var _q: list<Effect> = []
   var _start: number = 0
 
-  static var max_size = get(g:, 'libreactive_queue_size', 10000)
+  static var max_size = queue_size
 
   def Items(): list<Effect>
     return this._q[this._start : ]
@@ -159,11 +167,13 @@ export class Property implements IProperty
     this.value = value
 
     Begin()
+
     for effect in this._effects
       if effect->NotIn(gQueue.Items())
         gQueue.Push(effect)
       endif
     endfor
+
     Commit()
   enddef
 
@@ -187,11 +197,12 @@ endclass
 
 # Functions {{{
 export def CreateEffect(Fn: func())
-  if gActiveEffect != null
-    throw 'Nested effects detected: creating an effect within another effect is not allowed.'
-  endif
-
   var runningEffect = Effect.new(Fn)
+
+  if gActiveEffect != null && debug_level > 0
+    echomsg '[libreactive] Nested effects detected. '
+    .. $'Active effect: {gActiveEffect.String()}. Inner effect: {runningEffect.String()}'
+  endif
 
   runningEffect.Execute() # Necessary to bind to dependent signals
 enddef

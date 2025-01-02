@@ -3,10 +3,24 @@ vim9script
 import 'libtinytest.vim'           as tt
 import '../import/libreactive.vim' as react
 
+react.debug_level = 0
+react.queue_size  = 100
+
+class X
+  var result: number
+
+  def new(px: react.Property)
+    react.CreateEffect(() => {
+      this.result = px.Get()
+    })
+  enddef
+endclass
+
 def GetSet(value: any): list<func>
   var p = react.Property.new(value)
   return [p.Get, p.Set]
 enddef
+
 
 def Test_React_PropertyAttributes()
   var p0 = react.Property.new('x')
@@ -373,38 +387,114 @@ def Test_React_RecursiveEffectsAreDetected()
   }, 'recursive effects')
 enddef
 
-def Test_React_NestedCreateEffectIsAnError()
-  tt.AssertFails(() => {
+def Test_React_CreateEffectInClass()
+  var p0 = react.Property.new(4)
+  var p1 = react.Property.new(5)
+  var x0 = X.new(p0)
+  var x1 = X.new(p1)
+
+  p0.Set(7)
+  p1.Set(9)
+
+  assert_equal(7, p0.Get())
+  assert_equal(7, x0.result)
+  assert_equal(9, p1.Get())
+  assert_equal(9, x1.result)
+enddef
+
+def Test_React_NestedEffects()
+  var p0 = react.Property.new(0)
+  var result = 0
+
+  react.CreateEffect(() => { # E1
+    p0.Set(2024)
+
+    # E2
     react.CreateEffect(() => {
-      react.CreateEffect(() => {
-        })
+      result = p0.Get()
     })
-  }, 'Nested effects detected')
+  })
+
+  assert_equal(2024, result)
+
+  p0.Set(2025) # Triggers E2
+
+  assert_equal(2025, result)
+enddef
+
+def Test_React_NestedEffectsInfiniteLoop()
+  var p0 = react.Property.new(0)
+
+  # E1 creates and executes E2, which will trigger E1 again, causing another
+  # instance of E2 to be created, which will trigger E1 again, ad libitum.
+  tt.AssertFails(() => {
+    # E1
+    react.CreateEffect(() => {
+      var x = p0.Get()
+
+      # E2
+      react.CreateEffect(() => {
+        p0.Set(x + 1)
+      })
+    })
+  }, 'recursive effects', 'An infinite loop should have been detected')
+enddef
+
+def Test_React_NestedEffectUsingClass()
+  var p0 = react.Property.new(80)
+  var p1 = react.Property.new(91)
+
+  def Init(p: react.Property): X
+    var x: X
+
+    react.CreateEffect(() => {
+      x = X.new(p)
+    })
+
+    return x
+  enddef
+
+  var x0 = Init(p0)
+  var x1 = Init(p1)
+
+  assert_equal(80, x0.result)
+  assert_equal(91, x1.result)
+
+  p1.Set(99)
+  p0.Set(88)
+
+  assert_equal(88, x0.result)
+  assert_equal(99, x1.result)
 enddef
 
 def Test_React_ConditionalNestedEffect()
-  var flag = react.Property.new(false)
+  var flag   = react.Property.new(false)
   var result = 0
+  var count  = 0
 
   def F(): number
-    react.CreateEffect(() => {
+    react.CreateEffect(() => { # E1
+      ++result
+      flag.Set(false)
       })
-    return 2
+    return result + 2
   enddef
 
-  react.CreateEffect(() => {
+  react.CreateEffect(() => { # E2
+    ++count
     if flag.Get()
       result = F()
     endif
   })
 
-  # No error, because flag is false and no nested effect is created
-  assert_equal(0, result)
+  assert_equal(1, count)
+  assert_equal(0, result) # flag is false, F() was not called
 
+  flag.Set(true) # Triggers E2, which calls F() to create E1
 
-  tt.AssertFails(() => {
-    flag.Set(true) # Triggers the creation of a nested effect
-  }, 'Nested effects detected')
+  assert_equal(3, count) # E2 is also triggered by flag.Set() in E1
+  assert_false(flag.Get())
+  assert_equal(3, result)
 enddef
 
 type View = func(): list<string>

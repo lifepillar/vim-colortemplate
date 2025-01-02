@@ -296,8 +296,8 @@ once for each instance. If nesting were not allowed it would not be possible
 to create instances of `Foo` within the scope of another effect.
 
 During development or for debugging purposes it may be useful to know if and
-when nested effects are created. You may set |libreactive.debug| to |true| to
-log such information into the message history.
+when nested effects are created. You may set |libreactive.debug_level| to
+|true| to log such information into the message history.
 
 ==============================================================================
 3. Caching computations				*libreactive-caching*

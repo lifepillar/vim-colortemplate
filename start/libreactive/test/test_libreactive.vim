@@ -16,6 +16,22 @@ class X
   enddef
 endclass
 
+class ChildProperty extends react.Property
+  def new(value: string, pool: list<react.Property> = null_list)
+    this.value = value
+    super.Init(pool)
+  enddef
+
+  def Set(newValue: string, force = false)
+    if !force
+      return
+    endif
+
+    var concatenatedValue = this.value .. newValue
+    super.Set(concatenatedValue)
+  enddef
+endclass
+
 def GetSet(value: any): list<func>
   var p = react.Property.new(value)
   return [p.Get, p.Set]
@@ -28,7 +44,7 @@ def Test_React_PropertyAttributes()
   assert_equal('x',    p0.value)
   assert_equal('x',    p0.Get())
   assert_equal([],     p0.Effects())
-  assert_equal('x {}', p0.String())
+  assert_match('P\d\+ = x {}', p0.String())
 enddef
 
 def Test_React_SimpleProperty()
@@ -1102,6 +1118,38 @@ def Test_React_ListPropertyTransaction()
 
   assert_equal(['A', 'B', 'C', 'D', 'E', 'F'], l0.Get())
   assert_equal('ABCABCDEF', result)
+enddef
+
+
+
+def Test_React_SpecializedProperty()
+  var pool: list<react.Property> = []
+  var p0 = react.Property.new(25, pool)
+  var c0 = ChildProperty.new('x', pool)
+  var result = ''
+
+  assert_equal([p0, c0], pool)
+  assert_match('^P\d\+ = 25 {}', p0.String())
+  assert_match('^P\d\+ = x {}', c0.String())
+  assert_true(react.Property.count > 0)
+
+  var n = str2nr(matchstr(p0.String(), '\d\+'))
+
+  assert_equal($'P{n + 1} = x {{}}', c0.String())
+
+  react.CreateEffect(() => {
+    result = c0.Get()
+  })
+
+  c0.Set('y')
+
+  assert_equal('x', c0.Get())
+  assert_equal('x', result)
+
+  c0.Set('y', true)
+
+  assert_equal('xy', c0.Get())
+  assert_equal('xy', result)
 enddef
 
 tt.Run('_React_')

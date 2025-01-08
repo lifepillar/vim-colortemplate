@@ -33,25 +33,28 @@ endinterface
 class Effect
   var Fn: func()
   public var dependentProperties: list<IProperty> = []
+
   var _n = 0
   static var _count = 0
 
   def new(this.Fn)
-    this._n = Effect._count
-    Effect._count += 1
+    this._n = _count
+    _count += 1
   enddef
 
   def Execute()
-    var prevActive = gActiveEffect
-    gActiveEffect = this
+    var prevActive = sActiveEffect
+
+    sActiveEffect = this
     this.ClearDependencies()
 
     Begin()
+
     try
       this.Fn()
     finally
       Commit()
-      gActiveEffect = prevActive
+      sActiveEffect = prevActive
     endtry
   enddef
 
@@ -59,6 +62,7 @@ class Effect
     for property in this.dependentProperties
       property.RemoveEffect(this)
     endfor
+
     this.dependentProperties = []
   enddef
 
@@ -102,29 +106,29 @@ endclass
 # }}}
 
 # Global state {{{
-var gActiveEffect: Effect = null_object
-var gTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
-var gQueue = EffectsQueue.new()
+var sActiveEffect: Effect = null_object
+var sTransaction = 0 # 0 = not in a transaction, >=1 = inside transaction, >1 = in nested transaction
+var sQueue = EffectsQueue.new()
 # }}}
 
 # Transactions {{{
 export def Begin()
-  gTransaction += 1
+  sTransaction += 1
 enddef
 
 export def Commit()
-  if gTransaction > 1
-    --gTransaction
+  if sTransaction > 1
+    --sTransaction
     return
   endif
 
   try
-    while !gQueue.Empty()
-      gQueue.Pop().Execute()
+    while !sQueue.Empty()
+      sQueue.Pop().Execute()
     endwhile
   finally
-    gTransaction = 0
-    gQueue.Reset()
+    sTransaction = 0
+    sQueue.Reset()
   endtry
 enddef
 
@@ -140,6 +144,9 @@ export class Property implements IProperty
   var value: any = null
   var _effects: list<Effect> = []
 
+  var _n = 0
+  static var count = 0
+
   def new(this.value = v:none, pool: list<IProperty> = null_list)
     this.Init(pool)
   enddef
@@ -148,12 +155,15 @@ export class Property implements IProperty
     if pool != null
       pool->add(this)
     endif
+
+    this._n = count
+    count += 1
   enddef
 
   def Get(): any
-    if gActiveEffect != null && gActiveEffect->NotIn(this._effects)
-      this._effects->add(gActiveEffect)
-      gActiveEffect.dependentProperties->add(this)
+    if sActiveEffect != null && sActiveEffect->NotIn(this._effects)
+      this._effects->add(sActiveEffect)
+      sActiveEffect.dependentProperties->add(this)
     endif
 
     return this.value
@@ -169,8 +179,8 @@ export class Property implements IProperty
     Begin()
 
     for effect in this._effects
-      if effect->NotIn(gQueue.Items())
-        gQueue.Push(effect)
+      if effect->NotIn(sQueue.Items())
+        sQueue.Push(effect)
       endif
     endfor
 
@@ -190,7 +200,7 @@ export class Property implements IProperty
   enddef
 
   def String(): string
-    return printf('%s', this.value) .. ' {' .. printf('%s', join(this.Effects(), ', ')) .. '}'
+    return printf('P%d = %s', this._n, this.value) .. ' {' .. printf('%s', join(this.Effects(), ', ')) .. '}'
   enddef
 endclass
 # }}}
@@ -199,9 +209,9 @@ endclass
 export def CreateEffect(Fn: func())
   var runningEffect = Effect.new(Fn)
 
-  if gActiveEffect != null && debug_level > 0
+  if sActiveEffect != null && debug_level > 0
     echomsg '[libreactive] Nested effects detected. '
-    .. $'Active effect: {gActiveEffect.String()}. Inner effect: {runningEffect.String()}'
+      .. $'Active effect: {sActiveEffect.String()}. Inner effect: {runningEffect.String()}'
   endif
 
   runningEffect.Execute() # Necessary to bind to dependent signals

@@ -1,4 +1,4 @@
-*librelalg.txt*	For Vim version 9.0	Last change: 2024 Jun 9
+*librelalg.txt*	For Vim version 9.0	Last change: 2025 Jan 11
 
 This library is an implementation of Relational Algebra in Vim 9 script.
 
@@ -510,7 +510,7 @@ new{name}, {schema}, {keys} [, {typecheck}])
 		var S = Rel.new('S', {A: Int, B: Str}, ['A', 'B'])
 <
 		When a key has only one attribute, it may be denoted by
-		a |string|: 
+		a |string|:
 >
 		var S = Rel.new('S', {A: Int, B: Str}, 'A')
 <
@@ -654,17 +654,19 @@ Update({tuple} [, {upsert}])
 
 Functions ~
 						*librelalg.ForeignKey()*
-ForeignKey({relobj1}, {list}, {relobj2}[, {key}, {verb}])
+ForeignKey({relobj1}, {attrs}, {relobj2}[, {key}, {verb}])
 		Define a referential integrity constraint between the list of
-		attributes {list} in base relation {relobj1} and a key in base
-		relation {relobj2}. When {key} is omitted, the target key is
-		assumed to be {list}; otherwise, the list of attributes {key}
-		is the target key.
+		attributes {attrs} in base relation {relobj1} and a key in
+		base relation {relobj2}. When {key} is omitted, the target key
+		is assumed to be {attrs}; otherwise, the list of attributes
+		{key} is the target key. When {attrs} or {key} consist of
+		a single attribute, they can be passed as a string, too.
 
 		The string {verb} specifies a verb phrase to be read from
-		{relobj1} to {relobj2}. The verb phrase is used in error
-		messages when referential integrity is violated. See
-		|librelalg-tutorial| for an example.
+		{relobj1} to {relobj2}. The default verb phrase is
+		"references". The verb phrase is used in error messages when
+		referential integrity is violated. See |librelalg-tutorial|
+		for an example.
 
 ==============================================================================
 3. Relational Algebra				*librelalg-ra*
@@ -2266,6 +2268,74 @@ PartitionBy({rel}, {groupby})			*librelalg.PartitionBy()*
 <
 		Note that the result is obviously *not* a relation!
 
+Recursive({rel}, {recfunc}[, {unionall}])	*librelalg.Recursive()*
+		Perform a recursive query. This works similarly to SQL's WITH
+		RECURSIVE. {rel} is a relation. {recfunc} is a function
+		receiving a relation instance and returning a new relation.
+		The new relation must have the same schema as {rel}.
+		Continuations are accepted, too, everywhere a relation is
+		expected.
+
+		{recfunc} implements the recursive step of the query. Its
+		argument is interpreted as the reference to the query's
+		output.
+
+		{unionall} is a Boolean flag telling whether duplicate removal
+		should be skipped or not. The default is |false|, that is,
+		duplicate tuples are removed. If you know for sure that
+		duplicates cannot be generated, you may set {unionall} to
+		|true|: that will improve the performance of the query.
+
+		For example, consider the following SQL query:
+>
+		with recursive cnt(n) as (
+		  values(1)
+		  union all
+		  select n + 1 from cnt where n < 100
+		)
+		select n from cnt;
+<
+		That could be translated as follows:
+>
+		var result = Recursive(
+		  [{n: 1}],
+		  (R) => Transform(
+		    Select(R, (t) => t.n < 100), (t) => {
+		      return {n: t.n + 1}
+		    }),
+		  true
+		)
+<
+		As another example, the reflexive transitive closure of
+		a graph can be computed as follows:
+>
+		var Edge = [
+		  {From: 1, To: 2},
+		  {From: 2, To: 3},
+		  {From: 3, To: 2},
+		  {From: 5, To: 5},
+		]
+
+		var Path = (R) => NatJoin(
+		  Rename(R,    ['To'],   ['X']),
+		  Rename(Edge, ['From'], ['X'])
+		)->Project(['From', 'To'])
+
+		echo Table(Recursive(Edge, Path), '', ['From', 'To'])
+<
+		Output:
+>
+		─────────
+		 From To
+		─────────
+		    1  2
+		    1  3
+		    2  2
+		    2  3
+		    3  2
+		    3  3
+		    5  5
+<
 RelEq({rel1}, {rel2})				*librelalg.RelEq()*
 		Compare two base or derived relations for equality. Return
 		|true| if the relations are equal, that is, they are the same

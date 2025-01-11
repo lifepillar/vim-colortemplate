@@ -41,6 +41,7 @@ librelalg.PartitionBy()	librelalg.txt	/*librelalg.PartitionBy()*
 librelalg.Product()	librelalg.txt	/*librelalg.Product()*
 librelalg.Project()	librelalg.txt	/*librelalg.Project()*
 librelalg.Query()	librelalg.txt	/*librelalg.Query()*
+librelalg.Recursive()	librelalg.txt	/*librelalg.Recursive()*
 librelalg.Rel	librelalg.txt	/*librelalg.Rel*
 librelalg.RelEq()	librelalg.txt	/*librelalg.RelEq()*
 librelalg.Rename()	librelalg.txt	/*librelalg.Rename()*

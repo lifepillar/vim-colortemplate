@@ -1488,13 +1488,41 @@ export def RelEq(R: any, S: any): bool
   return sort(copy(rel1)) == sort(copy(rel2))
 enddef
 
-export def Recursive(
-    BaseRel: any,
-    RecursiveStep: func(any): any,
-    unionall = false
+def RecursiveWithoutDuplicates(
+    rel: Relation, RecursiveStep: func(Relation): any
     ): Relation
-  var result:  Relation = Query(BaseRel)
-  var working: Relation = result
+  var result  = rel
+  var working = result
+  var seen: dict<bool> = {}
+
+  for t in working
+    seen[String(t)] = true
+  endfor
+
+  while !empty(working)
+    var Intermediate = RecursiveStep(working)
+
+    working = []
+
+    From(Intermediate)((t) => {
+      var st = String(t)
+
+      if !seen->has_key(st)
+        add(working, t)
+        add(result, t)
+        seen[st] = true
+      endif
+    })
+  endwhile
+
+  return result
+enddef
+
+def RecursiveWithDuplicates(
+    rel: Relation, RecursiveStep: func(Relation): any
+    ): Relation
+  var result  = rel
+  var working = result
 
   while !empty(working)
     var Intermediate = RecursiveStep(working)
@@ -1511,11 +1539,19 @@ export def Recursive(
     endif
   endwhile
 
+  return result
+enddef
+
+export def Recursive(
+    BaseRel: any,
+    RecursiveStep: func(Relation): any,
+    unionall = false
+    ): Relation
   if unionall
-    return result
+    return RecursiveWithDuplicates(Query(BaseRel), RecursiveStep)
   endif
 
-  return result->sort()->uniq()
+  return RecursiveWithoutDuplicates(Query(BaseRel), RecursiveStep)
 enddef
 
 # Returns a textual representation of a relation

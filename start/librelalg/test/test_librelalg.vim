@@ -9,9 +9,10 @@ import 'librelalg.vim'   as ra
 import 'libtinytest.vim' as tt
 
 # Aliases {{{
-type Rel      = ra.Rel
-type Relation = ra.Relation
-type Tuple    = ra.Tuple
+type Continuation = ra.Continuation
+type Rel          = ra.Rel
+type Relation     = ra.Relation
+type Tuple        = ra.Tuple
 
 const AssertFails          = tt.AssertFails
 const AntiEquiJoin         = ra.AntiEquiJoin
@@ -2478,24 +2479,68 @@ def Test_RA_TransitiveClosure()
   assert_true(RelEq(expected, result))
 enddef
 
+def Test_RA_TransitiveClosureOfCyclicGraph()
+  var Node = Rel.new('Node', {NodeNo: Int}, ['NodeNo'])
+  var Edge = Rel.new('Edge', {From: Int, To: Int}, ['From', 'To'])
+
+  ForeignKey(Edge, 'From', Node, 'NodeNo')
+  ForeignKey(Edge, 'To',   Node, 'NodeNo')
+
+  Node.InsertMany([
+    {NodeNo: 1},
+    {NodeNo: 2},
+    {NodeNo: 3},
+    {NodeNo: 4},
+    {NodeNo: 5},
+    {NodeNo: 6},
+  ])
+  Edge.InsertMany([
+    {From: 1, To: 2},
+    {From: 2, To: 3},
+    {From: 3, To: 4},
+    {From: 4, To: 2},
+    {From: 5, To: 5},
+  ])
+
+  var expected = [
+    {From: 1, To: 2},
+    {From: 1, To: 3},
+    {From: 1, To: 4},
+    {From: 2, To: 2},
+    {From: 2, To: 3},
+    {From: 2, To: 4},
+    {From: 3, To: 2},
+    {From: 3, To: 3},
+    {From: 3, To: 4},
+    {From: 4, To: 2},
+    {From: 4, To: 3},
+    {From: 4, To: 4},
+    {From: 5, To: 5},
+  ]
+
+  var Path = (R: Relation): Continuation => NatJoin(
+    Rename(R,    ['To'],   ['X']),
+    Rename(Edge, ['From'], ['X'])
+  )->Project(['From', 'To'])
+
+  var result = Recursive(Edge, Path)
+
+  assert_true(RelEq(expected, result))
+enddef
+
 
 def Test_RA_RecursiveCount()
   var N        = 100
   var expected = mapnew(range(N + 1), (_, i) => {
-    return {Cnt: i}
+    return {n: i}
   })
 
-  def Increment(t: Tuple): Tuple
-    return {Cnt: t.Cnt + 1}
-  enddef
-
-  def RecursiveStep(R: Relation): Relation
-    return Transform(Select(R, (t) => t.Cnt < N), Increment)
-  enddef
-
   var result = Recursive(
-    [{Cnt: 0}],
-    RecursiveStep,
+    [{n: 0}],
+    (R) => Transform(
+    Select(R, (t) => t.n < N), (t) => {
+      return {n: t.n + 1}
+    }),
     true
   )
 

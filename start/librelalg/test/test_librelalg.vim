@@ -11,6 +11,7 @@ import 'libtinytest.vim' as tt
 # Aliases {{{
 type Rel      = ra.Rel
 type Relation = ra.Relation
+type Tuple    = ra.Tuple
 
 const AssertFails          = tt.AssertFails
 const AntiEquiJoin         = ra.AntiEquiJoin
@@ -2484,18 +2485,22 @@ def Test_RA_RecursiveCount()
     return {Cnt: i}
   })
 
+  def Increment(t: Tuple): Tuple
+    return {Cnt: t.Cnt + 1}
+  enddef
+
   def RecursiveStep(R: Relation): Relation
-    return Transform(Select(R, (t) => t.Cnt < N), (t) => {
-      return {Cnt: t.Cnt + 1}
-    })
+    return Transform(Select(R, (t) => t.Cnt < N), Increment)
   enddef
 
   var result = Recursive(
     [{Cnt: 0}],
-    RecursiveStep
+    RecursiveStep,
+    true
   )
 
   assert_true(RelEq(expected, result))
 enddef
+
 
 tt.Run('_RA_')

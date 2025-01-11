@@ -1488,16 +1488,34 @@ export def RelEq(R: any, S: any): bool
   return sort(copy(rel1)) == sort(copy(rel2))
 enddef
 
-export def Recursive(BaseRel: any, RecursiveStep: func(any): any): Relation
-  var result: Relation = Build(BaseRel)
-  var working: Relation = copy(result)
+export def Recursive(
+    BaseRel: any,
+    RecursiveStep: func(any): any,
+    unionall = false
+    ): Relation
+  var result:  Relation = Query(BaseRel)
+  var working: Relation = result
 
   while !empty(working)
-    working = Build(RecursiveStep(working))
-    result = Union(result, working)
+    var Intermediate = RecursiveStep(working)
+
+    if IsFunc(Intermediate)
+      working = []
+      Intermediate((t) => {
+        add(working, t)
+        add(result, t)
+      })
+    else
+      working = Instance(Intermediate)
+      result->extend(working)
+    endif
   endwhile
 
-  return result
+  if unionall
+    return result
+  endif
+
+  return result->sort()->uniq()
 enddef
 
 # Returns a textual representation of a relation

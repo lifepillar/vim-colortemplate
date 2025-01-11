@@ -9,7 +9,8 @@ import 'librelalg.vim'   as ra
 import 'libtinytest.vim' as tt
 
 # Aliases {{{
-type Rel = ra.Rel
+type Rel      = ra.Rel
+type Relation = ra.Relation
 
 const AssertFails          = tt.AssertFails
 const AntiEquiJoin         = ra.AntiEquiJoin
@@ -53,6 +54,7 @@ const Product              = ra.Product
 const Project              = ra.Project
 const Query                = ra.Query
 const RelEq                = ra.RelEq
+const Recursive            = ra.Recursive
 const Rename               = ra.Rename
 const Select               = ra.Select
 const SemiJoin             = ra.SemiJoin
@@ -2425,5 +2427,75 @@ END
   assert_equal(expected, split(Table(r, v:none, 'A'), "\n"))
 enddef
 
+def Test_RA_TransitiveClosure()
+  var Node = Rel.new('Node', {NodeNo: Int}, ['NodeNo'])
+  var Edge = Rel.new('Edge', {From: Int, To: Int}, ['From', 'To'])
+
+  ForeignKey(Edge, 'From', Node, 'NodeNo')
+  ForeignKey(Edge, 'To',   Node, 'NodeNo')
+
+  Node.InsertMany([
+    {NodeNo: 1},
+    {NodeNo: 2},
+    {NodeNo: 3},
+    {NodeNo: 4},
+    {NodeNo: 5},
+    {NodeNo: 6},
+  ])
+  Edge.InsertMany([
+    {From: 1, To: 2},
+    {From: 2, To: 3},
+    {From: 3, To: 4},
+    {From: 4, To: 5},
+    {From: 5, To: 6},
+  ])
+
+  var expected = [
+    {From: 1, To: 2},
+    {From: 2, To: 3},
+    {From: 3, To: 4},
+    {From: 4, To: 5},
+    {From: 5, To: 6},
+    {From: 1, To: 3},
+    {From: 2, To: 4},
+    {From: 3, To: 5},
+    {From: 4, To: 6},
+    {From: 1, To: 4},
+    {From: 2, To: 5},
+    {From: 3, To: 6},
+    {From: 1, To: 5},
+    {From: 2, To: 6},
+    {From: 1, To: 6},
+  ]
+
+  var Path = (R: any): any => {
+    return NatJoin(Rename(R, ['To'], ['_']), Rename(Edge, ['From'], ['_']))->Project(['From', 'To'])
+  }
+
+  var result = Recursive(Edge, Path)
+
+  assert_true(RelEq(expected, result))
+enddef
+
+
+def Test_RA_RecursiveCount()
+  var N        = 100
+  var expected = mapnew(range(N + 1), (_, i) => {
+    return {Cnt: i}
+  })
+
+  def RecursiveStep(R: Relation): Relation
+    return Transform(Select(R, (t) => t.Cnt < N), (t) => {
+      return {Cnt: t.Cnt + 1}
+    })
+  enddef
+
+  var result = Recursive(
+    [{Cnt: 0}],
+    RecursiveStep
+  )
+
+  assert_true(RelEq(expected, result))
+enddef
 
 tt.Run('_RA_')

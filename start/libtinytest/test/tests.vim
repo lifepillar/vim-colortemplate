@@ -2,6 +2,10 @@ vim9script
 
 import 'libtinytest.vim' as tt
 
+tt.Config.ok       = 'OK!'
+tt.Config.failed   = '💥'
+tt.Config.good     = '✔︎'
+
 const AssertFails = tt.AssertFails
 const Round       = tt.Round
 
@@ -12,15 +16,15 @@ enddef
 
 def Test_TT_AssertApprox()
   const testCases = [
-    [1.0, 1.00001, v:none, v:none],
-    [1.0, 1.0001, 0.0, 0.0001],
-    [1.0, 1.0001, 0.0001, 0.0],
-    [1.0, 2.0, 0.0, 1.0],
-    [10.0,  11.0, 0.1, v:none],
-    [10.0,  11.0, 0.05, 1.0],
-    [10.0,  11.0, 0.0, 1.0],
-    [0.6879, 0.68785, 0.0, 0.00005],
-    [0.6879, 0.68785, 0.0, 0.00005],
+    [1.0,    1.00001, v:none, v:none],
+    [1.0,    1.0001,  0.0,    0.0001],
+    [1.0,    1.0001,  0.0001, 0.0],
+    [1.0,    2.0,     0.0,    1.0],
+    [10.0,   11.0,    0.1,    v:none],
+    [10.0,   11.0,    0.05,   1.0],
+    [10.0,   11.0,    0.0,    1.0],
+    [0.6879, 0.68785, 0.0,    0.00005],
+    [0.6879, 0.68785, 0.0,    0.00005],
   ]
 
   for t in testCases
@@ -50,16 +54,23 @@ def Test_TT_AssertFailsNestedLambda()
 
 enddef
 
-def Test_TT_Benchmark()
-  def Measure(): float
-    return 1000 * tt.Benchmark(() => {
-      sleep 1m
-      }, 10)
-  enddef
-
-  assert_true(Measure() > 0.7)
-  assert_false(Measure() > 1.3)
+def Test_TT_MUST_FAIL()
+  assert_true(false)
 enddef
 
+def Test_TT_AssertBenchmark()
+  def F()
+    sleep 1m
+  enddef
+
+  tt.AssertBenchmark(F, 'F()', {
+    repeat: 10,
+    severity: {
+      critical: 0.0,
+      good:     1.0,
+      bad:      1.3,
+    }
+  })
+enddef
 
 tt.Run('_TT_')

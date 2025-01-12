@@ -1,6 +1,6 @@
 vim9script
 
-import 'libpath.vim' as path
+import 'libpath.vim'     as path
 import 'libtinytest.vim' as tt
 
 tt.Import(path.Join(expand('<sfile>:h'), 'tests.vim'))
@@ -19,6 +19,5 @@ tt.Teardown = () => {
 tt.Run('_TT_')
 
 if setup != tt.done || teardown != tt.done
-  echoerr $'Wrong setup/teardown counts: setup={setup}, teardown={teardown}'
+  echoerr $'Wrong setup/teardown counts: done={tt.done}, setup={setup}, teardown={teardown}'
 endif
-

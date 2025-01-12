@@ -539,16 +539,12 @@ enddef
 # }}}
 
 # Rel related helper functions {{{
-def AsRel(R: Rel): Rel
-  return R
-enddef
-
 def IsRel(R: any): bool
   return type(R) == v:t_object
 enddef
 
 def Instance(R: any): Relation
-  return type(R) == v:t_object ? AsRel(R).instance : R
+  return type(R) == v:t_object ? (<Rel>R).instance : R
 enddef
 
 def IsKeyOf(attrs: AttrList, R: Rel): bool
@@ -1169,7 +1165,7 @@ export def CoddDivide(Arg1: any, Arg2: any, divisorAttrs: AttrSet = []): Continu
 
   if empty(s)
     const K = IsRel(Arg2)
-      ? filter(keys(r[0]), (i, v) => index(AsRel(Arg2).attributes, v) == -1)
+      ? filter(keys(r[0]), (i, v) => index((<Rel>Arg2).attributes, v) == -1)
       : filter(keys(r[0]), (i, v) => index(divisorAttrs, v) == -1)
 
     return Project(r, K)
@@ -1566,8 +1562,8 @@ export def Table(
   var relname: string
 
   if IsRel(R)
-    rel = AsRel(R).instance
-    relname = empty(name) ? AsRel(R).name : name
+    rel = (<Rel>R).instance
+    relname = empty(name) ? (<Rel>R).name : name
   else
     rel = R
     relname = name

@@ -189,6 +189,7 @@ export const Bool    = v:t_bool
 export const Float   = v:t_float
 export const Func    = v:t_func
 export const List    = v:t_list
+export const Obj     = v:t_object
 
 const DomainStr = {
   [Int]:         'integer',
@@ -197,6 +198,7 @@ const DomainStr = {
   [Bool]:        'boolean',
   [Func]:        'funcref',
   [List]:        'list',
+  [Obj]:         'object',
   [v:t_dict]:    'dictionary',
   [v:t_none]:    'none',
   [v:t_job]:     'job',

@@ -51,6 +51,7 @@ const MinBy                = ra.MinBy
 const Minus                = ra.Minus
 const NatJoin              = ra.NatJoin
 const NotIn                = ra.NotIn
+const Obj                  = ra.Obj
 const PartitionBy          = ra.PartitionBy
 const Product              = ra.Product
 const Project              = ra.Project
@@ -2553,12 +2554,36 @@ def Test_RA_RecursiveCount()
     {
       repeat: 5,
       severity: {
-      '✓': 0.0,
-      '✗': 0.5,
+      'Ooh!': 0.0,
+      '✓':    0.4,
+      '✗':    0.5,
       }
     })
 
   assert_true(RelEq(expected, result))
+enddef
+
+
+class View
+  var name: string
+endclass
+
+def Test_RA_RelationWithObjects()
+  var ViewRel = Rel.new('View', {View: Obj, NextView: Obj}, [['View'], ['NextView']])
+  var v1 = View.new('v1')
+  var v2 = View.new('v2')
+  var v3 = View.new('v3')
+
+  ViewRel.InsertMany([
+    {View: v1, NextView: v2},
+    {View: v2, NextView: v3},
+    {View: v3, NextView: v1},
+  ])
+
+  var result = Query(Select(ViewRel, (t) => t.View is v2))
+
+  assert_equal(1, len(result))
+  assert_equal('v2', (<View>result[0].View).name)
 enddef
 
 

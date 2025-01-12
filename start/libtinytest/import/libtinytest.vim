@@ -15,29 +15,11 @@ export class Config
   public static var highlight = get(g:, 'libtinytest_highlight', true)
   public static var ok        = get(g:, 'libtinytest_ok',         '✔︎')
   public static var failed    = get(g:, 'libtinytest_failed',     '✘')
-  public static var good      = get(g:, 'libtinytest_good',       '+')
-  public static var critical  = get(g:, 'libtinytest_critical',   '!')
-  public static var bad       = get(g:, 'libtinytest_bad',        '-')
   public static var quiet     = get(g:, 'libtinytest_quiet',    false)
   public static var dryrun    = false
 
   static def Width(): number
-    return max([
-      strdisplaywidth(Config.ok),
-      strdisplaywidth(Config.failed),
-      strdisplaywidth(Config.good),
-      strdisplaywidth(Config.critical),
-      strdisplaywidth(Config.bad)
-    ])
-  enddef
-
-  static def SeveritySymbol(level: string): string
-    var symbols = {
-      'good':     good,
-      'critical': critical,
-      'bad':      bad,
-    }
-    return get(symbols, level, '')
+    return max([strdisplaywidth(Config.ok), strdisplaywidth(Config.failed)])
   enddef
 endclass
 
@@ -45,7 +27,7 @@ class BenchmarkResult
   var description:  string      # Benchmark description
   var measurements: list<float> # Measurements
   var loop:         number      # Number of iteration for each measurement
-  var severity:     dict<float> # Thresholds for severity
+  var severity:     dict<float> # Severity thresholds
 endclass
 
 class TestResult
@@ -131,7 +113,7 @@ def Measure(F: func(), repeat: number, loop: number): list<float>
     endwhile
 
     elapsed_time = reltimefloat(reltime(start_time)) / loop
-    measurements->add(1000.0 * elapsed_time)
+    measurements->add(1000.0 * elapsed_time) # ms
     ++i
   endwhile
 
@@ -148,7 +130,7 @@ def TuneBenchmark(F: func(), threshold = 200.0): number
       loop = i * j
       var measurements = Measure(F, 1, loop)
 
-      if loop * measurements[0] > threshold # ms
+      if loop * measurements[0] >= threshold # ms
         return loop
       endif
     endfor
@@ -199,23 +181,23 @@ def RunTest(test: string, name: string): TestResult
   return TestResult.new(name, elapsed_time, errors, vBenchmarks)
 enddef
 
-def FormatBenchmarkResult(benchmark_result: BenchmarkResult, width = Config.Width()): string
-  var severity  = 'none'
+def FormatBenchmarkResult(benchmark_result: BenchmarkResult): string
+  var severity  = ''
   var threshold = 0.0
   var N         = len(benchmark_result.measurements)
   var best      = Min(benchmark_result.measurements)
-  var stddev    = N > 1 ? '±' .. printf('%.4f', Stddev(benchmark_result.measurements)) : ''
+  var stddev    = N > 1 ? '±' .. printf('%.3f', Stddev(benchmark_result.measurements)) : ''
   var mean      = Mean(benchmark_result.measurements)
 
   for [key, value] in items(benchmark_result.severity)
-    if value < mean && value > threshold
+    if value < mean && value >= threshold
       severity  = key
       threshold = value
     endif
   endfor
 
-  return printf($'%-{width}S %s: %.4fms%s (best: %.4fms) [%d run%s, %d loop%s per run]',
-    Config.SeveritySymbol(severity),
+  return printf($'%s %s: %.3fms%s (best: %.3fms) [%d run%s, %d loop%s per run]',
+    severity,
     benchmark_result.description,
     mean,
     stddev,
@@ -313,9 +295,6 @@ def FinishTesting(test_results: list<TestResult>, elapsed_time: float)
   if Config.highlight
     matchadd('Identifier', Config.ok)
     matchadd('WarningMsg', Config.failed)
-    matchadd('Identifier', Config.good)
-    matchadd('Title',      Config.critical  .. '.\+: .\+$')
-    matchadd('WarningMsg', Config.bad  .. '.\+: .\+$')
     matchadd('WarningMsg', '\<FAILED\>')
     matchadd('WarningMsg', '^\d\+ tests\? failed')
     matchadd('Keyword',    '^\<line \d\+')
@@ -368,11 +347,7 @@ export def AssertBenchmark(F: func(), description = '', opts: dict<any> = {})
     description,
     measurements,
     nloop,
-    {
-      good:     severity->get('good',     0.0),
-      critical: severity->get('critical', 0.0),
-      bad:      severity->get('bad',      0.0),
-    }
+    opts->get('severity', {}),
   ))
 enddef
 

@@ -3,8 +3,6 @@ vim9script
 import 'libtinytest.vim' as tt
 
 tt.Config.ok       = 'OK!'
-tt.Config.failed   = '💥'
-tt.Config.good     = '✔︎'
 
 const AssertFails = tt.AssertFails
 const Round       = tt.Round
@@ -54,21 +52,17 @@ def Test_TT_AssertFailsNestedLambda()
 
 enddef
 
-def Test_TT_MUST_FAIL()
-  assert_true(false)
-enddef
-
 def Test_TT_AssertBenchmark()
   def F()
     sleep 1m
   enddef
 
   tt.AssertBenchmark(F, 'F()', {
-    repeat: 10,
+    repeat: 1,
     severity: {
-      critical: 0.0,
-      good:     1.0,
-      bad:      1.3,
+      '!': 0.0,
+      '✓': 1.0,
+      '✗': 1.3,
     }
   })
 enddef

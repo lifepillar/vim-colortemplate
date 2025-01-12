@@ -218,7 +218,7 @@ Run([{pattern}, {opts}])		*libtinytest.Run()*
 		matching {pattern}. For instance, to run only the tests
 		containing `ABC`, you may write:
 >
-		const success = Run('ABC')
+		var test_results = Run('ABC')
 <
 		This will run `Test_ABC_Foo()` and `TestABCBar()`, but not
 		`Test_XYZ()`.
@@ -227,6 +227,38 @@ Run([{pattern}, {opts}])		*libtinytest.Run()*
 		|libtinytest-options| for a specific run. For instance:
 >
 		Run('', {oksymbol: 'OK!'})
+<
+		Returns a list with test result objects. Each object has the
+		following fields:
+
+		- `test`: the name of the test.
+		- `elapsed`: the duration of the test in milliseconds.
+		- `errors`: a list of error strings produced by the test.
+		- `benchmarks`: a list of benchmarks results if benchmarks
+		  were run inside the test.
+
+		A benchmark result object has the following fields:
+
+		- `description`: the benchmark description.
+		- `measurements`: the list of measurements in milliseconds.
+		- `loop`: the number of iterations in each measurement.
+		- `severity`: the severity labels and thresholds.
+
+		See |libtinytest.AssertBenchmark()| for details.
+
+		For instance:
+>
+		var test_results = libtinytest.Run('', {quiet: true})
+
+		for result in test_results
+		  echo $'{result.test} took {result.elapsed}ms'
+
+		  if result.Ok()
+		    echo 'The test was successful'
+		  else
+		    echo 'There were errors:' result.errors
+		  endif
+		endfor
 <
 					*libtinytest-options*
 Options ~

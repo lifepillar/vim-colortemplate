@@ -190,12 +190,12 @@ def FormatBenchmarkResult(benchmark_result: BenchmarkResult): string
 
   for [key, value] in items(benchmark_result.severity)
     if value < mean && value >= threshold
-      severity  = key
+      severity  = key .. ' '
       threshold = value
     endif
   endfor
 
-  return printf($'%s %s: %.3fms%s (best: %.3fms) [%d run%s, %d loop%s per run]',
+  return printf($'%s%s: %.3fms%s (best: %.3fms) [%d run%s, %d loop%s per run]',
     severity,
     benchmark_result.description,
     mean,

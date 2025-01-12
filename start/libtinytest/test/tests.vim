@@ -55,7 +55,7 @@ def Test_TT_AssertBenchmark()
     sleep 1m
   enddef
 
-  tt.AssertBenchmark(F, 'F()', {
+  tt.AssertBenchmark(F, 'Sleep for 1ms', {
     repeat: 3,
     severity: {
       '!': 0.0,

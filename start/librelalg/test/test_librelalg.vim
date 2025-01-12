@@ -2534,15 +2534,29 @@ def Test_RA_RecursiveCount()
   var expected = mapnew(range(N + 1), (_, i) => {
     return {n: i}
   })
+  var result: Relation
 
-  var result = Recursive(
-    [{n: 0}],
-    (R) => Transform(
-    Select(R, (t) => t.n < N), (t) => {
-      return {n: t.n + 1}
-    }),
-    true
-  )
+  def RunQuery()
+    result = Recursive(
+      [{n: 0}],
+      (R) => Transform(
+      Select(R, (t) => t.n < N), (t) => {
+        return {n: t.n + 1}
+      }),
+      true
+    )
+  enddef
+
+  tt.AssertBenchmark(
+    RunQuery,
+    $'Recursive count from 0 to {N}',
+    {
+      repeat: 5,
+      severity: {
+      '✓': 0.0,
+      '✗': 0.5,
+      }
+    })
 
   assert_true(RelEq(expected, result))
 enddef

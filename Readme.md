@@ -26,7 +26,7 @@ packadd vim9asm
 - **libreactive:** a minimalist reactive library (beta level).
 - **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha
   level).
-- **libtinytest**: a minimal unit-testing library (beta level).
+- **libtinytest**: a minimal testing and benchmarking library (beta level).
 
 “alpha level” means that the library generally works, but there may be serious
 bugs and the interface is still WIP.

@@ -12,9 +12,9 @@ endif
 
 # User Settings {{{
 export var options = {
+  failedsymbol: get(g:, 'libtinytest_failedsymbol',  '✘'),
   highlight:    get(g:, 'libtinytest_highlight',    true),
   oksymbol:     get(g:, 'libtinytest_oksymbol',      '✔︎'),
-  failedsymbol: get(g:, 'libtinytest_failedsymbol',  '✘'),
   quiet:        get(g:, 'libtinytest_quiet',       false),
 }
 # }}}

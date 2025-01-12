@@ -56,7 +56,7 @@ def Test_TT_AssertBenchmark()
   enddef
 
   tt.AssertBenchmark(F, 'F()', {
-    repeat: 1,
+    repeat: 3,
     severity: {
       '!': 0.0,
       '✓': 1.0,

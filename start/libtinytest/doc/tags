@@ -1,4 +1,5 @@
-g:tinytest_highlight	libtinytest.txt	/*g:tinytest_highlight*
+libtinytest-functions	libtinytest.txt	/*libtinytest-functions*
+libtinytest-options	libtinytest.txt	/*libtinytest-options*
 libtinytest.AssertApprox()	libtinytest.txt	/*libtinytest.AssertApprox()*
 libtinytest.AssertFails()	libtinytest.txt	/*libtinytest.AssertFails()*
 libtinytest.Benchmark()	libtinytest.txt	/*libtinytest.Benchmark()*
@@ -9,4 +10,9 @@ libtinytest.Setup	libtinytest.txt	/*libtinytest.Setup*
 libtinytest.Teardown	libtinytest.txt	/*libtinytest.Teardown*
 libtinytest.done	libtinytest.txt	/*libtinytest.done*
 libtinytest.fail	libtinytest.txt	/*libtinytest.fail*
+libtinytest.options	libtinytest.txt	/*libtinytest.options*
+libtinytest.options.failedsymbol	libtinytest.txt	/*libtinytest.options.failedsymbol*
+libtinytest.options.highlight	libtinytest.txt	/*libtinytest.options.highlight*
+libtinytest.options.oksymbol	libtinytest.txt	/*libtinytest.options.oksymbol*
+libtinytest.options.quiet	libtinytest.txt	/*libtinytest.options.quiet*
 libtinytest.txt	libtinytest.txt	/*libtinytest.txt*

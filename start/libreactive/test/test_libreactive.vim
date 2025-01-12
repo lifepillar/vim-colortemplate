@@ -44,7 +44,7 @@ def Test_React_PropertyAttributes()
   assert_equal('x',    p0.value)
   assert_equal('x',    p0.Get())
   assert_equal([],     p0.Effects())
-  assert_match('P\d\+ = x {}', p0.String())
+  assert_match('P\d\+ = x {}', string(p0))
 enddef
 
 def Test_React_SimpleProperty()
@@ -748,7 +748,7 @@ def Test_React_PropertyString()
     property.Get()
   })
 
-  assert_match('value {E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+}', property.String())
+  assert_match('value {E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+}', string(property))
 enddef
 
 def Test_React_Pool()
@@ -1129,13 +1129,13 @@ def Test_React_SpecializedProperty()
   var result = ''
 
   assert_equal([p0, c0], pool)
-  assert_match('^P\d\+ = 25 {}', p0.String())
-  assert_match('^P\d\+ = x {}', c0.String())
+  assert_match('^P\d\+ = 25 {}', string(p0))
+  assert_match('^P\d\+ = x {}', string(c0))
   assert_true(react.Property.count > 0)
 
-  var n = str2nr(matchstr(p0.String(), '\d\+'))
+  var n = str2nr(matchstr(string(p0), '\d\+'))
 
-  assert_equal($'P{n + 1} = x {{}}', c0.String())
+  assert_equal($'P{n + 1} = x {{}}', string(c0))
 
   react.CreateEffect(() => {
     result = c0.Get()

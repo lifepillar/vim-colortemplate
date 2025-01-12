@@ -27,7 +27,6 @@ interface IProperty
   def Set(value: any, force: bool)
   def Clear()
   def RemoveEffect(effect: any)
-  def String(): string
 endinterface
 
 class Effect
@@ -66,7 +65,7 @@ class Effect
     this.dependentProperties = []
   enddef
 
-  def String(): string
+  def string(): string
     return $'E{this._n}:' .. substitute(string(this.Fn), 'function(''\(.\+\)'')', '\1', '')
   enddef
 endclass
@@ -77,12 +76,12 @@ class EffectsQueue
 
   static var max_size = queue_size
 
-  def Items(): list<Effect>
-    return this._q[this._start : ]
+  def empty(): bool
+    return this._start == len(this._q)
   enddef
 
-  def Empty(): bool
-    return this._start == len(this._q)
+  def Items(): list<Effect>
+    return this._q[this._start : ]
   enddef
 
   def Push(effect: Effect)
@@ -123,7 +122,7 @@ export def Commit()
   endif
 
   try
-    while !sQueue.Empty()
+    while !sQueue.empty()
       sQueue.Pop().Execute()
     endwhile
   finally
@@ -196,10 +195,10 @@ export class Property implements IProperty
   enddef
 
   def Effects(): list<string>
-    return mapnew(this._effects, (_, eff: Effect): string => eff.String())
+    return mapnew(this._effects, (_, eff: Effect): string => eff.string())
   enddef
 
-  def String(): string
+  def string(): string
     return printf('P%d = %s', this._n, this.value) .. ' {' .. printf('%s', join(this.Effects(), ', ')) .. '}'
   enddef
 endclass
@@ -211,7 +210,7 @@ export def CreateEffect(Fn: func())
 
   if sActiveEffect != null && debug_level > 0
     echomsg '[libreactive] Nested effects detected. '
-      .. $'Active effect: {sActiveEffect.String()}. Inner effect: {runningEffect.String()}'
+      .. $'Active effect: {sActiveEffect.string()}. Inner effect: {runningEffect.string()}'
   endif
 
   runningEffect.Execute() # Necessary to bind to dependent signals

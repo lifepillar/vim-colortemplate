@@ -15,13 +15,13 @@ name starts with `Test`. Typically, tests contain Vim assertions (see
 	  assert_equal(2, 1 + 1)
 	enddef
 
-	const success = tt.Run()
+	var test_results = tt.Run()
 <
-The output always appears in a new scratch buffer.
+The output appears in a new scratch buffer by default.
 
-Tests may also be used for benchmarks. See |libtinytest.AssertBenchmark()|.
+Tests may also be used for benchmarking. See |libtinytest.AssertBenchmark()|.
 
-The tests may be read from another file using |libtinytest.Import|. For
+The tests may be read from a different file using |libtinytest.Import|. For
 example, this is how you may import a file `tests.vim` in the same directory
 as the main test file:
 >
@@ -126,7 +126,7 @@ AssertApprox({expected}, {num}[, {rtol}, {atol}, {msg}])
 					*libtinytest.Benchmark()*
 AssertBenchmark({func}[, {desc}, {opts}])
 		Measure the time needed to run {func}, which is a function
-		with no arguments and no return value. {desc} is a brief
+		with no arguments and no return value. {desc} is a short
 		description of the benchmark, used to identify the benchmark
 		in the output.
 
@@ -140,9 +140,9 @@ AssertBenchmark({func}[, {desc}, {opts}])
 
 		- "loop": the number of times {func} should be executed in
 		  each measurement. Generally speaking, the faster the
-		  function to benchmark is the higher this parameter should
-		  be. When this is omitted or set to 0, the number of
-		  iterations is determined automatically.
+		  function to benchmark the higher this parameter should be.
+		  When this is omitted or set to 0, the number of iterations
+		  is determined automatically.
 
 		- "severity": a dictionary whose keys describe a benchmark
 		  outcome and whose values are floats denoting the minimum
@@ -234,7 +234,7 @@ Run([{pattern}, {opts}])		*libtinytest.Run()*
 		- `test`: the name of the test.
 		- `elapsed`: the duration of the test in milliseconds.
 		- `errors`: a list of error strings produced by the test.
-		- `benchmarks`: a list of benchmarks results if benchmarks
+		- `benchmarks`: a list of benchmark results if any benchmarks
 		  were run inside the test.
 
 		A benchmark result object has the following fields:
@@ -242,7 +242,7 @@ Run([{pattern}, {opts}])		*libtinytest.Run()*
 		- `description`: the benchmark description.
 		- `measurements`: the list of measurements in milliseconds.
 		- `loop`: the number of iterations in each measurement.
-		- `severity`: the severity labels and thresholds.
+		- `severity`: the severity labels and correponding thresholds.
 
 		See |libtinytest.AssertBenchmark()| for details.
 
@@ -264,11 +264,11 @@ Run([{pattern}, {opts}])		*libtinytest.Run()*
 Options ~
 
 For each of the following script variables a corresponding global variable
-called `g:libtinytest_<option>` can also be defined. For instance, the
+called `g:libtinytest_<option>` may also be defined. For instance, the
 highlight can be controlled by setting |libtinytest.options.highlight|, but
 also |g:libtinytest_highlight|. Setting the script variables is preferrable
-because their effective on the next test run: global variables, instead, must
-be set before libtinytest is loaded.
+because they become effective on the next test run: global variables, instead,
+must be defined before libtinytest is loaded.
 
 					*libtinytest.options.failedsymbol*
 String to label failed tests.

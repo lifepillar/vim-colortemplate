@@ -2,8 +2,6 @@ vim9script
 
 import 'libtinytest.vim' as tt
 
-tt.Config.ok       = 'OK!'
-
 const AssertFails = tt.AssertFails
 const Round       = tt.Round
 
@@ -63,8 +61,10 @@ def Test_TT_AssertBenchmark()
       '!': 0.0,
       '✓': 1.0,
       '✗': 1.3,
-    }
+    },
   })
 enddef
 
-tt.Run('_TT_')
+tt.Run('_TT_', {
+  oksymbol: 'OK!',
+})

@@ -10,19 +10,16 @@ if !&magic
   finish
 endif
 
+# User Settings {{{
+export var options = {
+  highlight:    get(g:, 'libtinytest_highlight',    true),
+  oksymbol:     get(g:, 'libtinytest_oksymbol',      '✔︎'),
+  failedsymbol: get(g:, 'libtinytest_failedsymbol',  '✘'),
+  quiet:        get(g:, 'libtinytest_quiet',       false),
+}
+# }}}
+#
 # Local state {{{
-export class Config
-  public static var highlight = get(g:, 'libtinytest_highlight', true)
-  public static var ok        = get(g:, 'libtinytest_ok',         '✔︎')
-  public static var failed    = get(g:, 'libtinytest_failed',     '✘')
-  public static var quiet     = get(g:, 'libtinytest_quiet',    false)
-  public static var dryrun    = false
-
-  static def Width(): number
-    return max([strdisplaywidth(Config.ok), strdisplaywidth(Config.failed)])
-  enddef
-endclass
-
 class BenchmarkResult
   var description:  string      # Benchmark description
   var measurements: list<float> # Measurements
@@ -41,7 +38,9 @@ class TestResult
   enddef
 endclass
 
-var vBenchmarks: list<BenchmarkResult> = []
+var Config:      dict<any>             = {}
+var Benchmarks:  list<BenchmarkResult> = []
+var dryrun:      bool                  = false
 
 export var done = 0
 export var fail = 0
@@ -153,7 +152,7 @@ def RunTest(test: string, name: string): TestResult
   var start_time = reltime()
 
   v:errors    = []
-  vBenchmarks = []
+  Benchmarks = []
 
   Setup()
 
@@ -169,7 +168,7 @@ def RunTest(test: string, name: string): TestResult
   var elapsed_time = 1000.0 * reltimefloat(reltime(start_time))
 
   if empty(v:errors)
-    return TestResult.new(name, elapsed_time, [], vBenchmarks)
+    return TestResult.new(name, elapsed_time, [], Benchmarks)
   endif
 
   fail += 1
@@ -178,7 +177,7 @@ def RunTest(test: string, name: string): TestResult
 
   v:errors = []
 
-  return TestResult.new(name, elapsed_time, errors, vBenchmarks)
+  return TestResult.new(name, elapsed_time, errors, Benchmarks)
 enddef
 
 def FormatBenchmarkResult(benchmark_result: BenchmarkResult): string
@@ -209,12 +208,12 @@ def FormatBenchmarkResult(benchmark_result: BenchmarkResult): string
   )
 enddef
 
-def FormatTestResult(test_result: TestResult, width = Config.Width()): string
+def FormatTestResult(test_result: TestResult): string
   var ok = test_result.Ok()
-  var symbol = ok ? Config.ok : Config.failed
+  var symbol = ok ? Config.oksymbol : Config.failedsymbol
   var failed = ok ? '' : ' FAILED'
 
-  return printf($'%-{width}S %s (%.01fms)%s',
+  return printf($'%-{Config.width}S %s (%.01fms)%s',
     symbol, test_result.test, test_result.elapsed, failed
   )
 enddef
@@ -267,7 +266,7 @@ def FormatTestResults(test_results: list<TestResult>, elapsed_time: float): list
   output->add(printf('%d test%s run in %.03fs', done, (done == 1 ? '' : 's'), elapsed_time))
 
   if succeeded
-    output->add(Config.ok .. ' ALL TESTS PASSED!')
+    output->add(Config.oksymbol .. ' ALL TESTS PASSED!')
   else
     output->add(printf('%d test%s failed', fail, (fail == 1 ? '' : 's')))
   endif
@@ -293,8 +292,8 @@ def FinishTesting(test_results: list<TestResult>, elapsed_time: float)
   append(0, FormatTestResults(test_results, elapsed_time))
 
   if Config.highlight
-    matchadd('Identifier', Config.ok)
-    matchadd('WarningMsg', Config.failed)
+    matchadd('Identifier', Config.oksymbol)
+    matchadd('WarningMsg', Config.failedsymbol)
     matchadd('WarningMsg', '\<FAILED\>')
     matchadd('WarningMsg', '^\d\+ tests\? failed')
     matchadd('Keyword',    '^\<line \d\+')
@@ -319,9 +318,9 @@ enddef
 
 # Public interface {{{
 export def Import(path: string)
-  Config.dryrun = true
+  dryrun = true
   execute 'source' path
-  Config.dryrun = false
+  dryrun = false
 enddef
 
 export def Round(num: float, digits: number): float
@@ -343,7 +342,7 @@ export def AssertBenchmark(F: func(), description = '', opts: dict<any> = {})
   var severity     = opts->get('severity', {})
   var measurements = Measure(F, repeat, nloop)
 
-  vBenchmarks->add(BenchmarkResult.new(
+  Benchmarks->add(BenchmarkResult.new(
     description,
     measurements,
     nloop,
@@ -362,17 +361,25 @@ export def AssertFails(F: func(), expectedError: string, msg = '')
   endtry
 enddef
 
-export def Run(pattern: string = ''): list<TestResult>
-  if Config.dryrun
+def Init(opts: dict<any>)
+  Config = options->extendnew(opts, 'force')
+  Config.width = max([
+    strdisplaywidth(Config.oksymbol), strdisplaywidth(Config.failedsymbol)
+  ])
+  done = 0
+  fail = 0
+enddef
+
+export def Run(pattern: string = '', opts: dict<any> = {}): list<TestResult>
+  Init(opts)
+
+  if dryrun
     return []
   endif
 
   var tests:        list<dict<string>> = FindTests(pattern)
   var test_results: list<TestResult>   = []
   var start_time = reltime()
-
-  done = 0
-  fail = 0
 
   for test in tests
     test_results->add(RunTest(test.test, test.name))

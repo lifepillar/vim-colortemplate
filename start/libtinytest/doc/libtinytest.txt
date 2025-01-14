@@ -1,10 +1,11 @@
-*libtinytest.txt*	For Vim version 9.0	Last change: 2025 Jan 12
+*libtinytest.txt*	For Vim version 9.1	Last change: 2025 Jan 14
 
-Note: Vim 9.0.1501 or later is recommended.
+Note: libtinytest can work with Vim 9.0 or later, but depending on the patch
+level, you may encounter issues. Vim 9.1.1013 or later is recommended.
 
-Tiny Test is a minimalist testing and benchmarking library for Vim 9 script
-developers. A test is just a function without arguments and return value whose
-name starts with `Test`. Typically, tests contain Vim assertions (see
+Tiny Test is a testing and benchmarking library for Vim 9 script developers.
+A test is just a function without arguments and return value whose name starts
+with `Test`. Typically, tests contain Vim assertions (see
 |assert-functions-details|). For instance:
 >
 	vim9script

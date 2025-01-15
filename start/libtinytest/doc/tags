@@ -1,8 +1,8 @@
 libtinytest-functions	libtinytest.txt	/*libtinytest-functions*
 libtinytest-options	libtinytest.txt	/*libtinytest-options*
 libtinytest.AssertApprox()	libtinytest.txt	/*libtinytest.AssertApprox()*
+libtinytest.AssertBenchmark()	libtinytest.txt	/*libtinytest.AssertBenchmark()*
 libtinytest.AssertFails()	libtinytest.txt	/*libtinytest.AssertFails()*
-libtinytest.Benchmark()	libtinytest.txt	/*libtinytest.Benchmark()*
 libtinytest.Import()	libtinytest.txt	/*libtinytest.Import()*
 libtinytest.Round()	libtinytest.txt	/*libtinytest.Round()*
 libtinytest.Run()	libtinytest.txt	/*libtinytest.Run()*

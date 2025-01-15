@@ -124,7 +124,7 @@ AssertApprox({expected}, {num}[, {rtol}, {atol}, {msg}])
 		AssertApprox(10.0, 11.0, 0.05)      # Fails
 		AssertApprox(10.0, 11.0, 0.05, 0.9) # Fails
 <
-					*libtinytest.Benchmark()*
+					*libtinytest.AssertBenchmark()*
 AssertBenchmark({func}[, {desc}, {opts}])
 		Measure the time needed to run {func}, which is a function
 		with no arguments and no return value. {desc} is a short

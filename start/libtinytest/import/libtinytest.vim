@@ -185,7 +185,7 @@ def FormatBenchmarkResult(benchmark_result: BenchmarkResult): string
   var threshold = 0.0
   var N         = len(benchmark_result.measurements)
   var best      = Min(benchmark_result.measurements)
-  var stddev    = N > 1 ? '±' .. printf('%.3f', Stddev(benchmark_result.measurements)) : ''
+  var stddev    = N > 1 ? '±' .. printf('%.6f', Stddev(benchmark_result.measurements)) : ''
   var mean      = Mean(benchmark_result.measurements)
 
   for [key, value] in items(benchmark_result.severity)
@@ -195,7 +195,7 @@ def FormatBenchmarkResult(benchmark_result: BenchmarkResult): string
     endif
   endfor
 
-  return printf($'%s%s: %.3fms%s (best: %.3fms) [%d run%s, %d loop%s per run]',
+  return printf($'%s%s: %.6fms%s (best: %.6fms) [%d run%s, %d loop%s per run]',
     severity,
     benchmark_result.description,
     mean,

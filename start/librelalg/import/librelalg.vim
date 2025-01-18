@@ -5,7 +5,7 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
-# Type Aliases {{{
+# Types {{{
 export type Attr            = string
 export type Domain          = number # v:t_number, v:t_string, etc.
 export type Schema          = dict<Domain> # Map from Attr to Domain
@@ -13,15 +13,16 @@ export type AttrSet         = list<Attr> # When the order does not matter
 export type AttrList        = list<Attr> # When the order matters
 export type Tuple           = dict<any>
 export type Relation        = list<Tuple>
-export type Constraint      = func(Tuple): void # Raises if the constraint fails
+
+export type Constraint      = func(Tuple): bool
 export type Consumer        = func(Tuple): void
 export type Continuation    = func(Consumer): void
 export type UnaryPredicate  = func(Tuple): bool
 export type BinaryPredicate = func(Tuple, Tuple): bool
 # }}}
 
-# Helper functions {{{
-# string() turns 'A' into a string of length 3, with quotes. We do not want that.
+# Helper Functions {{{
+# string() turns 'A' into a string of length 3, with quotes. Use this if you don't want that.
 def String(value: any): string
   return type(value) == v:t_string ? value : string(value)
 enddef
@@ -32,12 +33,12 @@ def ListStr(items: list<any>): string
 enddef
 
 def TupleStr(t: Tuple, attrs: AttrList = keys(t)): string
-  const stringified = mapnew(attrs, (_, a) => $'{a}: {String(t[a])}')
+  const stringified = mapnew(attrs, (_, a) => $'{a}: {string(t[a])}')
   return '{' .. join(stringified, ', ') .. '}'
 enddef
 
 def SchemaStr(schema: Schema): string
-  const stringified = mapnew(schema, (a, d) => $'{a}: {DomainName(d)}')
+  const stringified = mapnew(schema, (attr, dom) => $'{attr}: {DomainName(dom)}')
   return '{' .. join(values(stringified), ', ') .. '}'
 enddef
 
@@ -211,6 +212,14 @@ def DomainName(domain: Domain): string
 enddef
 # }}}
 
+# Error Messages {{{
+var E000 = 'At least one key must be specified for relation %s.'
+var E001 = 'Expected a tuple on schema %s: got %s instead.'
+var E002 = 'Key %s already defined in relation %s.'
+var E003 = '%s is not an attribute of relation %s.'
+var E004 = 'Duplicate key: %s already exists in relation %s.'
+# }}}
+
 # Indexes {{{
 export const KEY_NOT_FOUND: Tuple = {}
 
@@ -267,31 +276,34 @@ endclass
 
 # Relations {{{
 export class Rel
-  var name:          string
-  var schema:        Schema
-  var keys:          list<AttrList>
-  var instance:      list<Tuple> = []
-  var attributes:    AttrSet
-  var keyAttributes: AttrSet
-  var descriptors:   AttrSet
+  var name:               string
+  var schema:             Schema
+  var keys:               list<AttrList>
+  var attributes:         AttrList
+  var key_attributes:     AttrList
+  var descriptors:        AttrList
+  var instance:           Relation         = []
+  var insert_constraints: list<Constraint> = []
+  var delete_constraints: list<Constraint> = []
+  var update_constraints: list<Constraint> = []
 
-  var _indexes:      dict<UniqueIndex> = {}
-  var _constraints:  dict<list<Constraint>> = {'I': [], 'U': [], 'D': []}
+
+  var _key_indexes: dict<UniqueIndex> = {}
 
   def new(this.name, this.schema, relKeys: any, checkType = true)
     if empty(relKeys)
-      throw $'No key specified for relation {this.name}'
+      throw printf(E000, this.name)
     endif
 
     if checkType
       this.EnableTypeChecking_()
     endif
 
-    const keys_: list<AttrList> = ListifyKeys(relKeys)
+    var keys_: list<AttrList> = ListifyKeys(relKeys)
 
-    this.attributes    = keys(this.schema)->sort()
-    this.keyAttributes = flattennew(keys_)->sort()->uniq()
-    this.descriptors   = filter(copy(this.attributes), (_, v) => index(this.keyAttributes, v) == -1)
+    this.attributes     = keys(this.schema)->sort()
+    this.key_attributes = flattennew(keys_)->sort()->uniq()
+    this.descriptors    = filter(copy(this.attributes), (_, v) => index(this.key_attributes, v) == -1)
 
     for key in keys_
       this.AddKeyConstraint_(key)
@@ -300,28 +312,32 @@ export class Rel
 
   def AddKeyConstraint_(key: AttrList)
     if index(this.keys, key) != -1
-      throw $'Key {ListStr(key)} already defined in {this.name}'
+      throw printf(E002, ListStr(key), this.name)
     endif
 
     for attr in key
       if index(this.attributes, attr) == -1
-        throw $'{attr} is not an attribute of {this.name}'
+        throw printf(E003, attr, this.name)
       endif
     endfor
 
     this.keys->add(key)
+    this.CreateUniquenessConstraint_(key)
+  enddef
 
+  def CreateUniquenessConstraint_(key: AttrList)
     var keyIndex = UniqueIndex.new(key)
 
-    this._indexes[string(key)] = keyIndex
-
-    const KeyConstraint = (t: Tuple): void => {
-      if keyIndex.Search(Values(t, key)) isnot KEY_NOT_FOUND
-        throw $'Duplicate key value: {TupleStr(t, key)} already exists in {this.name}'
+    var IsUnique: UnaryPredicate = (t) => {
+      if keyIndex.Search(Values(t, key)) is KEY_NOT_FOUND
+        return true
       endif
+
+      return FailedCheck(printf(E004, TupleStr(t, key), this.name))
     }
 
-    this._constraints.I->add(KeyConstraint)
+    this._key_indexes[string(key)] = keyIndex
+    Check('Key uniqueness', IsUnique)->OnInsert(this)
   enddef
 
   def IsEmpty(): bool
@@ -329,17 +345,21 @@ export class Rel
   enddef
 
   def Index(key: any): UniqueIndex
-    return this._indexes[string(Listify(key))]
+    return this._key_indexes[string(Listify(key))]
   enddef
 
   def Insert(t: Tuple): any
-    for CheckConstraint in this._constraints.I
-      CheckConstraint(t)
+    for CheckConstraint in this.insert_constraints
+      if !CheckConstraint(t)
+        var errorMessage = join(failure_messages, "\r")
+        failure_messages = []
+        throw errorMessage
+      endif
     endfor
 
     this.instance->add(t)
 
-    for idx in values(this._indexes)
+    for idx in values(this._key_indexes)
       idx.Add(t)
     endfor
 
@@ -371,7 +391,7 @@ export class Rel
   def RollbackInsertion_(tuples: list<Tuple>)
     const DeletePred = (i: number, t: Tuple): bool => {
       if t->In(tuples)
-        for ind in values(this._indexes)
+        for ind in values(this._key_indexes)
           const keyValue = Values(t, ind.key)
           ind.Remove(keyValue)
         endfor
@@ -400,7 +420,7 @@ export class Rel
       return this
     endif
 
-    for attr in this.keyAttributes
+    for attr in this.key_attributes
       if t[attr] != oldt[attr]
         throw $'Updating key attributes not allowed: failed to replace {TupleStr(oldt)} with {TupleStr(t)} ({attr} is a key attribute)'
       endif
@@ -408,8 +428,12 @@ export class Rel
 
     # This may be tricky for some kind of constraints, as the old tuple is
     # still in the relation at this point. But for simple checks it should work.
-    for CheckConstraint in this._constraints.U
-      CheckConstraint(t)
+    for CheckConstraint in this.update_constraints
+      if !CheckConstraint(t)
+        var errorMessage = join(failure_messages, "\r")
+        failure_messages = []
+        throw errorMessage
+      endif
     endfor
 
     for attr in this.descriptors
@@ -422,11 +446,15 @@ export class Rel
   def Delete(Pred: func(Tuple): bool = (t) => true, atomic: bool = false): any
     const DeletePred = (i: number, t: Tuple): bool => {
       if Pred(t)
-        for CheckConstraint in this._constraints.D
-          CheckConstraint(t)
+        for CheckConstraint in this.delete_constraints
+          if !CheckConstraint(t)
+            var errorMessage = join(failure_messages, "\r")
+            failure_messages = []
+            throw errorMessage
+          endif
         endfor
 
-        for ind in values(this._indexes)
+        for ind in values(this._key_indexes)
           const keyValue = Values(t, ind.key)
           ind.Remove(keyValue)
         endfor
@@ -451,91 +479,121 @@ export class Rel
       throw $'{key} is not a key of {this.name}'
     endif
 
-    const ind = this._indexes[String(key)]
+    const ind = this._key_indexes[String(key)]
     return ind.Search(value)
   enddef
 
-  def Check(C: Constraint, opList: list<string> = ['I', 'U'])
-    for op in opList
-      if index(['I', 'U', 'D'], op) == -1
-        throw $"Expected one of 'I' (insert), 'U' (update), 'D' (deletion), got {op}"
-      endif
-
-      this._constraints[op]->add(C)
-    endfor
-  enddef
-
-
   def EnableTypeChecking_()
-    const TC: Constraint = (t: Tuple): void => {
-      const schema = this.schema
-
-      if sort(keys(t)) != this.attributes
-        throw $'Expected a tuple on schema {SchemaStr(schema)}: got {TupleStr(t)} instead'
+    var SameAttributes: UnaryPredicate = (t) => {
+      if sort(keys(t)) == this.attributes
+        return true
       endif
 
-      for [attr, domain] in items(schema)
-        const v = t[attr]
-
-        if type(v) != domain
-          const wrong    = DomainName(type(v))
-          const expected = DomainName(schema[attr])
-          throw $"Attribute {attr} is of type {expected}, but value '{v}' of type {wrong} was provided"
-        endif
-      endfor
+      return FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
     }
 
-    this.Check(TC, ['I', 'U'])
+    var CompatibleDomains: UnaryPredicate = (t) => {
+      for [attr, domain] in items(this.schema)
+        var v = t[attr]
+
+        if type(v) != domain
+          return FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
+        endif
+      endfor
+
+      return true
+    }
+
+    Check('Type checking', SameAttributes)->OnInsert(this)->OnUpdate(this)
+    Check('Type checking ', CompatibleDomains)->OnInsert(this)->OnUpdate(this)
   enddef
 endclass
 # }}}
 
 # Integrity constraints {{{
-export def ForeignKey(
-  Child:      Rel,
-  fkey:       any,
-  Parent:     Rel,
-  key:        any = null,
-  verbphrase: string = 'references'
-): void
-  const fkey_: AttrList = Listify(fkey)
-  const key_:  AttrList = key == null ? fkey_ : Listify(key)
+var failure_messages: list<string> = []
+
+export def FailedCheck(message: string): bool
+  failure_messages->add(message)
+
+  return false
+enddef
+
+export def Check(description: string, P: UnaryPredicate): Constraint
+  return (t): bool => {
+    if P(t)
+      return true
+    endif
+
+    return FailedCheck($'{description} failed for tuple {TupleStr(t)}.')
+  }
+enddef
+
+export def OnInsert(C: Constraint, R: Rel): Constraint
+  R.insert_constraints->add(C)
+  return C
+enddef
+
+export def OnUpdate(C: Constraint, R: Rel): Constraint
+  R.update_constraints->add(C)
+  return C
+enddef
+
+export def OnDelete(C: Constraint, R: Rel): Constraint
+  R.delete_constraints->add(C)
+  return C
+enddef
+
+export def ForeignKey(Child: Rel, fkey: any): list<any>
+  var fkey_: AttrList = Listify(fkey)
+
+  for attr in fkey_
+    if index(Child.attributes, attr) == -1
+      throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)}. {attr} is not an attribute of {Child.name}'
+    endif
+  endfor
+
+  return [Child, fkey_]
+enddef
+
+export def References(foreign_key: list<any>, Parent: Rel, key: any = null, verbphrase: string = 'references')
+  var Child = (<Rel>foreign_key[0])
+  var fkey_: AttrList = foreign_key[1]
+  var key_:  AttrList = key == null ? fkey_ : Listify(key)
 
   if len(fkey_) != len(key_)
     throw $'Foreign key size mismatch: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}'
   endif
 
-  for attr in fkey_
-    if index(Child.attributes, attr) == -1
-      throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {attr} is not an attribute of {Child.name}'
-    endif
-  endfor
-
   if index(Parent.keys, key_) == -1
     throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {ListStr(key_)} is not a key of {Parent.name}'
   endif
 
-  const fkStr = $'{Child.name} {verbphrase} {Parent.name}'
+  var fkStr = $'{Child.name} {verbphrase} {Parent.name}'
 
-  const FkConstraint = (t: dict<any>): void => {
-    if Parent.Lookup(key_, Values(t, fkey_)) is KEY_NOT_FOUND
-      throw $'{fkStr}: {TupleStr(t, fkey_)} is not present in {Parent.name}{ListStr(key_)}'
+  var FkConstraint: UnaryPredicate = (t) => {
+    if Parent.Lookup(key_, Values(t, fkey_)) isnot KEY_NOT_FOUND
+      return true
     endif
+
+    return FailedCheck($'{fkStr}: {TupleStr(t, fkey_)} not found in {Parent.name}{ListStr(key_)}')
   }
 
-  Child.Check(FkConstraint, ['I', 'U'])
+  Check('Referential integrity', FkConstraint)->OnInsert(Child)->OnUpdate(Child)
 
-  const FkPred = EquiJoinPred(fkey_, key_)
+  var FkPred = EquiJoinPred(fkey_, key_)
 
-  const DelConstraint = (t_p: dict<any>): void => {
+  var DelConstraint: UnaryPredicate = (t_p) => {
     for t_c in Child.instance
       if FkPred(t_c, t_p)
-        throw $'{fkStr}: cannot delete {TupleStr(t_p)} from {Parent.name} because it is referenced by {TupleStr(t_c)} in {Child.name}'
+        return FailedCheck($'{fkStr}: cannot delete {TupleStr(t_p)} from {Parent.name} because it is referenced by {TupleStr(t_c)} in {Child.name}')
       endif
     endfor
+
+    return true
   }
 
-  Parent.Check(DelConstraint, ['D'])
+  Check('Referential integrity', DelConstraint)->OnDelete(Parent)
 enddef
 # }}}
 # }}}

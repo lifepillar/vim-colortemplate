@@ -76,6 +76,7 @@ const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
 const Transform            = ra.Transform
+const Transaction          = ra.Transaction
 const Union                = ra.Union
 const Zip                  = ra.Zip
 # }}}
@@ -293,6 +294,19 @@ def Test_RA_TransactionalInsertMany()
   }, "Duplicate key: {A: 1, C: true} already exists in relation RR.")
 
   assert_equal(expected, RR.instance)
+enddef
+
+def Test_RA_InsertWithConstraint()
+  var R = Rel.new('R', {A: Int}, 'A')
+
+  Check('Max 3 tuples', (t) => len(R.instance) < 3)
+
+  R.Insert({A: 1})
+  R.Insert({A: 2})
+
+  AssertFails(() => {
+    R.Insert({A: 3})
+  }, 'Max 3 tuples failed')
 enddef
 
 def Test_RA_InsertManyDuplicateKey()
@@ -2612,6 +2626,22 @@ def Test_RA_BenchmarkInsert()
   tt.AssertBenchmark(I, 'Insert', {repeat: 5})
 enddef
 
+def Test_RA_Transaction()
+  var r0 = Rel.new('r0', {A: Int}, 'A')
+  var s0 = Rel.new('s0', {B: Int}, 'B')
+
+  Transaction(() => {
+    r0.Insert({A: 10})
+    s0.Insert({B: 10})
+    r0.Insert({A: 20})
+    s0.Insert({B: 30})
+    s0.Insert({B: 40})
+    r0.Delete((t) => t.A < 15)
+  })
+
+  assert_equal(1, len(r0.instance))
+  assert_equal(3, len(00.instance))
+enddef
 
 def Test_RA_CircularPath()
   var R = Rel.new('R', {Node: Int, Next: Int}, [['Node'], ['Next']])
@@ -2633,5 +2663,15 @@ def Test_RA_CircularPath()
   R.Update({Node: 1, Next: 3})
 enddef
 
+def Test_RA_T1()
+  var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
+  var i = 0
+  var I = () => {
+    r0.Insert({Node: i, Next: 2})
+    ++i
+  }
+  tt.AssertBenchmark(I, 'Insert', {repeat: 5})
+enddef
 
-tt.Run('_RA_')
+
+tt.Run('_RA_T1')

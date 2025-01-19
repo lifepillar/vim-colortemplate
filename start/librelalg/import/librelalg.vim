@@ -54,12 +54,11 @@ def IsFunc(X: any): bool
   return type(X) == v:t_func
 enddef
 
-# Item must be an attribute or a list of attributes
-def Listify(item: any): list<Attr>
+def Listify(item: any): list<Attr> # item: Attr | AttrList
   return type(item) == v:t_list ? item : [item]
 enddef
 
-def ListifyKeys(keys: any): list<AttrList>
+def ListifyKeys(keys: any): list<AttrList> # keys: Attr | AttrList | list<Attr | AttrList>
   if type(keys) == v:t_string
     return [[keys]]  # One single-attribute key
   endif
@@ -233,6 +232,11 @@ class UniqueIndex
 
   def Add(t: Tuple)
     const keyValues = string(Values(t, this.key))
+
+    if this._index->has_key(keyValues)
+      return
+    endif
+
     this._index[keyValues] = t
   enddef
 
@@ -242,6 +246,10 @@ class UniqueIndex
 
   def Search(keyValue: list<any>): Tuple
     return get(this._index, string(keyValue), KEY_NOT_FOUND)
+  enddef
+
+  def string(): string
+    return string(this._index)
   enddef
 endclass
 
@@ -274,19 +282,102 @@ class NonUniqueIndex
 endclass
 # }}}
 
-# Relations {{{
-export class Rel
+# Transactions {{{
+interface IRel
   var name:               string
   var schema:             Schema
   var keys:               list<AttrList>
   var attributes:         AttrList
   var key_attributes:     AttrList
   var descriptors:        AttrList
-  var instance:           Relation         = []
+  var instance:           Relation
+
+  def Instance(): Relation
+  def Commit()
+  def Rollback()
+  def CheckConstraints(): bool
+endinterface
+
+var sFailureMessages: list<string> = [] # Stores error messages when constraints fail
+var sTransaction:     number       = 0  # 0 = not in a transaction, 1 = inside transaction
+var sPendingRelations: list<IRel>  = [] # Relations modified during a transactions
+
+export def Messages(): list<string>
+  return sFailureMessages
+enddef
+
+def Log(rel: IRel)
+  if index(sPendingRelations, rel) == -1
+    sPendingRelations->add(rel)
+  endif
+enddef
+
+def Begin()
+  if sTransaction != 0
+    throw 'Transactions cannot be nested'
+  endif
+
+  sFailureMessages = []
+  sTransaction = 1
+enddef
+
+def Commit(throw = true): bool
+  if sTransaction != 1
+    throw 'Commit() without Begin()'
+  endif
+
+  var ok = true
+
+  for rel in sPendingRelations
+    ok = ok && rel.CheckConstraints()
+  endfor
+
+  if ok
+    for rel in sPendingRelations
+      rel.Commit()
+    endfor
+  else
+    for msg in sFailureMessages
+      echomsg msg
+    endfor
+    echomsg 'Commit failed. Rollback necessary.'
+
+    for rel in sPendingRelations
+      rel.Rollback()
+    endfor
+  endif
+
+  sPendingRelations = []
+  sTransaction      = 0
+
+  if throw && !ok
+    throw $'Transaction failed: {sFailureMessages[0]}. See `librelalg.Messages() for the full log.'
+  endif
+
+  return ok
+enddef
+
+export def Transaction(Body: func(), throw: bool = true): bool
+  Begin()
+  Body()
+  return Commit()
+enddef
+# }}}
+# Relations {{{
+export class Rel implements IRel
+  var name:               string
+  var schema:             Schema
+  var keys:               list<AttrList>
+  var attributes:         AttrList
+  var key_attributes:     AttrList
+  var descriptors:        AttrList
+  var instance:           Relation          = []
   var insert_constraints: list<Constraint> = []
   var delete_constraints: list<Constraint> = []
   var update_constraints: list<Constraint> = []
 
+  var _new_tuples:         list<Tuple>      = []
+  var _deleted_tuples:     list<Tuple>      = []
 
   var _key_indexes: dict<UniqueIndex> = {}
 
@@ -310,6 +401,10 @@ export class Rel
     endfor
   enddef
 
+  def Instance(): Relation
+    return this.instance
+  enddef
+
   def AddKeyConstraint_(key: AttrList)
     if index(this.keys, key) != -1
       throw printf(E002, ListStr(key), this.name)
@@ -329,7 +424,7 @@ export class Rel
     var keyIndex = UniqueIndex.new(key)
 
     var IsUnique: UnaryPredicate = (t) => {
-      if keyIndex.Search(Values(t, key)) is KEY_NOT_FOUND
+      if keyIndex.Search(Values(t, key)) is t
         return true
       endif
 
@@ -348,20 +443,76 @@ export class Rel
     return this._key_indexes[string(Listify(key))]
   enddef
 
-  def Insert(t: Tuple): any
-    for CheckConstraint in this.insert_constraints
-      if !CheckConstraint(t)
-        var errorMessage = join(failure_messages, "\r")
-        failure_messages = []
-        throw errorMessage
-      endif
-    endfor
-
+  def Insert_(t: Tuple)
     this.instance->add(t)
 
     for idx in values(this._key_indexes)
       idx.Add(t)
     endfor
+  enddef
+
+  def Delete_(t: Tuple)
+    var i = indexof(this.instance, (_, u) => u is t)
+
+    if i != -1
+      remove(this.instance, i)
+
+      for ind in values(this._key_indexes)
+        ind.Remove(Values(t, ind.key))
+      endfor
+    endif
+  enddef
+
+  def Commit()
+    this._new_tuples     = []
+    this._deleted_tuples = []
+  enddef
+
+  def Rollback()
+    for t in this._new_tuples
+      this.Delete_(t)
+    endfor
+
+    for t in this._deleted_tuples
+      this.Insert_(t)
+    endfor
+
+    this._new_tuples     = []
+    this._deleted_tuples = []
+  enddef
+
+  def CheckConstraints(): bool
+    var ok = true
+
+    for t in this._new_tuples
+      for C in this.insert_constraints
+        ok = ok && C(t)
+      endfor
+    endfor
+
+    for t in this._deleted_tuples
+      for C in this.delete_constraints
+        ok = ok && C(t)
+      endfor
+    endfor
+
+    return ok
+  enddef
+
+  def Insert(t: Tuple): any
+    var implicit_transaction = (sTransaction == 0)
+
+    if implicit_transaction
+      Begin()
+    endif
+
+    this._new_tuples->add(t)
+    this.Insert_(t)
+    Log(this)
+
+    if implicit_transaction
+      Commit()
+    endif
 
     return this
   enddef
@@ -430,8 +581,8 @@ export class Rel
     # still in the relation at this point. But for simple checks it should work.
     for CheckConstraint in this.update_constraints
       if !CheckConstraint(t)
-        var errorMessage = join(failure_messages, "\r")
-        failure_messages = []
+        var errorMessage = join(sFailureMessages, "\r")
+        sFailureMessages = []
         throw errorMessage
       endif
     endfor
@@ -448,8 +599,8 @@ export class Rel
       if Pred(t)
         for CheckConstraint in this.delete_constraints
           if !CheckConstraint(t)
-            var errorMessage = join(failure_messages, "\r")
-            failure_messages = []
+            var errorMessage = join(sFailureMessages, "\r")
+            sFailureMessages = []
             throw errorMessage
           endif
         endfor
@@ -511,10 +662,16 @@ endclass
 # }}}
 
 # Integrity constraints {{{
-var failure_messages: list<string> = []
+# for CheckConstraint in this.insert_constraints
+#   if !CheckConstraint(t)
+#     var errorMessage = join(sFailureMessages, "\r")
+#     sFailureMessages = []
+#     throw errorMessage
+#   endif
+# endfor
 
 export def FailedCheck(message: string): bool
-  failure_messages->add(message)
+  sFailureMessages->add(message)
 
   return false
 enddef

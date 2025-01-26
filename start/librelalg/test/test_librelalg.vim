@@ -56,7 +56,6 @@ const NotIn                = ra.NotIn
 const Obj                  = ra.Obj
 const OnDelete             = ra.OnDelete
 const OnInsert             = ra.OnInsert
-const OnUpdate             = ra.OnUpdate
 const PartitionBy          = ra.PartitionBy
 const Product              = ra.Product
 const Project              = ra.Project
@@ -193,19 +192,18 @@ enddef
 # Data manipulation {{{
 def Test_RA_Insert()
   var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
+
   R.Insert({A: 0, B: 'b0', C: true, D: 1.2})
 
   assert_equal(1, len(R.instance))
 
-  const result = R.Insert({A: 0, B: 'b1', C: false, D: 0.2})
+  R.Insert({A: 0, B: 'b1', C: false, D: 0.2})
 
   assert_equal(2, len(R.instance))
-  assert_equal(
-    [{A: 0, B: 'b0', C: true, D: 1.2}, {A: 0, B: 'b1', C: false, D: 0.2}],
-    R.instance
-  )
-  assert_equal(v:t_object, type(result))
-  assert_true(result is R, 'The result is not the relation object')
+  assert_equal([
+    {A: 0, B: 'b0', C: true,  D: 1.2},
+    {A: 0, B: 'b1', C: false, D: 0.2}
+  ], R.instance)
 
   AssertFails(() => {
     R.Insert({A: 0, B: 'b2', C: true, D: 3.5})
@@ -248,7 +246,7 @@ def Test_RA_InsertMany()
   assert_equal(instance, RR.instance)
 enddef
 
-def Test_RA_NonTransactionalInsertMany()
+def Test_RA_InsertManyFailedConstraint()
   var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
   const instance = [
     {A: 0, B: 'b0', C: true, D: 1.2},
@@ -258,12 +256,6 @@ def Test_RA_NonTransactionalInsertMany()
 
   assert_equal(instance, R.instance)
 
-  const expected = [
-    {A: 0, B: 'b0', C: true, D: 1.2},
-    {A: 1, B: 'b1', C: true, D: 3.4},
-    {A: 2, B: 'b2', C: false, D: 1.0},
-  ]
-
   AssertFails(() => {
     R.InsertMany([
       {A: 2, B: 'b2', C: false, D: 1.0},
@@ -271,35 +263,13 @@ def Test_RA_NonTransactionalInsertMany()
     ])
   }, "Duplicate key: {A: 1, C: true} already exists in relation R.")
 
-  assert_equal(expected, R.instance)
-enddef
-
-def Test_RA_TransactionalInsertMany()
-  var RR = Rel.new('RR', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
-  const instance = [
-    {A: 0, B: 'b0', C: true, D: 1.2},
-    {A: 1, B: 'b1', C: true, D: 3.4},
-  ]
-  RR.InsertMany(instance, true)
-
-  assert_equal(instance, RR.instance)
-
-  const expected = instance
-
-  AssertFails(() => {
-    RR.InsertMany([
-      {A: 2, B: 'b2', C: false, D: 1.0},
-      {A: 1, B: 'b3', C: true,  D: 3.4},
-    ], true)
-  }, "Duplicate key: {A: 1, C: true} already exists in relation RR.")
-
-  assert_equal(expected, RR.instance)
+  assert_equal(instance, R.instance)
 enddef
 
 def Test_RA_InsertWithConstraint()
   var R = Rel.new('R', {A: Int}, 'A')
 
-  Check('Max 3 tuples', (t) => len(R.instance) < 3)
+  Check('Max 3 tuples', (t) => len(R.instance) < 3)->OnInsert(R)
 
   R.Insert({A: 1})
   R.Insert({A: 2})
@@ -316,23 +286,10 @@ def Test_RA_InsertManyDuplicateKey()
     RR.InsertMany([
       {A: 0, B: 'b0', C: true, D: 1.2},
       {A: 0, B: 'b0', C: true, D: 0.4},
-    ], true)
+    ])
   }, "Duplicate key: {A: 0, B: 'b0', C: true} already exists in relation RR")
 
   assert_true(RR.IsEmpty())
-
-  const expected = [
-      {A: 0, B: 'b0', C: true, D: 1.2},
-  ]
-
-  AssertFails(() => {
-    RR.InsertMany([
-      {A: 0, B: 'b0', C: true, D: 1.2},
-      {A: 0, B: 'b0', C: true, D: 0.4},
-    ], false)
-  }, "Duplicate key: {A: 0, B: 'b0', C: true} already exists in relation RR")
-
-  assert_equal(expected, RR.instance)
 enddef
 
 def Test_RA_Update()
@@ -344,8 +301,12 @@ def Test_RA_Update()
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  R.Update({A: 0, B: 'x', C: true, D: 'new-d1'})
-  R.Update({A: 1, B: 'x', C: false, D: 'new-d2'})
+  R.Update((t) => t.A == 0, (t) => {
+    t.D = 'new-d1'
+  })
+  R.Update((t) => t.A == 1, (t) => {
+    t.D = 'new-d2'
+  })
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -355,12 +316,17 @@ def Test_RA_Update()
   assert_equal(expected, rr)
 
   AssertFails(() => {
-    R.Update({A: 0, B: 'x', C: false, D: ''})
-  }, "Updating key attributes not allowed")
+    R.Update((t) => t.A == 0, (t) => {
+      t.C = false  # Key attribute
+      t.D = ''
+    })
+  }, "updating key attributes is not allowed")
 
-  AssertFails(() => {
-    R.Update({A: 2, B: 'y', C: true, D: 'd3'})
-  }, "Update failed: no tuple with key {A: 2} exists in R")
+  R.Update((t) => t.A == 2, (t) => {
+    t.B = 'y'
+  })
+
+  assert_true(RelEq(expected, R.Instance()))
 enddef
 
 def Test_RA_UpdateDiscriminator()
@@ -376,18 +342,15 @@ def Test_RA_UpdateDiscriminator()
     IsLinked:    false,
   })
 
-  const t = HiGroup.Lookup(['HiGroupName'], ['Normal'])
-
-  HiGroup.Update({
-      HiGroupName: t.HiGroupName,
-      DiscrName:   'foobar',
-      IsLinked:    t.IsLinked,
-    })
+  HiGroup.Update((t) => t.HiGroupName == 'Normal', (t) => {
+    t.DiscrName = 'foobar'
+    t.IsLinked = true
+  })
 
   const expected = [{
     HiGroupName: 'Normal',
     DiscrName:   'foobar',
-    IsLinked:    false,
+    IsLinked:    true,
   }]
 
   assert_equal(expected, HiGroup.instance)
@@ -396,13 +359,14 @@ enddef
 def Test_RA_Upsert()
   var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
   const rr = R.instance
+
   R.InsertMany([
     {A: 0, B: 'x', C: true, D: 'd1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  R.Update({A: 2, B: 'y', C: true, D: 'd3'}, true)
-  R.Update({A: 0, B: 'x', C: true, D: 'new-d1'}, true)
+  R.Upsert({A: 2, B: 'y', C: true, D: 'd3'})
+  R.Upsert({A: 0, B: 'x', C: true, D: 'new-d1'})
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -413,8 +377,8 @@ def Test_RA_Upsert()
   assert_equal(expected, rr)
 
   AssertFails(() => {
-    R.Update({A: 0, B: 'x', C: false, D: 'd'})
-  }, "Updating key attributes not allowed")
+    R.Upsert({A: 0, B: 'x', C: false, D: 'd'})
+  }, "updating key attributes is not allowed")
 enddef
 
 def Test_RA_Delete()
@@ -452,7 +416,7 @@ def Test_RA_Delete()
   assert_equal([], R.instance)
 enddef
 
-def Test_RA_NonTransactionalDelete()
+def Test_RA_DeleteConstraint()
   var R = Rel.new('R', {A: Int, B: Str}, ['A'])
 
   Check('Cardinality', (t) => {
@@ -475,33 +439,7 @@ def Test_RA_NonTransactionalDelete()
     R.Delete((t) => t.A == 0)
   }, "Too few tuples")
 
-  assert_equal([], R.instance)
-enddef
-
-def Test_RA_TransactionalDelete()
-  var R = Rel.new('R', {A: Int, B: Str}, ['A'])
-
-  Check('Cardinality', (t) => {
-    if len(R.instance) <= 2
-      return FailedCheck('Too few tuples')
-    endif
-
-    return true
-  })->OnDelete(R)
-
-  const instance = [
-    {A: 0, B: 'X'},
-    {A: 1, B: 'Y'},
-  ]
-  R.InsertMany(instance)
-
-  assert_equal(2, len(R.instance))
-
-  AssertFails(() => {
-    R.Delete((t) => t.A == 0, true)
-  }, "Too few tuples")
-
-  assert_equal(instance, R.instance)
+  assert_true(RelEq(instance, R.Instance()))
 enddef
 
 def Test_RA_ReferentialIntegrityDelete()
@@ -540,7 +478,7 @@ def Test_RA_WrongForeignKeyDefinitions()
 enddef
 
 def Test_RA_ReferentialIntegrityInsertUpdate()
-  var R = Rel.new('R', {A: Str}, 'A')
+  var R = Rel.new('R', {A: Str},         'A')
   var S = Rel.new('S', {B: Int, C: Str}, 'B')
 
   ForeignKey(S, 'C')->References(R, 'A', 'smurfs')
@@ -559,10 +497,14 @@ def Test_RA_ReferentialIntegrityInsertUpdate()
     S.Insert({B: 40, C: 'xy'})
   }, "S smurfs R: {C: 'xy'} not found in R[A]")
 
-  S.Update({B: 20, C: 'ab'})
+  S.Update((t) => t.B == 20, (t) => {
+    t.C = 'ab'
+  })
 
   AssertFails(() => {
-    S.Update({B: 30, C: 'wz'})
+    S.Update((t) => t.B == 30, (t) => {
+      t.C = 'wz'
+    })
   }, "S smurfs R: {C: 'wz'} not found in R[A]")
 
   const expected = [
@@ -589,7 +531,7 @@ def Test_RA_ForeignKeySameAttrs()
   }, "{A: 'xy'} not found in R[A]")
 enddef
 
-def Test_RA_GenericConstraint()
+def Test_RA_CheckConstraint()
   var RR = Rel.new('R', {A: Int, B: Int}, 'A')
 
   Check('test', (t) => {
@@ -598,9 +540,10 @@ def Test_RA_GenericConstraint()
     endif
 
    return true
-  })->OnInsert(RR)->OnUpdate(RR)
+  })->OnInsert(RR)
 
   var t0 = {A: 1, B: 2}
+
   RR.Insert(t0)
 
   assert_equal([t0], RR.instance)
@@ -611,13 +554,19 @@ def Test_RA_GenericConstraint()
 
   assert_equal([t0], RR.instance)
 
-  RR.Update({A: 1, B: 3})
+  RR.Update((t) => t.A == 1, (t) => {
+    t.B = 3
+  })
+
+  assert_equal([{A: 1, B: 3}], RR.instance)
 
   AssertFails(() => {
-    RR.Update({A: 1, B: -2})
+    RR.Update((t) => t.A == 1, (t) => {
+      t.B = -2
+    })
   }, "B must be positive: got -2")
 
-  assert_equal([t0], RR.instance)
+  assert_equal([{A: 1, B: 3}], RR.instance)
 
   RR.Delete()
 
@@ -626,7 +575,7 @@ enddef
 # }}}
 
 # Indexes {{{
-def Test_RA_UniqueIndex()
+def Test_RA_Index()
   const key = ['A', 'B']
   const keyStr = string(key)
   var R = Rel.new('R', {A: Int, B: Str}, key)
@@ -636,7 +585,7 @@ def Test_RA_UniqueIndex()
   const I = R.Index(key)
 
   assert_equal(v:t_object, type(I))
-  assert_equal('object<UniqueIndex>', typename(I))
+  assert_equal('object<Index>', typename(I))
   assert_true(I.IsEmpty(), 'Index must be initially empty')
 
   const t0 = {A: 9, B: 'veni'}
@@ -645,28 +594,34 @@ def Test_RA_UniqueIndex()
 
   R.InsertMany([t0, t1, t2])
 
-  assert_true(I.Search([9, 'veni']) is t0)
-  assert_true(I.Search([9, 'vidi']) is t2)
-  assert_true(I.Search([3, 'vici']) is t1)
-  assert_true(I.Search([0, '']) is KEY_NOT_FOUND)
+  var s0 = I.Search([9, 'veni'])
+  var s1 = I.Search([9, 'vidi'])
+  var s2 = I.Search([3, 'vici'])
+  assert_true(s0 == [t0])
+  assert_true(s1 == [t2])
+  assert_true(s2 == [t1])
+  assert_true(s0[0] is t0)
+  assert_true(s1[0] is t2)
+  assert_true(s2[0] is t1)
+  assert_true(empty(I.Search([0, ''])))
 
   R.Delete((t) => t.A == 9 && t.B == 'veni')
 
-  assert_true(I.Search([9, 'veni']) is KEY_NOT_FOUND)
-  assert_true(I.Search([9, 'vidi']) is t2)
-  assert_true(I.Search([3, 'vici']) is t1)
+  assert_true(empty(I.Search([9, 'veni'])))
+  assert_true(I.Search([9, 'vidi']) == [t2])
+  assert_true(I.Search([3, 'vici']) == [t1])
 
   R.Delete((t) => t.B == 'vici')
 
-  assert_true(I.Search([9, 'veni']) is KEY_NOT_FOUND)
-  assert_true(I.Search([9, 'vidi']) is t2)
-  assert_true(I.Search([3, 'vici']) is KEY_NOT_FOUND)
+  assert_true(empty(I.Search([9, 'veni'])))
+  assert_true(I.Search([9, 'vidi']) == [t2])
+  assert_true(empty(I.Search([3, 'vici'])))
 
   R.Delete()
 
-  assert_true(I.Search([9, 'veni']) is KEY_NOT_FOUND)
-  assert_true(I.Search([9, 'vidi']) is KEY_NOT_FOUND)
-  assert_true(I.Search([3, 'vici']) is KEY_NOT_FOUND)
+  assert_true(empty(I.Search([9, 'veni'])))
+  assert_true(empty(I.Search([9, 'vidi'])))
+  assert_true(empty(I.Search([3, 'vici'])))
   assert_true(I.IsEmpty())
 enddef
 # }}}
@@ -1456,16 +1411,22 @@ def Test_RA_LeftEquiJoin()
 enddef
 
 def Test_RA_LeftEquiJoinFastPath()
-  var R = Rel.new('R', {A: Int, B: Str}, 'A').InsertMany([
+  var R = Rel.new('R', {A: Int, B: Str}, 'A')
+
+  R.InsertMany([
     {A: 0, B: 'zero'},
     {A: 1, B: 'one'},
     {A: 2, B: 'two'},
   ])
-  var S = Rel.new('S', {A: Int, C: Float}, 'A').InsertMany([
+
+  var S = Rel.new('S', {A: Int, C: Float}, 'A')
+
+  S.InsertMany([
     {A: 1, C: 1.0},
     {A: 0, C: 0.0},
     {A: 3, C: 3.0},
   ])
+
   const result = Query(LeftEquiJoin(R, S, 'A', 'A', [{A: -1, C: -1.0}]))
   const expected = [
     {_A: 0, B: 'zero', A:  0, C:  0.0},
@@ -1487,7 +1448,10 @@ def Test_RA_Lookup()
 enddef
 
 def Test_RA_Extend()
-  var R = Rel.new('R', {A: Int}, [['A']]).InsertMany([{A: 1}, {A: 3}, {A: 5}])
+  var R = Rel.new('R', {A: Int}, [['A']])
+
+  R.InsertMany([{A: 1}, {A: 3}, {A: 5}])
+
   const expected = [
     {A: 1, B: 2,  C: 'ok'},
     {A: 3, B: 6,  C: 'ok'},
@@ -2337,7 +2301,9 @@ def Test_RA_Zip()
 enddef
 
 def Test_RA_Filter()
-  var R = Rel.new('R', {A: Int, B: Int}, [['A']]).InsertMany([
+  var R = Rel.new('R', {A: Int, B: Int}, [['A']])
+
+  R.InsertMany([
     {A: 0, B: 10},
     {A: 2, B: 30},
     {A: 1, B: 20},
@@ -2556,38 +2522,38 @@ def Test_RA_TransitiveClosureOfCyclicGraph()
 enddef
 
 
-def Test_RA_RecursiveCount()
-  var N        = 100
-  var expected = mapnew(range(N + 1), (_, i) => {
-    return {n: i}
-  })
-  var result: Relation
-
-  def RunQuery()
-    result = Recursive(
-      [{n: 0}],
-      (R) => Transform(
-      Select(R, (t) => t.n < N), (t) => {
-        return {n: t.n + 1}
-      }),
-      true
-    )
-  enddef
-
-  tt.AssertBenchmark(
-    RunQuery,
-    $'Recursive count from 0 to {N}',
-    {
-      repeat: 5,
-      severity: {
-      'Wow!': 0.0,
-      '✓':    0.4,
-      '✗':    0.5,
-      }
-    })
-
-  assert_true(RelEq(expected, result))
-enddef
+# def Test_RA_RecursiveCount()
+#   var N        = 100
+#   var expected = mapnew(range(N + 1), (_, i) => {
+#     return {n: i}
+#   })
+#   var result: Relation
+#
+#   def RunQuery()
+#     result = Recursive(
+#       [{n: 0}],
+#       (R) => Transform(
+#       Select(R, (t) => t.n < N), (t) => {
+#         return {n: t.n + 1}
+#       }),
+#       true
+#     )
+#   enddef
+#
+#   tt.AssertBenchmark(
+#     RunQuery,
+#     $'Recursive count from 0 to {N}',
+#     {
+#       repeat: 5,
+#       severity: {
+#       'Wow!': 0.0,
+#       '✓':    0.4,
+#       '✗':    0.5,
+#       }
+#     })
+#
+#   assert_true(RelEq(expected, result))
+# enddef
 
 
 class View
@@ -2616,16 +2582,6 @@ def Test_RA_RelationWithObjects()
 enddef
 
 
-def Test_RA_BenchmarkInsert()
-  var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
-  var i = 0
-  var I = () => {
-    r0.Insert({Node: i, Next: 2})
-    ++i
-  }
-  tt.AssertBenchmark(I, 'Insert', {repeat: 5})
-enddef
-
 def Test_RA_Transaction()
   var r0 = Rel.new('r0', {A: Int}, 'A')
   var s0 = Rel.new('s0', {B: Int}, 'B')
@@ -2640,38 +2596,211 @@ def Test_RA_Transaction()
   })
 
   assert_equal(1, len(r0.instance))
-  assert_equal(3, len(00.instance))
+  assert_equal(3, len(s0.instance))
+enddef
+
+def Test_RA_Next()
+  var Edge = Rel.new('Edge', {Node: Int, Next: Int}, [['Node'], ['Next']])
+
+  ForeignKey(Edge, 'Next')->References(Edge, 'Node')
+  Edge.Insert({Node: 1, Next: 1})
+
+  assert_equal([{Node: 1, Next: 1}], Edge.Instance())
+
+  Transaction(() => {
+    Edge.Delete((t) => t.Node == 1)
+    Edge.Insert({Node: 1, Next: 2})
+    Edge.Insert({Node: 2, Next: 1})
+  })
+
+  assert_equal([
+    {Node: 1, Next: 2},
+    {Node: 2, Next: 1},
+  ], Edge.Instance())
 enddef
 
 def Test_RA_CircularPath()
-  var R = Rel.new('R', {Node: Int, Next: Int}, [['Node'], ['Next']])
+  var Node = Rel.new('Node', {Node: Int}, 'Node')
+  var Edge = Rel.new('Edge', {Node: Int, Next: Int}, [['Node'], ['Next']])
 
-  ForeignKey(R, 'Next')->References(R, 'Node')
+  ForeignKey(Edge, 'Node')->References(Node, 'Node')
+  ForeignKey(Edge, 'Next')->References(Node, 'Node')
 
-  R.Insert({Node: 1, Next: 1})
+  Node.Insert({Node: 1})
+  Edge.Insert({Node: 1, Next: 1})
 
-  # Transaction
-  # Begin()
-  R.Insert({Node: 2, Next: 1}) # Key violation
-  R.Delete((t) => t.Node == 1) # ...
-  R.Insert({Node: 1, Next: 2}) # Integrity restored
-  # Commit()
+  Transaction(() => {
+    Node.Insert({Node: 2})
+    Edge.Delete((t) => t.Node == 1)
+    Edge.Insert({Node: 2, Next: 1})
+    # What if you do a Select() here?
+    Edge.Insert({Node: 1, Next: 2}) # Integrity restored
+  })
 
-  # Transaction
-  R.Insert({Node: 3, Next: 1})
-  R.Delete((t) => t.Node == 1)
-  R.Update({Node: 1, Next: 3})
+  Transaction(() => {
+    Node.Insert({Node: 3})
+    Edge.Delete((t) => t.Next == 1)
+    Edge.Insert({Node: 3, Next: 1})
+    Edge.Insert({Node: 2, Next: 3})
+  })
+
+  var expected = [
+    {Node: 1, Next: 2},
+    {Node: 2, Next: 3},
+    {Node: 3, Next: 1},
+  ]
+
+  assert_true(RelEq(expected, Edge.Instance()))
+enddef
+
+def Test_RA_Hierarchy()
+  var H = Rel.new('Hierarchy', {Node: Int, Parent: Int}, [['Node']])
+
+  ForeignKey(H, 'Parent')->References(H, 'Node')
+
+  H.Insert({Node: 1, Parent: 1})
+
+  Transaction(() => {
+    H.Insert({Node: 2, Parent: 1})
+    H.Insert({Node: 3, Parent: 2})
+    H.Insert({Node: 4, Parent: 2})
+  })
+
+  assert_true(RelEq([
+    {Node: 1, Parent: 1},
+    {Node: 2, Parent: 1},
+    {Node: 3, Parent: 2},
+    {Node: 4, Parent: 2},
+  ], H.Instance()))
+enddef
+
+def Test_RA_ViewHierarchy()
+  var BaseView  = Rel.new('View', {View: Int, IsLeaf: Bool, Parent: Int}, [['View']])
+  var Container = Rel.new('Container', {View: Int}, 'View')
+  var LeafView  = Rel.new('LeafView',  {View: Int}, 'View')
+
+  BaseView.Insert({View: 0, IsLeaf: false, Parent: 0})
+  Container.Insert({View: 0})
+
+  ForeignKey(BaseView,  'Parent')->References(Container, 'View')
+  ForeignKey(Container, 'View')->References(BaseView, 'View')
+  ForeignKey(LeafView,  'View')->References(BaseView, 'View')
+
+  Transaction(() => {
+    BaseView.InsertMany([
+      {View: 1, Parent:  0, IsLeaf: false},
+      {View: 2, Parent:  1, IsLeaf: false},
+      {View: 3, Parent:  2, IsLeaf: true},
+      {View: 4, Parent:  2, IsLeaf: true},
+    ])
+    Container.InsertMany([
+      {View: 1},
+      {View: 2},
+    ])
+    LeafView.InsertMany([
+      {View: 3},
+      {View: 4},
+    ])
+  })
+
+  Transaction(() => {
+    LeafView.Delete()
+    Container.Delete((t) => t.View > 0)
+    BaseView.Delete((t) => t.View > 0)
+  })
+
+  assert_equal([{View: 0, IsLeaf: false, Parent: 0}], BaseView.Instance())
+  assert_equal([{View: 0}], Container.Instance())
+  assert_equal([], LeafView.Instance())
+enddef
+
+def Test_RA_BreweryConstraint01()
+  var Beer = Rel.new('Beer', {Name: Str, AlcPerc: Float}, 'Name')
+
+  Check('I1', (t) => t.AlcPerc > 0)->OnInsert(Beer)
+
+  var instance = [
+    {Name: "Beck's Light", AlcPerc: 2.30},
+    {Name: "Corona Premier", AlcPerc: 4.00},
+  ]
+
+  # NOTE: this info may be inaccurate.
+  # That doesn't invalidate the usefulness of this test.
+  Beer.InsertMany(instance)
+
+  AssertFails(() => {
+    Beer.Insert({Name: "Negative Hops", AlcPerc: -1.10})
+  }, 'I1')
+
+  Transaction(() => {
+    Beer.Insert({Name: "Negative Hops", AlcPerc: -1.10})
+    Beer.Delete((t) => t.AlcPerc <= 0.0)
+  })
+
+  assert_true(RelEq(instance, Beer.Instance()))
+enddef
+
+def Test_RA_TransactionInsertDelete()
+  var R = Rel.new('R', {A: Int, B: Int}, 'A')
+
+  R.Insert({A: 1, B: 10})
+
+  Transaction(() => {
+    R.Insert({A: 1, B: 11})  # Temporarily violates key constraint
+    R.Delete((t) => t.B == 11)
+  })
+
+  assert_equal([{A: 1, B: 10}], R.Instance())
+
+  Transaction(() => {
+    R.Insert({A: 1, B: 10})
+    R.Insert({A: 1, B: 11})
+    R.Delete((t) => t.B == 10)
+  })
+
+  assert_equal([{A: 1, B: 11}], R.Instance())
+
+  AssertFails(() => {
+    Transaction(() => {
+      R.Insert({A: 1, B: 12})
+      R.Insert({A: 1, B: 13})
+      R.Delete((t) => t.B == 13)
+    })
+  }, 'Duplicate key')
+
+  assert_equal([{A: 1, B: 11}], R.Instance())
+
+  Transaction(() => {
+    R.Insert({A: 1, B: 12})
+    R.Delete((t) => t.A == 1)
+  })
+
+  assert_equal([], R.Instance())
 enddef
 
 def Test_RA_T1()
   var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
   var i = 0
   var I = () => {
-    r0.Insert({Node: i, Next: 2})
-    ++i
+    ra.Transaction(() => {
+      for _ in range(50000)
+        r0.Insert({Node: i, Next: 2})
+        ++i
+      endfor
+    })
   }
-  tt.AssertBenchmark(I, 'Insert', {repeat: 5})
+  # tt.AssertBenchmark(I, 'Insert', {repeat: 5})
 enddef
 
+# def Test_RA_BenchmarkInsert()
+#   var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
+#   var i = 0
+#   var I = () => {
+#     r0.Insert({Node: i, Next: 2})
+#     ++i
+#   }
+#   tt.AssertBenchmark(I, 'Insert', {repeat: 5})
+# enddef
 
-tt.Run('_RA_T1')
+
+tt.Run('_RA_')

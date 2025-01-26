@@ -217,43 +217,14 @@ var E001 = 'Expected a tuple on schema %s: got %s instead.'
 var E002 = 'Key %s already defined in relation %s.'
 var E003 = '%s is not an attribute of relation %s.'
 var E004 = 'Duplicate key: %s already exists in relation %s.'
+var E100 = 'Update failed: no tuple with key %s exists in relation %s.'
+var E101 = 'Cannot replace %s with %s: updating key attributes is not allowed.'
 # }}}
 
 # Indexes {{{
 export const KEY_NOT_FOUND: Tuple = {}
 
-class UniqueIndex
-  var key:    AttrList    = []
-  var _index: dict<Tuple> = {} # Map from key to tuple
-
-  def IsEmpty(): bool
-    return empty(this._index)
-  enddef
-
-  def Add(t: Tuple)
-    const keyValues = string(Values(t, this.key))
-
-    if this._index->has_key(keyValues)
-      return
-    endif
-
-    this._index[keyValues] = t
-  enddef
-
-  def Remove(keyValue: list<any>)
-    this._index->remove(string(keyValue))
-  enddef
-
-  def Search(keyValue: list<any>): Tuple
-    return get(this._index, string(keyValue), KEY_NOT_FOUND)
-  enddef
-
-  def string(): string
-    return string(this._index)
-  enddef
-endclass
-
-class NonUniqueIndex
+class Index
   var key:    AttrList          = []
   var _index: dict<list<Tuple>> = {} # Map from key to tuples
 
@@ -262,7 +233,7 @@ class NonUniqueIndex
   enddef
 
   def Add(t: Tuple)
-    const keyValues = string(Values(t, this.key))
+    var keyValues = string(Values(t, this.key))
 
     if !this._index->has_key(keyValues)
       this._index[keyValues] = []
@@ -272,8 +243,17 @@ class NonUniqueIndex
   enddef
 
   def Remove(t: Tuple)
-    const keyValues = string(Values(t, this.key))
-    filter(get(this._index, keyValues, []), (u) => t == u)
+    var keyValues = string(Values(t, this.key))
+
+    if this._index->has_key(keyValues)
+      var tuples = this._index[keyValues]
+
+      filter(tuples, (_, u) => t isnot u)
+
+      if empty(tuples)
+        remove(this._index, keyValues)
+      endif
+    endif
   enddef
 
   def Search(keyValue: list<any>): list<Tuple>
@@ -283,111 +263,136 @@ endclass
 # }}}
 
 # Transactions {{{
-interface IRel
-  var name:               string
-  var schema:             Schema
-  var keys:               list<AttrList>
-  var attributes:         AttrList
-  var key_attributes:     AttrList
-  var descriptors:        AttrList
-  var instance:           Relation
+interface IBaseRel
+  var name: string
+  var insert_constraints: list<Constraint>
+  var delete_constraints: list<Constraint>
 
   def Instance(): Relation
-  def Commit()
-  def Rollback()
-  def CheckConstraints(): bool
+  def Add(t: Tuple)
+  def Remove(t: Tuple)
+  def Insert(t: Tuple)
+  def Upsert(t: Tuple, insert: bool)
+  def Delete(P: UnaryPredicate)
+  def Update(P: UnaryPredicate, Set: func(Tuple))
 endinterface
 
-var sFailureMessages: list<string> = [] # Stores error messages when constraints fail
-var sTransaction:     number       = 0  # 0 = not in a transaction, 1 = inside transaction
-var sPendingRelations: list<IRel>  = [] # Relations modified during a transactions
+class LogEntry
+  var rel:   IBaseRel
+  var tuple: Tuple
+
+  def string(): string
+    return $'LOG({this.rel.name},{TupleStr(this.tuple)})'
+  enddef
+endclass
+
+var sFailureMessages: list<string>   = [] # Stores error messages when constraints fail
+var sTransaction:     number         = 0  # 0 = not in a transaction, 1 = inside transaction
+var sNewLog:          list<LogEntry> = [] # Log new tuples to be committed
+var sOldLog:          list<LogEntry> = [] # Log deleted tuples to be committed
 
 export def Messages(): list<string>
   return sFailureMessages
 enddef
 
-def Log(rel: IRel)
-  if index(sPendingRelations, rel) == -1
-    sPendingRelations->add(rel)
-  endif
-enddef
-
-def Begin()
+ def Begin()
   if sTransaction != 0
     throw 'Transactions cannot be nested'
   endif
 
   sFailureMessages = []
-  sTransaction = 1
+  sTransaction     = 1
 enddef
 
-def Commit(throw = true): bool
+def Rollback(throw = true)
+  for entry in sNewLog
+    entry.rel.Remove(entry.tuple)
+  endfor
+
+  for entry in sOldLog
+    entry.rel.Add(entry.tuple)
+  endfor
+
+  sNewLog      = []
+  sOldLog      = []
+  sTransaction = 0
+
+  if throw
+    throw sFailureMessages[0]
+  endif
+enddef
+
+ def Commit(throw = true): bool
   if sTransaction != 1
     throw 'Commit() without Begin()'
   endif
 
-  var ok = true
-
-  for rel in sPendingRelations
-    ok = ok && rel.CheckConstraints()
+  for entry in sNewLog
+    for C in entry.rel.insert_constraints
+      if !C(entry.tuple)
+        Rollback(throw)
+        return false
+      endif
+    endfor
   endfor
 
-  if ok
-    for rel in sPendingRelations
-      rel.Commit()
+  for entry in sOldLog
+    for C in entry.rel.delete_constraints
+      if !C(entry.tuple)
+        Rollback(throw)
+        return false
+      endif
     endfor
-  else
-    for msg in sFailureMessages
-      echomsg msg
-    endfor
-    echomsg 'Commit failed. Rollback necessary.'
+  endfor
 
-    for rel in sPendingRelations
-      rel.Rollback()
-    endfor
-  endif
+  sNewLog      = []
+  sOldLog      = []
+  sTransaction = 0
 
-  sPendingRelations = []
-  sTransaction      = 0
-
-  if throw && !ok
-    throw $'Transaction failed: {sFailureMessages[0]}. See `librelalg.Messages() for the full log.'
-  endif
-
-  return ok
+  return true
 enddef
 
 export def Transaction(Body: func(), throw: bool = true): bool
   Begin()
   Body()
-  return Commit()
+  return Commit(throw)
+enddef
+
+def ImplicitTransaction(Body: func())
+  var implicit_transaction = (sTransaction == 0)
+
+  if implicit_transaction
+    Begin()
+  endif
+
+  Body()
+
+  if implicit_transaction
+    Commit()
+  endif
 enddef
 # }}}
+
 # Relations {{{
-export class Rel implements IRel
+export class Rel implements IBaseRel
   var name:               string
   var schema:             Schema
   var keys:               list<AttrList>
   var attributes:         AttrList
   var key_attributes:     AttrList
   var descriptors:        AttrList
-  var instance:           Relation          = []
+  var instance:           Relation         = []
   var insert_constraints: list<Constraint> = []
   var delete_constraints: list<Constraint> = []
   var update_constraints: list<Constraint> = []
 
-  var _new_tuples:         list<Tuple>      = []
-  var _deleted_tuples:     list<Tuple>      = []
+  public var type_check: bool = true
 
-  var _key_indexes: dict<UniqueIndex> = {}
+  var _key_indexes: dict<Index> = {}
 
-  def new(this.name, this.schema, relKeys: any, checkType = true)
+  def new(this.name, this.schema, relKeys: any, this.type_check = v:none)
     if empty(relKeys)
       throw printf(E000, this.name)
-    endif
-
-    if checkType
-      this.EnableTypeChecking_()
     endif
 
     var keys_: list<AttrList> = ListifyKeys(relKeys)
@@ -401,8 +406,149 @@ export class Rel implements IRel
     endfor
   enddef
 
+  def string(): string
+    return $'{this.name}={this.Instance()}'
+  enddef
+
   def Instance(): Relation
     return this.instance
+  enddef
+
+  def IsEmpty(): bool
+    return empty(this.instance)
+  enddef
+
+  def Index(key: any): Index
+    return this._key_indexes[string(Listify(key))]
+  enddef
+
+  def Add(t: Tuple)
+    this.TypeCheck_(t)
+    this.instance->add(t)
+
+    for idx in values(this._key_indexes)
+      idx.Add(t)
+    endfor
+  enddef
+
+  def Remove(t: Tuple)
+    var i = indexof(this.instance, (_, u) => u is t)
+
+    remove(this.instance, i)
+
+    for idx in values(this._key_indexes)
+      idx.Remove(t)
+    endfor
+  enddef
+
+  def Insert(t: Tuple)
+    ImplicitTransaction(() => {
+      this.Add(t)
+
+      # Check if t was previously deleted during the current transaction
+      var k = indexof(sOldLog, (_, entry: LogEntry) => entry.tuple == t)
+
+      if k == -1
+        sNewLog->add(LogEntry.new(this, t))
+      else # This insertion undoes the deletion
+        remove(sOldLog, k)
+      endif
+    })
+  enddef
+
+  def Delete(P: UnaryPredicate = (t) => true)
+    ImplicitTransaction(() => {
+      for t in this.instance
+        if P(t)
+          # Check if t was previously inserted during the current transaction
+          var k = indexof(sNewLog, (_, entry: LogEntry) => entry.tuple == t)
+
+          if k == -1
+            sOldLog->add(LogEntry.new(this, t))
+          else # This deletion undoes the insertion
+            remove(sNewLog, k)
+          endif
+
+          for idx in values(this._key_indexes)
+            idx.Remove(t)
+          endfor
+        endif
+      endfor
+
+      filter(this.instance, (_, t) => !P(t))
+    })
+  enddef
+
+  def InsertMany(tuples: list<Tuple>)
+    ImplicitTransaction(() => {
+      for t in tuples
+        this.Add(t)
+        sNewLog->add(LogEntry.new(this, t))
+      endfor
+    })
+  enddef
+
+  def Update(P: UnaryPredicate, Set: func(Tuple))
+    ImplicitTransaction(() => {
+      for t in this.instance
+        var u: Tuple
+
+        if P(t)
+          u = deepcopy(t)
+
+          sOldLog->add(LogEntry.new(this, u))
+          Set(t)
+          sNewLog->add(LogEntry.new(this, t))
+
+          for attr in this.key_attributes
+            if t[attr] != u[attr] # FIXME: use `is`? What if a key is an object?
+              sFailureMessages->add(printf(E101, TupleStr(u), TupleStr(t)))
+              Rollback(true)
+            endif
+          endfor
+        endif
+      endfor
+    })
+  enddef
+
+  def Lookup(key: AttrSet, value: list<any>): Tuple
+    if index(this.keys, key) == -1
+      throw $'{key} is not a key of {this.name}'
+    endif
+
+    var idx = this._key_indexes[String(key)]
+    var result = idx.Search(value)
+
+    return empty(result) ? KEY_NOT_FOUND : result[0]
+  enddef
+
+  def Upsert(t: Tuple, insert: bool = true)
+    var u = this.Lookup(this.keys[0], Values(t, this.keys[0]))
+
+    if u is KEY_NOT_FOUND
+      if insert
+        this.Insert(t)
+        return
+      endif
+
+      throw printf(E100, TupleStr(t, this.keys[0]), this.name)
+    endif
+
+    for attr in this.key_attributes
+      if t[attr] != u[attr] # FIXME: use `is`? What if a key is an object?
+        throw printf(E101, TupleStr(u), TupleStr(t))
+      endif
+    endfor
+
+    ImplicitTransaction(() => {
+      sOldLog->add(LogEntry.new(this, deepcopy(u)))
+
+      for attr in this.descriptors
+        u[attr] = t[attr]
+      endfor
+
+      sNewLog->add(LogEntry.new(this, u))
+    })
   enddef
 
   def AddKeyConstraint_(key: AttrList)
@@ -421,10 +567,10 @@ export class Rel implements IRel
   enddef
 
   def CreateUniquenessConstraint_(key: AttrList)
-    var keyIndex = UniqueIndex.new(key)
+    var keyIndex = Index.new(key)
 
     var IsUnique: UnaryPredicate = (t) => {
-      if keyIndex.Search(Values(t, key)) is t
+      if len(keyIndex.Search(Values(t, key))) <= 1
         return true
       endif
 
@@ -435,241 +581,27 @@ export class Rel implements IRel
     Check('Key uniqueness', IsUnique)->OnInsert(this)
   enddef
 
-  def IsEmpty(): bool
-    return empty(this.instance)
-  enddef
-
-  def Index(key: any): UniqueIndex
-    return this._key_indexes[string(Listify(key))]
-  enddef
-
-  def Insert_(t: Tuple)
-    this.instance->add(t)
-
-    for idx in values(this._key_indexes)
-      idx.Add(t)
-    endfor
-  enddef
-
-  def Delete_(t: Tuple)
-    var i = indexof(this.instance, (_, u) => u is t)
-
-    if i != -1
-      remove(this.instance, i)
-
-      for ind in values(this._key_indexes)
-        ind.Remove(Values(t, ind.key))
-      endfor
-    endif
-  enddef
-
-  def Commit()
-    this._new_tuples     = []
-    this._deleted_tuples = []
-  enddef
-
-  def Rollback()
-    for t in this._new_tuples
-      this.Delete_(t)
-    endfor
-
-    for t in this._deleted_tuples
-      this.Insert_(t)
-    endfor
-
-    this._new_tuples     = []
-    this._deleted_tuples = []
-  enddef
-
-  def CheckConstraints(): bool
-    var ok = true
-
-    for t in this._new_tuples
-      for C in this.insert_constraints
-        ok = ok && C(t)
-      endfor
-    endfor
-
-    for t in this._deleted_tuples
-      for C in this.delete_constraints
-        ok = ok && C(t)
-      endfor
-    endfor
-
-    return ok
-  enddef
-
-  def Insert(t: Tuple): any
-    var implicit_transaction = (sTransaction == 0)
-
-    if implicit_transaction
-      Begin()
-    endif
-
-    this._new_tuples->add(t)
-    this.Insert_(t)
-    Log(this)
-
-    if implicit_transaction
-      Commit()
-    endif
-
-    return this
-  enddef
-
-  def InsertMany(tuples: list<Tuple>, atomic: bool = false): any
-    if atomic
-      var inserted: list<Tuple> = []
-
-      for t in tuples
-        try
-          this.Insert(t)
-          inserted->add(t)
-        catch
-          this.RollbackInsertion_(inserted)
-          throw v:exception
-        endtry
-      endfor
-    else
-      for t in tuples
-        this.Insert(t)
-      endfor
-    endif
-
-    return this
-  enddef
-
-  def RollbackInsertion_(tuples: list<Tuple>)
-    const DeletePred = (i: number, t: Tuple): bool => {
-      if t->In(tuples)
-        for ind in values(this._key_indexes)
-          const keyValue = Values(t, ind.key)
-          ind.Remove(keyValue)
-        endfor
-
-        return false
+  def TypeCheck_(t: Tuple)
+    if this.type_check
+      if sort(keys(t)) != this.attributes
+        FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
+        Rollback()
       endif
 
-      return true
-    }
-
-    filter(this.instance, DeletePred)
-  enddef
-
-  def Update(t: Tuple, upsert = false): any
-    const key      = this.keys[0]
-    const keyValue = Values(t, key)
-    const oldt     = this.Lookup(key, keyValue)
-
-    if oldt is KEY_NOT_FOUND
-      if upsert
-        this.Insert(t)
-      else
-        throw $'Update failed: no tuple with key {TupleStr(t, key)} exists in {this.name}'
-      endif
-
-      return this
-    endif
-
-    for attr in this.key_attributes
-      if t[attr] != oldt[attr]
-        throw $'Updating key attributes not allowed: failed to replace {TupleStr(oldt)} with {TupleStr(t)} ({attr} is a key attribute)'
-      endif
-    endfor
-
-    # This may be tricky for some kind of constraints, as the old tuple is
-    # still in the relation at this point. But for simple checks it should work.
-    for CheckConstraint in this.update_constraints
-      if !CheckConstraint(t)
-        var errorMessage = join(sFailureMessages, "\r")
-        sFailureMessages = []
-        throw errorMessage
-      endif
-    endfor
-
-    for attr in this.descriptors
-      oldt[attr] = t[attr]
-    endfor
-
-    return this
-  enddef
-
-  def Delete(Pred: func(Tuple): bool = (t) => true, atomic: bool = false): any
-    const DeletePred = (i: number, t: Tuple): bool => {
-      if Pred(t)
-        for CheckConstraint in this.delete_constraints
-          if !CheckConstraint(t)
-            var errorMessage = join(sFailureMessages, "\r")
-            sFailureMessages = []
-            throw errorMessage
-          endif
-        endfor
-
-        for ind in values(this._key_indexes)
-          const keyValue = Values(t, ind.key)
-          ind.Remove(keyValue)
-        endfor
-
-        return false
-      endif
-
-      return true
-    }
-
-    if atomic
-      this.instance = filter(copy(this.instance), DeletePred)
-    else
-      filter(this.instance, DeletePred)
-    endif
-
-    return this
-  enddef
-
-  def Lookup(key: AttrSet, value: list<any>): Tuple
-    if index(this.keys, key) == -1
-      throw $'{key} is not a key of {this.name}'
-    endif
-
-    const ind = this._key_indexes[String(key)]
-    return ind.Search(value)
-  enddef
-
-  def EnableTypeChecking_()
-    var SameAttributes: UnaryPredicate = (t) => {
-      if sort(keys(t)) == this.attributes
-        return true
-      endif
-
-      return FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
-    }
-
-    var CompatibleDomains: UnaryPredicate = (t) => {
       for [attr, domain] in items(this.schema)
         var v = t[attr]
 
         if type(v) != domain
-          return FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
+          FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
+          Rollback()
         endif
       endfor
-
-      return true
-    }
-
-    Check('Type checking', SameAttributes)->OnInsert(this)->OnUpdate(this)
-    Check('Type checking ', CompatibleDomains)->OnInsert(this)->OnUpdate(this)
+    endif
   enddef
 endclass
 # }}}
 
 # Integrity constraints {{{
-# for CheckConstraint in this.insert_constraints
-#   if !CheckConstraint(t)
-#     var errorMessage = join(sFailureMessages, "\r")
-#     sFailureMessages = []
-#     throw errorMessage
-#   endif
-# endfor
-
 export def FailedCheck(message: string): bool
   sFailureMessages->add(message)
 
@@ -688,11 +620,6 @@ enddef
 
 export def OnInsert(C: Constraint, R: Rel): Constraint
   R.insert_constraints->add(C)
-  return C
-enddef
-
-export def OnUpdate(C: Constraint, R: Rel): Constraint
-  R.update_constraints->add(C)
   return C
 enddef
 
@@ -736,11 +663,15 @@ export def References(foreign_key: list<any>, Parent: Rel, key: any = null, verb
     return FailedCheck($'{fkStr}: {TupleStr(t, fkey_)} not found in {Parent.name}{ListStr(key_)}')
   }
 
-  Check('Referential integrity', FkConstraint)->OnInsert(Child)->OnUpdate(Child)
+  Check('Referential integrity', FkConstraint)->OnInsert(Child)
 
   var FkPred = EquiJoinPred(fkey_, key_)
 
   var DelConstraint: UnaryPredicate = (t_p) => {
+    if Parent.Lookup(key_, Values(t_p, key_)) isnot KEY_NOT_FOUND
+      return true
+    endif
+
     for t_c in Child.instance
       if FkPred(t_c, t_p)
         return FailedCheck($'{fkStr}: cannot delete {TupleStr(t_p)} from {Parent.name} because it is referenced by {TupleStr(t_c)} in {Child.name}')

@@ -1152,5 +1152,69 @@ def Test_React_SpecializedProperty()
   assert_equal('xy', result)
 enddef
 
+def Test_React_RollbackEffect()
+  var r0: list<dict<number>> = []
+  var logged = react.Property.new([])
+  var counter = 0
+
+  def Rollback()
+    for t in logged.Get()
+      r0->remove(index(r0, t))
+    endfor
+  enddef
+
+  def Insert(t: dict<number>)
+    r0->add(t)
+    var inserted = logged.Get()
+    inserted->add(t)
+    logged.Set(inserted, true)
+  enddef
+
+  react.CreateEffect(() => { # Effect 1
+    for t in logged.Get()
+      if t.A == 5
+        Rollback()
+        react.Reset()
+      endif
+    endfor
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    for t in logged.Get()
+      ++counter
+    endfor
+  })
+
+  react.Transaction(() => {
+    Insert({A: 1})
+    Insert({A: 2})
+    Insert({A: 3})
+  })
+
+  assert_equal([{A: 1}, {A: 2}, {A: 3}], r0)
+  assert_equal([{A: 1}, {A: 2}, {A: 3}], logged.Get())
+  assert_equal(3, counter)
+
+  logged.Set([])
+
+  assert_equal([{A: 1}, {A: 2}, {A: 3}], r0)
+  assert_true(empty(logged.Get()))
+  assert_equal(3, counter)
+
+  react.Transaction(() => {
+    Insert({A: 4})
+
+    # The following Insert() causes this transaction to be undone upon commit
+    # by Effect 1. Since Effect 1 resets the effects' queue, Effect 2 is not
+    # executed.
+    Insert({A: 5})
+    Insert({A: 6})
+  })
+
+  assert_equal([{A: 1}, {A: 2}, {A: 3}], r0)
+  assert_equal([{A: 4}, {A: 5}, {A: 6}], logged.Get())
+  assert_equal(3, counter)
+enddef
+
 tt.Run('_React_')
 

@@ -852,6 +852,14 @@ CreateMemo({func}[, {pool}])
 
 		Returns a reference to the property's Get() method.
 
+					*libreactive.Reset()*
+Reset()
+		Clear the effects' queue. Any effects that are queued for
+		execution will be removed from the queue without being
+		executed. This may be useful in the context of a transaction
+		to stop propagating the effects of some transaction's updates,
+		for instance because some anomalous condition has been met.
+
 					*libreactive.Transaction()*
 Transaction({func})
 		Execute {func} atomically: any property updates performed by

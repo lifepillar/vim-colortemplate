@@ -13,6 +13,7 @@ libreactive.Commit()	libreactive.txt	/*libreactive.Commit()*
 libreactive.CreateEffect()	libreactive.txt	/*libreactive.CreateEffect()*
 libreactive.CreateMemo()	libreactive.txt	/*libreactive.CreateMemo()*
 libreactive.Property()	libreactive.txt	/*libreactive.Property()*
+libreactive.Reset()	libreactive.txt	/*libreactive.Reset()*
 libreactive.Transaction()	libreactive.txt	/*libreactive.Transaction()*
 libreactive.debug_level	libreactive.txt	/*libreactive.debug_level*
 libreactive.queue_size	libreactive.txt	/*libreactive.queue_size*

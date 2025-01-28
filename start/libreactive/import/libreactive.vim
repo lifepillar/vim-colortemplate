@@ -136,6 +136,10 @@ export def Transaction(Body: func())
   Body()
   Commit()
 enddef
+
+export def Reset()
+  sQueue.Reset()
+enddef
 # }}}
 
 # Properties {{{

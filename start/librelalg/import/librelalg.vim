@@ -5,6 +5,8 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
+import 'libreactive.vim' as react
+
 # Types {{{
 export type Attr            = string
 export type Domain          = number # v:t_number, v:t_string, etc.
@@ -277,24 +279,6 @@ interface IBaseRel
   def Update(P: UnaryPredicate, Set: func(Tuple))
 endinterface
 
-class LogEntry
-  var rel:   IBaseRel
-  var tuple: Tuple
-
-  def string(): string
-    return $'LOG({this.rel.name},{TupleStr(this.tuple)})'
-  enddef
-endclass
-
-var sFailureMessages: list<string>   = [] # Stores error messages when constraints fail
-var sTransaction:     number         = 0  # 0 = not in a transaction, 1 = inside transaction
-var sNewLog:          list<LogEntry> = [] # Log new tuples to be committed
-var sOldLog:          list<LogEntry> = [] # Log deleted tuples to be committed
-
-export def Messages(): list<string>
-  return sFailureMessages
-enddef
-
  def Begin()
   if sTransaction != 0
     throw 'Transactions cannot be nested'
@@ -322,7 +306,7 @@ def Rollback(throw = true)
   endif
 enddef
 
- def Commit(throw = true): bool
+def Commit(throw = true): bool
   if sTransaction != 1
     throw 'Commit() without Begin()'
   endif
@@ -351,26 +335,6 @@ enddef
 
   return true
 enddef
-
-export def Transaction(Body: func(), throw: bool = true): bool
-  Begin()
-  Body()
-  return Commit(throw)
-enddef
-
-def ImplicitTransaction(Body: func())
-  var implicit_transaction = (sTransaction == 0)
-
-  if implicit_transaction
-    Begin()
-  endif
-
-  Body()
-
-  if implicit_transaction
-    Commit()
-  endif
-enddef
 # }}}
 
 # Relations {{{
@@ -382,9 +346,31 @@ export class Rel implements IBaseRel
   var key_attributes:     AttrList
   var descriptors:        AttrList
   var instance:           Relation         = []
-  var insert_constraints: list<Constraint> = []
-  var delete_constraints: list<Constraint> = []
-  var update_constraints: list<Constraint> = []
+
+  var _inserted_tuples: react.Property = []
+  var _deleted_tuples:  react.Property = []
+
+  def OnInsertCheck(C: UnaryPredicate)
+    react.CreateEffect(() => {
+      for t in this._inserted_tuples
+        if !C(t)
+          Rollback()
+          react.Reset()
+        endif
+      endfor
+    })
+  enddef
+
+  def OnDeleteCheck(C: UnaryPredicate)
+    react.CreateEffect(() => {
+      for t in this._deleted_tuples
+        if !C(t)
+          Rollback()
+          react.Reset()
+        endif
+      endfor
+    })
+  enddef
 
   public var type_check: bool = true
 

@@ -267,73 +267,91 @@ endclass
 # Transactions {{{
 interface IBaseRel
   var name: string
-  var insert_constraints: list<Constraint>
-  var delete_constraints: list<Constraint>
 
   def Instance(): Relation
-  def Add(t: Tuple)
-  def Remove(t: Tuple)
-  def Insert(t: Tuple)
-  def Upsert(t: Tuple, insert: bool)
-  def Delete(P: UnaryPredicate)
-  def Update(P: UnaryPredicate, Set: func(Tuple))
+  def IsConsistent(): bool
+  def Confirm_()
+  def Undo_()
 endinterface
 
- def Begin()
-  if sTransaction != 0
-    throw 'Transactions cannot be nested'
-  endif
+class TransactionManager
+  var _running: number         = 0
+  var _pending: list<IBaseRel> = []
+  var _messages: list<string>  = []
 
-  sFailureMessages = []
-  sTransaction     = 1
-enddef
+  def Add(rel: IBaseRel)
+    if index(this._pending, rel) == -1
+      this._pending->add(rel)
+    endif
+  enddef
 
-def Rollback(throw = true)
-  for entry in sNewLog
-    entry.rel.Remove(entry.tuple)
-  endfor
+  def FailMessage(msg: string)
+    this._messages->add(msg)
+  enddef
 
-  for entry in sOldLog
-    entry.rel.Add(entry.tuple)
-  endfor
+  def Begin()
+    this._running += 1
+  enddef
 
-  sNewLog      = []
-  sOldLog      = []
-  sTransaction = 0
+  def Commit()
+    if this._running == 0 # Not in a transaction (rolled back)
+      return
+    endif
 
-  if throw
-    throw sFailureMessages[0]
-  endif
-enddef
+    this._running -= 1
 
-def Commit(throw = true): bool
-  if sTransaction != 1
-    throw 'Commit() without Begin()'
-  endif
+    if this._running > 0 # Nested transaction
+      return
+    endif
 
-  for entry in sNewLog
-    for C in entry.rel.insert_constraints
-      if !C(entry.tuple)
-        Rollback(throw)
+    if this.CheckConstraints()
+      for rel in this._pending
+        rel.Confirm_()
+      endfor
+
+      this._pending  = []
+      this._messages = []
+    else
+      this.Rollback()
+    endif
+  enddef
+
+  def Rollback()
+    for rel in this._pending
+      rel.Undo_()
+    endfor
+
+    var errors = join(this._messages)
+
+    this._pending  = []
+    this._messages = []
+    this._running  = 0
+
+    throw errors
+  enddef
+
+  def CheckConstraints(): bool
+    for rel in this._pending
+      if !rel.IsConsistent()
         return false
       endif
     endfor
-  endfor
 
-  for entry in sOldLog
-    for C in entry.rel.delete_constraints
-      if !C(entry.tuple)
-        Rollback(throw)
-        return false
-      endif
-    endfor
-  endfor
+    return true
+  enddef
+endclass
 
-  sNewLog      = []
-  sOldLog      = []
-  sTransaction = 0
+var gTM = TransactionManager.new()
 
-  return true
+export def Transaction(Body: func())
+  gTM.Begin()
+  Body()
+  gTM.Commit()
+enddef
+
+export def FailedCheck(message: string): bool
+  gTM.FailMessage(message)
+  return false
 enddef
 # }}}
 
@@ -345,32 +363,12 @@ export class Rel implements IBaseRel
   var attributes:         AttrList
   var key_attributes:     AttrList
   var descriptors:        AttrList
-  var instance:           Relation         = []
+  var instance:           Relation = []
 
-  var _inserted_tuples: react.Property = []
-  var _deleted_tuples:  react.Property = []
-
-  def OnInsertCheck(C: UnaryPredicate)
-    react.CreateEffect(() => {
-      for t in this._inserted_tuples
-        if !C(t)
-          Rollback()
-          react.Reset()
-        endif
-      endfor
-    })
-  enddef
-
-  def OnDeleteCheck(C: UnaryPredicate)
-    react.CreateEffect(() => {
-      for t in this._deleted_tuples
-        if !C(t)
-          Rollback()
-          react.Reset()
-        endif
-      endfor
-    })
-  enddef
+  var _insert_constraints: list<Constraint> = []
+  var _delete_constraints: list<Constraint> = []
+  var _inserted_tuples:    list<Tuple>      = []
+  var _deleted_tuples:     list<Tuple>      = []
 
   public var type_check: bool = true
 
@@ -408,7 +406,7 @@ export class Rel implements IBaseRel
     return this._key_indexes[string(Listify(key))]
   enddef
 
-  def Add(t: Tuple)
+  def Add_(t: Tuple)
     this.TypeCheck_(t)
     this.instance->add(t)
 
@@ -417,7 +415,7 @@ export class Rel implements IBaseRel
     endfor
   enddef
 
-  def Remove(t: Tuple)
+  def Remove_(t: Tuple)
     var i = indexof(this.instance, (_, u) => u is t)
 
     remove(this.instance, i)
@@ -427,32 +425,85 @@ export class Rel implements IBaseRel
     endfor
   enddef
 
+  def Undo_()
+    for t in this._inserted_tuples
+      this.Remove_(t)
+    endfor
+
+    for t in this._deleted_tuples
+      this.Add_(t)
+    endfor
+
+    this._inserted_tuples = []
+    this._deleted_tuples  = []
+  enddef
+
+  def Confirm_()
+    this._inserted_tuples = []
+    this._deleted_tuples  = []
+  enddef
+
+  def IsConsistent(): bool
+    for C in this._insert_constraints
+      for t in this._inserted_tuples
+        if !C(t)
+          return false
+        endif
+      endfor
+    endfor
+
+    for C in this._delete_constraints
+      for t in this._deleted_tuples
+        if !C(t)
+          return false
+        endif
+      endfor
+    endfor
+
+    return true
+  enddef
+
+  def OnInsertCheck(C: UnaryPredicate)
+    this._insert_constraints->add(C)
+  enddef
+
+  def OnDeleteCheck(C: UnaryPredicate)
+    this._delete_constraints->add(C)
+  enddef
+
   def Insert(t: Tuple)
-    ImplicitTransaction(() => {
-      this.Add(t)
+    gTM.Add(this)
+
+    Transaction(() => {
+      this.Add_(t)
 
       # Check if t was previously deleted during the current transaction
-      var k = indexof(sOldLog, (_, entry: LogEntry) => entry.tuple == t)
+      var k = indexof(this._deleted_tuples, (_, u: Tuple) => u == t)
 
       if k == -1
-        sNewLog->add(LogEntry.new(this, t))
+        this._inserted_tuples->add(t)
       else # This insertion undoes the deletion
-        remove(sOldLog, k)
+        remove(this._deleted_tuples, k)
       endif
     })
   enddef
 
-  def Delete(P: UnaryPredicate = (t) => true)
-    ImplicitTransaction(() => {
+  def Delete(P: UnaryPredicate = (t) => true): Relation
+    gTM.Add(this)
+    var deleted: list<Tuple> = []
+
+    Transaction(() => {
       for t in this.instance
         if P(t)
+          deleted->add(t)
+
           # Check if t was previously inserted during the current transaction
-          var k = indexof(sNewLog, (_, entry: LogEntry) => entry.tuple == t)
+          var k = indexof(this._inserted_tuples, (_, u: Tuple) => u == t)
 
           if k == -1
-            sOldLog->add(LogEntry.new(this, t))
+            this._deleted_tuples->add(t)
           else # This deletion undoes the insertion
-            remove(sNewLog, k)
+            remove(this._inserted_tuples, k)
           endif
 
           for idx in values(this._key_indexes)
@@ -463,36 +514,40 @@ export class Rel implements IBaseRel
 
       filter(this.instance, (_, t) => !P(t))
     })
+
+    return deleted
   enddef
 
   def InsertMany(tuples: list<Tuple>)
-    ImplicitTransaction(() => {
+    gTM.Add(this)
+
+    Transaction(() => {
       for t in tuples
-        this.Add(t)
-        sNewLog->add(LogEntry.new(this, t))
+        this.Add_(t)
+
+        # Check if t was previously deleted during the current transaction
+        var k = indexof(this._deleted_tuples, (_, u: Tuple) => u == t)
+
+        if k == -1
+          this._inserted_tuples->add(t)
+        else # This insertion undoes the deletion
+          remove(this._deleted_tuples, k)
+        endif
       endfor
     })
   enddef
 
   def Update(P: UnaryPredicate, Set: func(Tuple))
-    ImplicitTransaction(() => {
-      for t in this.instance
-        var u: Tuple
+    gTM.Add(this)
 
-        if P(t)
-          u = deepcopy(t)
+    Transaction(() => {
+      var deleted = this.Delete(P)
 
-          sOldLog->add(LogEntry.new(this, u))
-          Set(t)
-          sNewLog->add(LogEntry.new(this, t))
+      for t in deleted
+        var new_t = deepcopy(t)
 
-          for attr in this.key_attributes
-            if t[attr] != u[attr] # FIXME: use `is`? What if a key is an object?
-              sFailureMessages->add(printf(E101, TupleStr(u), TupleStr(t)))
-              Rollback(true)
-            endif
-          endfor
-        endif
+        Set(new_t)
+        this.Insert(new_t)
       endfor
     })
   enddef
@@ -526,14 +581,14 @@ export class Rel implements IBaseRel
       endif
     endfor
 
-    ImplicitTransaction(() => {
-      sOldLog->add(LogEntry.new(this, deepcopy(u)))
+    Transaction(() => {
+      this._deleted_tuples->add(deepcopy(u))
 
       for attr in this.descriptors
         u[attr] = t[attr]
       endfor
 
-      sNewLog->add(LogEntry.new(this, u))
+      this._inserted_tuples->add(u)
     })
   enddef
 
@@ -571,7 +626,7 @@ export class Rel implements IBaseRel
     if this.type_check
       if sort(keys(t)) != this.attributes
         FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
-        Rollback()
+        gTM.Rollback()
       endif
 
       for [attr, domain] in items(this.schema)
@@ -579,7 +634,7 @@ export class Rel implements IBaseRel
 
         if type(v) != domain
           FailedCheck(printf(E001, SchemaStr(this.schema), TupleStr(t)))
-          Rollback()
+          gTM.Rollback()
         endif
       endfor
     endif
@@ -588,12 +643,6 @@ endclass
 # }}}
 
 # Integrity constraints {{{
-export def FailedCheck(message: string): bool
-  sFailureMessages->add(message)
-
-  return false
-enddef
-
 export def Check(description: string, P: UnaryPredicate): Constraint
   return (t): bool => {
     if P(t)
@@ -605,12 +654,12 @@ export def Check(description: string, P: UnaryPredicate): Constraint
 enddef
 
 export def OnInsert(C: Constraint, R: Rel): Constraint
-  R.insert_constraints->add(C)
+  R.OnInsertCheck(C)
   return C
 enddef
 
 export def OnDelete(C: Constraint, R: Rel): Constraint
-  R.delete_constraints->add(C)
+  R.OnDeleteCheck(C)
   return C
 enddef
 

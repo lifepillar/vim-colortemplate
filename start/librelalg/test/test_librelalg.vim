@@ -294,10 +294,9 @@ enddef
 
 def Test_RA_Update()
   var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
-  const rr = R.instance
 
   R.InsertMany([
-    {A: 0, B: 'x', C: true, D: 'd1'},
+    {A: 0, B: 'x', C: true,  D: 'd1'},
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
@@ -313,20 +312,44 @@ def Test_RA_Update()
     {A: 1, B: 'x', C: false, D: 'new-d2'},
   ]
 
-  assert_equal(expected, rr)
+  assert_true(RelEq(expected, R.Instance()))
 
   AssertFails(() => {
     R.Update((t) => t.A == 0, (t) => {
-      t.C = false  # Key attribute
+      t.C = false
       t.D = ''
     })
-  }, "updating key attributes is not allowed")
+    echo R.Index(['B', 'C'])
+  }, "Duplicate key: {B: 'x', C: false}")
+
+  assert_true(RelEq(expected, R.Instance()))
+
+  R.Update((t) => t.A == 0, (t) => {
+    t.D = 'dd'
+  })
+
+  assert_true(RelEq([
+    {A: 0, B: 'x', C: true,  D: 'dd'},
+    {A: 1, B: 'x', C: false, D: 'new-d2'},
+  ], R.Instance()))
 
   R.Update((t) => t.A == 2, (t) => {
     t.B = 'y'
   })
 
-  assert_true(RelEq(expected, R.Instance()))
+  assert_true(RelEq([
+    {A: 0, B: 'x', C: true,  D: 'dd'},
+    {A: 1, B: 'x', C: false, D: 'new-d2'},
+  ], R.Instance()))
+
+  R.Update((t) => true, (t) => {
+    t.B = 'y'
+  })
+
+  assert_true(RelEq([
+    {A: 0, B: 'y', C: true,  D: 'dd'},
+    {A: 1, B: 'y', C: false, D: 'new-d2'},
+  ], R.Instance()))
 enddef
 
 def Test_RA_UpdateDiscriminator()
@@ -358,7 +381,6 @@ enddef
 
 def Test_RA_Upsert()
   var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Str}, [['A'], ['B', 'C']])
-  const rr = R.instance
 
   R.InsertMany([
     {A: 0, B: 'x', C: true, D: 'd1'},
@@ -374,7 +396,7 @@ def Test_RA_Upsert()
     {A: 2, B: 'y', C: true, D: 'd3'},
   ]
 
-  assert_equal(expected, rr)
+  assert_equal(expected, R.Instance())
 
   AssertFails(() => {
     R.Upsert({A: 0, B: 'x', C: false, D: 'd'})
@@ -405,7 +427,7 @@ def Test_RA_Delete()
 
   R.Delete((t) => t.B == 'X')
 
-  assert_equal(expected1, R.instance)
+  assert_equal(expected1, R.Instance())
 
   R.Delete((t) => t.A == 2 || t.A == 3)
 

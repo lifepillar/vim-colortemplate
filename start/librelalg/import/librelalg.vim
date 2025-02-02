@@ -496,6 +496,8 @@ export class Rel implements IRel, ICheckable, ITransactable
 
   var _instance:           Relation        = []
   var _key_indexes:        dict<Index>     = {}
+  # Differential sets. See: Grefen and Apers, 1993
+  # Integrity control in relational database systems - An overview
   var _inserted_tuples:    list<Tuple>     = []
   var _deleted_tuples:     list<Tuple>     = []
 

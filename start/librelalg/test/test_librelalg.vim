@@ -2734,31 +2734,83 @@ def Test_RA_ViewHierarchy()
   assert_equal([], LeafView.Instance())
 enddef
 
-def Test_RA_BreweryConstraint01()
-  var Beer = Rel.new('Beer', {Name: Str, AlcPerc: Float}, 'Name')
+def Test_RA_BreweryConstraints()
+  var Brewery = Rel.new('Brewery',
+    {Name: Str, City: Str, Country: Str},
+    'Name'
+  )
+  var Beer = Rel.new('Beer',
+    {Name: Str, BrewedBy: Str, AlcPerc: Float},
+    'Name'
+  )
+  var Drinker = Rel.new('Drinker',
+    {Name: Str, Beer: Str, QtyBought: Int, QtyDrunk: Int},
+    ['Name', 'Beer']
+  )
 
   Beer.OnInsertCheck('I1', (t) => t.AlcPerc > 0)
+  ForeignKey(Beer, 'BrewedBy')->References(Brewery, 'Name', 'is brewed by')
+  ForeignKey(Drinker, 'Beer')->References(Beer, 'Name', 'drinks')
+  Drinker.OnInsertCheck('I4', (t) => t.QtyDrunk <= t.QtyBought)
 
-  var instance = [
-    {Name: "Beck's Light", AlcPerc: 2.30},
-    {Name: "Corona Premier", AlcPerc: 4.00},
+  # NOTE: this info is made up.
+  var brewery = [
+    {Name: "Furious Ale", City: "Hasselt",    Country: "Belgium"},
+    {Name: "Crown & Son", City: "Anderlecht", Country: "Belgium"},
+    {Name: "Drunk Fools", City: "Dalkeith", Country:   "Scotland"},
+  ]
+  var beer = [
+    {Name: "Pegs's Light",  BrewedBy: "Furious Ale", AlcPerc: 2.30},
+    {Name: "Korona Strong", BrewedBy: "Crown & Son", AlcPerc: 4.00},
+  ]
+  var drinker = [
+    {Name: "Ken", Beer: "Pegs's Light",  QtyBought: 10, QtyDrunk: 10},
+    {Name: "Ken", Beer: "Korona Strong", QtyBought: 5,  QtyDrunk:  0},
   ]
 
-  # NOTE: this info may be inaccurate.
-  # That doesn't invalidate the usefulness of this test.
-  Beer.InsertMany(instance)
+  Brewery.InsertMany(brewery)
+  Beer.InsertMany(beer)
+  Drinker.InsertMany(drinker)
 
   AssertFails(() => {
-    Beer.Insert({Name: "Negative Hops", AlcPerc: -1.10})
+    Beer.Insert({Name: "Negative Hops", BrewedBy: "Drunk Fools", AlcPerc: -1.10})
   }, 'I1')
 
   Transaction(() => {
-    Beer.Insert({Name: "Negative Hops", AlcPerc: -1.10})
+    Beer.Insert({Name: "Negative Hops", BrewedBy: "Drunk Fools", AlcPerc: -1.10})
     Beer.Delete((t) => t.AlcPerc <= 0.0)
   })
 
-  assert_true(RelEq(instance, Beer.Instance()))
+  AssertFails(() => {
+    Beer.Insert({Name: "Hops", BrewedBy: "Drunk Ghosts", AlcPerc: 5.10})
+  }, 'Beer is brewed by Brewery')
+
+  AssertFails(() => {
+    Brewery.Delete((t) => t.Name == "Crown & Son")
+  }, 'Beer is brewed by Brewery')
+
+  Brewery.Delete((t) => t.Name == "Drunk Fools")
+
+  AssertFails(() => {
+    Brewery.InsertMany([
+    {Name: "Drunk Fools", City: "Dalkeith", Country:   "Scotland"},
+    {Name: "Crown & Son", City: "Anderlecht", Country: "Belgium"},
+    ])
+  }, "Duplicate key: {Name: 'Crown & Son'}")
+
+  AssertFails(() => {
+    Drinker.Update((t) => t.Name == "Ken", (t) => {
+      t.QtyDrunk = 6
+    })
+  }, 'I4')
+
+  Drinker.Update((t) => t.Name == "Ken", (t) => {
+    t.QtyDrunk = 5
+  })
+
+  assert_true(RelEq(beer, Beer.Instance()))
 enddef
+
 
 def Test_RA_TransactionInsertDelete()
   var R = Rel.new('R', {A: Int, B: Int}, 'A')

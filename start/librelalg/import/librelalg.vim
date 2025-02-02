@@ -5,8 +5,6 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
-import 'libreactive.vim' as react
-
 # Types {{{
 export type Attr            = string
 export type Domain          = number # v:t_number, v:t_string, etc.

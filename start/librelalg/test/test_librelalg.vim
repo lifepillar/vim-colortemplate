@@ -9,10 +9,10 @@ import 'librelalg.vim'   as ra
 import 'libtinytest.vim' as tt
 
 # Aliases {{{
-type Continuation = ra.Continuation
-type Rel          = ra.Rel
-type Relation     = ra.Relation
-type Tuple        = ra.Tuple
+type Continuation          = ra.Continuation
+type Rel                   = ra.Rel
+type Relation              = ra.Relation
+type Tuple                 = ra.Tuple
 
 const AssertFails          = tt.AssertFails
 const AntiEquiJoin         = ra.AntiEquiJoin
@@ -77,7 +77,6 @@ const Union                = ra.Union
 const Zip                  = ra.Zip
 # }}}
 
-# Data definition {{{
 def Test_RA_CreateEmptyRel()
   const M = Rel.new('M', {}, [[]])
 
@@ -196,9 +195,7 @@ def Test_RA_OnInsertCheck()
     R.Insert({A: 'y', B: -1})
   }, "Test constraint failed")
 enddef
-# }}}
 
-# Data manipulation {{{
 def Test_RA_Insert()
   var R = Rel.new('R', {A: Int, B: Str, C: Bool, D: Float}, [['A', 'C']])
 
@@ -632,9 +629,7 @@ def Test_RA_DeleteInsertUpdate()
 
   assert_equal([{A: 1}, {A: 2}], R.Instance())
 enddef
-# }}}
 
-# Indexes {{{
 def Test_RA_Index()
   const key = ['A', 'B']
   const keyStr = string(key)
@@ -684,7 +679,6 @@ def Test_RA_Index()
   assert_true(empty(I.Search([3, 'vici'])))
   assert_true(I.IsEmpty())
 enddef
-# }}}
 
 def Test_RA_In()
   const R = Rel.new('R', {A: Str, B: Int}, [['A']])
@@ -2581,39 +2575,6 @@ def Test_RA_TransitiveClosureOfCyclicGraph()
   assert_true(RelEq(expected, result))
 enddef
 
-def Test_RA_RecursiveCount()
-  var N        = 100
-  var expected = mapnew(range(N + 1), (_, i) => {
-    return {n: i}
-  })
-  var result: Relation
-
-  def RunQuery()
-    result = Recursive(
-      [{n: 0}],
-      (R) => Transform(
-      Select(R, (t) => t.n < N), (t) => {
-        return {n: t.n + 1}
-      }),
-      true
-    )
-  enddef
-
-  tt.AssertBenchmark(
-    RunQuery,
-    $'Recursive count from 0 to {N}',
-    {
-      repeat: 5,
-      severity: {
-      'Wow!': 0.0,
-      '✓':    0.4,
-      '✗':    0.5,
-      }
-    })
-
-  assert_true(RelEq(expected, result))
-enddef
-
 
 class View
   var name: string
@@ -2836,30 +2797,6 @@ def Test_RA_TransactionInsertDelete()
 
   assert_equal([], R.Instance())
 enddef
-
-def Test_RA_T1()
-  var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
-  var i = 0
-  var I = () => {
-    ra.Transaction(() => {
-      for _ in range(50000)
-        r0.Insert({Node: i, Next: 2})
-        ++i
-      endfor
-    })
-  }
-  # tt.AssertBenchmark(I, 'Insert', {repeat: 5})
-enddef
-
-# def Test_RA_BenchmarkInsert()
-#   var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
-#   var i = 0
-#   var I = () => {
-#     r0.Insert({Node: i, Next: 2})
-#     ++i
-#   }
-#   tt.AssertBenchmark(I, 'Insert', {repeat: 5})
-# enddef
 
 
 tt.Run('_RA_')

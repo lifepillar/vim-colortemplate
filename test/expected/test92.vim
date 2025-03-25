@@ -9,7 +9,7 @@ hi clear
 let g:colors_name = 'test92'
 
 let s:t_Co = has('gui_running') ? -1 : get(g:, 'test92_t_Co', get(g:, 't_Co', exists('&t_Co') ? +&t_Co : 0))
-let s:italics = get(g:, 'test92_italics', 1)
+let s:italics = get(g:, 'test92_italics', get(g:, 'test92_italic', 1))
 
 hi Normal guifg=#ffffff guibg=#000000 gui=NONE cterm=NONE
 hi Comment guifg=#ffffff guibg=#000000 gui=italic cterm=italic

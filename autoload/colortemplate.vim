@@ -2404,7 +2404,7 @@ fun! s:print_header(bufnr)
   endif
   if s:uses_italics()
     if s:supports_only_neovim()
-      let l:itcheck =  printf("let s:italics = get(g:, '%s_italics', 1)", s:info['optionprefix'])
+      let l:itcheck =  printf("let s:italics = get(g:, '%s_italics', get(g:, '%s_italic', 1))", s:info['optionprefix'], s:info['optionprefix'])
     else
       let l:itcheck = "let s:italics = has('gui_running')"
 

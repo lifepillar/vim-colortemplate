@@ -13,11 +13,9 @@ enddef
 def RemoveFrom(v: any, items: list<any>)
   var i = indexof(items, (_, e) => e is v)
 
-  if i == -1
-    return
+  if i > -1
+    items->remove(i)
   endif
-
-  items->remove(i)
 enddef
 # }}}
 

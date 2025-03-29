@@ -133,6 +133,25 @@ enddef
 # }}}
 
 # Properties {{{
+def Bind(property: IProperty, effects: list<Effect>)
+  if sActiveEffect != null && sActiveEffect->NotIn(effects)
+    effects->add(sActiveEffect)
+    sActiveEffect.dependentProperties->add(property)
+  endif
+enddef
+
+def PushEffects(effects: list<Effect>)
+    Begin()
+
+    for effect in effects
+      if effect->NotIn(sQueue.Items())
+        sQueue.Push(effect)
+      endif
+    endfor
+
+    Commit()
+enddef
+
 export class Property implements IProperty
   public var value: any = null
   var effects: list<Effect> = []
@@ -148,11 +167,7 @@ export class Property implements IProperty
   enddef
 
   def Get(): any
-    if sActiveEffect != null && sActiveEffect->NotIn(this.effects)
-      this.effects->add(sActiveEffect)
-      sActiveEffect.dependentProperties->add(this)
-    endif
-
+    Bind(this, this.effects)
     return this.value
   enddef
 
@@ -163,15 +178,7 @@ export class Property implements IProperty
 
     this.value = value
 
-    Begin()
-
-    for effect in this.effects
-      if effect->NotIn(sQueue.Items())
-        sQueue.Push(effect)
-      endif
-    endfor
-
-    Commit()
+    PushEffects(this.effects)
   enddef
 
   def RemoveEffect(effect: Effect)

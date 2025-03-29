@@ -43,8 +43,8 @@ def Test_React_PropertyAttributes()
 
   assert_equal('x',    p0.value)
   assert_equal('x',    p0.Get())
-  assert_equal([],     p0.Effects())
-  assert_match('P\d\+ = x {}', string(p0))
+  assert_equal([],     p0.effects)
+  assert_match('x', string(p0))
 enddef
 
 def Test_React_SimpleProperty()
@@ -118,7 +118,7 @@ def Test_React_EffectRaisingException()
     })
 
   assert_equal(1, Count())
-  assert_equal(1, len(counter.Effects()))
+  assert_equal(1, len(counter.effects))
   assert_equal(1, result)
 
   tt.AssertFails(() => {
@@ -126,7 +126,7 @@ def Test_React_EffectRaisingException()
   }, 'Aaaaargh!', 'AssertFails #1')
 
   assert_equal(2, Count())
-  assert_equal(1, len(counter.Effects()))
+  assert_equal(1, len(counter.effects))
   assert_equal(2, result)
 
   tt.AssertFails(() => {
@@ -134,7 +134,7 @@ def Test_React_EffectRaisingException()
   }, 'Aaaaargh!', 'AssertFails #2')
 
   assert_equal(6, Count(), 'Count() should be 6')
-  assert_equal(1, len(counter.Effects()))
+  assert_equal(1, len(counter.effects))
   assert_equal(6, result, 'result should be 6')
 enddef
 
@@ -731,15 +731,15 @@ def Test_React_EffectString()
   react.CreateEffect(() => {
     result = property.Get()
   })
-  const effects = property.Effects()
+  const effects = property.effects
 
   assert_equal('a', result)
   assert_equal(1, len(effects))
-  assert_match('E\d\+:<lambda>\d\+', effects[0])
+  assert_match('<lambda>\d\+', string(effects[0]))
 enddef
 
 def Test_React_PropertyString()
-  var property = react.Property.new('value')
+  var property = react.Property.new('the value')
 
   react.CreateEffect(() => {
     property.Get()
@@ -748,7 +748,7 @@ def Test_React_PropertyString()
     property.Get()
   })
 
-  assert_match('value {E\d\+:<lambda>\d\+, E\d\+:<lambda>\d\+}', string(property))
+  assert_equal('the value', string(property))
 enddef
 
 def Test_React_Pool()
@@ -829,10 +829,10 @@ def Test_React_TwoEffectsOneLambda()
   react.CreateEffect(F)
   react.CreateEffect(F)
   p.Set('y')
-  const effects = p.Effects()
 
-  assert_equal(2, len(effects))
-  assert_notequal(effects[0], effects[1]) # Same lambda, but effects are distinct
+  assert_equal(2, len(p.effects))
+  assert_equal(p.effects[0], p.effects[1]) # Two effects, but same lambda
+  assert_true(p.effects[0] isnot p.effects[1])
   assert_equal('xxyy', result)
 enddef
 
@@ -852,30 +852,30 @@ def Test_React_ReuseLambda()
   E()
 
   assert_equal('x', result)
-  assert_equal(1, len(p.Effects()))
+  assert_equal(1, len(p.effects))
 
   p.Set('y')
 
   assert_equal('xy', result)
-  assert_equal(1, len(p.Effects()))
+  assert_equal(1, len(p.effects))
 
   E()
-  var effects = p.Effects()
 
   assert_equal('xyy', result)
-  assert_equal(2, len(effects))
-  assert_notequal(effects[0], effects[1])
+  assert_equal(2, len(p.effects))
+  assert_equal(p.effects[0], p.effects[1])
 
   p.Set('z')
 
   assert_equal('xyyzz', result)
-  assert_equal(2, len(effects))
-  assert_notequal(effects[0], effects[1])
+  assert_equal(2, len(p.effects))
+  assert_equal(p.effects[0], p.effects[1])
+  assert_false(p.effects[0] is p.effects[1])
 
   p.Clear()
   E()
   assert_equal('xyyzzz', result)
-  assert_equal(1, len(p.Effects()))
+  assert_equal(1, len(p.effects))
 enddef
 
 def Test_React_TransactionEffects()
@@ -1129,13 +1129,13 @@ def Test_React_SpecializedProperty()
   var result = ''
 
   assert_equal([p0, c0], pool)
-  assert_match('^P\d\+ = 25 {}', string(p0))
-  assert_match('^P\d\+ = x {}', string(c0))
-  assert_true(react.Property.count > 0)
+  assert_equal('25', string(p0))
+  assert_equal('x', string(c0))
 
   var n = str2nr(matchstr(string(p0), '\d\+'))
 
-  assert_equal($'P{n + 1} = x {{}}', string(c0))
+  assert_equal('x', string(c0))
+  assert_equal(0, len(c0.effects))
 
   react.CreateEffect(() => {
     result = c0.Get()

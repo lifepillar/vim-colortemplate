@@ -31,14 +31,6 @@ class Effect
   var Fn: func()
   public var dependentProperties: list<IProperty> = []
 
-  var _n = 0
-  static var _count = 0
-
-  def new(this.Fn)
-    this._n = _count
-    _count += 1
-  enddef
-
   def Execute()
     var prevActive = sActiveEffect
 
@@ -64,7 +56,7 @@ class Effect
   enddef
 
   def string(): string
-    return $'E{this._n}:' .. substitute(string(this.Fn), 'function(''\(.\+\)'')', '\1', '')
+    return substitute(string(this.Fn), 'function(''\(.\+\)'')', '\1', '')
   enddef
 endclass
 
@@ -142,11 +134,7 @@ enddef
 
 # Properties {{{
 export class Property implements IProperty
-  var value: any = null
-  var _effects: list<Effect> = []
-
-  var _n = 0
-  static var count = 0
+  var effects: list<Effect> = []
 
   def new(this.value = v:none, pool: list<IProperty> = null_list)
     this.Init(pool)
@@ -156,14 +144,11 @@ export class Property implements IProperty
     if pool != null
       pool->add(this)
     endif
-
-    this._n = count
-    count += 1
   enddef
 
   def Get(): any
-    if sActiveEffect != null && sActiveEffect->NotIn(this._effects)
-      this._effects->add(sActiveEffect)
+    if sActiveEffect != null && sActiveEffect->NotIn(this.effects)
+      this.effects->add(sActiveEffect)
       sActiveEffect.dependentProperties->add(this)
     endif
 
@@ -179,7 +164,7 @@ export class Property implements IProperty
 
     Begin()
 
-    for effect in this._effects
+    for effect in this.effects
       if effect->NotIn(sQueue.Items())
         sQueue.Push(effect)
       endif
@@ -189,19 +174,15 @@ export class Property implements IProperty
   enddef
 
   def RemoveEffect(effect: Effect)
-    effect->RemoveFrom(this._effects)
+    effect->RemoveFrom(this.effects)
   enddef
 
   def Clear()
-    this._effects = []
-  enddef
-
-  def Effects(): list<string>
-    return mapnew(this._effects, (_, eff: Effect): string => eff.string())
+    this.effects = []
   enddef
 
   def string(): string
-    return printf('P%d = %s', this._n, this.value) .. ' {' .. printf('%s', join(this.Effects(), ', ')) .. '}'
+    return type(this.value) == v:t_string ? this.value : string(this.value)
   enddef
 endclass
 # }}}
@@ -220,7 +201,9 @@ enddef
 
 export def CreateMemo(Fn: func(): any, pool: list<IProperty> = null_list): func(): any
   var memo = Property.new(v:none, pool)
+
   CreateEffect(() => memo.Set(Fn()))
+
   return memo.Get
 enddef
 # }}}

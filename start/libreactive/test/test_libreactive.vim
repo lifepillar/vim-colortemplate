@@ -17,9 +17,9 @@ class X
 endclass
 
 class ChildProperty extends react.Property
-  def new(value: string, pool: list<react.Property> = null_list)
+  def new(value: string, args: dict<any> = {})
     this.value = value
-    super.Init(pool)
+    super.Init(args)
   enddef
 
   def Set(newValue: string, force = false)
@@ -754,12 +754,12 @@ enddef
 def Test_React_Pool()
   var pool: list<react.Property> = []
   var result = ''
-  var p0 = react.Property.new('o', pool)
+  var p0 = react.Property.new('o', {pool: pool})
 
   assert_equal(1, len(pool))
 
   def F(): react.Property
-    var p1 = react.Property.new('n', pool)
+    var p1 = react.Property.new('n', {pool: pool})
 
     react.CreateEffect(() => {
       result ..= p1.Get()
@@ -794,7 +794,7 @@ def Test_React_PropertyInsideFunction()
   var result = ''
   var pool: list<react.Property> = []
   const F = (): react.Property => {
-    var p = react.Property.new('a', pool)
+    var p = react.Property.new('a', {pool: pool})
 
     react.CreateEffect(() => {
       result ..= p.Get()
@@ -1076,7 +1076,7 @@ enddef
 def Test_React_CreateMemoWithPool()
   var pool: list<react.Property> = []
   var p0 = react.Property.new(3)
-  var F = react.CreateMemo(() =>  2 * p0.Get(), pool)
+  var F = react.CreateMemo(() =>  2 * p0.Get(), {pool: pool})
 
   assert_equal(1, len(pool))
   assert_equal(6, F())
@@ -1124,8 +1124,8 @@ enddef
 
 def Test_React_SpecializedProperty()
   var pool: list<react.Property> = []
-  var p0 = react.Property.new(25, pool)
-  var c0 = ChildProperty.new('x', pool)
+  var p0 = react.Property.new(25, {pool: pool})
+  var c0 = ChildProperty.new('x', {pool: pool})
   var result = ''
 
   assert_equal([p0, c0], pool)

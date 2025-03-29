@@ -156,11 +156,13 @@ export class Property implements IProperty
   public var value: any = null
   var effects: list<Effect> = []
 
-  def new(this.value = v:none, pool: list<IProperty> = null_list)
-    this.Init(pool)
+  def new(this.value = v:none, args: dict<any> = {})
+    this.Init(args)
   enddef
 
-  def Init(pool: list<IProperty>)
+  def Init(args: dict<any>)
+    var pool = get(args, 'pool', null_list)
+
     if pool != null
       pool->add(this)
     endif
@@ -207,8 +209,8 @@ export def CreateEffect(Fn: func())
   runningEffect.Execute() # Necessary to bind to dependent signals
 enddef
 
-export def CreateMemo(Fn: func(): any, pool: list<IProperty> = null_list): func(): any
-  var memo = Property.new(v:none, pool)
+export def CreateMemo(Fn: func(): any, args: dict<any> = {}): func(): any
+  var memo = Property.new(v:none, args)
 
   CreateEffect(() => memo.Set(Fn()))
 

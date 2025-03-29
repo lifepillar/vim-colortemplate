@@ -1,4 +1,4 @@
-*libreactive.txt*	For Vim version 9.1	Last change: 2025 Jan 02
+*libreactive.txt*	For Vim version 9.1	Last change: 2025 Mar 29
 
 Note: Vim 9.1 or later is required.
 
@@ -190,7 +190,7 @@ effects. The following snippet is perfectly fine:
 <
 NOTE: in the limited circumstances where one does want to access the value of
 a property without any side effects even within an effect, it is possible to
-access the read-only `value` attribute of the property:
+access the `value` attribute of the property:
 >
 	var p = react.Property.new(0)
 
@@ -274,17 +274,19 @@ or call a function or method that does it.
 Nested effects must be managed carefully, because they may result in an
 uncontrolled growth of function calls or even infinite loops. If effect E1
 calls a function that creates an effect E2 then every time E1 is executed
-a new instance of E2 is created. So, each time a dependency of E2 is updated,
-E2 is executed many times, one for each copy that has been created by E1. This
-may not be what one wants.
+a new instance of E2 is created. So, each time a dependent property of E2 is
+updated, E2 is executed many times, one for each copy that has been created by
+E1. This may not be what one wants.
 
 Forbidding nested effects, however, may be limiting in some circumstances. For
-instance, this class creates an effect every time it is instantiated:
+instance, this class creates a new property and binds it to an effect every
+time the class is instantiated:
 >
 	class Foo
-	  var p: react.Property
+	  var p = react.Property.new(0)
 
-	  def new(this.p)
+	  def new(x: number)
+	    this.p.Set(x)
 	    react.CreateEffect(() => {
 	      echo $'Instance has value {this.p.Get()}'
 	    })
@@ -380,8 +382,7 @@ property.
 
 Let us see why sometimes it is necessary to clear the properties. The
 following script defines a :Foo command that creates an effect and prints
-a string representation of a property, which also shows the associated
-effects:
+the value of the property and its associated effects:
 >
 	vim9script
 	import 'libreactive.vim' as react
@@ -393,7 +394,7 @@ effects:
 	    p0.Get()
 	  })
 
-	  echo p0.String()
+	  echo p0 p0.effects
 	enddef
 
 	command! -nargs=0 Foo Foo()
@@ -428,8 +429,8 @@ For example:
 	var pool: list<react.Property> = []
 
 	# New properties are added to the pool:
-	var p0 = react.Property.new(0, pool)
-	var p1 = react.Property.new(1, pool)
+	var p0 = react.Property.new(0, {pool: pool})
+	var p1 = react.Property.new(1, {pool: pool})
 
 	react.CreateEffect(() => {
 	  p0.Get()
@@ -437,7 +438,7 @@ For example:
 	})
 
 	# Inspect the value and effects of each property
-	echo mapnew(pool, (_, p: react.Property) => p.String())
+	echo pool mapnew(pool, (_, p) => string(p.effects))
 
 	# Clear all the effects
 	for property in pool
@@ -445,7 +446,7 @@ For example:
 	endfor
 
 	# Check that the effects have been cleared
-	echo mapnew(pool, (_, p: react.Property) => p.String())
+	echo pool mapnew(pool, (_, p) => string(p.effects))
 <
 The pool is under the complete control of your script: you may use it in any
 way you want.
@@ -454,174 +455,67 @@ way you want.
 5. Examples					*libreactive-examples*
 
 An obvious application of libreactive is to support interactive UIs in Vim,
-such as interactive popup windows or palettes. A straightforward way to
-achieve that is with a rendering loop. Example:
+such as interactive popup windows or palettes.
+
+The following script creates a popup window that is updated every time the
+user clicks with the mouse on the window. The number of mouse clicks is
+displayed and shown at the bottom, and if the user clicks on the first line of
+the popup, the emoji is changed, too. The example is somewhat contrived: the
+poup could be easily created without libreactive.
 >
 	vim9script
 	import 'libreactive.vim' as react
-
-	var n = 0  # Counts how many times the UI is redrawn
-
-	# Internal state:
-	var pool: list<react.Property> = []
-	var cmd    = react.Property.new('', pool)
-	var animal = react.Property.new('', pool)
-	var plant  = react.Property.new('', pool)
-
-	def InitProperties()
-	  for property in pool
-	    property.Clear()
-	  endfor
-
-	  cmd.Set('')
-	  animal.Set('-')
-	  plant.Set('-')
+	
+	const emoji = ['🦊', '🐼', '🍀', '💐']
+	
+	# Reactive state
+	var k = react.Property.new(0) # Index of displayed emoji
+	var n = react.Property.new(0) # Counter of mouse clicks
+	
+	def SelectNextEmoji()
+	  k.Set((k.Get() + 1) % len(emoji))
 	enddef
-
-	def InitEffects()
-	  react.CreateEffect(() => {
-	    if cmd.Get() == 'f'
-	      animal.Set('🦊')
-	    elseif cmd.Get() == 'p'
-	      animal.Set('🐼')
+	
+	def IncrementCounter()
+	  n.Set(n.Get() + 1)
+	enddef
+	
+	def HandleEvent(winid: number, keyCode: string): bool
+	  if keyCode == "\<LeftMouse>"
+	    var mousepos = getmousepos()
+	
+	    if mousepos.winid == winid
+	      if mousepos.line == 1
+		SelectNextEmoji()
+	      endif
+	
+	      IncrementCounter()
 	    endif
-	  })
-
-	  react.CreateEffect(() => {
-	    if cmd.Get() == 'f'
-	      plant.Set('🍀')
-	    elseif cmd.Get() == 'r'
-	      plant.Set('💐')
-	    endif
-	  })
-	enddef
-
-	def View(): list<string>
-	  ++n
-	  return [animal.Get() .. $' ({n})', plant.Get() .. $' ({n})']
-	enddef
-
-	def RenderingLoop(winID: number, key: string): bool
-	  if key == 'q'
-	    popup_close(winID)
-	  else
-	    cmd.Set(key) # React to action by updating the internal state
-	    popup_settext(winID, View()) # Rebuild the view and update the UI
 	  endif
-	  return true
+	
+	  return false
 	enddef
-
-	def Main()
-	  n = 0
-	  InitProperties()
-	  InitEffects()
-	  const winID = popup_create(
-	    View(), {close: 'click', filter: RenderingLoop}
-	  )
-	enddef
-
-	command! -nargs=0 RunBabyRun Main()
->
-In the previous, somewhat contrived, example, changing the state and updating
-the UI are two clearly distinct steps, executed one after another. The whole
-popup is updated exactly once for each event (in this case, for each key
-press): even the parts of the UI that do not change are redrawn. That is
-apparent by looking at the counter next to each emoji (the counter is not to
-be considered part of the internal state: it exists only to make it apparent
-when the popup is redrawn).
-
-A simple interactive popup like the above can be easily built without
-libreactive (try simplifying the script above by getting rid of libreactive!).
-The benefits of using libreactive manifest themselves when the complexity
-increases, there are cascading effects or efficiency can be improved by
-caching computations.
-
-Another possibility is to perform the rendering as part of one or more
-effects. This is more complex, but provides finer control, than the previous
-approach. It works best when the rendering is granular, that is, only the
-parts of the UI that need to be updated are redrawn (with the limitation that
-the unit of update of a popup is a full line). Example:
->
-	vim9script
-	import 'libreactive.vim' as react
-
-	var pool: list<react.Property> = []
-	var cmd    = react.Property.new('', pool)
-	var animal = react.Property.new('', pool)
-	var plant  = react.Property.new('', pool)
-
-	def InitProperties()
-	  for property in pool
-	    property.Clear()
-	  endfor
-
-	  cmd.Set('')
-	  animal.Set('-')
-	  plant.Set('-')
-	enddef
-
-	def InitEffects(winID: number)
-	  var bufnr = winbufnr(winID)
-	  var m = 0  # Counts how many times the first line is updated
-	  var n = 0  # Counts how many times the second line is updated
-
-	  # State manipulation:
-
-	  react.CreateEffect(() => {
-	    if cmd.Get() == 'f'
-	      animal.Set('🦊')
-	    elseif cmd.Get() == 'p'
-	      animal.Set('🐼')
-	    endif
-	  })
-
-	  react.CreateEffect(() => {
-	    if cmd.Get() == 'f'
-	      plant.Set('🍀')
-	    elseif cmd.Get() == 'r'
-	      plant.Set('💐')
-	    endif
-	  })
-
-	  # UI effects:
-
-	  react.CreateEffect(() => {
-	    if cmd.Get() == 'q'
-	      popup_close(winID)
-	    endif
-	  })
-
-	  react.CreateEffect(() => {
-	    ++m
-	    setbufline(bufnr, 1, animal.Get() .. $' ({m})')
-	  })
-
-	  react.CreateEffect(() => {
-	    ++n
-	    setbufline(bufnr, 2, plant.Get() .. $' ({n})')
-	  })
-	enddef
-
-	# Update the state and render the parts of the UI needing an update
-	def Filter(winID: number, key: string): bool
-	  cmd.Set(key, true) 
-	  return true
-	enddef
-
-	def Main()
-	  const winID = popup_create('', {close: 'click', filter: Filter})
-	  InitProperties()
-	  InitEffects(winID)
-	enddef
-
-	command! -nargs=0 RunBabyRun Main()
+	
+	var popup_id = popup_create([
+	  '', # Dynamically updated 
+	  'Number of clicks:',
+	  '', # Dynamically updated
+	], {
+	  filter: HandleEvent,
+	})
+	var bufnr = winbufnr(popup_id)
+	
+	# UI update
+	react.CreateEffect(() => {
+	  setbufline(bufnr, 1, emoji[k.Get()])
+	})
+	
+	react.CreateEffect(() => {
+	  setbufline(bufnr, 3, string(n.Get()))
+	})
 <
-Again, the same popup could be created without libreactive, but you would need
-to manually keep track of what must be updated when. For moderately complex
-UIs, that may quickly become difficult and prone to errors.
-
 Of course, libreactive is not limited to building popups, and its use is not
-limited to the two techniques described above. Be creative!
+limited to the what has been described above. Be creative!
 
 ==============================================================================
 6. Tips and tricks				*libreactive-tips*
@@ -744,14 +638,16 @@ limited to the two techniques described above. Be creative!
   an error will be raised when `F()` is executed.
 
 - If you think you need to read and write the same property inside an effect,
-  you are probably doing it wrong: rethink about your problem. An exception
-  may be collection properties, because most often the new value is obtained
-  by adding elements to or removing elements from the current value. which you
-  must read from the property but without side effects.
+  you are probably doing it wrong: rethink about your problem. An exception is
+  collection properties, because most often the new value is obtained by
+  adding elements to or removing elements from the current value of the
+  property, which you must read without side effects by accessing the
+  property's `value` attribute.
 
-- Always define a pool in your scripts and clear all your properties in the
-  initialization step of your script. This will avoid the "phantom effect"
-  described in |libreactive-pools|.
+- For properties defined at the script level, always define a pool in the
+  script and clear all the properties in the initialization step of the
+  script. This will avoid the "phantom effect" described in
+  |libreactive-pools|.
 
 - Prefer |libreactive.Transaction()| to |libreactive.Begin()| and
   |libreactive.Commit()|. The latter two are useful in limited circumstances,
@@ -764,18 +660,25 @@ limited to the two techniques described above. Be creative!
 
 Classes ~
 					*libreactive.Property()*
-new([{value}, {pool}])
+new([{value}, {args}])
 		Create a new property with the given {value}. {value} can be
 		of any type. If no value is provided, the property is
 		initialized with |null|.
 
-		If {pool} is provided, it must be a |List| of Properties. The
-		new property is added to {pool} by the constructor.
-
+		{args} is an optional dictionary that can be used to provide
+		a pool. Then, the new property is added to the pool by the
+		constructor. For example:
+>
+		var my_pool: list<react.Property> = []
+		var my_property = react.Property.new(value, {pool: my_pool})
+<
 value
 		The read-only value of the property. Accessing this does not
 		trigger any effects. You should prefer Get() in most
 		circumstances.
+
+effects
+		The list of effects currently bound to the property.
 
 Get()
 		Obtain the value of the property. If this method is called
@@ -801,20 +704,6 @@ Clear()
 		After this, updating this property will not trigger any effect
 		until the property is read again by some effect.
 
-Effects()
-		Return the names of the effects currently observing this
-		property as a |List| of |String|s. Mainly useful for debugging.
-
-String()
-		Return a |String| representation of this property. The string
-		has the form '<value> {<effects>}', where <value> is the
-		current value of the property, and <effects> is the list of
-		functions or lambdas that are the current effects of this
-		property. Each effect is prefix with E<n>:, where <n> is
-		a number uniquely identifying each effect, so that it is
-		possible to distinguish distinct effect instances that execute
-		the same function or lambda.
-
 Functions ~
 
 					*libreactive.Begin()*
@@ -839,7 +728,7 @@ CreateEffect({func})
 		|libreactive.nested_effects| to |true|.
 
 					*libreactive.CreateMemo()*
-CreateMemo({func}[, {pool}])
+CreateMemo({func}[, {args}])
 		Create an effect that executes {func} and caches its result
 		into a property. The property is created by CreateMemo().
 		{func} must be a function with no parameters and an arbitrary
@@ -847,8 +736,7 @@ CreateMemo({func}[, {pool}])
 		recomputed—and its result cached—whenever any property which
 		the function depends upon is updated.
 
-		If {pool} is provided, it must be a |List| of Properties. The
-		property created by this function is appended to {pool}.
+		{args} is as in |libreactive.Property|'s new().
 
 		Returns a reference to the property's Get() method.
 

@@ -134,6 +134,7 @@ enddef
 
 # Properties {{{
 export class Property implements IProperty
+  public var value: any = null
   var effects: list<Effect> = []
 
   def new(this.value = v:none, pool: list<IProperty> = null_list)

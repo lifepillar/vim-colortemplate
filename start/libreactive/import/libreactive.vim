@@ -153,7 +153,7 @@ def PushEffects(effects: list<Effect>)
 enddef
 
 export class Property implements IProperty
-  public var value: any = null
+  var value: any = null
   var effects: list<Effect> = []
 
   def new(this.value = v:none, args: dict<any> = {})

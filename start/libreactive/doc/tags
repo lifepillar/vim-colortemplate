@@ -10,9 +10,9 @@ libreactive-tips	libreactive.txt	/*libreactive-tips*
 libreactive-transactions	libreactive.txt	/*libreactive-transactions*
 libreactive.Begin()	libreactive.txt	/*libreactive.Begin()*
 libreactive.Commit()	libreactive.txt	/*libreactive.Commit()*
+libreactive.ComputedProperty	libreactive.txt	/*libreactive.ComputedProperty*
 libreactive.CreateEffect()	libreactive.txt	/*libreactive.CreateEffect()*
-libreactive.CreateMemo()	libreactive.txt	/*libreactive.CreateMemo()*
-libreactive.Property()	libreactive.txt	/*libreactive.Property()*
+libreactive.Property	libreactive.txt	/*libreactive.Property*
 libreactive.Reset()	libreactive.txt	/*libreactive.Reset()*
 libreactive.Transaction()	libreactive.txt	/*libreactive.Transaction()*
 libreactive.debug_level	libreactive.txt	/*libreactive.debug_level*

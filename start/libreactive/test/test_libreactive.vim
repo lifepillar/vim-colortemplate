@@ -214,17 +214,17 @@ def Test_React_CachedComputation()
   var run = 0
   var name = ''
 
-  const FullName = react.CreateMemo((): string => {
+  const FullName = react.ComputedProperty.new((): string => {
     ++run
     return $'{FirstName()} {LastName()}'
   })
 
   assert_equal(1, run) # The lambda is executed once upon creation
-  assert_equal('John Smith', FullName())
+  assert_equal('John Smith', FullName.Get())
   assert_equal(1, run) # The name has been cached, so the lambda is not re-run
 
   react.CreateEffect(() => {
-    name = FullName()
+    name = FullName.Get()
   })
 
   assert_equal('John Smith', name) # The effect is initially run once
@@ -235,7 +235,7 @@ def Test_React_CachedComputation()
   assert_equal('Jacob Smith', name)
   assert_equal(2, run) # The name has changed, the lambda has been re-run
 
-  assert_equal('Jacob Smith', FullName())
+  assert_equal('Jacob Smith', FullName.Get())
   assert_equal(2, run)
 
   SetLastName('Doe')
@@ -243,7 +243,7 @@ def Test_React_CachedComputation()
   assert_equal('Jacob Doe', name)
   assert_equal(3, run) # The name has changed, the lambda has been re-run
 
-  assert_equal('Jacob Doe', FullName())
+  assert_equal('Jacob Doe', FullName.Get())
   assert_equal(3, run)
 enddef
 
@@ -254,14 +254,14 @@ def Test_React_FineGrainedReaction()
   var name = ''
   var run = 0
 
-  const DisplayName = react.CreateMemo((): string => {
+  const DisplayName = react.ComputedProperty.new((): string => {
     ++run
     if !ShowFullName() # When ShowFullName() is false, only first name is tracked
       return FirstName()
     endif
 
     return $'{FirstName()} {LastName()}'
-  })
+  }).Get
 
   assert_equal('John Smith', DisplayName())
   assert_equal(1, run)
@@ -527,8 +527,8 @@ def Test_React_VStack()
     var stacked: list<Reader>
 
     for V in views
-      var VMemo = react.CreateMemo(V) # Creates an effect that tracks V's signals
-      stacked->add(VMemo)
+      var memo = react.ComputedProperty.new(V) # Creates an effect that tracks V's signals
+      stacked->add(memo.Get)
     endfor
 
     return (): list<string> => {
@@ -1034,13 +1034,22 @@ def Test_React_Cache()
     return p0.Get() * p0.Get()
   }
 
-  const C0 = react.CreateMemo(F)
+  const c0 = react.ComputedProperty.new(F)
 
-  assert_equal(4, C0())
+  assert_equal(4, c0.Get())
 
   p0.Set(3)
 
-  assert_equal(9, C0())
+  assert_equal(9, c0.Get())
+enddef
+
+def Test_React_ComputedPropertyCannotBeSet()
+  var p0 = react.Property.new(42)
+  var c0 = react.ComputedProperty.new(() => p0.Get() + 1)
+
+  tt.AssertFails(() => {
+    c0.Set(2)
+  }, 'cannot be set')
 enddef
 
 def Test_React_ListProperty()
@@ -1073,17 +1082,17 @@ def Test_React_ListProperty()
   assert_equal('AABABCABCDABCDEABCDEF', result)
 enddef
 
-def Test_React_CreateMemoWithPool()
+def Test_React_ComputedPropertyWithPool()
   var pool: list<react.Property> = []
   var p0 = react.Property.new(3)
-  var F = react.CreateMemo(() =>  2 * p0.Get(), {pool: pool})
+  var c0 = react.ComputedProperty.new(() =>  2 * p0.Get(), {pool: pool})
 
   assert_equal(1, len(pool))
-  assert_equal(6, F())
+  assert_equal(6, c0.Get())
 
   p0.Set(21)
 
-  assert_equal(42, F())
+  assert_equal(42, c0.Get())
 enddef
 
 def Test_React_ListPropertyTransaction()

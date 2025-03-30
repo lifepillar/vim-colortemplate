@@ -333,11 +333,9 @@ In the code above, F() is executed four times: twice when Effect 1 and Effect
 2 are created, and two more times when `p` is updated (once for each effect).
 
 In such cases, it is convenient to cache the result of the expensive function.
-This can be done by using |libreactive.CreateMemo()|, which takes as input
-a function or lambda F whose current value is computed and stored inside
-a property automatically instantiated by CreateMemo(), which then returns
-a reference to the property's Get() method. The cached result is automatically
-recomputed whenever the properties on which F depends are updated.
+This can be done by using |libreactive.ComputedProperty()|, which caches the
+value of a function or lambda F and automatically recomputes F whenever the
+properties on which F depends are updated.
 
 The example above can be rewritten as follows:
 >
@@ -352,23 +350,23 @@ The example above can be rewritten as follows:
 	  return cos(p.Get())
 	enddef
 
-	var CachedF = react.CreateMemo(F)
+	var CachedF = react.ComputedProperty.new(F)
 
 	react.CreateEffect(() => {
-	  echo $'Effect 1: {CachedF()}'
+	  echo $'Effect 1: {CachedF.Get()}'
 	})
 
 	react.CreateEffect(() => {
-	  echo $'Effect 2: {CachedF()}'
+	  echo $'Effect 2: {CachedF.Get()}'
 	})
 
 	p.Set(1.3)
 <
-Now, F() is executed only if necessary: once when the memo is created (to
-cache the initial value of F for p equal to 0.0) and once more when `p` is
-updated (to compute the updated value of F for p equal to 1.3). The function
-F is not executed when Effect 1 and Effect 2 are run: those effects just
-retrieve the cached value from the memo property.
+Now, F() is executed only if necessary: once when the computed property is
+created (to cache the initial value of F for p equal to 0.0) and once more
+when `p` is updated (to compute the updated value of F for p equal to 1.3).
+The function F is not executed when Effect 1 and Effect 2 are run: those
+effects just retrieve the cached value from the property.
 
 ==============================================================================
 4. Pools					*libreactive-pools*
@@ -501,6 +499,7 @@ poup could be easily created without libreactive.
 	  'Number of clicks:',
 	  '', # Dynamically updated
 	], {
+	  close: 'button',
 	  filter: HandleEvent,
 	})
 	var bufnr = winbufnr(popup_id)
@@ -659,7 +658,9 @@ limited to the what has been described above. Be creative!
 7. API					*libreactive-api*
 
 Classes ~
-					*libreactive.Property()*
+
+					*libreactive.Property*
+
 new([{value}, {args}])
 		Create a new property with the given {value}. {value} can be
 		of any type. If no value is provided, the property is
@@ -704,6 +705,20 @@ Clear()
 		After this, updating this property will not trigger any effect
 		until the property is read again by some effect.
 
+
+					*libreactive.ComputedProperty*
+
+A subclass of |libreactive.Property| for caching derived values.
+
+new({func}[, {args}])
+		Create a new property that computes and caches the result of
+		{func}. {func} must be a function with no parameters and an
+		arbitrary return value. The function's value is automatically
+		recomputed whenever any property upon which the function
+		depends is updated.
+
+		{args} is as in |libreactive.Property|'s new().
+
 Functions ~
 
 					*libreactive.Begin()*
@@ -726,19 +741,6 @@ CreateEffect({func})
 		Effects by default cannot be nested: that results in a runtime
 		error. To allow nested effects, set
 		|libreactive.nested_effects| to |true|.
-
-					*libreactive.CreateMemo()*
-CreateMemo({func}[, {args}])
-		Create an effect that executes {func} and caches its result
-		into a property. The property is created by CreateMemo().
-		{func} must be a function with no parameters and an arbitrary
-		return value. The function's value is automatically
-		recomputed—and its result cached—whenever any property which
-		the function depends upon is updated.
-
-		{args} is as in |libreactive.Property|'s new().
-
-		Returns a reference to the property's Get() method.
 
 					*libreactive.Reset()*
 Reset()

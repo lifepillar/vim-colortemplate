@@ -195,6 +195,21 @@ export class Property implements IProperty
     return type(this.value) == v:t_string ? this.value : string(this.value)
   enddef
 endclass
+
+export class ComputedProperty extends Property
+  def new(Fn: func(): any, args: dict<any> = {})
+    super.Init(args)
+    CreateEffect(() => this.Set_(Fn()))
+  enddef
+
+  def Set(value: any, force = false)
+    throw 'The value of a computed property cannot be set.'
+  enddef
+
+  def Set_(value: any, force = false)
+    super.Set(value, force)
+  enddef
+endclass
 # }}}
 
 # Functions {{{
@@ -207,13 +222,5 @@ export def CreateEffect(Fn: func())
   endif
 
   runningEffect.Execute() # Necessary to bind to dependent signals
-enddef
-
-export def CreateMemo(Fn: func(): any, args: dict<any> = {}): func(): any
-  var memo = Property.new(v:none, args)
-
-  CreateEffect(() => memo.Set(Fn()))
-
-  return memo.Get
 enddef
 # }}}

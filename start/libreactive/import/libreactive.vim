@@ -212,7 +212,7 @@ export class ComputedProperty extends Property
 endclass
 # }}}
 
-# Functions {{{
+# CreateEffect {{{
 export def CreateEffect(Fn: func())
   var runningEffect = Effect.new(Fn)
 

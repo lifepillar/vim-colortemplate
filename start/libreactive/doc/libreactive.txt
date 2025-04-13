@@ -298,8 +298,8 @@ once for each instance. If nesting were not allowed it would not be possible
 to create instances of `Foo` within the scope of another effect.
 
 During development or for debugging purposes it may be useful to know if and
-when nested effects are created. You may set |libreactive.debug_level| to
-|true| to log such information into the message history.
+when nested effects are created. You may set |libreactive.debug_level| to |1|
+to log such information into the message history.
 
 ==============================================================================
 3. Caching computations				*libreactive-caching*
@@ -411,9 +411,9 @@ recreating the effect fixes the issue:
 	enddef
 <
 When there are many properties, clearing each and every one may become a bit
-tedious. For that reason, the constructor of |libreactive.Property()| takes an
-optional argument of type |List|, which can be used to store references to the
-properties created by your script. Such list is called a "pool". If the
+tedious. The constructor of |libreactive.Property()| takes an optional
+dictionary, which can be used to pass a |List| object to store references to
+the properties created by your script. Such list is called a "pool". If the
 constructor is provided with a pool, it will add the new property to that
 pool.
 
@@ -446,72 +446,127 @@ For example:
 	# Check that the effects have been cleared
 	echo pool mapnew(pool, (_, p) => string(p.effects))
 <
-The pool is under the complete control of your script: you may use it in any
-way you want.
+The pool is under the complete control of your script: libreactive does not
+use pools in any other way beyond appending a property to a list, and it does
+not store pools internally. In other words, initializing a property with
+a pool is simply a convenience for code that looks like this:
+>
+	var pool: list<react.Property> = []
+	var p0:   react.Property.new(0)
+	var p1:   react.Property.new(1)
 
+	pool->add(p0)
+	pool->add(p1)
+<
 ==============================================================================
 5. Examples					*libreactive-examples*
 
 An obvious application of libreactive is to support interactive UIs in Vim,
 such as interactive popup windows or palettes.
 
-The following script creates a popup window that is updated every time the
-user clicks with the mouse on the window. The number of mouse clicks is
-displayed and shown at the bottom, and if the user clicks on the first line of
-the popup, the emoji is changed, too. The example is somewhat contrived: the
-poup could be easily created without libreactive.
+The following script is a self-contained example outlining a general approach
+to implementing a reactive UI. In the script, there are two sources of events:
+popup actions and autocommands. The content of the popup is kept in sync with
+the reactive state, no matter what the cause of a state change is, using an
+effect that redraws the popup when necessary.
+
+A mouse click anywhere in the popup increments a counter of mouse clicks;
+clicking on the emoji will also change it; and finally, moving the cursor will
+update the count of cursor movements.
 >
 	vim9script
 	import 'libreactive.vim' as react
 	
-	const emoji = ['🦊', '🐼', '🍀', '💐']
+	const EMOJIS = ['🦊', '🐼', '🍀', '💐']
 	
 	# Reactive state
-	var k = react.Property.new(0) # Index of displayed emoji
-	var n = react.Property.new(0) # Counter of mouse clicks
+	var pool: list<react.Property> = []
+	var emoji = react.Property.new(0, {pool: pool}) # Index of displayed emoji
+	var click = react.Property.new(0, {pool: pool}) # Counter of mouse clicks
+	var moved = react.Property.new(0, {pool: pool}) # Counter of cursor movements
 	
-	def SelectNextEmoji()
-	  k.Set((k.Get() + 1) % len(emoji))
-	enddef
-	
-	def IncrementCounter()
-	  n.Set(n.Get() + 1)
-	enddef
+	augroup Libreactive
+	  autocmd CursorMoved * moved.Set(moved.Get() + 1)
+	augroup END
 	
 	def HandleEvent(winid: number, keyCode: string): bool
 	  if keyCode == "\<LeftMouse>"
 	    var mousepos = getmousepos()
 	
 	    if mousepos.winid == winid
-	      if mousepos.line == 1
-		SelectNextEmoji()
+	      if mousepos.line == 2 && mousepos.column == 1 # Emoji hit
+	        emoji.Set((emoji.Get() + 1) % len(EMOJIS))  # Select next emoji
 	      endif
 	
-	      IncrementCounter()
+	      click.Set(click.Get() + 1) # Increment mouse click
+	      return true
 	    endif
 	  endif
 	
 	  return false
 	enddef
 	
-	var popup_id = popup_create([
-	  '', # Dynamically updated 
-	  'Number of clicks:',
-	  '', # Dynamically updated
-	], {
-	  close: 'button',
-	  filter: HandleEvent,
-	})
-	var bufnr = winbufnr(popup_id)
+	def ClosedCallback(winid: number, result: any = '')
+	  if exists('#Libreactive')
+	    autocmd! Libreactive
+	    augroup! Libreactive
+	  endif
+	enddef
 	
-	# UI update
-	react.CreateEffect(() => {
-	  setbufline(bufnr, 1, emoji[k.Get()])
-	})
+	def Redraw(popup_id: number)
+	  popup_settext(popup_id, [
+	    'Libreactive  ',
+	    EMOJIS[emoji.Get()],
+	    string(click.Get()),
+	    string(moved.Get()),
+	  ])
+	enddef
 	
-	react.CreateEffect(() => {
-	  setbufline(bufnr, 3, string(n.Get()))
-	})
+	def RunBabyRun()
+	  for property in pool
+	    property.Clear()
+	  endfor
+	
+	  var popup_id = popup_create('', {
+	    close:    'button',
+	    filter:   HandleEvent,
+	    callback: ClosedCallback,
+	  })
+	  var bufnr = winbufnr(popup_id)
+	
+	  react.CreateEffect(() => Redraw(popup_id))
+	enddef
+	
+	RunBabyRun()
+<
+The UI update can also be made more granular. By replacing `RunBabyRun()`
+above with the following version, only the lines of the popup window that go
+out of sync are updated:
+>
+	def RunBabyRun()
+	  for property in pool
+	    property.Clear()
+	  endfor
+	
+	  var popup_id = popup_create(['Libreactive  '], {
+	    close:    'button',
+	    filter:   HandleEvent,
+	    callback: ClosedCallback,
+	  })
+	  var bufnr = winbufnr(popup_id)
+	
+	  react.CreateEffect(() => {
+	    setbufline(bufnr, 2, EMOJIS[emoji.Get()])
+	  })
+	
+	  react.CreateEffect(() => {
+	    setbufline(bufnr, 3, string(click.Get()))
+	  })
+	
+	  react.CreateEffect(() => {
+	    setbufline(bufnr, 4, string(moved.Get()))
+	  })
+	enddef
 <
 Of course, libreactive is not limited to building popups, and its use is not
 limited to the what has been described above. Be creative!
@@ -738,10 +793,6 @@ CreateEffect({func})
 		Create a new effect running {func} and execute it once. {func}
 		must be a function with no parameters and no return value.
 
-		Effects by default cannot be nested: that results in a runtime
-		error. To allow nested effects, set
-		|libreactive.nested_effects| to |true|.
-
 					*libreactive.Reset()*
 Reset()
 		Clear the effects' queue. Any effects that are queued for
@@ -754,9 +805,7 @@ Reset()
 Transaction({func})
 		Execute {func} atomically: any property updates performed by
 		{func} trigger their direct effects only once and only at the
-		end of the transaction.
-
-		Note: transactions may be nested.
+		end of the transaction. Transactions may be nested.
 
 ==============================================================================
 8. Options				*libreactive-options*
@@ -764,7 +813,7 @@ Transaction({func})
 For each of the following script variables, a global setting of the form
 `g:libreactive_<variable>` can also be defined. Script variables can be set
 anywhere in your scripts. Global variables have an effect only if they are
-defined before sourcing the library.
+defined before importing libreactive.
 
 					*libreactive.debug_level*
 

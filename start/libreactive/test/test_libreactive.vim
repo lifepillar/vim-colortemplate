@@ -6,6 +6,10 @@ import '../import/libreactive.vim' as react
 react.debug_level = 0
 react.queue_size  = 100
 
+class Dummy
+  var value: number
+endclass
+
 class X
   var result: number
 
@@ -22,8 +26,8 @@ class ChildProperty extends react.Property
     super.Init(args)
   enddef
 
-  def Set(newValue: string, force = false)
-    if !force
+  def Set(newValue: string, args: dict<any> = {})
+    if !args->get('force', false)
       return
     endif
 
@@ -381,7 +385,7 @@ def Test_React_EffectTriggeringItselfWithoutChangingValue()
   # loop.
   tt.AssertFails(() => {
     react.CreateEffect(() => {
-      p1.Set(p1.Get(), true)
+      p1.Set(p1.Get(), {'force': true})
     })
   }, 'recursive effects')
 enddef
@@ -1043,6 +1047,54 @@ def Test_React_Cache()
   assert_equal(9, c0.Get())
 enddef
 
+def Test_React_ComputedProperty()
+  var p0 = react.Property.new(2)
+  var c0 = react.ComputedProperty.new(() => p0.Get() * 2)
+
+  assert_equal(4, c0.Get())
+
+  p0.Set(5)
+
+  assert_equal(10, c0.Get())
+enddef
+
+def Test_React_ComputedObject()
+  var d0 = Dummy.new(1)
+  var d1 = Dummy.new(2)
+  var d2 = Dummy.new(2)
+  var p0 = react.Property.new(d0)
+  var c0 = react.ComputedProperty.new(() => p0.Get(), {'force': true})
+
+  assert_notequal(d0, d1)
+  assert_true(d0 isnot d1)
+  assert_equal(d1, d2)
+  assert_true(d1 isnot d2)
+
+  assert_equal(p0.Get(), c0.Get())
+  assert_true(p0.Get() is c0.Get())
+  assert_true(c0.Get() is d0)
+
+  p0.Set(d1)
+
+  assert_equal(p0.Get(), c0.Get())
+  assert_true(p0.Get() is c0.Get())
+  assert_true(c0.Get() is d1)
+
+  p0.Set(d2) # As Set() uses == this will not change the object
+
+  assert_equal(p0.Get(), c0.Get())
+  assert_true(p0.Get() is c0.Get())
+  assert_true(c0.Get() is d1)
+  assert_true(c0.Get() isnot d2)
+
+  p0.Set(d2, {force: true})
+
+  assert_equal(p0.Get(), c0.Get())
+  assert_true(p0.Get() is c0.Get())
+  assert_true(c0.Get() isnot d1)
+  assert_true(c0.Get() is d2)
+enddef
+
 def Test_React_ComputedPropertyCannotBeSet()
   var p0 = react.Property.new(42)
   var c0 = react.ComputedProperty.new(() => p0.Get() + 1)
@@ -1065,7 +1117,7 @@ def Test_React_ListProperty()
 
   for ch in ['A', 'B', 'C']
     value->add(ch)
-    l0.Set(value, true) # true necessary to trigger effects
+    l0.Set(value, {force: true}) # true necessary to trigger effects
   endfor
 
   assert_equal(['A', 'B', 'C'], l0.Get())
@@ -1109,7 +1161,7 @@ def Test_React_ListPropertyTransaction()
   react.Transaction(() => {
     for ch in ['A', 'B', 'C']
       value->add(ch)
-      l0.Set(value, true) # true necessary to trigger effects
+      l0.Set(value, {force: true}) # true necessary to trigger effects
     endfor
   })
 
@@ -1155,7 +1207,7 @@ def Test_React_SpecializedProperty()
   assert_equal('x', c0.Get())
   assert_equal('x', result)
 
-  c0.Set('y', true)
+  c0.Set('y', {force: true})
 
   assert_equal('xy', c0.Get())
   assert_equal('xy', result)
@@ -1176,7 +1228,7 @@ def Test_React_RollbackEffect()
     r0->add(t)
     var inserted = logged.Get()
     inserted->add(t)
-    logged.Set(inserted, true)
+    logged.Set(inserted, {force: true})
   enddef
 
   react.CreateEffect(() => { # Effect 1
@@ -1224,6 +1276,7 @@ def Test_React_RollbackEffect()
   assert_equal([{A: 4}, {A: 5}, {A: 6}], logged.Get())
   assert_equal(3, counter)
 enddef
+
 
 tt.Run('_React_')
 

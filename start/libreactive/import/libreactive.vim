@@ -22,7 +22,7 @@ enddef
 # Effects {{{
 interface IProperty
   def Get(): any
-  def Set(value: any, force: bool)
+  def Set(value: any, args: dict<any>)
   def Clear()
   def RemoveEffect(effect: any)
 endinterface
@@ -173,8 +173,8 @@ export class Property implements IProperty
     return this.value
   enddef
 
-  def Set(value: any, force = false)
-    if !force && (value == this.value)
+  def Set(value: any, args: dict<any> = {})
+    if !args->get('force', false) && (value == this.value)
       return
     endif
 
@@ -199,15 +199,15 @@ endclass
 export class ComputedProperty extends Property
   def new(Fn: func(): any, args: dict<any> = {})
     super.Init(args)
-    CreateEffect(() => this.Set_(Fn()))
+    CreateEffect(() => this.Set_(Fn(), args))
   enddef
 
-  def Set(value: any, force = false)
+  def Set(value: any, args: dict<any> = {})
     throw 'The value of a computed property cannot be set.'
   enddef
 
-  def Set_(value: any, force = false)
-    super.Set(value, force)
+  def Set_(value: any, args: dict<any>)
+    super.Set(value, args)
   enddef
 endclass
 # }}}

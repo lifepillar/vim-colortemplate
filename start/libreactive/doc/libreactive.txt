@@ -463,8 +463,8 @@ effects just retrieve the cached value from the property.
 So far we have talked about creating properties that trigger some effects. In
 practice, one will also want to stop properties to trigger effects.
 
-That is done by calling the Clear() method of |libreactive.Property()|, which
-unsubscribes all the effects that are currently observing the affected
+That is done by calling the ClearEffects() method of |libreactive.Property()|,
+which unsubscribes all the effects that are currently observing the affected
 property.
 
 Let us see why sometimes it is necessary to clear the properties. The
@@ -493,7 +493,7 @@ times. This is in general not what one wants. Clearing the property before
 recreating the effect fixes the issue:
 >
 	def Foo()
-	  p0.Clear()
+	  p0.ClearEffects()
 	  react.CreateEffect(() => {
 	    p0.Get()
 	  })
@@ -529,7 +529,7 @@ For example:
 
 	# Clear all the effects
 	for property in pool
-	  property.Clear()
+	  property.ClearEffects()
 	endfor
 
 	# Check that the effects have been cleared
@@ -620,7 +620,7 @@ title, a counter of how many times the popup has been redrawn.
 
 	def RunBabyRun()
 	  for property in pool
-	    property.Clear()
+	    property.ClearEffects()
 	  endfor
 
 	  var popup_id = popup_create('', {
@@ -655,7 +655,7 @@ out of sync are updated:
 >
 	def RunBabyRun()
 	  for property in pool
-	    property.Clear()
+	    property.ClearEffects()
 	  endfor
 
 	  var popup_id = popup_create(['Libreactive  '], {
@@ -870,7 +870,7 @@ Set({value}[, {args}])
 		set to |true|, though, the effects are always executed, even
 		if the update does not change the value of the property.
 
-Clear()
+ClearEffects()
 		Un-register all the effects currently observing this property.
 		After this, updating this property will not trigger any effect
 		until the property is read again by some effect.

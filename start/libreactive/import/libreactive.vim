@@ -23,7 +23,7 @@ enddef
 interface IProperty
   def Get(): any
   def Set(value: any, args: dict<any>)
-  def Clear()
+  def ClearEffects()
   def RemoveEffect(effect: any)
 endinterface
 
@@ -194,7 +194,7 @@ export class Property implements IProperty
     effect->RemoveFrom(this.effects)
   enddef
 
-  def Clear()
+  def ClearEffects()
     this.effects = []
   enddef
 

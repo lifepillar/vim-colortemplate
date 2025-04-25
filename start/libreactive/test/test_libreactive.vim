@@ -791,7 +791,7 @@ def Test_React_Pool()
   assert_equal('now', result)
 
   for p in pool # Clear effects
-    p.Clear()
+    p.ClearEffects()
   endfor
   p0.Set('he')
   pf.Set('re')
@@ -820,7 +820,7 @@ def Test_React_PropertyInsideFunction()
 
   assert_equal('ab', result)
 
-  pool[0].Clear()
+  pool[0].ClearEffects()
   q.Set('c')
 
   assert_equal('ab', result)
@@ -881,7 +881,7 @@ def Test_React_ReuseLambda()
   assert_equal(p.effects[0], p.effects[1])
   assert_false(p.effects[0] is p.effects[1])
 
-  p.Clear()
+  p.ClearEffects()
   E()
   assert_equal('xyyzzz', result)
   assert_equal(1, len(p.effects))
@@ -926,7 +926,7 @@ def Test_React_TransactionEffectsBis()
   })
 
   react.Transaction(() => {
-    p1.Clear()
+    p1.ClearEffects()
     p1.Set(1)
     p2.Set(2)
   })
@@ -951,7 +951,7 @@ def Test_React_TransactionEffectsTer()
 
   react.Transaction(() => {
     p1.Set(1)
-    p2.Clear()
+    p2.ClearEffects()
     p2.Set(2)
   })
 

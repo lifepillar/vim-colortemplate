@@ -1,4 +1,4 @@
-*libreactive.txt*	For Vim version 9.1	Last change: 2025 Apr 21
+*libreactive.txt*	For Vim version 9.1	Last change: 2025 Apr 25
 
 Note: Vim 9.1 or later is required.
 
@@ -226,11 +226,10 @@ following three steps until all cascading effects have been executed:
    queue;
 3. pop the effect at the top of the queue, and go to step 1.
 
-NOTE: in step 2, you should not rely on the order in which the effects
-associated to a given property are enqueued.
-
-It is worth pointing out that the algorithm above does not prevent the same
-effect to be executed multiple times during the same cascading propagation
+Note that in step 2 the effects are pushed to the execution queue following
+the order in which the properties are updated, without taking into account any
+causal relationship among effects. This may lead to situations in which the
+same effect is executed multiple times during the same cascading propagation
 even if everything is wrapped in a transaction. For example:
 >
 	var p1 = react.Property.new(0)
@@ -254,7 +253,7 @@ even if everything is wrapped in a transaction. For example:
 <
 Just before the transaction commits, the current value of result is 0, the
 value of p1 is 1 and the value of p2 is 2. Besides, the effects' queue
-contains Effect 2 and Effect 1 (in this order).
+contains Effect 2 and Effect 1 in this order.
 
 Then, during the commit of the transaction, Effect 2 is popped from the queue
 first and executed, which sets result to 1. Then, Effect 1 is popped from the
@@ -262,9 +261,99 @@ queue and executed, which sets p1 to 2. At this point, Effect 2 is pushed into
 the queue again, because p1 has been updated. Therefore, at commit time,
 Effect 2 is executed twice and the final result is 2.
 
-If you are now wondering whether two properties can track each other so that
-when one changes the other is automatically updated, the answer is they can:
-see |libreactive-tips| (or, better, try doing that yourself!).
+The result is correct, but since Effect 2 depends on Effect 1 (because Effect
+2 reads a value written by Effect 1), it would be more efficient to execute
+Effect 1 before Effect 2. This can be achieved by assigning weights to
+effects.
+
+To force the execution of effects in a specific order, each effect has an
+associated weight, which is zero by default. Effects with a smaller weight are
+pushed higher in the queue rather than at the end.
+
+We can make Effect 2 "heavier" than Effect 1 by assigning it a positive weight:
+>
+	react.CreateEffect(() => { # Effect 2
+	  result = p1.Get()
+	}, {weight: 1})
+<
+Now, during the transaction Effect 2 is pushed to the queue when p1 is set, as
+before. When p2 is set, Effect 1 is pushed to the queue, too, but this time
+before Effect 2. Hence, at commit time Effect 1 is executed before Effect 2.
+The final result is still 2, but now Effect 2 was executed just once.
+
+One may think that libreactive could automatically determine the best order of
+execution by some dynamic topological sorting of effects based on the current
+dependency graph. We end this section by claiming that this is in general
+impossible.
+
+Consider the following code:
+>
+	var p1     = react.Property.new(2)
+	var p2     = react.Property.new(3)
+	var result = 0
+	var coin   = 0
+
+	react.CreateEffect(() => { # Effect 1
+	  if coin == 0
+	    p2.Set(p1.Get() * 2)
+	  else
+	    result = p1.Get() + p2.Get()
+	  endif
+	})
+
+	react.CreateEffect(() => { # Effect 2
+	  if coin == 0
+	    result = p1.Get() + p2.Get()
+	  else
+	    p2.Set(p1.Get() * 3)
+	  endif
+	})
+
+	coin = rand() % 2
+	p1.Set(1)
+
+	echo result
+<
+The initial dependency graph, just before p1 is set to 1, looks as follows:
+>
+	┌───r──── p1 ───r───┐
+	▼                   ▼
+	E1                  E2
+	│                   ▲
+	└───w───► p2 ───r───┘
+<
+where `─w─►` means that the effect writes a property and `─r─►` means that the
+effect reads a property. In particular, it is clear that E2 depends on E1
+because E2 reads a value written by E1. Therefore, based on the above
+dependency graph, E1 should be pushed to the execution queue before E2.
+
+Now, whether that is a good choice or not depends on the value of coin, over
+which the script has no control (in this example it is set randomly, but that
+could be a value that depends on user's input, the content of a buffer, etc).
+
+If, before p1.Set(1), coin is 0 then indeed executing E1 then E2 is optimal:
+each effect will be executed once. But if coin is 1, then the dependecy graph
+changes as the effects of setting p1 are unfolded. After executing E1, the
+graph becomes:
+>
+	┌───r──── p1 ───r───┐
+	▼                   ▼
+	E1                  E2
+	▲                   ▲
+	└───r──── p2 ───r───┘
+<
+The direction of (E1,p2) has been reversed. After executing E2:
+>
+	┌───r──── p1 ───r───┐
+	▼                   ▼
+	E1                  E2
+	▲                   │
+	└───r──── p2 ◄──w───┘
+<
+The direction of (E2,p2) has also been reversed. So, now it's E1 that depends
+on E2, so E1 is executed once more. You may convince yourself that, when coin
+is 1, executing E2 first and then E1 is equivalent to the above, yet more
+efficient. But that cannot be discovered in advance.
 
 						*libreactive-nested-effects*
 
@@ -477,9 +566,9 @@ many times it has been redrawn, next to the title.
 >
 	vim9script
 	import 'libreactive.vim' as react
-	
+
 	const EMOJIS = ['🦊', '🐼', '🍀', '💐']
-	
+
 	# Reactive state
 	var pool: list<react.Property> = []
 	var emoji = react.Property.new(0, {pool: pool}) # Index of displayed emoji
@@ -487,38 +576,38 @@ many times it has been redrawn, next to the title.
 	var moved = react.Property.new(0, {pool: pool}) # Counter of cursor movements
 
 	var counter = 0 # Count the number of times the popup is redrawn
-	
+
 	augroup Libreactive
 	  autocmd CursorMoved * moved.Set(moved.Get() + 1)
 	augroup END
-	
+
 	def HandleEvent(winid: number, keyCode: string): bool
 	  if keyCode == "\<LeftMouse>"
 	    var mousepos = getmousepos()
-	
+
 	    if mousepos.winid == winid
 	      react.Transaction(() => {
 	        if mousepos.line == 2 && mousepos.column == 1 # Emoji hit
 	          # Select next emoji
 	          emoji.Set((emoji.Get() + 1) % len(EMOJIS))
 	        endif
-	        
+
 	        click.Set(click.Get() + 1) # Increment mouse click
 	      })
 	      return true
 	    endif
 	  endif
-	
+
 	  return false
 	enddef
-	
+
 	def ClosedCallback(winid: number, result: any = '')
 	  if exists('#Libreactive')
 	    autocmd! Libreactive
 	    augroup! Libreactive
 	  endif
 	enddef
-	
+
 	def Redraw(popup_id: number)
 	  ++counter
 	  popup_settext(popup_id, [
@@ -528,29 +617,36 @@ many times it has been redrawn, next to the title.
 	    string(moved.Get()),
 	  ])
 	enddef
-	
+
 	def RunBabyRun()
 	  for property in pool
 	    property.Clear()
 	  endfor
-	
+
 	  var popup_id = popup_create('', {
 	    close:    'button',
 	    filter:   HandleEvent,
 	    callback: ClosedCallback,
 	  })
 	  var bufnr = winbufnr(popup_id)
-	
-	  react.CreateEffect(() => Redraw(popup_id))
+
+	  react.CreateEffect(() => Redraw(popup_id), {weight: 100})
 	enddef
-	
+
 	RunBabyRun()
 <
-Note that the mouse click is handled inside a transaction because it may
+Note that the mouse clicks are handled inside a transaction because they may
 update two state variables (the emoji's index and the click counter), but we
 want the popup to be redrawn only once. Without the wrapping transaction the
 popup would be redrawn twice every time the user clicks on the emoji. So, the
 transaction avoids a double rendering.
+
+Note also that a large weight has been assigned to the redraw effect. Although
+that is not necessary in the script above, in general one wants to make sure
+that redrawing happens after all the effects that update the state have been
+executed. Again, this avoids multiple renderings. For an example why
+transactions alone are in general insufficient for such purpose, see
+|libreactive-effects|.
 
 The UI update can also be made more granular. By replacing `RunBabyRun()`
 above with the following version, only the lines of the popup window that go
@@ -560,27 +656,31 @@ out of sync are updated:
 	  for property in pool
 	    property.Clear()
 	  endfor
-	
+
 	  var popup_id = popup_create(['Libreactive  '], {
 	    close:    'button',
 	    filter:   HandleEvent,
 	    callback: ClosedCallback,
 	  })
 	  var bufnr = winbufnr(popup_id)
-	
+
 	  react.CreateEffect(() => {
 	    setbufline(bufnr, 2, EMOJIS[emoji.Get()])
 	  })
-	
+
 	  react.CreateEffect(() => {
 	    setbufline(bufnr, 3, string(click.Get()))
 	  })
-	
+
 	  react.CreateEffect(() => {
 	    setbufline(bufnr, 4, string(moved.Get()))
 	  })
 	enddef
 <
+In this case, we don't need transactions or weights: a state change
+immediately updates all and only the parts of the UI that are affected by that
+change.
+
 Of course, libreactive is not limited to building popups, and its use is not
 limited to the what has been described above. Be creative!
 
@@ -627,7 +727,7 @@ limited to the what has been described above. Be creative!
 
 	const F0 = MakeLambda(['a'])
 	const F1 = MakeLambda(['b'])
-	
+
 	echo F0 == F1 # true
 <
   Therefore, the following will not work without forcing the update as
@@ -785,7 +885,9 @@ new({func}[, {args}])
 		recomputed whenever any property upon which the function
 		depends is updated.
 
-		{args} is as in |libreactive.Property|'s new().
+		{args} is a dictionary that may contain the same keys as in
+		|libreactive.Property|'s new() and
+		|libreactive.CreateEffect()|.
 
 Functions ~
 
@@ -802,9 +904,14 @@ Commit()
 		In most cases, |libreactive.Transaction()| is preferrable.
 
 					*libreactive.CreateEffect()*
-CreateEffect({func})
+CreateEffect({func}[, {args}])
 		Create a new effect running {func} and execute it once. {func}
 		must be a function with no parameters and no return value.
+
+		{args} is a dictionary of options, which may contain
+		a "weight" key to set the weight of the effect. The weight
+		affects the ordering in which the effects of a property or of
+		a transaction are executed.
 
 					*libreactive.Reset()*
 Reset()

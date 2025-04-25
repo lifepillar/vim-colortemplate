@@ -148,15 +148,15 @@ def Bind(property: IProperty, effects: list<Effect>)
 enddef
 
 def PushEffects(effects: list<Effect>)
-    Begin()
+  Begin()
 
-    for effect in effects
-      if effect->NotIn(sQueue.Items())
-        sQueue.Push(effect)
-      endif
-    endfor
+  for effect in effects
+    if effect->NotIn(sQueue.Items())
+      sQueue.Push(effect)
+    endif
+  endfor
 
-    Commit()
+  Commit()
 enddef
 
 export class Property implements IProperty

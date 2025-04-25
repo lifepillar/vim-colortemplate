@@ -29,6 +29,7 @@ endinterface
 
 class Effect
   var Fn: func()
+  var weight: number
   public var dependentProperties: list<IProperty> = []
 
   def Execute()
@@ -61,34 +62,40 @@ class Effect
 endclass
 
 class EffectsQueue
-  var _q: list<Effect> = []
-  var _start: number = 0
+  var _queue: list<Effect> = []
+  var _start: number       = 0
 
   static var max_size = queue_size
 
   def empty(): bool
-    return this._start == len(this._q)
+    return this._start == len(this._queue)
   enddef
 
   def Items(): list<Effect>
-    return this._q[this._start : ]
+    return this._queue[this._start : ]
   enddef
 
   def Push(effect: Effect)
-    this._q->add(effect)
+    var k = len(this._queue) - 1
 
-    if len(this._q) > EffectsQueue.max_size
+    while k >= this._start && effect.weight < this._queue[k].weight
+      --k
+    endwhile
+
+    this._queue->insert(effect, k + 1)
+
+    if len(this._queue) > EffectsQueue.max_size
       throw $'[Reactive] Potentially recursive effects detected (effects max size = {EffectsQueue.max_size}).'
     endif
   enddef
 
   def Pop(): Effect
     ++this._start
-    return this._q[this._start - 1]
+    return this._queue[this._start - 1]
   enddef
 
   def Reset()
-    this._q = []
+    this._queue = []
     this._start = 0
   enddef
 endclass
@@ -199,7 +206,7 @@ endclass
 export class ComputedProperty extends Property
   def new(Fn: func(): any, args: dict<any> = {})
     super.Init(args)
-    CreateEffect(() => this.Set_(Fn(), args))
+    CreateEffect(() => this.Set_(Fn(), args), args)
   enddef
 
   def Set(value: any, args: dict<any> = {})
@@ -213,8 +220,8 @@ endclass
 # }}}
 
 # CreateEffect {{{
-export def CreateEffect(Fn: func())
-  var runningEffect = Effect.new(Fn)
+export def CreateEffect(Fn: func(), args = {})
+  var runningEffect = Effect.new(Fn, args->get('weight', 0))
 
   if sActiveEffect != null && debug_level > 0
     echomsg '[libreactive] Nested effects detected. '

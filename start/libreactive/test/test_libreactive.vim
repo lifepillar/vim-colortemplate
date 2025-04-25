@@ -1277,6 +1277,63 @@ def Test_React_RollbackEffect()
   assert_equal(3, counter)
 enddef
 
+def Test_React_EffectDefaultPriority()
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+  var result = 0
+  var count  = 0
+
+  react.CreateEffect(() => { # Effect 1
+    ++count
+    p1.Set(p2.Get())
+  })
+
+  react.CreateEffect(() => { # Effect 2
+    ++count
+    result = p1.Get()
+  })
+
+  count = 0
+
+  react.Transaction(() => {
+    p1.Set(1)  # Enqueues effect 2
+    p2.Set(2)  # Enqueues effect 1
+  })
+
+  # At commit time, effect 2 and effect 1 are executed (in this order),
+  # but effect 1 pushes effect 2 in the queue again.
+  assert_equal(2, result)
+  assert_equal(3, count)
+enddef
+
+def Test_React_EffectCustomPriority()
+  var p1 = react.Property.new(0)
+  var p2 = react.Property.new(0)
+  var result = 0
+  var count  = 0
+
+  react.CreateEffect(() => { # Effect 1
+    ++count
+    p1.Set(p2.Get())
+  }, {weight: 1})
+
+  react.CreateEffect(() => { # Effect 2
+    ++count
+    result = p1.Get()
+  }, {weight: 2})
+
+  count = 0
+
+  react.Transaction(() => {
+    p1.Set(1)  # Enqueues effect 2
+    p2.Set(2)  # Enqueues effect 1, but puts it first
+  })
+
+  # At commit time, effect 1 must execute before effect 2
+  assert_equal(2, result)
+  assert_equal(2, count)
+enddef
+
 
 tt.Run('_React_')
 

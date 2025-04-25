@@ -188,9 +188,9 @@ effects. The following snippet is perfectly fine:
 	  p.Set(p.Get() * 2)
 	endfor
 <
-NOTE: in the limited circumstances where one does want to access the value of
-a property without any side effects even within an effect, it is possible to
-access the `value` attribute of the property:
+NOTE: when one does want to access the value of a property without any side
+effects even within an effect, it is possible to access the `value` attribute
+of the property:
 >
 	var p = react.Property.new(0)
 
@@ -203,10 +203,10 @@ access the `value` attribute of the property:
 The above works and sets the value of the property to 1.
 
 Effects are executed inside a transaction. Therefore, no matter how many
-properties they change, each of their direct effects is run exactly once and
-only at the end of the effect's block. Besides, the properties accessed with
-Get() during the execution of an effect are guaranteed not to change within
-the span of that execution (read consistency).
+properties they change, their cascading effects are run at once only at the
+end of the effect's block. Besides, the properties accessed with Get() during
+the execution of an effect are guaranteed not to change within the span of
+that execution (read consistency).
 
 Effects' propagation is breadth-first: if effect E1 updates property P1, which
 is observed by effects E2 and E3, then at the end of E1:
@@ -333,8 +333,8 @@ could be a value that depends on user's input, the content of a buffer, etc).
 
 If, before p1.Set(1), coin is 0 then indeed executing E1 then E2 is optimal:
 each effect will be executed once. But if coin is 1, then the dependecy graph
-changes as the effects of setting p1 are unfolded. After executing E1, the
-graph becomes:
+changes as the effects of setting p1 unfold. After executing E1, the graph
+becomes:
 >
 	┌───r──── p1 ───r───┐
 	▼                   ▼
@@ -352,8 +352,8 @@ The direction of (E1,p2) has been reversed. After executing E2:
 <
 The direction of (E2,p2) has also been reversed. So, now it's E1 that depends
 on E2, so E1 is executed once more. You may convince yourself that, when coin
-is 1, executing E2 first and then E1 is equivalent to the above, yet more
-efficient. But that cannot be discovered in advance.
+is 1, executing E2 first and then E1 produces an equivalent result, yet it is
+more efficient. But that cannot be discovered in advance.
 
 						*libreactive-nested-effects*
 
@@ -540,9 +540,9 @@ use pools in any other way beyond appending a property to a list, and it does
 not store pools internally. In other words, initializing a property with
 a pool is simply a convenience for code that looks like this:
 >
-	var pool: list<react.Property> = []
 	var p0:   react.Property.new(0)
 	var p1:   react.Property.new(1)
+	var pool: list<react.Property> = []
 
 	pool->add(p0)
 	pool->add(p1)
@@ -560,9 +560,9 @@ the reactive state, no matter what the cause of a state change is, using an
 effect that redraws the popup when necessary.
 
 A mouse click anywhere in the popup increments a counter of mouse clicks;
-clicking on the emoji will also change it; and, moving the cursor updates the
-count of cursor movements. Finally, the popup also displays a counter of how
-many times it has been redrawn, next to the title.
+clicking on the emoji will also change it; and moving the cursor updates the
+count of cursor movements. Finally, the popup also displays, next to the
+title, a counter of how many times the popup has been redrawn.
 >
 	vim9script
 	import 'libreactive.vim' as react
@@ -635,18 +635,19 @@ many times it has been redrawn, next to the title.
 
 	RunBabyRun()
 <
-Note that the mouse clicks are handled inside a transaction because they may
+Note that mouse clicks are handled inside a transaction because they may
 update two state variables (the emoji's index and the click counter), but we
 want the popup to be redrawn only once. Without the wrapping transaction the
-popup would be redrawn twice every time the user clicks on the emoji. So, the
-transaction avoids a double rendering.
+popup would be redrawn twice every time the user clicks on the emoji: the
+first time, when the emoji is set and the second time when the click counter
+is incremented. So, the transaction avoids a double rendering.
 
 Note also that a large weight has been assigned to the redraw effect. Although
-that is not necessary in the script above, in general one wants to make sure
-that redrawing happens after all the effects that update the state have been
-executed. Again, this avoids multiple renderings. For an example why
-transactions alone are in general insufficient for such purpose, see
-|libreactive-effects|.
+that is not required in the script above, in general one wants to make sure
+that redrawing happens once after all the effects that update the state have
+been executed. Again, this avoids rendering the popup more often than
+necessary. For a discussion why transactions alone are in general insufficient
+for such a purpose, see |libreactive-effects|.
 
 The UI update can also be made more granular. By replacing `RunBabyRun()`
 above with the following version, only the lines of the popup window that go
@@ -817,10 +818,11 @@ limited to the what has been described above. Be creative!
   |libreactive-pools|.
 
 - Prefer |libreactive.Transaction()| to |libreactive.Begin()| and
-  |libreactive.Commit()|. The latter two are useful in limited circumstances,
-  e.g., when one needs to wrap in a transaction a call to a base class method,
-  prefixed with "super.", because the call using super cannot appear within
-  a lambda (|E1356|).
+  |libreactive.Commit()|. The latter two are useful in very rare
+  circumstances, e.g., when one needs to wrap in a transaction a call to
+  a base class method, prefixed with "super.", because the call using super
+  cannot appear within a lambda in some versions of Vim (that would raise
+  |E1356|).
 
 ==============================================================================
 7. API					*libreactive-api*

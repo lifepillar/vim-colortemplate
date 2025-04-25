@@ -906,7 +906,8 @@ Commit()
 					*libreactive.CreateEffect()*
 CreateEffect({func}[, {args}])
 		Create a new effect running {func} and execute it once. {func}
-		must be a function with no parameters and no return value.
+		must be a function with no parameters and no return value. The
+		effect object is returned.
 
 		{args} is a dictionary of options, which may contain
 		a "weight" key to set the weight of the effect. The weight

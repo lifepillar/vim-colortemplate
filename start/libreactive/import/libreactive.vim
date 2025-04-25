@@ -29,7 +29,7 @@ endinterface
 
 class Effect
   var Fn: func()
-  var weight: number
+  public var weight: number
   public var dependentProperties: list<IProperty> = []
 
   def Execute()
@@ -220,7 +220,7 @@ endclass
 # }}}
 
 # CreateEffect {{{
-export def CreateEffect(Fn: func(), args = {})
+export def CreateEffect(Fn: func(), args = {}): Effect
   var runningEffect = Effect.new(Fn, args->get('weight', 0))
 
   if sActiveEffect != null && debug_level > 0
@@ -229,5 +229,7 @@ export def CreateEffect(Fn: func(), args = {})
   endif
 
   runningEffect.Execute() # Necessary to bind to dependent signals
+
+  return runningEffect
 enddef
 # }}}

@@ -68,19 +68,24 @@ enddef
 
 def Test_React_SimpleEffect()
   var result = 0
-  const [Count, SetCount] = GetSet(1)
+  var p0 = react.Property.new(1)
+  var E  = () => {
+    result = p0.Get()
+  }
 
-  react.CreateEffect(() => {
-    result = Count()
-  })
+  var effect = react.CreateEffect(E)
+
+  assert_equal(E, effect.Fn)
+  assert_equal(0, effect.weight)
+  assert_equal([p0], effect.dependentProperties)
 
   assert_equal(1, result)
 
-  SetCount(2)
+  p0.Set(2)
 
   assert_equal(2, result)
 
-  SetCount(Count() * 3)
+  p0.Set(p0.Get() * 3)
 
   assert_equal(6, result)
 enddef

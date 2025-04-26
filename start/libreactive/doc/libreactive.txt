@@ -844,9 +844,9 @@ new([{value}, {args}])
 		var my_property = react.Property.new(value, {pool: my_pool})
 <
 value
-		The read-only value of the property. Accessing this does not
-		trigger any effects. You should prefer Get() in most
-		circumstances.
+		The value of the property. Reading of writing this attribute
+		does not trigger any effects. You should prefer Get() and
+		Set() in most circumstances.
 
 effects
 		The list of effects currently bound to the property.

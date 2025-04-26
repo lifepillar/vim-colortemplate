@@ -55,15 +55,22 @@ def Test_React_SimpleProperty()
   var cnt = react.Property.new(2)
   const DoubleCount = () => cnt.Get() * 2
 
-  assert_equal(DoubleCount(), 4)
+  assert_equal(4, DoubleCount())
 
   cnt.Set(3)
 
-  assert_equal(DoubleCount(), 6)
+  assert_equal(6, DoubleCount())
 
   cnt.Set(cnt.Get() + 2)
 
-  assert_equal(DoubleCount(), 10)
+  assert_equal(10, DoubleCount())
+
+  # A property's value can be read and written directly
+  assert_equal(5, cnt.value)
+
+  cnt.value = 6
+
+  assert_equal(6, cnt.Get())
 enddef
 
 def Test_React_SimpleEffect()

@@ -1346,6 +1346,36 @@ def Test_React_EffectCustomPriority()
   assert_equal(2, count)
 enddef
 
+def Test_React_ManualEffectExecution()
+  var p0 = react.Property.new(1)
+  var result = 0
+
+  var effect = react.CreateEffect(() => {
+    result = p0.Get() + 1
+  }, {execute: false})
+
+  assert_equal(0, result)
+  assert_equal([], effect.dependentProperties)
+  assert_equal([], p0.effects)
+
+  p0.Set(2) # Doesn't trigger the effect because it was never executed
+
+  assert_equal(0, result)
+  assert_equal([], effect.dependentProperties)
+
+  # Manually register the effect as an observer of p0
+  p0.Register(effect)
+
+  assert_equal(0, result)
+  assert_equal([p0], effect.dependentProperties)
+  assert_equal([effect], p0.effects)
+
+  p0.Set(3)
+
+  assert_equal(4, result)
+  assert_equal([p0], effect.dependentProperties)
+enddef
+
 
 tt.Run('_React_')
 

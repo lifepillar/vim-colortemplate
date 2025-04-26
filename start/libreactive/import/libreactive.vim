@@ -20,14 +20,17 @@ enddef
 # }}}
 
 # Effects {{{
+interface IEffect
+endinterface
+
 interface IProperty
+  var effects: list<IEffect>
   def Get(): any
   def Set(value: any, args: dict<any>)
   def ClearEffects()
-  def RemoveEffect(effect: any)
 endinterface
 
-class Effect
+class Effect implements IEffect
   var Fn: func()
   public var weight: number
   public var dependentProperties: list<IProperty> = []
@@ -50,7 +53,7 @@ class Effect
 
   def ClearDependencies()
     for property in this.dependentProperties
-      property.RemoveEffect(this)
+      this->RemoveFrom(property.effects)
     endfor
 
     this.dependentProperties = []
@@ -58,6 +61,11 @@ class Effect
 
   def string(): string
     return substitute(string(this.Fn), 'function(''\(.\+\)'')', '\1', '')
+  enddef
+
+  def Observe(property: IProperty)
+    property.effects->add(this)
+    this.dependentProperties->add(property)
   enddef
 endclass
 
@@ -140,10 +148,9 @@ enddef
 # }}}
 
 # Properties {{{
-def Bind(property: IProperty, effects: list<Effect>)
-  if sActiveEffect != null && sActiveEffect->NotIn(effects)
-    effects->add(sActiveEffect)
-    sActiveEffect.dependentProperties->add(property)
+def Bind(property: IProperty)
+  if sActiveEffect != null && sActiveEffect->NotIn(property.effects)
+    sActiveEffect.Observe(property)
   endif
 enddef
 
@@ -176,7 +183,7 @@ export class Property implements IProperty
   enddef
 
   def Get(): any
-    Bind(this, this.effects)
+    Bind(this)
     return this.value
   enddef
 
@@ -190,8 +197,8 @@ export class Property implements IProperty
     PushEffects(this.effects)
   enddef
 
-  def RemoveEffect(effect: Effect)
-    effect->RemoveFrom(this.effects)
+  def Register(effect: Effect)
+    effect.Observe(this)
   enddef
 
   def ClearEffects()
@@ -228,7 +235,9 @@ export def CreateEffect(Fn: func(), args = {}): Effect
       .. $'Active effect: {sActiveEffect.string()}. Inner effect: {runningEffect.string()}'
   endif
 
-  runningEffect.Execute() # Necessary to bind to dependent signals
+  if args->get('execute', true)
+    runningEffect.Execute() # Necessary to bind to dependent signals
+  endif
 
   return runningEffect
 enddef

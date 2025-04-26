@@ -870,6 +870,9 @@ Set({value}[, {args}])
 		set to |true|, though, the effects are always executed, even
 		if the update does not change the value of the property.
 
+Register({effect})
+		Register an effect as an observer of the property.
+
 ClearEffects()
 		Un-register all the effects currently observing this property.
 		After this, updating this property will not trigger any effect
@@ -911,10 +914,20 @@ CreateEffect({func}[, {args}])
 		must be a function with no parameters and no return value. The
 		effect object is returned.
 
-		{args} is a dictionary of options, which may contain
-		a "weight" key to set the weight of the effect. The weight
-		affects the ordering in which the effects of a property or of
-		a transaction are executed.
+		{args} is a dictionary of options: 
+
+		- "weight": set the weight of the effect. The weight is
+		  a |Number| affecting the ordering in which the effects of
+		  a property or of a transaction are executed.
+
+		- "execute": a boolean flag telling whether {func} should be
+		  executed at once. The default is that CreateEffect()
+		  immediately executes its argument: this is needed to
+		  initially bind the effect to the properties accessed by
+		  {func}. When this is set to |false|, {func} is not executed:
+		  for the effect to the triggered, then, it must be manually
+		  registered as an observer of some property: see
+		  |libreactive.Property|'s Register() method.
 
 					*libreactive.Reset()*
 Reset()

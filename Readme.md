@@ -41,5 +41,5 @@ use beta level libraries only if you feel adventurous.
 
 - **[vim9asm](https://github.com/lacygoill/vim9asm):** Vim 9 disassembly on
   steroids.
-- [vim-stylepicker](https://github.com/lifepillar/vim-stylepicker): A color
+- **[vim-stylepicker](https://github.com/lifepillar/vim-stylepicker):** A color
   picker inside Vim.

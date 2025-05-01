@@ -569,6 +569,29 @@ def Test_RA_ForeignKeySameAttrs()
   }, "{A: 'xy'} not found in R[A]")
 enddef
 
+def Test_RA_ForeignKeySyntacticSugar()
+  def FK(verbphrase: string): func(list<any>, Rel, any)
+    return (fk: list<any>, R: Rel, key: any) => {
+      return ForeignKey(fk[0], fk[1])->References(R, key, verbphrase)
+    }
+  enddef
+
+  var Tag    = Rel.new('Tag', {Name: Str, Buffer: Int}, 'Name')
+  var Buffer = Rel.new('Buffer', {Bufnr: Int, Name: Str}, 'Bufnr')
+  var Tags   = FK('must annotate a')
+
+  [Tag, 'Buffer']->Tags(Buffer, 'Bufnr')
+
+  Buffer.InsertMany([{Bufnr: 1, Name: 'b1'}, {Bufnr: 2, Name: 'b2'}])
+  Tag.Insert({Name: 't1', Buffer: 1})
+  Tag.Insert({Name: 't2', Buffer: 1})
+  Tag.Insert({Name: 't3', Buffer: 2})
+
+  AssertFails(() => {
+    Tag.Insert({Name: 't4', Buffer: 3})
+  }, 'Tag must annotate a Buffer')
+enddef
+
 def Test_RA_CheckConstraint()
   var RR = Rel.new('R', {A: Int, B: Int}, 'A')
 

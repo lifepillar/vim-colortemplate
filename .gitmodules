@@ -1,6 +1,0 @@
-[submodule "vim9asm"]
-	path = opt/vim9asm
-	url = https://github.com/lacygoill/vim9asm
-[submodule "opt/stylepicker"]
-	path = opt/stylepicker
-	url = https://github.com/lifepillar/vim-devel

@@ -1,18 +1,13 @@
 # Vim Development Package
 
-A package consisting of plugins and libraries that facilitate the development
-of modern Vim plugins and libraries.
+A package whose goal is to facilitate the development of modern Vim plugins and
+libraries.
+
 
 ## Installation
 
 ```sh
-git clone --recurse-submodules https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
-```
-
-Enable the plugins you need with `packadd`. For instance:
-
-```vim
-packadd vim9asm
+git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 ```
 
 
@@ -36,10 +31,3 @@ issues may still exist.
 
 You should not used alpha level libraries in your own plugins, and you should
 use beta level libraries only if you feel adventurous.
-
-**Plugins:**
-
-- **[vim9asm](https://github.com/lacygoill/vim9asm):** Vim 9 disassembly on
-  steroids.
-- **[vim-stylepicker](https://github.com/lifepillar/vim-stylepicker):** A color
-  picker inside Vim.

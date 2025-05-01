@@ -7,10 +7,10 @@ vim9script
 
 # Types Aliases {{{
 export type Attr            = string
-export type Domain          = number # v:t_number, v:t_string, etc.
+export type Domain          = number       # v:t_number, v:t_string, etc.
 export type Schema          = dict<Domain> # Map from Attr to Domain
-export type AttrSet         = list<Attr> # When the order does not matter
-export type AttrList        = list<Attr> # When the order matters
+export type AttrSet         = list<Attr>   # When the order does not matter
+export type AttrList        = list<Attr>   # When the order matters
 export type Tuple           = dict<any>
 export type Relation        = list<Tuple>
 
@@ -21,6 +21,13 @@ export type BinaryPredicate = func(Tuple, Tuple): bool
 # }}}
 
 # Helper Functions {{{
+def IsIn(v: any, items: list<any>): bool
+  return indexof(items, (_, u) => u == v) != -1
+enddef
+def IsNotIn(v: any, items: list<any>): bool
+  return indexof(items, (_, u) => u == v) == -1
+enddef
+
 # string() turns 'A' into a string of length 3, with quotes.
 # Use this if you don't want that.
 def String(value: any): string
@@ -218,22 +225,22 @@ enddef
 # }}}
 
 # Error Messages {{{
-var E000 = 'At least one key must be specified for relation %s.'
-var E001 = 'Expected a tuple on schema %s: got %s instead.'
-var E002 = 'Key %s already defined in relation %s.'
-var E003 = '%s is not an attribute of relation %s.'
-var E004 = 'Duplicate key: %s already exists in relation %s.'
-var E005 = 'Wrong foreign key: %s%s. %s is not an attribute of %s.'
-var E006 = 'Foreign key size mismatch: %s%s -> %s%s.'
-var E007 = 'Wrong foreign key: %s%s -> %s%s. %s is not a key of %s.'
-var E008 = '%s: %s not found in %s%s.'
-var E009 = '%s: cannot delete %s from %s because it is referenced by %s in %s.'
-var E010 = '%s is not a key of %s.'
-var E011 = '%s failed for tuple %s.'
-var E100 = 'Update failed: no tuple with key %s exists in relation %s.'
-var E101 = 'Cannot replace %s with %s: updating key attributes is not allowed.'
-var E200 = 'Join on sets of attributes of different length: %s vs %s.'
-var E300 = 'A table separator must be a single character. Got %s.'
+const E000 = 'At least one key must be specified for relation %s.'
+const E001 = 'Expected a tuple on schema %s: got %s instead.'
+const E002 = 'Key %s already defined in relation %s.'
+const E003 = '%s is not an attribute of relation %s.'
+const E004 = 'Duplicate key: %s already exists in relation %s.'
+const E005 = 'Wrong foreign key: %s%s. %s is not an attribute of %s.'
+const E006 = 'Foreign key size mismatch: %s%s -> %s%s.'
+const E007 = 'Wrong foreign key: %s%s -> %s%s. %s is not a key of %s.'
+const E008 = '%s: %s not found in %s%s.'
+const E009 = '%s: cannot delete %s from %s because it is referenced by %s in %s.'
+const E010 = '%s is not a key of %s.'
+const E011 = '%s failed for tuple %s.'
+const E100 = 'Update failed: no tuple with key %s exists in relation %s.'
+const E101 = 'Cannot replace %s with %s: updating key attributes is not allowed.'
+const E200 = 'Join on sets of attributes of different length: %s vs %s.'
+const E300 = 'A table separator must be a single character. Got %s.'
 # }}}
 
 # Indexes {{{
@@ -302,12 +309,12 @@ endinterface
 
 # Transactions {{{
 class TransactionManager
-  var _running: number         = 0
+  var _running: number              = 0
   var _pending: list<ITransactable> = []
-  var _messages: list<string>  = []
+  var _messages: list<string>       = []
 
   def Add(rel: ITransactable)
-    if index(this._pending, rel) == -1
+    if rel->IsNotIn(this._pending)
       this._pending->add(rel)
     endif
   enddef
@@ -372,16 +379,16 @@ class TransactionManager
   enddef
 endclass
 
-var gTM = TransactionManager.new()
+var globalTransactionManager = TransactionManager.new()
 
 export def Transaction(Body: func())
-  gTM.Begin()
+  globalTransactionManager.Begin()
   Body()
-  gTM.Commit()
+  globalTransactionManager.Commit()
 enddef
 
 export def FailedMsg(message: string, prepend = false)
-  gTM.LogMessage(message, prepend)
+  globalTransactionManager.LogMessage(message, prepend)
 enddef
 # }}}
 
@@ -399,7 +406,7 @@ export def ForeignKey(Child: ICheckable, fkey: any): list<any>
   var fkey_: AttrList = Listify(fkey)
 
   for attr in fkey_
-    if index(Child.attributes, attr) == -1
+    if attr->IsNotIn(Child.attributes)
       throw printf(E005, Child.name, ListStr(fkey_), attr, Child.name)
     endif
   endfor
@@ -426,7 +433,7 @@ export def References(
     )
   endif
 
-  if index(Parent.keys, key_) == -1
+  if key_->IsNotIn(Parent.keys)
     throw printf(E007,
       Child.name,
       ListStr(fkey_),
@@ -494,12 +501,12 @@ export class Rel implements IRel, ICheckable, ITransactable
 
   public var type_check:  bool             = true
 
-  var _instance:           Relation        = []
-  var _key_indexes:        dict<Index>     = {}
+  var _instance:          Relation         = []
+  var _key_indexes:       dict<Index>      = {}
   # Differential sets. See: Grefen and Apers, 1993
   # Integrity control in relational database systems - An overview
-  var _inserted_tuples:    list<Tuple>     = []
-  var _deleted_tuples:     list<Tuple>     = []
+  var _inserted_tuples:   list<Tuple>      = []
+  var _deleted_tuples:    list<Tuple>      = []
 
   def new(
       this.name,
@@ -517,7 +524,7 @@ export class Rel implements IRel, ICheckable, ITransactable
     this.key_attributes = flattennew(keys_)->sort()->uniq()
     this.descriptors    = filter(
       copy(this.attributes),
-      (_, v) => index(this.key_attributes, v) == -1
+      (_, v) => v->IsNotIn(this.key_attributes)
     )
 
     for key in keys_
@@ -569,7 +576,7 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def Insert(t: Tuple)
-    gTM.Add(this)
+    globalTransactionManager.Add(this)
 
     Transaction(() => {
       this.Add_(t)
@@ -586,13 +593,18 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def Delete(P: UnaryPredicate = (t) => true): Relation
-    gTM.Add(this)
     var deleted: list<Tuple> = []
+
+    globalTransactionManager.Add(this)
 
     Transaction(() => {
       for t in this._instance
         if P(t)
           deleted->add(t)
+
+          for idx in values(this._key_indexes)
+            idx.Remove(t)
+          endfor
 
           # Check if t was previously inserted during the current transaction
           var k = indexof(this._inserted_tuples, (_, u: Tuple) => u == t)
@@ -602,10 +614,6 @@ export class Rel implements IRel, ICheckable, ITransactable
           else # This deletion undoes the insertion
             remove(this._inserted_tuples, k)
           endif
-
-          for idx in values(this._key_indexes)
-            idx.Remove(t)
-          endfor
         endif
       endfor
 
@@ -616,26 +624,15 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def InsertMany(tuples: list<Tuple>)
-    gTM.Add(this)
-
     Transaction(() => {
       for t in tuples
-        this.Add_(t)
-
-        # Check if t was previously deleted during the current transaction
-        var k = indexof(this._deleted_tuples, (_, u: Tuple) => u == t)
-
-        if k == -1
-          this._inserted_tuples->add(t)
-        else # This insertion undoes the deletion
-          remove(this._deleted_tuples, k)
-        endif
+        this.Insert(t)
       endfor
     })
   enddef
 
   def Update(P: UnaryPredicate, Set: func(Tuple))
-    gTM.Add(this)
+    globalTransactionManager.Add(this)
 
     Transaction(() => {
       var deleted = this.Delete(P)
@@ -650,7 +647,7 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def Lookup(key: AttrList, value: list<any>): Tuple
-    if index(this.keys, key) == -1
+    if key->IsNotIn(this.keys)
       throw printf(E010, key, this.name)
     endif
 
@@ -661,6 +658,7 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def Upsert(t: Tuple, insert: bool = true)
+    # Lookup by primary key (conventionally, the first defined key)
     var u = this.Lookup(this.keys[0], Values(t, this.keys[0]))
 
     if u is KEY_NOT_FOUND
@@ -672,20 +670,9 @@ export class Rel implements IRel, ICheckable, ITransactable
       throw printf(E100, TupleStr(t, this.keys[0]), this.name)
     endif
 
-    for attr in this.key_attributes
-      if t[attr] != u[attr] # FIXME: use `is`? What if a key is an object?
-        throw printf(E101, TupleStr(u), TupleStr(t))
-      endif
-    endfor
-
     Transaction(() => {
-      this._deleted_tuples->add(deepcopy(u))
-
-      for attr in this.descriptors
-        u[attr] = t[attr]
-      endfor
-
-      this._inserted_tuples->add(u)
+      this.Delete((v) => v == u)
+      this.Insert(t)
     })
   enddef
 
@@ -693,7 +680,7 @@ export class Rel implements IRel, ICheckable, ITransactable
     if this.type_check
       if sort(keys(t)) != this.attributes
         FailedMsg(printf(E001, SchemaStr(this.schema), TupleStr(t)))
-        gTM.Rollback()
+        globalTransactionManager.Rollback()
       endif
 
       for [attr, domain] in items(this.schema)
@@ -701,19 +688,19 @@ export class Rel implements IRel, ICheckable, ITransactable
 
         if type(v) != domain
           FailedMsg(printf(E001, SchemaStr(this.schema), TupleStr(t)))
-          gTM.Rollback()
+          globalTransactionManager.Rollback()
         endif
       endfor
     endif
   enddef
 
   def AddKeyConstraint_(key: AttrList)
-    if index(this.keys, key) != -1
+    if key->IsIn(this.keys)
       throw printf(E002, ListStr(key), this.name)
     endif
 
     for attr in key
-      if index(this.attributes, attr) == -1
+      if attr->IsNotIn(this.attributes)
         throw printf(E003, attr, this.name)
       endif
     endfor
@@ -752,6 +739,7 @@ export class Rel implements IRel, ICheckable, ITransactable
     for constraint in this.delete_constraints
       for t in this._deleted_tuples
         if !constraint.Check(t)
+          FailedMsg(printf(E011, constraint, TupleStr(t)), true)
           return false
         endif
       endfor

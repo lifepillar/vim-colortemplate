@@ -393,8 +393,8 @@ def Test_RA_Upsert()
     {A: 1, B: 'x', C: false, D: 'd2'},
   ])
 
-  R.Upsert({A: 2, B: 'y', C: true, D: 'd3'})
-  R.Upsert({A: 0, B: 'x', C: true, D: 'new-d1'})
+  R.Upsert({A: 2, B: 'y', C: true, D: 'd3'})     # Insert new tuple
+  R.Upsert({A: 0, B: 'x', C: true, D: 'new-d1'}) # Update tuple
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},
@@ -402,11 +402,15 @@ def Test_RA_Upsert()
     {A: 2, B: 'y', C: true, D: 'd3'},
   ]
 
-  assert_equal(expected, R.Instance())
+  assert_true(RelEq(expected, R))
 
+  # It is possible to update any key except the primary key (the first key)
+  R.Upsert({A: 2, B: 'z', C: false, D: 'd3'})
+
+  # Of course, that should not result in the violation of uniqueness
   AssertFails(() => {
     R.Upsert({A: 0, B: 'x', C: false, D: 'd'})
-  }, "updating key attributes is not allowed")
+  }, "Duplicate key: {B: 'x', C: false}")
 enddef
 
 def Test_RA_Delete()

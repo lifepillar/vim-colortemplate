@@ -570,7 +570,7 @@ export class Rel implements IRel, ICheckable, ITransactable
     endfor
   enddef
 
-  def Insert(t: Tuple)
+  def Insert(t: Tuple): Rel
     globalTransactionManager.Add(this)
 
     Transaction(() => {
@@ -585,6 +585,8 @@ export class Rel implements IRel, ICheckable, ITransactable
         remove(this._deleted_tuples, k)
       endif
     })
+
+    return this
   enddef
 
   def Delete(P: UnaryPredicate = (t) => true): Relation
@@ -618,12 +620,14 @@ export class Rel implements IRel, ICheckable, ITransactable
     return deleted
   enddef
 
-  def InsertMany(tuples: list<Tuple>)
+  def InsertMany(tuples: list<Tuple>): Rel
     Transaction(() => {
       for t in tuples
         this.Insert(t)
       endfor
     })
+
+    return this
   enddef
 
   def Update(P: UnaryPredicate, Set: func(Tuple))

@@ -7,6 +7,10 @@ type Version = vv.Version
 const Require = vv.Require
 
 
+def Test_Version_Version()
+  assert_true(match(vv.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
+
 def Test_Version_Parse()
   for [version, major, minor, patch, prelease, build] in [
       ['0.0.0',                          0,  0,  0,       [               ], [                          ]],

@@ -1,5 +1,7 @@
 vim9script
 
+export var version = '0.0.1-alpha'
+
 # Utility class to parse and compare version numbers
 # Based on rules from https://semver.org/
 
@@ -38,8 +40,8 @@ export class Version
     this._version = flattennew([this.major, this.minor, this.patch, this.prerelease])
   enddef
 
-  static def Parse(version: string): Version
-    var match      = matchlist(version, Version.regex)
+  static def Parse(versionString: string): Version
+    var match      = matchlist(versionString, Version.regex)
     var major      = str2nr(match[1])
     var minor      = str2nr(match[2])
     var patch      = str2nr(match[3])
@@ -50,19 +52,19 @@ export class Version
   enddef
 
   def string(): string
-    var pre     = join(this.prerelease, '.')
-    var build   = join(this.build, '.')
-    var version = $'{this.major}.{this.minor}.{this.patch}'
+    var pre           = join(this.prerelease, '.')
+    var build         = join(this.build, '.')
+    var versionString = $'{this.major}.{this.minor}.{this.patch}'
 
     if !empty(pre)
-      version ..= "-" .. pre
+      versionString ..= "-" .. pre
     endif
 
     if !empty(build)
-      version ..= "+" .. build
+      versionString ..= "+" .. build
     endif
 
-    return version
+    return versionString
   enddef
 
   def IsPrerelease(): bool
@@ -141,13 +143,13 @@ export class Version
 endclass
 
 
-export def Require(name: string, version: string, minversion: string, args: dict<any> = {}): bool
-  var ver        = Version.Parse(version)
+export def Require(name: string, versionString: string, minversion: string, args: dict<any> = {}): bool
+  var ver        = Version.Parse(versionString)
   var min        = Version.Parse(minversion)
   var maxversion = args->get('max', '')
 
   if ver.LessThan(min)
-    var msg = $"{name} v{version} is too old. "
+    var msg = $"{name} v{versionString} is too old. "
 
     if empty(maxversion)
       msg ..= $'Please upgrade to v{minversion} or later.'
@@ -164,7 +166,7 @@ export def Require(name: string, version: string, minversion: string, args: dict
     var max = Version.Parse(maxversion)
 
     if ver.GreaterThan(max)
-      var msg = $"{name} v{version} is not supported yet. " ..
+      var msg = $"{name} v{versionString} is not supported yet. " ..
         $'Please downgrade to a version >={minversion} and <={maxversion}.'
 
       Err(msg, args->get('throw', true))

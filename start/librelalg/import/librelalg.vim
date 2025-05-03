@@ -414,58 +414,53 @@ export def ForeignKey(Child: ICheckable, fkey: any): list<any>
   return [Child, fkey_]
 enddef
 
-export def References(
-    foreign_key: list<any>,
-    Parent:      ICheckable,
-    key:         any    = null,
-    verbphrase:  string = 'references'
-    )
+export def References(foreign_key: list<any>, Parent: ICheckable, args: dict<any> = {})
   var Child = (<ICheckable>foreign_key[0])
-  var fkey_: AttrList = foreign_key[1]
-  var key_:  AttrList = key == null ? fkey_ : Listify(key)
+  var fkey: AttrList = foreign_key[1]
+  var key:  AttrList = args->has_key('key') ? Listify(args.key) : Parent.keys[0]
 
-  if len(fkey_) != len(key_)
+  if len(fkey) != len(key)
     throw printf(E006,
       Child.name,
-      ListStr(fkey_),
+      ListStr(fkey),
       Parent.name,
-      ListStr(key_)
+      ListStr(key)
     )
   endif
 
-  if key_->IsNotIn(Parent.keys)
+  if key->IsNotIn(Parent.keys)
     throw printf(E007,
       Child.name,
-      ListStr(fkey_),
+      ListStr(fkey),
       Parent.name,
-      ListStr(key_),
-      ListStr(key_),
+      ListStr(key),
+      ListStr(key),
       Parent.name
     )
   endif
 
-  var fkStr = $'{Child.name} {verbphrase} {Parent.name}'
+  var fkStr = $'{Child.name} {args->get("verb", "references")} {Parent.name}'
 
   var FkConstraint: UnaryPredicate = (t) => {
-    if Parent.Lookup(key_, Values(t, fkey_)) isnot KEY_NOT_FOUND
+    if Parent.Lookup(key, Values(t, fkey)) isnot KEY_NOT_FOUND
       return true
     endif
 
     FailedMsg(printf(E008,
       fkStr,
-      TupleStr(t, fkey_),
+      TupleStr(t, fkey),
       Parent.name,
-      ListStr(key_))
+      ListStr(key))
     )
     return false
   }
 
   Child.OnInsertCheck('Referential integrity', FkConstraint)
 
-  var FkPred = EquiJoinPred(fkey_, key_)
+  var FkPred = EquiJoinPred(fkey, key)
 
   var DelConstraint: UnaryPredicate = (t_p) => {
-    if Parent.Lookup(key_, Values(t_p, key_)) isnot KEY_NOT_FOUND
+    if Parent.Lookup(key, Values(t_p, key)) isnot KEY_NOT_FOUND
       return true
     endif
 

@@ -487,7 +487,7 @@ enddef
 def Test_RA_ReferentialIntegrityDelete()
   var R = Rel.new('R', {A: Int}, ['A'])
   var S = Rel.new('S', {X: Str, Y: Int}, ['X'])
-  ForeignKey(S, ['Y'])->References(R, ['A'], 'flocks with')
+  ForeignKey(S, ['Y'])->References(R, {key: ['A'], verb: 'flocks with'})
   R.Insert({A: 2})
   S.Insert({X: 'a', Y: 2})
 
@@ -506,15 +506,11 @@ def Test_RA_WrongForeignKeyDefinitions()
   var S = Rel.new('S', {B: Int, C: Str}, 'B')
 
   AssertFails(() => {
-    ForeignKey(S, ['B', 'C'])->References(R, ['A'])
+    ForeignKey(S, ['B', 'C'])->References(R, {key: ['A']})
   }, "Foreign key size mismatch: S[B, C] -> R[A]")
 
   AssertFails(() => {
-    ForeignKey(S, ['C'])->References(R)
-  }, "Wrong foreign key: S[C] -> R[C]. [C] is not a key of R")
-
-  AssertFails(() => {
-    ForeignKey(S, ['A'])->References(R, ['A'])
+    ForeignKey(S, ['A'])->References(R)
   }, "Wrong foreign key: S[A]. A is not an attribute of S")
 
 enddef
@@ -523,7 +519,7 @@ def Test_RA_ReferentialIntegrityInsertUpdate()
   var R = Rel.new('R', {A: Str},         'A')
   var S = Rel.new('S', {B: Int, C: Str}, 'B')
 
-  ForeignKey(S, 'C')->References(R, 'A', 'smurfs')
+  ForeignKey(S, 'C')->References(R, {verb: 'smurfs'})
 
   R.InsertMany([
     {A: 'ab'},
@@ -576,7 +572,7 @@ enddef
 def Test_RA_ForeignKeySyntacticSugar()
   def FK(verbphrase: string): func(list<any>, Rel, any)
     return (fk: list<any>, R: Rel, key: any) => {
-      return ForeignKey(fk[0], fk[1])->References(R, key, verbphrase)
+      return ForeignKey(fk[0], fk[1])->References(R, {key: key, verb: verbphrase})
     }
   enddef
 
@@ -2507,8 +2503,8 @@ def Test_RA_TransitiveClosure()
   var Node = Rel.new('Node', {NodeNo: Int}, ['NodeNo'])
   var Edge = Rel.new('Edge', {From: Int, To: Int}, ['From', 'To'])
 
-  ForeignKey(Edge, 'From')->References(Node, 'NodeNo')
-  ForeignKey(Edge, 'To')->References(Node, 'NodeNo')
+  ForeignKey(Edge, 'From')->References(Node, {key: 'NodeNo'})
+  ForeignKey(Edge, 'To')->References(Node) # References primary key (i.e., first key) by default
 
   Node.InsertMany([
     {NodeNo: 1},
@@ -2557,8 +2553,8 @@ def Test_RA_TransitiveClosureOfCyclicGraph()
   var Node = Rel.new('Node', {NodeNo: Int}, ['NodeNo'])
   var Edge = Rel.new('Edge', {From: Int, To: Int}, ['From', 'To'])
 
-  ForeignKey(Edge, 'From')->References(Node, 'NodeNo')
-  ForeignKey(Edge, 'To')->References(Node, 'NodeNo')
+  ForeignKey(Edge, 'From')->References(Node)
+  ForeignKey(Edge, 'To')->References(Node)
 
   Node.InsertMany([
     {NodeNo: 1},
@@ -2649,7 +2645,7 @@ enddef
 def Test_RA_Next()
   var Edge = Rel.new('Edge', {Node: Int, Next: Int}, [['Node'], ['Next']])
 
-  ForeignKey(Edge, 'Next')->References(Edge, 'Node')
+  ForeignKey(Edge, 'Next')->References(Edge, {key: 'Node'})
   Edge.Insert({Node: 1, Next: 1})
 
   assert_equal([{Node: 1, Next: 1}], Edge.Instance())
@@ -2670,8 +2666,8 @@ def Test_RA_CircularPath()
   var Node = Rel.new('Node', {Node: Int}, 'Node')
   var Edge = Rel.new('Edge', {Node: Int, Next: Int}, [['Node'], ['Next']])
 
-  ForeignKey(Edge, 'Node')->References(Node, 'Node')
-  ForeignKey(Edge, 'Next')->References(Node, 'Node')
+  ForeignKey(Edge, 'Node')->References(Node)
+  ForeignKey(Edge, 'Next')->References(Node)
 
   Node.Insert({Node: 1})
   Edge.Insert({Node: 1, Next: 1})
@@ -2703,7 +2699,7 @@ enddef
 def Test_RA_Hierarchy()
   var H = Rel.new('Hierarchy', {Node: Int, Parent: Int}, [['Node']])
 
-  ForeignKey(H, 'Parent')->References(H, 'Node')
+  ForeignKey(H, 'Parent')->References(H)
 
   H.Insert({Node: 1, Parent: 1})
 
@@ -2729,9 +2725,9 @@ def Test_RA_ViewHierarchy()
   BaseView.Insert({View: 0, IsLeaf: false, Parent: 0})
   Container.Insert({View: 0})
 
-  ForeignKey(BaseView,  'Parent')->References(Container, 'View')
-  ForeignKey(Container, 'View')->References(BaseView, 'View')
-  ForeignKey(LeafView,  'View')->References(BaseView, 'View')
+  ForeignKey(BaseView,  'Parent')->References(Container)
+  ForeignKey(Container, 'View')->References(BaseView)
+  ForeignKey(LeafView,  'View')->References(BaseView)
 
   Transaction(() => {
     BaseView.InsertMany([
@@ -2776,8 +2772,8 @@ def Test_RA_BreweryConstraints()
   )
 
   Beer.OnInsertCheck('I1', (t) => t.AlcPerc > 0)
-  ForeignKey(Beer, 'BrewedBy')->References(Brewery, 'Name', 'is brewed by')
-  ForeignKey(Drinker, 'Beer')->References(Beer, 'Name', 'drinks')
+  ForeignKey(Beer, 'BrewedBy')->References(Brewery, {verb: 'is brewed by'})
+  ForeignKey(Drinker, 'Beer')->References(Beer, {verb: 'drinks'})
   Drinker.OnInsertCheck('I4', (t) => t.QtyDrunk <= t.QtyBought)
 
   # NOTE: this info is made up.

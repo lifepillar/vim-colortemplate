@@ -22,6 +22,8 @@ git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 - **librelalg:** an implementation of Relational Algebra in Vim 9 script (alpha
   level).
 - **libtinytest**: a testing and benchmarking library (beta level).
+- **libversion**: utility library for version comparisons and requirements
+  (alpha level).
 
 “alpha level” means that the library generally works, but there may be serious
 bugs and the interface is still WIP.

@@ -1,0 +1,3 @@
+libversion.Require()	libversion.txt	/*libversion.Require()*
+libversion.Version	libversion.txt	/*libversion.Version*
+libversion.txt	libversion.txt	/*libversion.txt*

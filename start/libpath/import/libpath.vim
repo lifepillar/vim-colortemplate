@@ -1,5 +1,7 @@
 vim9script
 
+export var version = '0.0.1-alpha'
+
 export const SLASH: string = !exists("+shellslash") || &shellslash ? '/' : '\'
 
 export def C(path1: string, path2: string): string

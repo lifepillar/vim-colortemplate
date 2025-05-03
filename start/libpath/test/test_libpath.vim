@@ -7,6 +7,10 @@ const TESTPATH = resolve(expand('<sfile>:p'))
 const TESTFILE = fnamemodify(TESTPATH, ':t')
 const TESTDIR  = fnamemodify(TESTPATH, ':h')
 
+def Test_Path_Version()
+  assert_true(match(path.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
+
 def Test_Path_Clean()
   assert_equal('a',   path.Clean('a/'))
   assert_equal('a/b', path.Clean('a/b'))

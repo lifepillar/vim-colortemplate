@@ -1,5 +1,7 @@
 vim9script
 
+export var version = '0.0.1-alpha'
+
 # Author:       Lifepillar <lifepillar@lifepillar.me>
 # Maintainer:   Lifepillar <lifepillar@lifepillar.me>
 # Website:      https://github.com/lifepillar/vim-devel

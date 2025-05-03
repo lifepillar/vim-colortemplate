@@ -37,6 +37,10 @@ const Text         = parser.Text
 const TextToken    = parser.TextToken
 const Integer      = Regex('\d\+')->Map((x, _) => str2nr(x))
 
+def Test_LP_Version()
+  assert_true(match(parser.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
+
 
 def Test_LP_Context()
   var ctx = Context.new("Some text")

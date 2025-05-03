@@ -38,6 +38,10 @@ def In(v: any, items: list<any>): bool
   return index(items, v) != -1
 enddef
 
+def Test_Color_Version()
+  assert_true(match(libcolor.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
+
 def Test_Color_Cterm2Hex()
   for i in range(16)
     assert_equal(libcolor.ANSI_HEX[i], Cterm2Hex(i))

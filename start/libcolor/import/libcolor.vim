@@ -4,6 +4,8 @@ endif
 
 vim9script
 
+export var version = '0.0.1-alpha'
+
 # Constants {{{
 export const PI = 3.1415926535897932384626
 

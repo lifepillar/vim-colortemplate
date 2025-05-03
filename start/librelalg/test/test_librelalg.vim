@@ -8,6 +8,10 @@ vim9script
 import 'librelalg.vim'   as ra
 import 'libtinytest.vim' as tt
 
+def Test_RA_Version()
+  assert_true(match(ra.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
+
 # Aliases {{{
 type Continuation = ra.Continuation
 type Rel          = ra.Rel

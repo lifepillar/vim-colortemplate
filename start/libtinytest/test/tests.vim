@@ -5,6 +5,10 @@ import 'libtinytest.vim' as tt
 const AssertFails = tt.AssertFails
 const Round       = tt.Round
 
+def Test_TT_Version()
+  assert_true(match(tt.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
+
 def Test_TT_Round()
   assert_equal(4.55, Round(4.54898, 2))
   assert_equal(1.0,  Round(0.9987, 0))

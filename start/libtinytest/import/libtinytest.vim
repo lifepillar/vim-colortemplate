@@ -5,6 +5,8 @@ vim9script
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
+export var version = '0.0.1-beta'
+
 if !&magic
   echomsg "LibTinyTest requires 'magic' on"
   finish
@@ -18,7 +20,7 @@ export var options = {
   quiet:        get(g:, 'libtinytest_quiet',       false),
 }
 # }}}
-#
+
 # Local state {{{
 class BenchmarkResult
   var description:  string      # Benchmark description

@@ -41,6 +41,9 @@ def GetSet(value: any): list<func>
   return [p.Get, p.Set]
 enddef
 
+def Test_React_Version()
+  assert_true(match(react.version, '^\d\+\.\d\+\.\d\+') != -1)
+enddef
 
 def Test_React_PropertyAttributes()
   var p0 = react.Property.new('x')

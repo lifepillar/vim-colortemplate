@@ -1,5 +1,7 @@
 vim9script
 
+export var version = '0.0.1-beta'
+
 # Settings {{{
 export var debug_level = get(g:, 'libreactive_debug_level',     0)
 export var queue_size  = get(g:, 'libreactive_queue_size',  10000)

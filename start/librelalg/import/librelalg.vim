@@ -7,39 +7,51 @@ export var version = '0.0.1-alpha'
 # Website:      https://github.com/lifepillar/vim-devel
 # License:      Vim License (see `:help license`)
 
-# Type Aliases {{{
+# Types Aliases {{{
 export type Attr            = string
-export type Domain          = number # v:t_number, v:t_string, etc.
+export type Domain          = number       # v:t_number, v:t_string, etc.
 export type Schema          = dict<Domain> # Map from Attr to Domain
-export type AttrSet         = list<Attr> # When the order does not matter
-export type AttrList        = list<Attr> # When the order matters
+export type AttrSet         = list<Attr>   # When the order does not matter
+export type AttrList        = list<Attr>   # When the order matters
 export type Tuple           = dict<any>
 export type Relation        = list<Tuple>
-export type Constraint      = func(Tuple): void # Raises if the constraint fails
+
 export type Consumer        = func(Tuple): void
 export type Continuation    = func(Consumer): void
 export type UnaryPredicate  = func(Tuple): bool
 export type BinaryPredicate = func(Tuple, Tuple): bool
 # }}}
 
-# Helper functions {{{
-# string() turns 'A' into a string of length 3, with quotes. We do not want that.
+# Helper Functions {{{
+def IsIn(v: any, items: list<any>): bool
+  return indexof(items, (_, u) => u == v) != -1
+enddef
+def IsNotIn(v: any, items: list<any>): bool
+  return indexof(items, (_, u) => u == v) == -1
+enddef
+
+# string() turns 'A' into a string of length 3, with quotes.
+# Use this if you don't want that.
 def String(value: any): string
   return type(value) == v:t_string ? value : string(value)
 enddef
 
 def ListStr(items: list<any>): string
-  const stringified = mapnew(items, (_, v) => String(v))
+  var stringified = mapnew(items, (_, v) => String(v))
   return '[' .. join(stringified, ', ') .. ']'
 enddef
 
 def TupleStr(t: Tuple, attrs: AttrList = keys(t)): string
-  const stringified = mapnew(attrs, (_, a) => $'{a}: {String(t[a])}')
+  var stringified = mapnew(attrs,
+    (_, a) => $'{a}: {string(t[a])}'
+  )
   return '{' .. join(stringified, ', ') .. '}'
 enddef
 
 def SchemaStr(schema: Schema): string
-  const stringified = mapnew(schema, (a, d) => $'{a}: {DomainName(d)}')
+  var stringified = mapnew(schema,
+    (attr, dom) => $'{attr}: {DomainName(dom)}'
+  )
   return '{' .. join(values(stringified), ', ') .. '}'
 enddef
 
@@ -55,12 +67,13 @@ def IsFunc(X: any): bool
   return type(X) == v:t_func
 enddef
 
-# Item must be an attribute or a list of attributes
 def Listify(item: any): list<Attr>
+  # item: Attr | AttrList
   return type(item) == v:t_list ? item : [item]
 enddef
 
 def ListifyKeys(keys: any): list<AttrList>
+  # keys: Attr | AttrList | list<Attr | AttrList>
   if type(keys) == v:t_string
     return [[keys]]  # One single-attribute key
   endif
@@ -165,10 +178,10 @@ endif
 # besides, of course, allowing partial application.
 def Curry(Fn: func, ...values: list<any>): func
   # const n = get(Fn, "arity").required
-  const n = NumArgs(Fn)
+  var n = NumArgs(Fn)
 
   return (...args: list<any>) => {
-    const totalArgs = values + args
+    var totalArgs = values + args
 
     if len(totalArgs) < n
         return call(Curry, [Fn] + totalArgs)
@@ -213,32 +226,29 @@ def DomainName(domain: Domain): string
 enddef
 # }}}
 
+# Error Messages {{{
+const E000 = 'At least one key must be specified for relation %s.'
+const E001 = 'Expected a tuple on schema %s: got %s instead.'
+const E002 = 'Key %s already defined in relation %s.'
+const E003 = '%s is not an attribute of relation %s.'
+const E004 = 'Duplicate key: %s already exists in relation %s.'
+const E005 = 'Wrong foreign key: %s%s. %s is not an attribute of %s.'
+const E006 = 'Foreign key size mismatch: %s%s -> %s%s.'
+const E007 = 'Wrong foreign key: %s%s -> %s%s. %s is not a key of %s.'
+const E008 = '%s: %s not found in %s%s.'
+const E009 = '%s: cannot delete %s from %s because it is referenced by %s in %s.'
+const E010 = '%s is not a key of %s.'
+const E011 = '%s failed for tuple %s.'
+const E100 = 'Update failed: no tuple with key %s exists in relation %s.'
+const E101 = 'Cannot replace %s with %s: updating key attributes is not allowed.'
+const E200 = 'Join on sets of attributes of different length: %s vs %s.'
+const E300 = 'A table separator must be a single character. Got %s.'
+# }}}
+
 # Indexes {{{
 export const KEY_NOT_FOUND: Tuple = {}
 
-class UniqueIndex
-  var key:    AttrList    = []
-  var _index: dict<Tuple> = {} # Map from key to tuple
-
-  def IsEmpty(): bool
-    return empty(this._index)
-  enddef
-
-  def Add(t: Tuple)
-    const keyValues = string(Values(t, this.key))
-    this._index[keyValues] = t
-  enddef
-
-  def Remove(keyValue: list<any>)
-    this._index->remove(string(keyValue))
-  enddef
-
-  def Search(keyValue: list<any>): Tuple
-    return get(this._index, string(keyValue), KEY_NOT_FOUND)
-  enddef
-endclass
-
-class NonUniqueIndex
+class Index
   var key:    AttrList          = []
   var _index: dict<list<Tuple>> = {} # Map from key to tuples
 
@@ -247,7 +257,7 @@ class NonUniqueIndex
   enddef
 
   def Add(t: Tuple)
-    const keyValues = string(Values(t, this.key))
+    var keyValues = string(Values(t, this.key))
 
     if !this._index->has_key(keyValues)
       this._index[keyValues] = []
@@ -257,8 +267,17 @@ class NonUniqueIndex
   enddef
 
   def Remove(t: Tuple)
-    const keyValues = string(Values(t, this.key))
-    filter(get(this._index, keyValues, []), (u) => t == u)
+    var keyValues = string(Values(t, this.key))
+
+    if this._index->has_key(keyValues)
+      var tuples = this._index[keyValues]
+
+      filter(tuples, (_, u) => t isnot u)
+
+      if empty(tuples)
+        remove(this._index, keyValues)
+      endif
+    endif
   enddef
 
   def Search(keyValue: list<any>): list<Tuple>
@@ -267,291 +286,500 @@ class NonUniqueIndex
 endclass
 # }}}
 
+# Interfaces {{{
+export interface IRel
+  var name:       string
+  var attributes: list<Attr>
+  var keys:       list<AttrList>
+
+  def Instance(): Relation
+  def IsEmpty(): bool
+  def Lookup(key: AttrList, value: list<any>): Tuple
+endinterface
+
+interface ICheckable extends IRel
+  def OnInsertCheck(name: string, C: UnaryPredicate)
+  def OnDeleteCheck(name: string, C: UnaryPredicate)
+endinterface
+
+interface ITransactable
+  def IsConsistent_(): bool
+  def Commit_()
+  def Rollback_()
+endinterface
+# }}}
+
+# Transactions {{{
+class TransactionManager
+  var _running: number              = 0
+  var _pending: list<ITransactable> = []
+  var _messages: list<string>       = []
+
+  def Add(rel: ITransactable)
+    if rel->IsNotIn(this._pending)
+      this._pending->add(rel)
+    endif
+  enddef
+
+  def LogMessage(msg: string, prepend = false)
+    if prepend
+      this._messages->insert(msg)
+    else
+      this._messages->add(msg)
+    endif
+  enddef
+
+  def CheckConstraints(): bool
+    for rel in this._pending
+      if !rel.IsConsistent_()
+        return false
+      endif
+    endfor
+
+    return true
+  enddef
+
+  def Begin()
+    this._running += 1
+  enddef
+
+  def Commit()
+    if this._running == 0 # Not in a transaction (rolled back)
+      return
+    endif
+
+    this._running -= 1
+
+    if this._running > 0 # Nested transaction
+      return
+    endif
+
+    if this.CheckConstraints()
+      for rel in this._pending
+        rel.Commit_()
+      endfor
+
+      this._pending  = []
+      this._messages = []
+    else
+      this.Rollback()
+    endif
+  enddef
+
+  def Rollback()
+    for rel in this._pending
+      rel.Rollback_()
+    endfor
+
+    var errors = join(this._messages)
+
+    this._pending  = []
+    this._messages = []
+    this._running  = 0
+
+    throw errors
+  enddef
+endclass
+
+var globalTransactionManager = TransactionManager.new()
+
+export def Transaction(Body: func())
+  globalTransactionManager.Begin()
+  Body()
+  globalTransactionManager.Commit()
+enddef
+
+export def FailedMsg(message: string, prepend = false)
+  globalTransactionManager.LogMessage(message, prepend)
+enddef
+# }}}
+
+# Integrity constraints {{{
+class Constraint
+  var name:  string
+  var Check: UnaryPredicate
+
+  def string(): string
+    return this.name
+  enddef
+endclass
+
+export def ForeignKey(Child: ICheckable, fkey: any): list<any>
+  var fkey_: AttrList = Listify(fkey)
+
+  for attr in fkey_
+    if attr->IsNotIn(Child.attributes)
+      throw printf(E005, Child.name, ListStr(fkey_), attr, Child.name)
+    endif
+  endfor
+
+  return [Child, fkey_]
+enddef
+
+export def References(foreign_key: list<any>, Parent: ICheckable, args: dict<any> = {})
+  var Child = (<ICheckable>foreign_key[0])
+  var fkey: AttrList = foreign_key[1]
+  var key:  AttrList = args->has_key('key') ? Listify(args.key) : Parent.keys[0]
+
+  if len(fkey) != len(key)
+    throw printf(E006,
+      Child.name,
+      ListStr(fkey),
+      Parent.name,
+      ListStr(key)
+    )
+  endif
+
+  if key->IsNotIn(Parent.keys)
+    throw printf(E007,
+      Child.name,
+      ListStr(fkey),
+      Parent.name,
+      ListStr(key),
+      ListStr(key),
+      Parent.name
+    )
+  endif
+
+  var fkStr = $'{Child.name} {args->get("verb", "references")} {Parent.name}'
+
+  var FkConstraint: UnaryPredicate = (t) => {
+    if Parent.Lookup(key, Values(t, fkey)) isnot KEY_NOT_FOUND
+      return true
+    endif
+
+    FailedMsg(printf(E008,
+      fkStr,
+      TupleStr(t, fkey),
+      Parent.name,
+      ListStr(key))
+    )
+    return false
+  }
+
+  Child.OnInsertCheck('Referential integrity', FkConstraint)
+
+  var FkPred = EquiJoinPred(fkey, key)
+
+  var DelConstraint: UnaryPredicate = (t_p) => {
+    if Parent.Lookup(key, Values(t_p, key)) isnot KEY_NOT_FOUND
+      return true
+    endif
+
+    for t_c in Child.Instance()
+      if FkPred(t_c, t_p)
+        FailedMsg(printf(E009,
+          fkStr,
+          TupleStr(t_p),
+          Parent.name, TupleStr(t_c),
+          Child.name
+        ))
+        return false
+      endif
+    endfor
+
+    return true
+  }
+
+  Parent.OnDeleteCheck('Referential integrity', DelConstraint)
+enddef
+# }}}
+
 # Relations {{{
-export class Rel
-  var name:          string
-  var schema:        Schema
-  var keys:          list<AttrList>
-  var instance:      list<Tuple> = []
-  var attributes:    AttrSet
-  var keyAttributes: AttrSet
-  var descriptors:   AttrSet
+export class Rel implements IRel, ICheckable, ITransactable
+  var name:               string
+  var schema:             Schema
+  var keys:               list<AttrList>
+  var attributes:         AttrList
+  var key_attributes:     AttrList
+  var descriptors:        AttrList
+  var insert_constraints: list<Constraint> = []
+  var delete_constraints: list<Constraint> = []
 
-  var _indexes:      dict<UniqueIndex> = {}
-  var _constraints:  dict<list<Constraint>> = {'I': [], 'U': [], 'D': []}
+  public var type_check:  bool             = true
 
-  def new(this.name, this.schema, relKeys: any, checkType = true)
+  var _instance:          Relation         = []
+  var _key_indexes:       dict<Index>      = {}
+  # Differential sets. See: Grefen and Apers, 1993
+  # Integrity control in relational database systems - An overview
+  var _inserted_tuples:   list<Tuple>      = []
+  var _deleted_tuples:    list<Tuple>      = []
+
+  def new(
+      this.name,
+      this.schema,
+      relKeys: any,
+      this.type_check = v:none
+      )
     if empty(relKeys)
-      throw $'No key specified for relation {this.name}'
+      throw printf(E000, this.name)
     endif
 
-    if checkType
-      this.EnableTypeChecking_()
-    endif
+    var keys_: list<AttrList> = ListifyKeys(relKeys)
 
-    const keys_: list<AttrList> = ListifyKeys(relKeys)
-
-    this.attributes    = keys(this.schema)->sort()
-    this.keyAttributes = flattennew(keys_)->sort()->uniq()
-    this.descriptors   = filter(copy(this.attributes), (_, v) => index(this.keyAttributes, v) == -1)
+    this.attributes     = keys(this.schema)->sort()
+    this.key_attributes = flattennew(keys_)->sort()->uniq()
+    this.descriptors    = filter(
+      copy(this.attributes),
+      (_, v) => v->IsNotIn(this.key_attributes)
+    )
 
     for key in keys_
       this.AddKeyConstraint_(key)
     endfor
   enddef
 
+  def string(): string
+    return $'{this.name}={this.Instance()}'
+  enddef
+
+  def Instance(): Relation
+    return this._instance
+  enddef
+
+  def IsEmpty(): bool
+    return empty(this._instance)
+  enddef
+
+  def Index(key: any): Index
+    return this._key_indexes[string(Listify(key))]
+  enddef
+
+  def OnInsertCheck(name: string, C: UnaryPredicate)
+    this.insert_constraints->add(Constraint.new(name, C))
+  enddef
+
+  def OnDeleteCheck(name: string, C: UnaryPredicate)
+    this.delete_constraints->add(Constraint.new(name, C))
+  enddef
+
+  def Add_(t: Tuple)
+    this.TypeCheck_(t)
+    this._instance->add(t)
+
+    for idx in values(this._key_indexes)
+      idx.Add(t)
+    endfor
+  enddef
+
+  def Remove_(t: Tuple)
+    var i = indexof(this._instance, (_, u) => u is t)
+
+    remove(this._instance, i)
+
+    for idx in values(this._key_indexes)
+      idx.Remove(t)
+    endfor
+  enddef
+
+  def Insert(t: Tuple): Rel
+    globalTransactionManager.Add(this)
+
+    Transaction(() => {
+      this.Add_(t)
+
+      # Check if t was previously deleted during the current transaction
+      var k = indexof(this._deleted_tuples, (_, u: Tuple) => u == t)
+
+      if k == -1
+        this._inserted_tuples->add(t)
+      else # This insertion undoes the deletion
+        remove(this._deleted_tuples, k)
+      endif
+    })
+
+    return this
+  enddef
+
+  def Delete(P: UnaryPredicate = (t) => true): Relation
+    var deleted: list<Tuple> = []
+
+    globalTransactionManager.Add(this)
+
+    Transaction(() => {
+      for t in this._instance
+        if P(t)
+          deleted->add(t)
+
+          for idx in values(this._key_indexes)
+            idx.Remove(t)
+          endfor
+
+          # Check if t was previously inserted during the current transaction
+          var k = indexof(this._inserted_tuples, (_, u: Tuple) => u == t)
+
+          if k == -1
+            this._deleted_tuples->add(t)
+          else # This deletion undoes the insertion
+            remove(this._inserted_tuples, k)
+          endif
+        endif
+      endfor
+
+      filter(this._instance, (_, t) => !P(t))
+    })
+
+    return deleted
+  enddef
+
+  def InsertMany(tuples: list<Tuple>): Rel
+    Transaction(() => {
+      for t in tuples
+        this.Insert(t)
+      endfor
+    })
+
+    return this
+  enddef
+
+  def Update(P: UnaryPredicate, Set: func(Tuple))
+    globalTransactionManager.Add(this)
+
+    Transaction(() => {
+      var deleted = this.Delete(P)
+
+      for t in deleted
+        var new_t = deepcopy(t)
+
+        Set(new_t)
+        this.Insert(new_t)
+      endfor
+    })
+  enddef
+
+  def Lookup(key: AttrList, value: list<any>): Tuple
+    if key->IsNotIn(this.keys)
+      throw printf(E010, key, this.name)
+    endif
+
+    var idx = this._key_indexes[String(key)]
+    var result = idx.Search(value)
+
+    return empty(result) ? KEY_NOT_FOUND : result[0]
+  enddef
+
+  def Upsert(t: Tuple, insert: bool = true)
+    # Lookup by primary key (conventionally, the first defined key)
+    var u = this.Lookup(this.keys[0], Values(t, this.keys[0]))
+
+    if u is KEY_NOT_FOUND
+      if insert
+        this.Insert(t)
+        return
+      endif
+
+      throw printf(E100, TupleStr(t, this.keys[0]), this.name)
+    endif
+
+    Transaction(() => {
+      this.Delete((v) => v == u)
+      this.Insert(t)
+    })
+  enddef
+
+  def TypeCheck_(t: Tuple)
+    if this.type_check
+      if sort(keys(t)) != this.attributes
+        FailedMsg(printf(E001, SchemaStr(this.schema), TupleStr(t)))
+        globalTransactionManager.Rollback()
+      endif
+
+      for [attr, domain] in items(this.schema)
+        var v = t[attr]
+
+        if type(v) != domain
+          FailedMsg(printf(E001, SchemaStr(this.schema), TupleStr(t)))
+          globalTransactionManager.Rollback()
+        endif
+      endfor
+    endif
+  enddef
+
   def AddKeyConstraint_(key: AttrList)
-    if index(this.keys, key) != -1
-      throw $'Key {ListStr(key)} already defined in {this.name}'
+    if key->IsIn(this.keys)
+      throw printf(E002, ListStr(key), this.name)
     endif
 
     for attr in key
-      if index(this.attributes, attr) == -1
-        throw $'{attr} is not an attribute of {this.name}'
+      if attr->IsNotIn(this.attributes)
+        throw printf(E003, attr, this.name)
       endif
     endfor
 
     this.keys->add(key)
+    this.CreateUniquenessConstraint_(key)
+  enddef
 
-    var keyIndex = UniqueIndex.new(key)
+  def CreateUniquenessConstraint_(key: AttrList)
+    var keyIndex = Index.new(key)
 
-    this._indexes[string(key)] = keyIndex
-
-    const KeyConstraint = (t: Tuple): void => {
-      if keyIndex.Search(Values(t, key)) isnot KEY_NOT_FOUND
-        throw $'Duplicate key value: {TupleStr(t, key)} already exists in {this.name}'
+    var IsUnique: UnaryPredicate = (t) => {
+      if len(keyIndex.Search(Values(t, key))) <= 1
+        return true
       endif
+
+      FailedMsg(printf(E004, TupleStr(t, key), this.name))
+
+      return false
     }
 
-    this._constraints.I->add(KeyConstraint)
+    this._key_indexes[string(key)] = keyIndex
+    this.OnInsertCheck('Key uniqueness', IsUnique)
   enddef
 
-  def IsEmpty(): bool
-    return empty(this.instance)
-  enddef
-
-  def Index(key: any): UniqueIndex
-    return this._indexes[string(Listify(key))]
-  enddef
-
-  def Insert(t: Tuple): any
-    for CheckConstraint in this._constraints.I
-      CheckConstraint(t)
-    endfor
-
-    this.instance->add(t)
-
-    for idx in values(this._indexes)
-      idx.Add(t)
-    endfor
-
-    return this
-  enddef
-
-  def InsertMany(tuples: list<Tuple>, atomic: bool = false): any
-    if atomic
-      var inserted: list<Tuple> = []
-
-      for t in tuples
-        try
-          this.Insert(t)
-          inserted->add(t)
-        catch
-          this.RollbackInsertion_(inserted)
-          throw v:exception
-        endtry
-      endfor
-    else
-      for t in tuples
-        this.Insert(t)
-      endfor
-    endif
-
-    return this
-  enddef
-
-  def RollbackInsertion_(tuples: list<Tuple>)
-    const DeletePred = (i: number, t: Tuple): bool => {
-      if t->In(tuples)
-        for ind in values(this._indexes)
-          const keyValue = Values(t, ind.key)
-          ind.Remove(keyValue)
-        endfor
-
-        return false
-      endif
-
-      return true
-    }
-
-    filter(this.instance, DeletePred)
-  enddef
-
-  def Update(t: Tuple, upsert = false): any
-    const key      = this.keys[0]
-    const keyValue = Values(t, key)
-    const oldt     = this.Lookup(key, keyValue)
-
-    if oldt is KEY_NOT_FOUND
-      if upsert
-        this.Insert(t)
-      else
-        throw $'Update failed: no tuple with key {TupleStr(t, key)} exists in {this.name}'
-      endif
-
-      return this
-    endif
-
-    for attr in this.keyAttributes
-      if t[attr] != oldt[attr]
-        throw $'Updating key attributes not allowed: failed to replace {TupleStr(oldt)} with {TupleStr(t)} ({attr} is a key attribute)'
-      endif
-    endfor
-
-    # This may be tricky for some kind of constraints, as the old tuple is
-    # still in the relation at this point. But for simple checks it should work.
-    for CheckConstraint in this._constraints.U
-      CheckConstraint(t)
-    endfor
-
-    for attr in this.descriptors
-      oldt[attr] = t[attr]
-    endfor
-
-    return this
-  enddef
-
-  def Delete(Pred: func(Tuple): bool = (t) => true, atomic: bool = false): any
-    const DeletePred = (i: number, t: Tuple): bool => {
-      if Pred(t)
-        for CheckConstraint in this._constraints.D
-          CheckConstraint(t)
-        endfor
-
-        for ind in values(this._indexes)
-          const keyValue = Values(t, ind.key)
-          ind.Remove(keyValue)
-        endfor
-
-        return false
-      endif
-
-      return true
-    }
-
-    if atomic
-      this.instance = filter(copy(this.instance), DeletePred)
-    else
-      filter(this.instance, DeletePred)
-    endif
-
-    return this
-  enddef
-
-  def Lookup(key: AttrSet, value: list<any>): Tuple
-    if index(this.keys, key) == -1
-      throw $'{key} is not a key of {this.name}'
-    endif
-
-    const ind = this._indexes[String(key)]
-    return ind.Search(value)
-  enddef
-
-  def Check(C: Constraint, opList: list<string> = ['I', 'U'])
-    for op in opList
-      if index(['I', 'U', 'D'], op) == -1
-        throw $"Expected one of 'I' (insert), 'U' (update), 'D' (deletion), got {op}"
-      endif
-
-      this._constraints[op]->add(C)
-    endfor
-  enddef
-
-
-  def EnableTypeChecking_()
-    const TC: Constraint = (t: Tuple): void => {
-      const schema = this.schema
-
-      if sort(keys(t)) != this.attributes
-        throw $'Expected a tuple on schema {SchemaStr(schema)}: got {TupleStr(t)} instead'
-      endif
-
-      for [attr, domain] in items(schema)
-        const v = t[attr]
-
-        if type(v) != domain
-          const wrong    = DomainName(type(v))
-          const expected = DomainName(schema[attr])
-          throw $"Attribute {attr} is of type {expected}, but value '{v}' of type {wrong} was provided"
+  def IsConsistent_(): bool
+    for constraint in this.insert_constraints
+      for t in this._inserted_tuples
+        if !constraint.Check(t)
+          FailedMsg(printf(E011, constraint, TupleStr(t)), true)
+          return false
         endif
       endfor
-    }
+    endfor
 
-    this.Check(TC, ['I', 'U'])
+    for constraint in this.delete_constraints
+      for t in this._deleted_tuples
+        if !constraint.Check(t)
+          FailedMsg(printf(E011, constraint, TupleStr(t)), true)
+          return false
+        endif
+      endfor
+    endfor
+
+    return true
+  enddef
+
+  def Commit_()
+    this._inserted_tuples = []
+    this._deleted_tuples  = []
+  enddef
+
+  def Rollback_()
+    for t in this._inserted_tuples
+      this.Remove_(t)
+    endfor
+
+    for t in this._deleted_tuples
+      this.Add_(t)
+    endfor
+
+    this._inserted_tuples = []
+    this._deleted_tuples  = []
   enddef
 endclass
 # }}}
-
-# Integrity constraints {{{
-export def ForeignKey(
-  Child:      Rel,
-  fkey:       any,
-  Parent:     Rel,
-  key:        any = null,
-  verbphrase: string = 'references'
-): void
-  const fkey_: AttrList = Listify(fkey)
-  const key_:  AttrList = key == null ? fkey_ : Listify(key)
-
-  if len(fkey_) != len(key_)
-    throw $'Foreign key size mismatch: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}'
-  endif
-
-  for attr in fkey_
-    if index(Child.attributes, attr) == -1
-      throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {attr} is not an attribute of {Child.name}'
-    endif
-  endfor
-
-  if index(Parent.keys, key_) == -1
-    throw $'Wrong foreign key: {Child.name}{ListStr(fkey_)} -> {Parent.name}{ListStr(key_)}. {ListStr(key_)} is not a key of {Parent.name}'
-  endif
-
-  const fkStr = $'{Child.name} {verbphrase} {Parent.name}'
-
-  const FkConstraint = (t: dict<any>): void => {
-    if Parent.Lookup(key_, Values(t, fkey_)) is KEY_NOT_FOUND
-      throw $'{fkStr}: {TupleStr(t, fkey_)} is not present in {Parent.name}{ListStr(key_)}'
-    endif
-  }
-
-  Child.Check(FkConstraint, ['I', 'U'])
-
-  const FkPred = EquiJoinPred(fkey_, key_)
-
-  const DelConstraint = (t_p: dict<any>): void => {
-    for t_c in Child.instance
-      if FkPred(t_c, t_p)
-        throw $'{fkStr}: cannot delete {TupleStr(t_p)} from {Parent.name} because it is referenced by {TupleStr(t_c)} in {Child.name}'
-      endif
-    endfor
-  }
-
-  Parent.Check(DelConstraint, ['D'])
-enddef
-# }}}
 # }}}
 
-# Rel related helper functions {{{
+# IRel related helper functions {{{
 def IsRel(R: any): bool
   return type(R) == v:t_object
 enddef
 
 def Instance(R: any): Relation
-  return type(R) == v:t_object ? (<Rel>R).instance : R
+  return type(R) == v:t_object ? (<IRel>R).Instance() : R
 enddef
 
-def IsKeyOf(attrs: AttrList, R: Rel): bool
+def IsKeyOf(attrs: AttrList, R: IRel): bool
   return index(R.keys, attrs) != -1
 enddef
 # }}}
@@ -840,7 +1068,7 @@ export def EquiJoinPred(lAttrs: AttrList, rAttrs: AttrList = null_list): BinaryP
   const rgt = rAttrs == null ? lAttrs : rAttrs
 
   if n != len(rgt)
-    throw $'Join on sets of attributes of different length: {ListStr(lAttrs)} vs {ListStr(rgt)}'
+    throw printf(E200, ListStr(lAttrs), ListStr(rgt))
   endif
 
   return (t: Tuple, u: Tuple): bool => {
@@ -867,7 +1095,7 @@ export def EquiJoin(
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
     const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
     const Cont = From(Arg1)
-    const rel: Rel = Arg2
+    const rel: IRel = Arg2
 
     return (Emit: Consumer) => {
       Cont((t: Tuple) => {
@@ -998,7 +1226,7 @@ export def AntiEquiJoin(Arg1: any, Arg2: any, lAttrs: any, rAttrs: any = lAttrs)
   const Cont = From(Arg1)
 
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
-    const rel: Rel = Arg2
+    const rel: IRel = Arg2
 
     return (Emit: Consumer) => {
       Cont((t: Tuple) => {
@@ -1055,7 +1283,7 @@ export def LeftEquiJoin(
   const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
 
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
-    const rel: Rel = Arg2
+    const rel: IRel = Arg2
 
     return (Emit: Consumer) => {
       Cont((t: Tuple) => {
@@ -1169,7 +1397,7 @@ export def CoddDivide(Arg1: any, Arg2: any, divisorAttrs: AttrSet = []): Continu
 
   if empty(s)
     const K = IsRel(Arg2)
-      ? filter(keys(r[0]), (i, v) => index((<Rel>Arg2).attributes, v) == -1)
+      ? filter(keys(r[0]), (i, v) => index((<IRel>Arg2).attributes, v) == -1)
       : filter(keys(r[0]), (i, v) => index(divisorAttrs, v) == -1)
 
     return Project(r, K)
@@ -1559,15 +1787,15 @@ export def Table(
     R: any, name = null_string, columns: any = null, gap = 1, sep = '─'
 ): string
   if strchars(sep) != 1
-    throw $'A table separator must be a single character. Got {sep}'
+    throw printf(E300, sep)
   endif
 
   var rel: Relation
   var relname: string
 
   if IsRel(R)
-    rel = (<Rel>R).instance
-    relname = empty(name) ? (<Rel>R).name : name
+    rel = (<IRel>R).Instance()
+    relname = empty(name) ? (<IRel>R).name : name
   else
     rel = R
     relname = name

@@ -5,20 +5,33 @@ vim9script
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
 # License:     MIT
 
-import 'libpath.vim' as path
-import autoload '../autoload/colortemplate.vim'      as ctemplate
-import autoload '../autoload/colortemplate/util.vim' as util
-
 if exists("b:did_ftplugin")
   finish
 endif
 
 b:did_ftplugin = 1
 
+import 'libpath.vim' as path
+import autoload '../autoload/colortemplate.vim'      as colortemplate
+import autoload '../autoload/colortemplate/util.vim' as util
+
+if exists('b:undo_ftplugin') && !empty(b:undo_ftplugin)
+  b:undo_ftplugin ..= '|'
+else
+  b:undo_ftplugin = ''
+endif
+
+b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl cms< com< fo< ofu<'
+
 setlocal comments=:;
 setlocal commentstring=;%s
 setlocal formatoptions=cjloqr1
 setlocal omnifunc=syntaxcomplete#Complete
+
+if has('balloon_eval') || has('balloon_eval_term')
+  setlocal balloonexpr=colortemplate#util#BalloonExpr()
+  b:undo_ftplugin = "|setl balloonexpr<"
+endif
 
 def g:InitOutputDir()
   if empty(get(b:, 'colortemplate_outdir', ''))
@@ -34,50 +47,34 @@ def g:InitOutputDir()
       outdir = path.Parent(outdir)
     endif
 
-    ctemplate.SetOutputDir(outdir)
+    colortemplate.SetOutputDir(outdir)
   endif
 enddef
 
 g:InitOutputDir()
 
-if exists('b:undo_ftplugin')
-  b:undo_ftplugin ..= '|'
-else
-  b:undo_ftplugin = ''
-endif
-
-b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl cms< com< fo< ofu<'
-
-# if has('balloon_eval') || has('balloon_eval_term')
-#   setlocal balloonexpr=colortemplate#syn#balloonexpr()
-#   b:undo_ftplugin = "|setl balloonexpr<"
-# endif
-
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
-  nnoremap <silent> <buffer> <c-l> <scriptcmd>ctemplate.toolbar.Show()<cr><c-l>
+  nnoremap <silent> <buffer> <c-l> <scriptcmd>colortemplate.toolbar.Show()<cr><c-l>
   nnoremap <silent> <buffer> ga    <scriptcmd>util.GetColorInfo(v:count1)<cr>
   nnoremap <silent> <buffer> gl    <scriptcmd>util.ToggleHighlightInfo()<cr>
   nnoremap <silent> <buffer> gx    <scriptcmd>util.ApproximateColor(v:count1)<cr>
   nnoremap <silent> <buffer> gy    <scriptcmd>util.NearbyColors(v:count1)<cr>
+
   if exists(':StylePicker') > 0
     nnoremap <silent> <buffer> gs    <scriptcmd>StylePicker<cr>
   endif
 endif
 
-command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate       silent ctemplate.Build(bufnr(), <q-args>, "<bang>")
-command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll    silent ctemplate.BuildAll(<q-args>, "<bang>")
-command! -buffer -nargs=0 -bar                     ColortemplateCheck  ctemplate.Validate(bufnr())
-command! -buffer -nargs=0                          ColortemplateOutdir ctemplate.AskOutputDir()
-command! -buffer -nargs=0 -bar                     ColortemplateStats  ctemplate.Stats()
-command! -buffer -nargs=0 -bar                     ColortemplateSource ctemplate.ViewSource(bufnr())
-command! -buffer -nargs=0 -bar                     ColortemplateShow   ctemplate.ShowColorscheme(bufnr())
-command! -buffer -nargs=0 -bar                     ColortemplateHide   ctemplate.HideColorscheme()
-command! -buffer -nargs=0 -bar                     ColortemplateTest   ctemplate.ColorTest(bufnr())
-command! -buffer -nargs=0 -bar                     ColortemplateHiTest ctemplate.HighlightTest(bufnr())
-
-if has('popupwin') && has('textprop')
-  command! -nargs=? -bar -complete=highlight ColortemplateStyle call colortemplate#style#open(<q-args>)
-endif
+command! -buffer -nargs=? -bar -bang -complete=dir Colortemplate       silent colortemplate.Build(bufnr(), <q-args>, "<bang>")
+command! -buffer -nargs=? -bar -bang -complete=dir ColortemplateAll    silent colortemplate.BuildAll(<q-args>, "<bang>")
+command! -buffer -nargs=0 -bar                     ColortemplateCheck  colortemplate.Validate(bufnr())
+command! -buffer -nargs=0                          ColortemplateOutdir colortemplate.AskOutputDir()
+command! -buffer -nargs=0 -bar                     ColortemplateStats  colortemplate.Stats()
+command! -buffer -nargs=0 -bar                     ColortemplateSource colortemplate.ViewSource(bufnr())
+command! -buffer -nargs=0 -bar                     ColortemplateShow   colortemplate.ShowColorscheme(bufnr())
+command! -buffer -nargs=0 -bar                     ColortemplateHide   colortemplate.HideColorscheme()
+command! -buffer -nargs=0 -bar                     ColortemplateTest   colortemplate.ColorTest(bufnr())
+command! -buffer -nargs=0 -bar                     ColortemplateHiTest colortemplate.HighlightTest(bufnr())
 
 augroup colortemplate
   autocmd!
@@ -86,11 +83,11 @@ augroup END
 
 if get(g:, 'colortemplate_toolbar', true) && has('menu')
   augroup colortemplate
-    autocmd BufEnter,WinEnter *.colortemplate ctemplate.toolbar.Show()
-    autocmd BufLeave,WinLeave *.colortemplate ctemplate.toolbar.Hide()
+    autocmd BufEnter,WinEnter *.colortemplate colortemplate.toolbar.Show()
+    autocmd BufLeave,WinLeave *.colortemplate colortemplate.toolbar.Hide()
   augroup END
 endif
 
-ctemplate.toolbar.Show()
+colortemplate.toolbar.Show()
 
 # vim: foldmethod=marker nowrap et ts=2 sw=2

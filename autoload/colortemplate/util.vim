@@ -11,6 +11,20 @@ const ColorsWithin = libcolor.ColorsWithin
 const ColorParser  = parser.ColorParser
 type  Context      = libparser.Context
 
+var sBalloonID = 0
+var sLastBalloonText  = ''
+
+hi clear ColortemplateInfoFg
+hi clear ColortemplateInfoBg
+hi clear ColortemplateInfoSp
+
+prop_type_delete('ct_hifg')
+prop_type_delete('ct_hibg')
+prop_type_delete('ct_hisp')
+prop_type_add('ct_hifg', {highlight: 'ColortemplateInfoFg'})
+prop_type_add('ct_hibg', {highlight: 'ColortemplateInfoBg'})
+prop_type_add('ct_hisp', {highlight: 'ColortemplateInfoSp'})
+
 # Get info about the Color definition under the cursor.
 #
 # n: the desired number of terminal approximations for the given color.
@@ -135,7 +149,7 @@ enddef
 # Displays some information about the highlight group under the cursor in the
 # command line.
 export def GetHighlightInfo()
-  const info = GetHighlightInfoAt(line('.'), col('.'))
+  var info = GetHighlightInfoAt(line('.'), col('.'))
 
   if empty(info)
     return
@@ -166,13 +180,68 @@ export def GetHighlightInfo()
   endif
 enddef
 
-export def ToggleHighlightInfo()
-  if get(g:, 'colortemplate_higroup_balloon', 1)
-    # if s:balloon_id && popup_getpos(s:balloon_id) != {}
-    #   call popup_close(s:balloon_id)
-    # endif
-    # set ballooneval! balloonevalterm!
+export def BalloonExpr(): string # See :help popup_beval_example
+  var beval_text = v:beval_text
+
+  if sBalloonID > 0 && popup_getpos(sBalloonID) != null_dict # Previous popup window still shows
+    if beval_text == sLastBalloonText # Still the same text, keep the existing popup
+      return null_string
+    endif
+
+    popup_close(sBalloonID)
   endif
+
+  var info = GetHighlightInfoAt(v:beval_lnum, v:beval_col)
+
+  if !empty(info)
+    var name  = info.name
+    var tname = info.tname
+    var trans = info.transname
+    var text0 = (name == tname) ? name : $'T:{tname} → {name}'
+
+    if name != trans
+      text0 ..= $' → {trans}'
+    endif
+
+    var text1 = printf('     Fg %7s %4s     ', info.fggui, info.fgterm)
+    var prop1 = [{col: 2, length: 2, type: 'ct_hifg'}]
+    var beval = [{text: text0, props: []}, {text: text1, props: prop1}]
+
+    if info.bggui != 'NONE' || info.bgterm != 'NONE'
+      beval->add({
+        text: printf('     Bg %7s %4s     ', info.bggui, info.bgterm),
+        props: [{col: 2, length: 2, type: 'ct_hibg'}],
+      })
+    endif
+
+    if info.spgui != 'NONE' || info.spterm != 'NONE'
+      beval->add({
+        text: printf('     Sp %7s %4s     ', info.spgui, info.spterm),
+        props: [{col: 2, length: 2, type: 'ct_hisp'}]
+      })
+    endif
+
+    beval->add({text: join(info.synstack, " ⊂ "), props: []})
+
+    sBalloonID = popup_beval(beval, {
+      close:      'click',
+      mousemoved: 'word',
+      moved:      'any',
+      padding:    [0, 1, 0, 1],
+    })
+
+    sLastBalloonText = beval_text
+  endif
+
+  return null_string
+enddef
+
+export def ToggleHighlightInfo()
+  if sBalloonID > 0 && popup_getpos(sBalloonID) != null_dict
+    popup_close(sBalloonID)
+  endif
+
+  set ballooneval! balloonevalterm!
 
   if get(g:, 'colortemplate_higroup_command_line', true)
     if exists("#colortemplate_syn_info")
@@ -180,7 +249,7 @@ export def ToggleHighlightInfo()
       augroup! colortemplate_syn_info
       echo "\r"
     else
-      cachedHiGroup = { 'synid': -1 }
+      cachedHiGroup = {'synid': -1}
 
       augroup colortemplate_syn_info
         autocmd CursorMoved * call GetHighlightInfo()

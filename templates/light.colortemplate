@@ -7,16 +7,17 @@ Short name:    light
 Author:        Myself <myself@somewhere.org>
 ; Optional
 Maintainer:    Myself <myself@somewhere.org>
-Website:       https://me.org
+URL:           https://me.org
 Description:   Template for a light colorscheme
-License:       Public domain
-; Prefix for options: short name is used if this key is not present:
-Option Prefix: light
+License:       MIT
 ; }}}
 
 ; Documentation {{{
 Include: _help.colortemplate
 ; }}}
+
+Variants:   gui 256 8 0
+Background: light
 
 ; Common linked groups {{{
 ; Other conventional group names (see `:help group-name`)
@@ -64,53 +65,52 @@ String            -> Constant
 Structure         -> Type
 Tag               -> Special
 Typedef           -> Type
-debugBreakpoint   -> SignColumn
-debugPC           -> SignColumn
 ; See `:help lCursor`
 lCursor           -> Cursor
+; See `:help hl-debugPC`
+debugPC           -> SignColumn
+debugBreakpoint   -> SignColumn
 ; }}}
 
-Background: light
-
 ; Color palette {{{
-; Color name         GUI                     Base256     Base16 (optional)
-Color: black         rgb( 83,  88,  95)        ~         Black
-Color: red           rgb(255,   0,   0)        ~         DarkRed
-Color: green         rgb(  0, 255,   0)        ~         DarkGreen
-Color: yellow        rgb(255, 255,   0)        ~         DarkYellow
-Color: blue          rgb(  0,   0, 255)        ~         DarkBlue
-Color: magenta       rgb(255,   0, 255)        ~         DarkMagenta
-Color: cyan          rgb(  0, 255, 255)        ~         DarkCyan
-Color: white         rgb(235, 235, 235)        ~         LightGrey
-Color: brightblack   rgb(210, 210, 210)        ~         DarkGrey
-Color: brightred     rgb(255, 100,   0)        ~         LightRed
-Color: brightgreen   rgb(100, 255,   0)        ~         LightGreen
-Color: brightyellow  rgb(255, 255, 100)        ~         LightYellow
-Color: brightblue    rgb(  0, 100, 255)        ~         LightBlue
-Color: brightmagenta rgb(255, 100, 255)        ~         LightMagenta
-Color: brightcyan    rgb(100, 255, 255)        ~         LightCyan
-; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
-Color: brightwhite   #ffffff                  231        White
+; Color name         GUI            Base256     Base16 (optional)
+Color: black         #53585f        240         Black
+Color: red           #ff0000        196         DarkRed
+Color: green         #00ff00        46          DarkGreen
+Color: yellow        #ffff00        226         DarkYellow
+Color: blue          #0000ff        21          DarkBlue
+Color: magenta       #ff00ff        201         DarkMagenta
+Color: cyan          #00ffff        51          DarkCyan
+Color: white         #ebebeb        255         LightGrey
+Color: brightblack   #d2d2d2        252         DarkGrey
+Color: brightred     #ffd200        220         LightRed
+Color: brightgreen   #64ff00        82          LightGreen
+Color: brightyellow  #ff6464        203         LightYellow
+Color: brightblue    #0064ff        27          LightBlue
+Color: brightmagenta #ff64ff        207         LightMagenta
+Color: brightcyan    #64ffff        87          LightCyan
+Color: brightwhite   #ffffff        231         White
 ; }}}
 
 ; Terminal colors {{{
 Term colors: black red green yellow blue magenta cyan white
-Term colors: brightblack brightred brightgreen brightyellow
-Term colors: brightblue brightmagenta brightcyan brightwhite
+             brightblack brightred brightgreen brightyellow
+             brightblue brightmagenta brightcyan brightwhite
 ; }}}
 
 ; Default highlight groups {{{
-Variant: gui
-#if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
-Variant: 256 8
-#if get(g:, '@optionprefix_transp_bg', 0)
-Variant: gui 256 8
-    Normal           black             none
-    Terminal         black             none
-#else
-    Normal           black             white
-    Terminal         black             white
-#endif
+Normal               black             white
+Terminal             black             white
+
+#const transp_bg = get(g:, 'light_transp_bg', 0)
+
+Normal
+  /256/8
+    +transp_bg 1     white             none
+
+Terminal
+  /256/8
+    +transp_bg 1     white             none
 
 ; Group              Foreground        Background        Attributes
 ColorColumn          fg                white
@@ -128,7 +128,8 @@ EndOfBuffer          black             white
 ErrorMsg             black             white             reverse
 FoldColumn           black             white
 Folded               black             white             italic
-IncSearch            black             white             t=reverse g=standout
+IncSearch            black             white             reverse
+IncSearch/gui        black             white             standout
 LineNr               black             white
 MatchParen           black             white
 ModeMsg              black             white

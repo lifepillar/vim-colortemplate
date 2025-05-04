@@ -1,114 +1,68 @@
 ; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
 
-; Information {{{
 ; Mandatory
 Full name:     Dark and Light
 Short name:    dark_and_light
+Variants:      gui 256 8 0
 Author:        Myself <myself@somewhere.org>
 ; Optional
 Maintainer:    Myself <myself@somewhere.org>
-Website:       https://me.org
+URL:           https://me.org
 Description:   Template for a colorscheme with dark and light variants
-License:       Public domain
-Option Prefix: dark_and_light
-; }}}
+License:       MIT
+Options:       backend=vim9 palette=true
 
-; Documentation {{{
 Include: _help.colortemplate
-; }}}
 
-; Global definitions - put at the top of the colorscheme {{{
-Added                -> diffAdded
-Boolean              -> Constant
-Character            -> Constant
-Changed              -> diffChanged
-Conditional          -> Statement
-CurSearch            -> IncSearch
-CursorLineFold       -> FoldColumn
-CursorLineSign       -> SignColumn
-Debug                -> Special
-Define               -> PreProc
-Delimiter            -> Special
-Exception            -> Statement
-Float                -> Constant
-Function             -> Identifier
-Include              -> PreProc
-Keyword              -> Statement
-Label                -> Statement
-LineNrAbove          -> LineNr
-LineNrBelow          -> LineNr
-Macro                -> PreProc
-MessageWindow        -> WarningMsg
-Number               -> Constant
-Operator             -> Statement
-PmenuKind            -> Pmenu
-PmenuKindSel         -> PmenuSel
-PmenuExtra           -> Pmenu
-PmenuExtraSel        -> PmenuSel
-PmenuMatch           -> Pmenu
-PmenuMatchSel        -> PmenuSel
-PopupNotification    -> WarningMsg
-PopupSelected        -> PmenuSel
-PreCondit            -> PreProc
-QuickFixLine         ->  Search
-Removed              -> diffRemoved
-Repeat               -> Statement
-SpecialChar          -> Special
-SpecialComment       -> Special
-StatusLineTerm       -> StatusLine
-StatusLineTermNC     -> StatusLineNC
-StorageClass         -> Type
-String               -> Constant
-Structure            -> Type
-Tag                  -> Special
-Typedef              -> Type
-debugBreakpoint      -> SignColumn
-debugPC              -> SignColumn
-; See `:help lCursor`
-lCursor              -> Cursor
-; }}}
+verbatim
+# For dual background colorschemes, verbatim text before a Background
+# directive or in the scope of `Background: any` is put at the top of the
+# colorscheme.
+endverbatim
+
 
 Background: dark
 
+verbatim
+# Verbatim text under `Background: dark` is put
+# at the beginning of the dark block.
+endverbatim
+
+Include: _common.colortemplate
+
 ; Color palette for dark variant {{{
-; Color name                GUI                  Base256    Base16 (optional)
-Color: black                rgb( 57,  71,  89)     ~        Black
-Color: red                  rgb(255,   0,   0)     ~        DarkRed
-Color: green                rgb(  0, 255,   0)     ~        DarkGreen
-Color: yellow               rgb(255, 255,   0)     ~        DarkYellow
-Color: blue                 rgb(  0,   0, 255)     ~        DarkBlue
-Color: magenta              rgb(255,   0, 255)     ~        DarkMagenta
-Color: cyan                 rgb(  0, 255, 255)     ~        DarkCyan
-Color: white                rgb(235, 235, 235)     ~        LightGrey
-Color: brightblack          rgb(210, 210, 210)     ~        DarkGrey
-Color: brightred            rgb(255, 100,   0)     ~        LightRed
-Color: brightgreen          rgb(100, 255,   0)     ~        LightGreen
-Color: brightyellow         rgb(255, 255, 100)     ~        LightYellow
-Color: brightblue           rgb(  0, 100, 255)     ~        LightBlue
-Color: brightmagenta        rgb(255, 100, 255)     ~        LightMagenta
-Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
-; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
-Color: brightwhite          #e0e0ed                231      White
+; Color name         GUI         Base256  Base16 (optional)
+Color: black         #394759     238      Black
+Color: red           #ff0000     196      DarkRed
+Color: green         #00ff00     46       DarkGreen
+Color: yellow        #ffff00     226      DarkYellow
+Color: blue          #0000ff     196      DarkBlue
+Color: magenta       #ff00ff     196      DarkMagenta
+Color: cyan          #00ffff     51       DarkCyan
+Color: white         #ebebeb     255      LightGrey
+Color: brightblack   #d2d2d2     252      DarkGrey
+Color: brightred     #ff6400     202      LightRed
+Color: brightgreen   #64ff00     82       LightGreen
+Color: brightyellow  #ffff64     227      LightYellow
+Color: brightblue    #0064ff     27       LightBlue
+Color: brightmagenta #ff64ff     207      LightMagenta
+Color: brightcyan    #64ffff     87       LightCyan
+Color: brightwhite   #e0e0ed     231      White
 ; }}}
 
 ; Terminal colors for dark variant {{{
-Term colors: black red green yellow blue magenta cyan white
-Term colors: brightblack brightred brightgreen brightyellow
-Term colors: brightblue brightmagenta brightcyan brightwhite
+Term colors:
+  black       red       green       yellow       blue       magenta       cyan       white
+  brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite
 ; }}}
 
-; Definitions common to all variants {{{
-Variant: gui
-#if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
-Variant: 256 8
-#if get(g:, '@optionprefix_transp_bg', 0)
-Variant: gui 256 8
-    Normal           white             none
-    Terminal         white             none
-#else
-    Normal           white             black
-    Terminal         white             black
-#endif
+; Dark highlight group definitions {{{
+Normal               white             black
+Normal/256/8/0
+  +transp_bg 1       white             none
+Terminal             white             black
+Terminal/256/8/0
+  +transp_bg 1       white             none
 
 ; Group              Foreground        Background        Attributes
 ColorColumn          fg                black
@@ -126,7 +80,8 @@ EndOfBuffer          white             black
 ErrorMsg             white             black             reverse
 FoldColumn           white             black
 Folded               white             black             italic
-IncSearch            white             black             t=reverse g=standout
+IncSearch            white             black             standout
+IncSearch/256/8      white             black             reverse
 LineNr               white             black
 MatchParen           white             black
 ModeMsg              white             black
@@ -174,51 +129,43 @@ ToolbarLine          none              white
 ToolbarButton        white             black             bold
 ; }}}
 
-; Additional highlight groups {{{
-; Add additional highlight groups here if you want
-; }}}
-
 Background: light
+
+Include: _common.colortemplate
 
 ; Color palette for light variant {{{
 ; Color name                GUI                  Base256    Base16 (optional)
-Color: black                rgb( 83,  88,  95)     ~        Black
-Color: red                  rgb(255,   0,   0)     ~        DarkRed
-Color: green                rgb(  0, 255,   0)     ~        DarkGreen
-Color: yellow               rgb(255, 255,   0)     ~        DarkYellow
-Color: blue                 rgb(  0,   0, 255)     ~        DarkBlue
-Color: magenta              rgb(255,   0, 255)     ~        DarkMagenta
-Color: cyan                 rgb(  0, 255, 255)     ~        DarkCyan
-Color: white                rgb(235, 235, 235)     ~        LightGrey
-Color: brightblack          rgb(210, 210, 210)     ~        DarkGrey
-Color: brightred            rgb(255, 100,   0)     ~        LightRed
-Color: brightgreen          rgb(100, 255,   0)     ~        LightGreen
-Color: brightyellow         rgb(255, 255, 100)     ~        LightYellow
-Color: brightblue           rgb(  0, 100, 255)     ~        LightBlue
-Color: brightmagenta        rgb(255, 100, 255)     ~        LightMagenta
-Color: brightcyan           rgb(100, 255, 255)     ~        LightCyan
-; You may use hexadecimal values, too, and you may provide an explicit base-256 color:
-Color: brightwhite          #ffffff                231      White
+Color: black                #53585f     240        Black
+Color: red                  #ff0000     196        DarkRed
+Color: green                #00ff00      46        DarkGreen
+Color: yellow               #ffff00     226        Brown
+Color: blue                 #0000ff      21        DarkBlue
+Color: magenta              #ff00ff     201        DarkMagenta
+Color: cyan                 #00ffff      51        DarkCyan
+Color: white                #ebebeb     255        LightGrey
+Color: brightblack          #d2d2d2     252        DarkGrey
+Color: brightred            #ff6400     202        LightRed
+Color: brightgreen          #64ff00      82        LightGreen
+Color: brightyellow         #ffff64     227        LightYellow
+Color: brightblue           #0064ff      27        LightBlue
+Color: brightmagenta        #ff64ff     207        LightMagenta
+Color: brightcyan           #64ffff      87        LightCyan
+Color: brightwhite          #ffffff     231         White
 ; }}}
 
 ; Terminal colors for light variant {{{
-Term colors: black red green yellow blue magenta cyan white
-Term colors: brightblack brightred brightgreen brightyellow
-Term colors: brightblue brightmagenta brightcyan brightwhite
+Term colors: black       red       green       yellow       blue       magenta       cyan       white
+             brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite
 ; }}}
 
-; Definitions common to all variants {{{
-Variant: gui
-#if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
-Variant: 256 8
-#if get(g:, '@optionprefix_transp_bg', 0) && !has('gui_running')
-Variant: gui 256 8
-    Normal           black             none
-    Terminal         black             none
-#else
-    Normal           black             white
-    Terminal         black             white
-#endif
+; Light highlight group definitions {{{
+Normal           black             white
+Terminal         black             white
+
+Normal/256/8/0
+  +transp_bg 1   black              none
+Terminal/256/8/0
+  +transp_bg 1   black              none
 
 ; Group              Foreground        Background        Attributes
 ColorColumn          fg                black
@@ -236,7 +183,8 @@ EndOfBuffer          black             white
 ErrorMsg             black             white             reverse
 FoldColumn           black             white
 Folded               black             white             italic
-IncSearch            black             white             t=reverse g=standout
+IncSearch            black             white             standout
+IncSearch/256/8      black             white             reverse
 LineNr               black             white
 MatchParen           black             white
 ModeMsg              black             white
@@ -284,10 +232,15 @@ ToolbarLine          none              black
 ToolbarButton        black             white             bold
 ; }}}
 
-; Additional highlight groups {{{
-; Add additional highlight groups here if you want
-; }}}
+verbatim
+# This will appear at the start of the light background block
+# because it is in the scope of `Background: light`.
+endverbatim
 
 Background: any
-Include: _bw.colortemplate
 
+verbatim
+# This will appear at the top of the colorscheme.
+endverbatim
+
+Include: _bw.colortemplate

@@ -1,11 +1,11 @@
 vim9script
 
-import 'libpath.vim'       as path
-import 'libparser.vim'     as libparser
-import './colorscheme.vim' as themes
-import './parser.vim'      as parser
-import './generator.vim'   as g
-import './colorstats.vim'  as stats
+import 'libpath.vim'                     as path
+import 'libparser.vim'                   as libparser
+import './colortemplate/colorscheme.vim' as themes
+import './colortemplate/parser.vim'      as parser
+import './colortemplate/generator.vim'   as g
+import './colortemplate/colorstats.vim'  as stats
 
 type Colorscheme = themes.Colorscheme
 type Result      = libparser.Result

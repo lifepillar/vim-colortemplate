@@ -6,8 +6,8 @@ vim9script
 # License:     Vim license (see `:help license`)
 
 import 'libpath.vim' as path
-import autoload '../autoload/colortemplate.vim' as ctemplate
-import autoload '../autoload/util.vim'          as util
+import autoload '../autoload/colortemplate.vim'      as ctemplate
+import autoload '../autoload/colortemplate/util.vim' as util
 
 if exists("b:did_ftplugin")
   finish
@@ -59,8 +59,8 @@ if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
   nnoremap <silent> <buffer> gl    <scriptcmd>util.ToggleHighlightInfo()<cr>
   nnoremap <silent> <buffer> gx    <scriptcmd>util.ApproximateColor(v:count1)<cr>
   nnoremap <silent> <buffer> gy    <scriptcmd>util.NearbyColors(v:count1)<cr>
-  if has('popupwin') && has('textprop')
-    nnoremap <silent> <buffer> gs    <scriptcmd>call colortemplate#style#open()<cr>
+  if exists(':StylePicker') > 0
+    nnoremap <silent> <buffer> gs    <scriptcmd>StylePicker<cr>
   endif
 endif
 

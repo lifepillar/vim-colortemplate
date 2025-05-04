@@ -2,7 +2,7 @@ vim9script
 
 import 'libpath.vim'     as path
 import 'libtinytest.vim' as tt
-import '../autoload/colortemplate.vim' as ctemplate
+import '../autoload/colortemplate.vim' as colortemplate
 
 # Helper functions {{{
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')
@@ -22,7 +22,7 @@ enddef
 def AssertBuild(name: string)
   const template = path.Join(TESTDIR, 'templates', name .. '.colortemplate')
   execute 'edit' template
-  const success = ctemplate.Build(bufnr('%'), TESTDIR, '!')
+  const success = colortemplate.Build(bufnr('%'), TESTDIR, '!')
 
   assert_true(success)
 

@@ -4,12 +4,12 @@ import 'libpath.vim'                     as path
 import 'libparser.vim'                   as libparser
 import './colortemplate/colorscheme.vim' as themes
 import './colortemplate/parser.vim'      as parser
-import './colortemplate/generator.vim'   as generator
+import './colortemplate/generator.vim'   as gen
 import './colortemplate/colorstats.vim'  as stats
 
 type Colorscheme = themes.Colorscheme
 type Result      = libparser.Result
-type Generator   = generator.Generator
+type Generator   = gen.Generator
 
 # Cache for generated color schemes
 var theme_cache: dict<Colorscheme>

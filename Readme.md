@@ -11,13 +11,12 @@ create new color schemes for Vim!
   millions of colors, and both terminal and GUI Vim.
 - Generate color schemes that load efficiently and have a consistent structure
   following best practices.
-- Automatically computes xterm approximations for GUI colors.
+- Automatically compute xterm approximations for GUI colors.
 - Import any color scheme. You do not have to start from scratch!
 - Display information about the highlight group under the cursor or mouse.
 - Compute useful statistics about your color scheme.
 - Support generating any kind of auxiliary files (say,
   `autoload/gorgeous.vim` or `scripts/foo.sh`).
-- Has syntax completion for highlight groups, keywords and common colors.
 
 Colortemplate is fully documented: to learn everything about it, read `:help
 colortemplate.txt`.
@@ -37,7 +36,7 @@ The "plugins" directory can have any other name.
 
 Also consider installing
 [StylePicker](https://github.com/lifepillar/vim-stylepicker)
-to make it even easier to create your color schemes!
+to make it even easier to create color schemes!
 
 
 ## Quick Start

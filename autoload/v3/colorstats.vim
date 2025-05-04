@@ -187,7 +187,7 @@ def ColorInfo(theme: Colorscheme, background: string): list<string>
   endif
 
   const db     = theme.Db(background)
-  const colors = db.Color.instance
+  const colors = db.Color.Instance()
   const width  = 2 + max(mapnew(colors, (_, t) => len(t.ColorName))) # Find maximum length of color names
 
   execute printf('setlocal tabstop=%d shiftwidth=%d', width, width)

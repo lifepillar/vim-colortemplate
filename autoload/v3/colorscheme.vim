@@ -1,6 +1,9 @@
 vim9script
 
-import 'librelalg.vim' as ra
+import 'librelalg.vim'  as ra
+import 'libversion.vim' as vv
+
+vv.Require('librelalg', ra.version, '0.1.0-alpha')
 
 # Aliases {{{
 type Attr           = ra.Attr
@@ -11,12 +14,14 @@ type Relation       = ra.Relation
 const Bool          = ra.Bool
 const DictTransform = ra.DictTransform
 const EquiJoin      = ra.EquiJoin
+const FailedMsg     = ra.FailedMsg
 const Float         = ra.Float
 const ForeignKey    = ra.ForeignKey
 const Int           = ra.Int
 const LeftEquiJoin  = ra.LeftEquiJoin
 const PartitionBy   = ra.PartitionBy
 const Query         = ra.Query
+const References    = ra.References
 const Select        = ra.Select
 const SortBy        = ra.SortBy
 const Str           = ra.Str
@@ -33,20 +38,30 @@ const ColorKind = {
 export const DEFAULT_DISCR_VALUE = '__DfLt__'
 
 # Integrity constraints {{{
-def IsValidColorName(t: Tuple)
+def IsValidColorName(t: Tuple): bool
   if t.ColorName == 'none' ||
      t.ColorName == 'fg'   ||
      t.ColorName == 'bg'   ||
      t.ColorName == 'omit'
-    throw $"'{t.ColorName}' is a reserved name and cannot be used as a color name"
+    FailedMsg($"'{t.ColorName}' is a reserved name and cannot be used as a color name")
+
+    return false
   endif
+
+  return true
 enddef
 
-def IsValidBase256Value(t: Tuple)
-  const n = str2nr(t.Base256Value)
+def IsValidBase256Value(t: Tuple): bool
+  # This works even if the value is a name rather than a number: str2nr() returns 0
+  var n = str2nr(t.Base256Value)
+
   if n > 255 || n < 0
-    throw $'Base-256 value must be in [0,255]: {t.Base256Value} is invalid'
+    FailedMsg($'Base-256 value must be in [0,255]: {t.Base256Value} is invalid')
+
+    return false
   endif
+
+  return true
 enddef
 # }}}
 
@@ -55,11 +70,11 @@ export class Database
   public var termcolors:   list<string> = []
   public var verbatimtext: list<string> = []
 
-  var Variant: Rel = Rel.new('Variant', {
+  var Variant = Rel.new('Variant', {
     Variant:   Str,
     NumColors: Int,
-  },
-  'Variant').InsertMany([
+  }, 'Variant'
+  ).InsertMany([
     {Variant:     'gui', NumColors: 16777216},
     {Variant:     '256', NumColors:      256},
     {Variant:      '88', NumColors:       88},
@@ -68,12 +83,13 @@ export class Database
     {Variant:       '0', NumColors:        0},
   ])
 
-  var VariantAttribute: Rel = Rel.new("Variant's Attribute", {
+  var VariantAttribute = Rel.new("Variant's Attribute", {
     Variant:  Str,
     AttrType: Str,
     AttrKey:  Str,
   },
-  [['Variant', 'AttrKey'], ['Variant', 'AttrType']]).InsertMany([
+  [['Variant', 'AttrKey'], ['Variant', 'AttrType']]
+  ).InsertMany([
     {Variant: 'gui',     AttrType: 'Fg',      AttrKey: 'guifg'  },
     {Variant: 'gui',     AttrType: 'Bg',      AttrKey: 'guibg'  },
     {Variant: 'gui',     AttrType: 'Special', AttrKey: 'guisp'  },
@@ -100,41 +116,39 @@ export class Database
     {Variant:   '0',     AttrType: 'Stop',    AttrKey: 'stop'   },
   ])
 
-  var Color: Rel = Rel.new('Color', {
+  var Color = Rel.new('Color', {
     ColorName:       Str,
     GUIValue:        Str,
     Base256Value:    Str,
     Base256HexValue: Str,
     Base16Value:     Str,
-  }, 'ColorName').InsertMany([
+  }, 'ColorName'
+  ).InsertMany([
     {ColorName: '',     GUIValue: '',     Base256Value: '',     Base256HexValue: '', Base16Value: '',   },
     {ColorName: 'none', GUIValue: 'NONE', Base256Value: 'NONE', Base256HexValue: '', Base16Value: 'NONE'},
     {ColorName: 'fg',   GUIValue: 'fg',   Base256Value: 'fg',   Base256HexValue: '', Base16Value: 'fg', },
     {ColorName: 'bg',   GUIValue: 'bg',   Base256Value: 'bg',   Base256HexValue: '', Base16Value: 'bg', }
   ])
 
-  var Discriminator: Rel = Rel.new('Discriminator', {
+  var Discriminator = Rel.new('Discriminator', {
     DiscrName:  Str,
     Definition: Str,
     DiscrNum:   Int,
-  }, [
-  ['DiscrName'], ['DiscrNum']
-  ]).InsertMany([
+  }, [['DiscrName'], ['DiscrNum']]
+  ).InsertMany([
     {DiscrName: '', Definition: '', DiscrNum: 0},
   ])
 
-  var HiGroup: Rel = Rel.new('Highlight Group', {
+  var HiGroup = Rel.new('Highlight Group', {
     HiGroupName: Str,
     DiscrName:   Str,
     IsLinked:    Bool,
-  },
-  'HiGroupName')
+  }, 'HiGroupName')
 
-  var LinkedGroup: Rel = Rel.new('Linked Group', {
+  var LinkedGroup = Rel.new('Linked Group', {
     HiGroupName: Str,
     TargetGroup: Str,
-  },
-  ['HiGroupName'])
+  }, ['HiGroupName'])
 
   var BaseGroup: Rel = Rel.new('Base Group', {
     HiGroupName: Str,
@@ -145,24 +159,21 @@ export class Database
     Font:        Str,
     Start:       Str,
     Stop:        Str,
-  },
-  ['HiGroupName'])
+  }, ['HiGroupName'])
 
   var HiGroupOverride: Rel = Rel.new('Hi Group Override', {
     HiGroupName: Str,
     Variant:     Str,
     DiscrValue:  Str,
     IsLinked:    Bool,
-  },
-  ['HiGroupName', 'Variant', 'DiscrValue'])
+  }, ['HiGroupName', 'Variant', 'DiscrValue'])
 
   var LinkedGroupOverride: Rel = Rel.new('Linked Group Override', {
     HiGroupName: Str,
     Variant:     Str,
     DiscrValue:  Str,
     TargetGroup: Str,
-  },
-  ['HiGroupName', 'Variant', 'DiscrValue'])
+  }, ['HiGroupName', 'Variant', 'DiscrValue'])
 
   var BaseGroupOverride: Rel = Rel.new('Base Group Override', {
     HiGroupName: Str,
@@ -175,26 +186,25 @@ export class Database
     Font:        Str,
     Start:       Str,
     Stop:        Str,
-  },
-  ['HiGroupName', 'Variant', 'DiscrValue'])
+  }, ['HiGroupName', 'Variant', 'DiscrValue'])
 
   def new(this.background)
-    this.Color.Check(IsValidColorName)
-    this.Color.Check(IsValidBase256Value)
+    this.Color.OnInsertCheck('Valid color', IsValidColorName)
+    this.Color.OnInsertCheck('Valid 256-based color', IsValidBase256Value)
 
-    ForeignKey(this.HiGroup,     'DiscrName',   this.Discriminator, v:none,      'is classified by')
-    ForeignKey(this.LinkedGroup, 'HiGroupName', this.HiGroup,       v:none,      'is a')
-    ForeignKey(this.BaseGroup,   'HiGroupName', this.HiGroup,       v:none,      'is a')
-    ForeignKey(this.BaseGroup,   'Fg',          this.Color,         'ColorName', 'uses as foreground a')
-    ForeignKey(this.BaseGroup,   'Bg',          this.Color,         'ColorName', 'must use as background a valid')
-    ForeignKey(this.BaseGroup,   'Special',     this.Color,         'ColorName', 'must use as special color a valid')
-    ForeignKey(this.HiGroupOverride, 'HiGroupName', this.HiGroup, v:none, 'must override an existing')
-    ForeignKey(this.HiGroupOverride, 'Variant', this.Variant, v:none, 'must refer to a valid')
-    ForeignKey(this.LinkedGroupOverride, ['HiGroupName', 'Variant', 'DiscrValue'], this.HiGroupOverride, v:none, 'must be a')
-    ForeignKey(this.BaseGroupOverride,   ['HiGroupName', 'Variant', 'DiscrValue'], this.HiGroupOverride, v:none, 'must be a')
-    ForeignKey(this.BaseGroupOverride,   'Fg', this.Color, 'ColorName', 'must use as foreground a valid')
-    ForeignKey(this.BaseGroupOverride,   'Bg', this.Color, 'ColorName', 'must use as background a valid')
-    ForeignKey(this.BaseGroupOverride,   'Special', this.Color, 'ColorName', 'must use as special color a valid')
+    ForeignKey(this.HiGroup,             'DiscrName'                             )-> References(this.Discriminator,   {verb: 'is classified by'})
+    ForeignKey(this.LinkedGroup,         'HiGroupName'                           )-> References(this.HiGroup,         {verb: 'is a'})
+    ForeignKey(this.BaseGroup,           'HiGroupName'                           )-> References(this.HiGroup,         {verb: 'is a'})
+    ForeignKey(this.BaseGroup,           'Fg'                                    )-> References(this.Color,           {verb: 'uses as foreground a'})
+    ForeignKey(this.BaseGroup,           'Bg'                                    )-> References(this.Color,           {verb: 'must use as background a valid'})
+    ForeignKey(this.BaseGroup,           'Special'                               )-> References(this.Color,           {verb: 'must use as special color a valid'})
+    ForeignKey(this.HiGroupOverride,     'HiGroupName'                           )-> References(this.HiGroup,         {verb: 'must override an existing'})
+    ForeignKey(this.HiGroupOverride,     'Variant'                               )-> References(this.Variant,         {verb: 'must refer to a valid'})
+    ForeignKey(this.LinkedGroupOverride, ['HiGroupName', 'Variant', 'DiscrValue'])-> References(this.HiGroupOverride, {verb: 'must be a'})
+    ForeignKey(this.BaseGroupOverride,   ['HiGroupName', 'Variant', 'DiscrValue'])-> References(this.HiGroupOverride, {verb: 'must be a'})
+    ForeignKey(this.BaseGroupOverride,   'Fg'                                    )-> References(this.Color,           {verb: 'must use as foreground a valid'})
+    ForeignKey(this.BaseGroupOverride,   'Bg'                                    )-> References(this.Color,           {verb: 'must use as background a valid'})
+    ForeignKey(this.BaseGroupOverride,   'Special'                               )-> References(this.Color,           {verb: 'must use as special color a valid'})
   enddef
 
   def GetColor(name: string, kind: string): string

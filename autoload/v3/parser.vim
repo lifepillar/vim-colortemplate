@@ -267,11 +267,11 @@ def SetDiscrName(v: list<string>, ctx: Context)
     endif
 
     if empty(t.DiscrName)  # First override: set the discriminator's name
-      db.HiGroup.Update({
+      db.HiGroup.Upsert({
         HiGroupName: t.HiGroupName,
         DiscrName:   discrName,
         IsLinked:    t.IsLinked,
-      })
+      }, false)
     elseif t.DiscrName != discrName
       throw printf(
         "Inconsistent discriminator name '%s': '%s' already uses '%s' (%s background)",

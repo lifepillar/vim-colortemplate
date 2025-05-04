@@ -1,3 +1,3 @@
 vim9script
 
-export const VERSION = '3.0.0-alpha0'
+export const VERSION = '3.0.0-alpha1'

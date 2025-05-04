@@ -1,39 +1,46 @@
 # The Toolkit for Vim Color Scheme Designers!
 
-Colortemplate is a 100% VimScript plugin for Vim 8 or later, which makes it easy
-to develop color schemes. Its ambitious goal is to become *the* way to create
-new color schemes for Vim!
+Colortemplate is a 100% Vim9 script plugin for Vim 9.1 or later, which makes it
+easy to develop color schemes. Its ambitious goal is to become *the* way to
+create new color schemes for Vim!
 
-**Note:** Colortemplate v3 only supports Vim 9 or later.
-
-<img src="https://raw.github.com/lifepillar/Resources/master/colortemplate/colortemplate.gif" width="520">
 
 ## Features
 
-- Generates color schemes that support all environments, from black&white to
+- Generate color schemes that support all environments, from black&white to
   millions of colors, and both terminal and GUI Vim.
-- Generates color schemes that load efficiently and have a consistent structure
+- Generate color schemes that load efficiently and have a consistent structure
   following best practices.
-- Automatically provides xterm approximations for GUI colors.
-- Imports any color scheme. You do not have to start from scratch!
-- Provides a sophisticated style picker. Create color schemes in real-time
-  directly within Vim!
-- Displays information about the highlight group under the cursor.
-- Computes useful statistics about your color scheme.
-- Supports generating any kind of auxiliary files (say,
+- Automatically computes xterm approximations for GUI colors.
+- Import any color scheme. You do not have to start from scratch!
+- Display information about the highlight group under the cursor or mouse.
+- Compute useful statistics about your color scheme.
+- Support generating any kind of auxiliary files (say,
   `autoload/gorgeous.vim` or `scripts/foo.sh`).
 - Has syntax completion for highlight groups, keywords and common colors.
-- …And a lot more!
 
 Colortemplate is fully documented: to learn everything about it, read `:help
 colortemplate.txt`.
 
+
+## Installation
+
+Colortemplate requires [vim-devel](https://github.com/lifepillar/vim-devel).
+
+    git clone https://github.com/lifepillar/vim-devel.git \
+              ~/.vim/pack/devel
+
+    git clone https://github.com/lifepillar/vim-colortemplate.git \
+              ~/.vim/pack/plugins/colortemplate
+
+The "plugins" directory can have any other name.
+
+Also consider installing
+[StylePicker](https://github.com/lifepillar/vim-stylepicker)
+to make it even easier to create your color schemes!
+
+
 ## Quick Start
-
-The plugin requires [vim-devel](https://github.com/lifepillar/vim-devel).
-
-If you need help, please first check the
-[FAQ](https://github.com/lifepillar/vim-colortemplate/wiki/FAQs).
 
 ```vim
 :edit templates/dark.colortemplate
@@ -50,7 +57,7 @@ You may need to explicitly type `:set ft=colortemplate` to make them available
 in new buffers.
 
 Colortemplate is based on a very simple but very flexible template format.
-This is a minimal template, which you can actually compile without warnings:
+This is a minimal template (it doesn't define much, but it compiles):
 
 ```
 Full name:  My Gorgeous Theme
@@ -71,7 +78,7 @@ Term colors: mywhite mywhite mywhite mywhite mywhite mywhite mywhite mywhite
              myblack myblack myblack myblack myblack myblack myblack myblack
 ```
 
-If you want to get a flavor of how Colortemplate can be used in the real world,
+If you want to get a flavor of how Colortemplate is used in the real world,
 take a look at some color schemes created with it:
 [WWDC16](https://github.com/lifepillar/vim-wwdc16-theme) and
 [WWDC17](https://github.com/lifepillar/vim-wwdc17-theme) (simple), or

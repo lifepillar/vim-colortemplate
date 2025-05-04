@@ -15,17 +15,24 @@ URL:           https://you.somewhere.net
 Description:   Template for dark colorscheme
 Description:   More details may go here
 License:       Same as Vim
+
 ; The backend determines how the code is generated.
 ; 'vim9' is the default: use 'legacy' for legacy Vim script
 Options:       backend=vim9    ; Generate Vim 9 script code
 Options:       palette=true    ; Append the color palette to the output as a comment
 Options:       dateformat="%c" ; Custom date format (strftime() syntax)
 
-; Prefix for the color scheme's options (if any): short name
-; is used if this key is not present:
+; An optional prefix for the color scheme's settings. This is typically
+; used in the help file (see `_help.colortemplate`) and in discriminators
+; (see below). If not provided, it is set equal to the short name.
 Prefix: drk
 
-; A template can include other templates:
+; Variants tell Colortemplate for which environments to generate highlight
+; group definitions. The 'gui' variant is always enabled and doesn't have to be
+; specified (unless it's the only one to be supported).
+Variants:   gui 256 8 0
+
+; A template can import other templates:
 Include: _help.colortemplate
 
 verbatim
@@ -34,11 +41,7 @@ verbatim
 # output. For instance: @author1.
 endverbatim
 
-; Variants and Background keys are mandatory, and must be
-; defined before any color or highlight group definition.
-; The 'gui' variant is always enabled and doesn't have to be
-; specified (unless it's the only one to be supported).
-Variants:   256 8 0
+; The background must be defined before any color or highlight group.
 Background: dark
 
 verbatim
@@ -146,7 +149,7 @@ Terminal             white             black
 ; Vim 9 script syntax and it is used to override some
 ; highlight group definitions when the discriminator has
 ; certain values.
-#const transp_bg = get(g:, 'dark_transp_bg', 0)
+#const transp_bg = get(g:, '@prefix_transp_bg', 0)
 
 ; For example, Normal and Terminal are white on black by
 ; default (see above), but if there are 256 or 8 colors

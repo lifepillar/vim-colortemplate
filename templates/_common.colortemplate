@@ -1,6 +1,6 @@
 ; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
 
-#const transp_bg = get(g:, 'transp_bg', 0)
+#const transp_bg = get(g:, '@prefix_transp_bg', 0)
 
 Added                -> diffAdded
 Boolean              -> Constant

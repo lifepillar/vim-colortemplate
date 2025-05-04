@@ -24,6 +24,7 @@ colortemplate-hi-groups	colortemplate.txt	/*colortemplate-hi-groups*
 colortemplate-include	colortemplate.txt	/*colortemplate-include*
 colortemplate-mappings	colortemplate.txt	/*colortemplate-mappings*
 colortemplate-meta	colortemplate.txt	/*colortemplate-meta*
+colortemplate-migrate-v2	colortemplate.txt	/*colortemplate-migrate-v2*
 colortemplate-options	colortemplate.txt	/*colortemplate-options*
 colortemplate-quickstart	colortemplate.txt	/*colortemplate-quickstart*
 colortemplate-stats	colortemplate.txt	/*colortemplate-stats*

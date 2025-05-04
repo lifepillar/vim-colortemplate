@@ -38,7 +38,8 @@ CONTENTS					*ft-colortemplate*
    17. Window toolbar ....... |colortemplate-toolbar|
    18. Functions ............ |colortemplate-functions|
    19. Best practices ....... |colortemplate-best-practices|
-   20. Providing feedback ... |colortemplate-feedback|
+   20. Migrating from v2 .... |colortemplate-migrate-v2|
+   21. Providing feedback ... |colortemplate-feedback|
 
 Colortemplate is a pure Vim9 script plugin for creating Vim color schemes. It
 can also be used to create color schemes suitable for distribution with Vim.
@@ -1014,20 +1015,141 @@ Here are some guidelines to develop outstanding hackable color schemes:
   Similarly, in the former case there is only one long vertical split, while
   in the latter there are two independent vertical bars.
 
-- Some users like to use a transparent background (e.g., with custom images)
-  in the terminal. You may easily support that by defining a discriminator:
-  >
+- Some users like their color schemes to have a transparent background in the
+  terminal. You may easily support that by defining a discriminator:
+>
 	#const transp_bg = get(g:, '@prefix_transp_bg', 0)
 <
   Then, for any highlight group that should have a transparent background if
   the option is on, define an override. For instance:
 >
-        Normal white black /256/8+transp_bg omit none
+	Normal white black /256/8+transp_bg white none
 <
   Do not forget to document `@prefix_transp_bg`!
 
 - Verbatim blocks and aux files allow you to get fancy. Avoid getting too
   fancy.
+
+=============================================================================
+Migrating from Colortemplate v2			*colortemplate-migrate-v2*
+
+The current template syntax has evolved over time with feedback from users.
+Starting with version 3, Colortemplate's syntax has changed in a way that is
+no more fully compatible with templates generated with Colortemplate v2. Such
+templates must therefore be updated to continue to build.
+
+These are the main differences between v2 and v3:
+
+No more "Variant" directives ~
+
+The `Variant` directive has been dropped: now each highlight group has
+a unique default definition and zero or more overriding definitions that
+follow it. This means that code that looked like this:
+>
+        Variant: gui 256 8
+        Normal  white black
+
+	Variant: gui
+	Comment gray black
+
+	Variant: 256
+	Comment lightgray black
+
+	Variant: 8
+	Comment gray darkgray
+
+	Variant: gui 256 8
+	; etc...
+<
+should be rewritten by providing a default definition (typically, the one for
+the GUI is taken) followed by overriding definitions for specific cases:
+>
+	Normal           white     black
+
+	Comment          gray      black
+	   /256          lightgray black
+	   /8            gray      darkgray
+<
+Since each highlight group definition is now self-contained, there is no need
+to switch back and forth between variant sets as v2 required.
+
+New "Variants" metadata directive ~
+
+Note the "s"! This is just a way to specify for which color environments
+highlight group definitions should be created. It appears once in a template,
+usually at the top together with the other metadata fields. See
+|colortemplate-variants|.
+
+No more "gui=" and "term=" ~
+
+If you used "gui=" and "term=" (or their abbreviated forms "g=" and "t=") in
+templates, now you have to rewrite those definitions. For instance:
+>
+	SpellBad  red  none  g=undercurl t=underline s=red
+<
+might become
+>
+	SpellBad        red  none  s=red undercurl
+	  /256/16/8/0   red  none  s=red underline
+<
+if the GUI version is chosen as the default, or
+>
+	SpellBad        red  none  s=red underline
+	    /gui        red  none  s=red undercurl
+<
+if the terminal version is chosen as the default.
+
+The special color must appear before the style attributes ~
+
+This now raises an error:
+>
+	SpellBad  red  none  undercurl  s=red
+<
+It must be:
+>
+	SpellBad  red  none  s=red  undercurl
+<
+"Term colors" must be followed by exactly 16 colors ~
+
+The value of the "Term colors" directive must be a sequence of 16 colors. You
+do not need to repeat "Term colors". As whitespace in the new syntax largely
+doesn't matter, the colors may be written on different lines. For example:
+>
+	Term colors:
+	    black
+	    red
+	    green
+	    yellow
+	    blue
+	    ; etc.
+<
+"Website" is replaced by "URL" ~
+
+The "Website" metadata directive has been renamed "URL".
+
+Verbatim blocks ~
+
+In v2, verbatim blocks are output at the same location where they appear in
+the source template. That is possible because Colortemplate v2 outputs the
+highlight groups in the same order as they appear in the template.
+
+Since in v3 the order of the highlight groups does not matter (in fact, they
+are typically sorted in the resulting color scheme), verbatim blocks
+interspersed between highlight groups do not make sense.
+
+For the same reason, `#let`, `#if`, `#else`, `#endif` do not exist any more.
+Most use cases of those keywords are now covered by discriminators.
+
+In v3, `verbatim`/`endverbatim` can still be used, but such blocks are now
+concatenated and always written at the top of the output color scheme, before
+the definition of any discriminator and before the definition of any highlight
+group.
+
+Neovim is not supported ~
+
+The "Neovim" directive is not supported any longer. Colortemplate v3 could
+generate Neovim-specific color schemes if a backend generator for it existed.
+Such generator, however, has not been implemented yet.
 
 =============================================================================
 Providing feedback				*colortemplate-feedback*

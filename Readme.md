@@ -5,6 +5,18 @@ easy to develop color schemes. Its ambitious goal is to become *the* way to
 create new color schemes for Vim!
 
 
+## Note for Users of Colortemplate v2
+
+The current version of Colortemplate is a complete rewrite of v2.2.3,
+introducing a better syntax for templates, which is unfortunately not fully
+compatible with the old syntax. The old Colortemplate version, however, is not
+disappearing anywhere: if you want to keep using it, just checkout the `v2`
+branch of this repository.
+
+For instructions on how to update your templates to the new syntax, see `:help
+colortemplate-migrate-v2`.
+
+
 ## Features
 
 - Generate color schemes that support all environments, from black&white to

@@ -223,13 +223,7 @@ export def BalloonExpr(): string # See :help popup_beval_example
 
     beval->add({text: join(info.synstack, " ⊂ "), props: []})
 
-    sBalloonID = popup_beval(beval, {
-      close:      'click',
-      mousemoved: 'word',
-      moved:      'any',
-      padding:    [0, 1, 0, 1],
-    })
-
+    sBalloonID = popup_beval(beval, {padding: [0, 1, 0, 1]})
     sLastBalloonText = beval_text
   endif
 
@@ -237,11 +231,19 @@ export def BalloonExpr(): string # See :help popup_beval_example
 enddef
 
 export def ToggleHighlightInfo()
-  if sBalloonID > 0 && popup_getpos(sBalloonID) != null_dict
-    popup_close(sBalloonID)
-  endif
+  if get(g:, 'colortemplate_higroup_popup', true)
+    if sBalloonID > 0 && popup_getpos(sBalloonID) != null_dict
+      popup_close(sBalloonID)
+    endif
 
-  set ballooneval! balloonevalterm!
+    if has('balloon_eval')
+      set ballooneval!
+    endif
+
+    if has('balloon_eval_term')
+      set balloonevalterm!
+    endif
+  endif
 
   if get(g:, 'colortemplate_higroup_command_line', true)
     if exists("#colortemplate_syn_info")

@@ -3,7 +3,7 @@ vim9script
 # Name:        Colortemplate
 # Author:      Lifepillar <lifepillar@lifepillar.me>
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
-# License:     Vim license (see `:help license`)
+# License:     MIT
 
 import 'libpath.vim' as path
 import autoload '../autoload/colortemplate.vim'      as ctemplate

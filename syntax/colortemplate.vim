@@ -2,7 +2,7 @@ vim9script
 # Name:        Colortemplate
 # Author:      Lifepillar <lifepillar@lifepillar.me>
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
-# License:     Vim license (see `:help license`)
+# License:     MIT
 
 if exists("b:current_syntax")
   finish

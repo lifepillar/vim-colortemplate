@@ -9,7 +9,7 @@ Author:        Myself <myself@somewhere.org>
 Maintainer:    Myself <myself@somewhere.org>
 URL:           https://me.org
 Description:   Template for a light colorscheme
-License:       Same as Vim
+License:       MIT
 ; }}}
 
 ; Documentation {{{

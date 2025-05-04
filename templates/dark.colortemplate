@@ -14,7 +14,7 @@ URL:           https://me.org
 URL:           https://you.somewhere.net
 Description:   Template for dark colorscheme
 Description:   More details may go here
-License:       Same as Vim
+License:       MIT
 
 ; The backend determines how the code is generated.
 ; 'vim9' is the default: use 'legacy' for legacy Vim script

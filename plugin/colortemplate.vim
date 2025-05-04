@@ -6,7 +6,7 @@ vim9script
 # Name:        Colortemplate
 # Author:      Lifepillar <lifepillar@lifepillar.me>
 # Maintainer:  Lifepillar <lifepillar@lifepillar.me>
-# License:     Vim license (see `:help license`)
+# License:     MIT
 
 import autoload '../autoload/colortemplate/importer.vim' as importer
 

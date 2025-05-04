@@ -6,8 +6,8 @@ vim9script
 # License:     Vim license (see `:help license`)
 
 import 'libpath.vim' as path
-import autoload '../autoload/v3/colortemplate.vim' as ctemplate
-import autoload '../autoload/v3/util.vim'          as util
+import autoload '../autoload/colortemplate.vim' as ctemplate
+import autoload '../autoload/util.vim'          as util
 
 if exists("b:did_ftplugin")
   finish

@@ -1,8 +1,8 @@
 vim9script
 
 import 'libtinytest.vim'                   as tt
-import '../../autoload/v3/parser.vim'      as parser
-import '../../autoload/v3/colorscheme.vim' as themes
+import '../autoload/parser.vim'      as parser
+import '../autoload/colorscheme.vim' as themes
 
 const Parse       = parser.Parse
 const NO_DISCR    = themes.DEFAULT_DISCR_VALUE

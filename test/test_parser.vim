@@ -3,8 +3,8 @@ vim9script
 import 'libtinytest.vim' as tt
 import 'librelalg.vim' as ra
 import 'libparser.vim'
-import '../../autoload/v3/parser.vim' as colortemplateParser
-import '../../autoload/v3/colorscheme.vim' as themes
+import '../autoload/parser.vim' as colortemplateParser
+import '../autoload/colorscheme.vim' as themes
 
 const Parse       = colortemplateParser.Parse
 type  Result      = libparser.Result

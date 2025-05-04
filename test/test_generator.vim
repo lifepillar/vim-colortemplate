@@ -2,7 +2,7 @@ vim9script
 
 import 'libpath.vim'     as path
 import 'libtinytest.vim' as tt
-import '../../autoload/v3/colortemplate.vim' as ctemplate
+import '../autoload/colortemplate.vim' as ctemplate
 
 # Helper functions {{{
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')

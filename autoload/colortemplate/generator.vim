@@ -412,7 +412,7 @@ export class Generator
     const space  = repeat(' ', indent)
 
     if variantMeta.Variant == 'gui'
-      return [space .. "if has('gui_running')"]
+      return [space .. "if has('gui_running') || (has('termguicolors') && &termguicolors)"]
     endif
 
     return [printf('%sif str2nr(&t_Co) >= %s', space, variantMeta.NumColors)]

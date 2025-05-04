@@ -34,8 +34,6 @@ colortemplate-toolbar	colortemplate.txt	/*colortemplate-toolbar*
 colortemplate-variants	colortemplate.txt	/*colortemplate-variants*
 colortemplate-verbatim	colortemplate.txt	/*colortemplate-verbatim*
 colortemplate.txt	colortemplate.txt	/*colortemplate.txt*
-dark-options	dark.txt	/*dark-options*
-dark.txt	dark.txt	/*dark.txt*
 ft-colortemplate	colortemplate.txt	/*ft-colortemplate*
 g:colortemplate_fancy_import	colortemplate.txt	/*g:colortemplate_fancy_import*
 g:colortemplate_higroup_command_line	colortemplate.txt	/*g:colortemplate_higroup_command_line*
@@ -45,4 +43,3 @@ g:colortemplate_rtp	colortemplate.txt	/*g:colortemplate_rtp*
 g:colortemplate_toolbar	colortemplate.txt	/*g:colortemplate_toolbar*
 g:colortemplate_toolbar_actions	colortemplate.txt	/*g:colortemplate_toolbar_actions*
 g:colortemplate_toolbar_items	colortemplate.txt	/*g:colortemplate_toolbar_items*
-g:drk_transp_bg	dark.txt	/*g:drk_transp_bg*

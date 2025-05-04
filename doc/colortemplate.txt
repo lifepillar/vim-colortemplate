@@ -656,7 +656,8 @@ Buffer-local mappings ~
 							*colortemplate-gl*
 gl			Toggle the display of highlight group information
                         under the under the cursor. To choose what display to
-                        use, set |g:colortemplate_higroup_popup|.
+                        use, set |g:colortemplate_higroup_popup| and
+                        |g:colortemplate_higroup_command_line|.
 
 							*colortemplate-gs*
 gs			Open the style picker. For this to work, you must
@@ -687,8 +688,8 @@ prefer dull names such as Color0001, Color0002, etc. instead.
 	g:colortemplate_fancy_import = true
 <
 					*g:colortemplate_higroup_command_line*
-When set to 1, Colortemplate displays the details of the highlight group under
-the cursor in the command line, when requested to do so (see |gl|).
+When set to |true|, Colortemplate displays the details of the highlight group
+under the cursor in the command line, when requested to do so (see |gl|).
 >
 	g:colortemplate_higroup_command_line = true
 <

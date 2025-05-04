@@ -448,7 +448,7 @@ Note: each highlight group can have at most one associated discriminator.
 A discriminator, however, can assume an unbounded number of distinct values.
 
 Discriminator values can be integers, strings, or the values "true" and
-"false". The values must not be quoted.
+"false". Strings must be double-quoted, but true and false must not be quoted.
 
 Variant and discriminator-based overrides can be combined. For example:
 >

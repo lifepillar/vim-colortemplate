@@ -1,4 +1,4 @@
-*colortemplate.txt*	For Vim version 9.0	Last change: 2024 Aug 05
+*colortemplate.txt*	For Vim version 9.1	Last change: 2025 May 4
 
 	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
 	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~
@@ -15,9 +15,9 @@
 
 	The Toolkit for Color Scheme Designers!
 	Author:  Lifepillar <https://github.com/lifepillar>
-	License: Same terms as Vim itself (see |license|)
+	License: MIT
 ==============================================================================
-CONTENTS						*ft-colortemplate*
+CONTENTS					*ft-colortemplate*
 
     1. Getting started ...... |colortemplate-quickstart|
     2. Templates' structure . |colortemplate-structure|
@@ -36,19 +36,27 @@ CONTENTS						*ft-colortemplate*
    15. Options .............. |colortemplate-options|
    16. Commands ............. |colortemplate-commands|
    17. Window toolbar ....... |colortemplate-toolbar|
-   18. The style picker ..... |colortemplate-popup|
-   19. Functions ............ |colortemplate-functions|
-   20. Best practices ....... |colortemplate-best-practices|
-   21. Providing feedback ... |colortemplate-feedback|
+   18. Functions ............ |colortemplate-functions|
+   19. Best practices ....... |colortemplate-best-practices|
+   20. Providing feedback ... |colortemplate-feedback|
 
-Colortemplate is a plugin that help users create their own color schemes
-without much effort. It can also be used to create color schemes suitable for
-distribution with Vim.
+Colortemplate is a pure Vim9 script plugin for creating Vim color schemes. It
+can also be used to create color schemes suitable for distribution with Vim.
 
-Colortemplate requires Vim 9.0.1558 or later.
+Colortemplate has been been tested with Vim 9.1.1128, so that is the minimum
+recommended version.
 
 ==============================================================================
 Getting Started					*colortemplate-quickstart*
+
+Colortemplate requires vim-devel:
+
+    git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
+
+To install Colortemplate, just put the plugin somewhere in your |packpath|:
+
+    git clone https://github.com/lifepillar/vim-colortemplate.git \
+              ~/.vim/pack/plugins/colortemplate
 
 To get started quickly, |:edit| `templates/dark.colortemplate`, which is
 located in colortemplate's plugin folder, and type:
@@ -59,24 +67,27 @@ You may also execute commands by clicking on a window toolbar. Click on
 "OutDir" and set the output directory to `~/.vim`, then click on "Build!" to
 (re)create the color scheme.
 
-If the template builds successfully or if it contains an error, Colortemplate
-tells you so with a message in the command line.
+If the template builds successfully Colortemplate tells you so with a message
+in the command line. If there is an error, Colortemplate also displays
+a message in the command line, and puts the cursor on the line where the error
+was detected. Note that the actual error may be a bit earlier than the
+location where it is reported.
 
-Note: |:Colortemplate| gives an error if the color scheme already exists at
-the given location (`~/.vim/colors` in the example above): use
-`:Colortemplate!` to overwrite existing files. Vice versa, the "Build!" menu
-silently overwrites any existing file.
-
-To enable the generated color scheme, you may use |:colorscheme| or (better)
-click on "Show" in the toolbar (the dark template uses only two colors out of
-its palette, so it does not stand out as a catchy color scheme). If you enable
-the color scheme by clicking on "Show" in the toolbar, you may switch back to
-the original color scheme by clicking on "Hide".
+Note: |:Colortemplate| refuses to build a color scheme if the color scheme
+already exists at the given location (`~/.vim/colors/dark.vim` in the example
+above): use `:Colortemplate!` (with an exclamation mark) to overwrite existing
+files. Vice versa, the "Build!" menu silently overwrites any existing file.
 
 Note: unless explicitly noted otherwise, Colortemplate's commands are
 filetype-specific. That means that they are available only if the filetype is
 set to `colortemplate`. You may need to `:set ft=colortemplate` to make them
 available in new buffers.
+
+To enable the generated color scheme, you may use |:colorscheme| or click on
+"Show" in the toolbar (the dark template uses only two colors out of its
+palette, so it does not stand out as a catchy color scheme). If you enable the
+color scheme by clicking on "Show" in the toolbar, you may switch back to the
+original color scheme by clicking on "Hide".
 
 You may validate your color scheme against Vim's built-in script
 `$VIMRUNTIME/colors/tools/check_colors.vim` with |:ColortemplateCheck| or by
@@ -89,8 +100,8 @@ message:
 <
 You may compute some statistics about the colors used by your theme with
 |:ColortemplateStats| or by clicking on "Stats" in the toolbar. For more
-details, see |colortemplate-stats|. Click on "Source" to view the generated
-color scheme.
+details, see |colortemplate-stats|. Click on "Source" to view the code of the
+generated color scheme.
 
 You may use `dark.colortemplate`, `light.colortemplate` or
 `dark_and_light.colortemplate` in the `templates` folder as starting points
@@ -100,8 +111,8 @@ necessarily sequential) steps:
 1. edit your color scheme's information;
 2. define a color palette;
 3. define the necessary highlight groups;
-4. document your color scheme's options, if any;
-5. build your color scheme.
+4. build your color scheme;
+5. document your color scheme's options, if any.
 
 If you want to start from scratch instead of using one of the predefined
 templates, set the modeline in your template to
@@ -113,30 +124,37 @@ or save your template with a `.colortemplate` suffix.
 ==============================================================================
 Templates' structure				*colortemplate-structure*
 
-(You may skim through this section on a first read and come back to it after
-you have read the rest of the documentation and have understood the examples
-in the `templates` folder.)
-
 A template consists of:
 
-1. metadata;
-2. `Color` and `Term colors` definitions;
-3. `Background` and `Variants` directives;
-4. `Include` directives;
-5. verbatim blocks (`verbatim`/`auxfile`/`help`);
-6. highlight group definitions;
-7. line comments (starting with `;`), which are ignored by Colortemplate.
+1. metadata directives;
+2. include directives;
+3. color definitions;
+4. highlight group definitions;
+5. verbatim blocks;
+6. line comments.
 
-Each template must contain some mandatory metadata: the name of the
-color scheme and its author. Additional metadata may be optionally specified.
-See |colortemplate-meta| for more details.
+Each template must contain some mandatory metadata directives, specifying for
+instance the name of the color scheme and its author. See |colortemplate-meta|
+for more details.
 
-Before any other definition, the supported variants and the background should
-be defined.
+Include directives allow you to import template code from another file. See
+|colortemplate-include|.
 
-Highlight group definitions may appear in any order: the only constraint is
-that a default definition must appear before any variant-specific or
-discriminator-specific definitions.
+Colors and highlight groups define how your color scheme looks like. They may
+appear in almost any order, provided that the following two constraints are
+satisfied:
+
+- a color must be defined before it is mentioned in a highlight group;
+- a default highlight group definition must appear before any variant-specific
+  or discriminator-specific definitions.
+
+See |colortemplate-colors| and |colortemplate-hi-groups| for more information.
+
+Verbatim blocks contain Vim script code that is copied at the top of the
+generated color scheme. See |colortemplate-verbatim| for details.
+
+Finally, line comments may appear anywhere: they start with a semicolon and
+are ignored by Colortemplate.
 
 ==============================================================================
 Metadata block					*colortemplate-meta*
@@ -152,27 +170,30 @@ optional fields, usually appearing at the top of your template:
 	; Optional information
 	Maintainer:      [Uses Author's value by default]  (+)
 	Description:     [Empty]                           (+)
-        URL:             [Empty]                           (+)
+	URL:             [Empty]                           (+)
 	License:         [Vim license]
-        Version:         [Empty]
+	Version:         [Empty]
+        Prefix:          [same as short name]
 	Options:         []                                (+)
+	Variants:        [gui]
 <
 Each metadata field must fit in one line. The default values for optional
 fields is shown in square brackets. Fields annotated with `(+)` may be
 repeated: this allows you, for example, to provide more than one maintainer or
 more than one URL. All the fields should be self-descriptive, except for the
-last one, which is described in the following paragraph.
+last three.
 
-`Options` allows you to configure the generated output. The value of this
+`Prefix` is meant to be used as a prefix for color scheme's settings. See
+`templates/dark.colortemplate` for an example. See also |colortemplate-help|.
+
+`Options` allows you to configure how output is generated. The value of this
 metadata field is a space-separated sequence of items of the form
 `option=value`. For example:
 >
 	Options: backend=vim9
-        Options: creator=false
-        Options: dateformat="%c"
-        Options: palette=true
-        Options: shiftwidth=4
-        Options: timestamp=true
+	Options: creator=false
+	Options: dateformat="%c"
+	Options: palette=true shiftwidth=4 timestamp=true
 <
 The available options are:
 
@@ -189,8 +210,11 @@ The available options are:
 - `timestamp`: a flag to include or suppress the "Last Change" comment. When
   set to `false`, the value of `dateformat` is ignored.
 
+`Variants` defines the environments that color scheme should support. See
+|colortemplate-variants| for details.
+
 ==============================================================================
-Color scheme background				*colortemplate-background*
+Backgrounds              	 		*colortemplate-background*
 
 You must specify whether color definitions and highlight group definitions
 apply to a dark background or to a light background. You do so with
@@ -198,7 +222,7 @@ a `Background` directive, which may have one of three values:
 >
 	Background: dark
 	Background: light
-        Background: any
+	Background: any
 <
 All definitions appearing after a `Background` directive until the end of the
 file or until another `Background` directive apply to the specified
@@ -221,17 +245,17 @@ have this structure:
 ==============================================================================
 Variants						*colortemplate-variants*
 
-The `Variants` directive, which must appear before any color or highlight
-group can be defined, declares which environments a color scheme supports.
-Every color scheme generated by Colortemplate always implicitly supports GUI
-colors (also in the terminal when |termguicolors| is set). `Variants` can be
-used to define the less capable alternatives that the color scheme should
-support.
+The `Variants` metadata directive declares which environments a color scheme
+supports. It must consist of a space-separated sequence of one or more of the
+following values: `gui`, `256`, `88`, `16`, `8`, `0`.
 
-The allowed values are `256`, `88`, `16`, `8`, `0`. Each value specifies
-a value for |t_Co| that the color scheme will support. The values must be
-separated by spaces. For example, to generate code for 256-color and 16-color
-variants, put this near the top of your template:
+Every color scheme generated by Colortemplate always implicitly supports GUI
+colors (also in the terminal when |termguicolors| is set), so the `gui` value
+may be omitted unless it is the only one. Other values can be used to define
+the less capable alternatives that the color scheme should support.
+
+For example, to generate code for 256-color and 16-color variants in addition
+to GUI colors, add this to your template:
 >
 	Variants: 256 16
 <
@@ -246,16 +270,16 @@ For example:
 >
 	Color: red  #e64547  167  DarkRed
 <
-The name is an arbitrary string (only letters, numbers and underscore
-allowed). Color definitions that are in the scope of `Background: any`, are
+The name is an arbitrary string consisting of only letters, numbers and
+underscore. Color definitions that are in the scope of `Background: any`, are
 assumed to apply to any background. Color definitions in the scope of
 `Background: dark` or `Background: light` apply only to the specified
-background. So, you may have two different colors with the same name for light
-and dark background.
+background. So, it is possible to define two different colors with the same
+name, one for the light background and one for the dark background.
 
 The `<GUI spec>` may be given as a hexadecimal value, as in the example above,
-or as an RGB value. The standard color names from |v:colornames| may be used
-as well, although their use is discouraged. For instance:
+or as an RGB value. The standard color names from |v:colornames| may be used,
+too, although their use is discouraged. For instance:
 >
 	Color: white    rgb(255,255,255)    206    White
 	Color: gold     dark goldenrod      136    Brown
@@ -277,9 +301,9 @@ So, a minimal color definition looks as follows:
 Terminal colors					*colortemplate-termcolors*
 
 The 16 ASCII colors for Vim terminal windows should be specified using
-a `Term Colors` directive:
+a `Term colors` directive:
 >
-	Term Colors: mydarkblack  mydarkred      mydarkgreen  mydarkyellow
+	Term colors: mydarkblack  mydarkred      mydarkgreen  mydarkyellow
 	             mydarkblue   mydarkmagenta  mydarkcyan   mydarkwhite
 	             mylightblack mylightred     mylightgreen mylightyellow
 	             mylightblue  mylightmagenta mylightcyan  mylightwhite
@@ -291,6 +315,8 @@ used color names must have been previously defined with `Color` directives.
 ==============================================================================
 Highlight group definitions			*colortemplate-hi-groups*
 
+Base Highlight Groups ~
+
 Default highlight group definitions consist of lines having the following
 syntax:
 >
@@ -299,15 +325,15 @@ syntax:
 In order:
 
 - the name of a highlight group;
-- the foreground color;
-- the background color;
-- (optional) the special color: see |highlight-guisp| and |highlight-ctermul|;
-- (optional) style attributes: see |attr-list|.
+- the name of the foreground color;
+- the name of the background color;
+- (optional) the name of the special color;
+- (optional) style attributes (see |attr-list|).
 
 For example:
 >
 	Normal     white   black
-	SpellRare  white   black  s=cyan  bold,reverse 
+	SpellRare  white   black  s=cyan  bold,reverse
 	DiffAdd    orange  blue           reverse
 	SpellBad   white   black  s=red   underline
 
@@ -335,11 +361,11 @@ simplicity):
 >
 	hi CursorLine guifg=#ffffff guisp=NONE gui=NONE
 <
-Compare with this definition:
+The `guibg` attribute is missing altogether. Compare with this definition:
 >
 	CursorLine white black
 >
-which would become:
+which might become:
 >
 	hi CursorLine guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE
 
@@ -351,6 +377,8 @@ which would be translated as follows:
 >
 	hi CursorLine guifg=#ffffff guibg=NONE guisp=NONE gui=NONE
 <
+Linked Highlight Groups ~
+
 Linked groups are defined using the following syntax:
 >
 	<SourceGroup> -> <TargetGroup>
@@ -385,7 +413,7 @@ two definitions can be joined into a single definition by omitting the second
 	Title      orange  blue
 	  /256/8   red     black  underline
 <
-Highlight groups can be also overridden based on some condition. For example:
+Highlight groups can also be overridden based on some condition. For example:
 >
 	#const transp_bg = get(g:, 'foo_transp_bg', 0)
 
@@ -393,15 +421,14 @@ Highlight groups can be also overridden based on some condition. For example:
 	Normal +transp_bg 1  white  none
 <
 The `#const` declaration defines a script-local variable. Except for the
-leading `#`, the line is just Vim 9 script's syntax (but the command must be
-on a single line). In Colortemplate, identifiers defined with `#const` are
-called "discriminators".
+leading `#`, the line is just Vim9 script's syntax (but the command must be on
+a single line). In Colortemplate, variables defined with `#const` are called
+"discriminators".
 
 In the example above, the discriminator is used to override `Normal` when
 `g:foo_transp_bg` is defined and set to 1. As before, the two definitions
 can be collapsed into one by omitting the second occurrence of `Normal`:
 >
-
 	Normal              white  black
 	      +transp_bg 1  white  none
 <
@@ -446,6 +473,13 @@ and without spaces (e.g., `@shortname` may be used to insert the value of
 the value of the current background) and `@vimversion` (to insert the current
 Vim version).
 
+NOTE: Colortemplate v3 adopts a more declarative approach to template
+definition compared to Colortemplate v2, which makes verbatim blocks
+unnecessary for most purposes. The most important difference with respect to
+v2 is that v3 verbatim blocks are aggregated—in order of appearance in the
+source—and put at the top of the resulting color scheme, regardless of where
+they appear in the template.
+
 ==============================================================================
 Help file					*colortemplate-helpfile*
 
@@ -457,16 +491,20 @@ a transparent background, you may document it as follows:
   ===========================================================================
   @fullname options                                *@shortname-options*
 
-                                                   *g:@shortname_transp_bg*
+                                                   *g:@prefix_transp_bg*
 
   Set to 1 if you want a transparent background. Takes effect only in the
   terminal.
   >
-    let g:@shortname_transp_bg = 0
+    let g:@prefix_transp_bg = 0
   <
   endhelpfile
 
-A helpfile block starts with `helpfile` and ends with `endhelpfile`.
+A helpfile block starts with `helpfile` and ends with `endhelpfile` and may
+appear anywhere in your template, although it is common practice to put it in
+a separate file and import it into the main template with `Include` (see
+|colortemplate-include|).
+
 Interpolation works as in verbatim blocks. Multiple helpfile blocks are
 chained together in the order in which they are encountered.
 
@@ -558,7 +596,7 @@ takes into account the perceptual characteristics of the human eye. Roughly
 speaking, colors at distance less than 2.3 correspond to "just noticeable
 differences". The greater the distance, the greater the discrepancy between
 the GUI color and its base-256 counterpart. Colortemplate will highlight
-difference greater than 2.3 with a difference color.
+delta values greater than 2.3 with a different color.
 
 Note: keep in mind that the "most similar" terminal color may not necessarily
 be the "best looking" color, because the overall look&feel of a color scheme
@@ -570,8 +608,8 @@ highlight group and have contrast ratio less than 3.0 (as per ISO-9241-3) are
 reported in this section, for exact colors and for xterm approximations. For
 each pair of colors, its contrast ratio, color brightness and color difference
 are shown, together with the highlight groups using such pairs. Generally
-speaking, pairs of fg/bg colors with low contrast ratio may be acceptable if
-they are used for decorative elements (e.g., for |hl-VertSplit|), but should
+speaking, pairs of fg/bg colors with low contrast ratio are acceptable if they
+are used for decorative elements (e.g., for |hl-VertSplit|), but they should
 be avoided for text, and especially for |hl-Normal|.
 
 Contrast ratio matrix ~
@@ -595,8 +633,8 @@ their color difference exceed a certain threshold. Colortemplate computes
 color and brightness difference for each pair of colors in your color scheme.
 
 Color difference ranges between 0.0 (no difference) and 765.0 (maximum
-difference). At least for the Normal highlight group, the difference should be
-no less than 500.
+difference). It is recommended that, at least for the Normal highlight group,
+the difference is 500 or more.
 
 Brightness difference ranges between 0.0 (no difference) and 255.0 (maximum
 difference). At least for the Normal highlight group, the difference should be
@@ -610,58 +648,59 @@ If you do not want Colortemplate to define any mapping, set
 
 Buffer-local mappings ~
 							*colortemplate-ga*
-ga			If the cursor is on a `Color` line, display some
+[count]ga		If the cursor is on a `Color` line, display some
 			information about the given color, including [count]
 			best xterm approximations for the color.
 
 							*colortemplate-gl*
 gl			Toggle the display of highlight group information
-			under the mouse pointer and/or under the cursor.
-			To choose what display to use, set
-			|g:colortemplate_higroup_command_line| or
-			|g:colortemplate_higroup_balloon|.
+                        under the under the cursor. To choose what display to
+                        use, set |g:colortemplate_higroup_popup|.
 
 							*colortemplate-gs*
-gs			Open the style picker.
+gs			Open the style picker. For this to work, you must
+			install the StylePicker plugin
+			(https://github.com/lifepillar/vim-stylepicker).
 
 							*colortemplate-gx*
-gx			If the cursor is on a `Color` line, replace `~` with
+[count]gx		If the cursor is on a `Color` line, replace `~` with
 			the [count]th best xterm approximation of the color.
 
 							*colortemplate-gy*
-gy			If the cursor is on a `Color` line, show the xterm
+[count]gy		If the cursor is on a `Color` line, show the xterm
 			approximations of the color at distance at most
 			[count] from the GUI value in the command line.
 
 							*colortemplate-ctrl-l*
 CTRL-L			Show/redraw the window toolbar and redraw the screen.
+			Useful if the toolbar got hidden for some reason.
 
 ==============================================================================
 Colortemplate options				*colortemplate-options*
 
 					*g:colortemplate_fancy_import*
 When importing a color scheme with |ColortemplateImport|, Colortemplate by
-default generates random fancy names for colors. Set this to 0 if you prefer
-dull names such as Color0001, Color0002, etc. instead.
+default generates random fancy names for colors. Set this to |false| if you
+prefer dull names such as Color0001, Color0002, etc. instead.
 >
-	g:colortemplate_fancy_import = 1
-<
-					*g:colortemplate_higroup_balloon*
-When set to 1, Colortemplate displays the details of the highlight group under
-the mouse pointer in a popup balloon, when requested to do so (see |gl|).
->
-	let g:colortemplate_higroup_balloon = 1
+	g:colortemplate_fancy_import = true
 <
 					*g:colortemplate_higroup_command_line*
 When set to 1, Colortemplate displays the details of the highlight group under
 the cursor in the command line, when requested to do so (see |gl|).
 >
-	let g:colortemplate_higroup_command_line = 1
+	g:colortemplate_higroup_command_line = true
+<
+					*g:colortemplate_higroup_popup*
+When |true|, Colortemplate displays the details of the highlight group under
+the mouse pointer in a popup window, when requested to do so (see |gl|).
+>
+	g:colortemplate_higroup_popup = true
 <
 					*g:colortemplate_no_mappings*
-Set to 1 to suppress mappings.
+Set to |true| to suppress mappings.
 >
-	let g:colortemplate_no_mappings = 0
+	g:colortemplate_no_mappings = false
 <
 					*b:colortemplate_outdir*
 The directory for the generated color scheme and optional auxiliary files.
@@ -669,160 +708,43 @@ This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
-					*g:colortemplate_popup_bg*
-The name of a highlight group to be used for the background of the style
-picker.
->
-	let g:colortemplate_popup_bg = 'Normal'
-<
-For example, to use a black background no matter what the color scheme
-is, you may define:
->
-	hi MyBlack ctermbg=16 guibg=#000000
-	let g:colortemplate_popup_bg = 'MyBlack'
-<
-					*g:colortemplate_popup_borderchars*
-A list with eight character elements, which is used for drawing the border of
-the style picker. See |popup_create-arguments|.
->
-	let g:colortemplate_popup_borderchars =
-	    \ ['─', '│', '─', '│', '┌', '┐', '┘', '└']
-<
-					*g:colortemplate_popup_default_pane*
-The default pane that should be presented to the user when the style picker is
-opened. The possible values are `'rgb'`, `'hsb'`, `'gray`', and `'help'`.
->
-	let g:colortemplate_popup_default_pane = 'rgb'
-<
-					*g:colortemplate_popup_fav_path*
-The path where the style picker's favorite colors are saved.
->
-	let g:colortemplate_popup_fav_path =
-	    \ '$HOME/.vim/colortemplate_favorites.txt'
-<
-					*g:colortemplate_popup_keys*
-A Dictionary used to customize the keys used by the style picker. For example,
-to use `q` to close the popup, put this in your |vimrc|:
->
-	let g:colortemplate_popup_keys = { 'close': 'q' }
-<
-Keep in mind that, by default, mappings are processed before passing keys to
-the popup. In practice, the keys used in the popup should not be mapped in
-Normal mode. See also |g:colortemplate_popup_mapping|.
-
-Note: multiple-keystroke mappings are not allowed!
->
-	let g:colortemplate_popup_keys = {
-	    \ 'close':            "x",
-	    \ 'cancel':           "X",
-	    \ 'yank':             "Y",
-	    \ 'down':             "\<down>",
-	    \ 'up':               "\<up>",
-	    \ 'top':              "T",
-	    \ 'decrement':        "\<left>",
-	    \ 'increment':        "\<right>",
-	    \ 'next-color':       "\<tab>",
-	    \ 'prev-color':       "\<s-tab>",
-	    \ 'toggle-bold':      "B",
-	    \ 'toggle-italic':    "I",
-	    \ 'toggle-underline': "U",
-	    \ 'toggle-standout':  "S",
-	    \ 'toggle-inverse':   "V",
-	    \ 'toggle-undercurl': "~",
-	    \ 'toggle-strike':    "-",
-	    \ 'new-color':        "E",
-	    \ 'new-higroup':      "N",
-	    \ 'clear':            "Z",
-	    \ 'rgb':              "R",
-	    \ 'hsb':              "H",
-	    \ 'gray':             "G",
-	    \ 'help':             "?",
-	\ }
-<
-					*g:colortemplate_popup_mapping*
-Set the "mapping" attribute of the style picker. When set to 1, any key
-arrives to the popup after any mapping. This may interfere with the keyboard
-controls of the style picker. In such cases, you may set this to 0 or
-(probably better) redefine some keys with |g:colortemplate_popup_keys|.
->
-	let g:colortemplate_popup_mapping = 1
-<
-					*g:colortemplate_popup_marker*
-The String used to mark the selected line in the style picker. The width of
-the style picker adapts to accommodate symbols of arbitrary length.
->
-	let g:colortemplate_popup_marker = '❯❯ '
-<
-					*g:colortemplate_popup_notifications*
-Set to 0 if you want to suppress the notification popups (such as 'Color
-cleared', 'Color yanked', etc.) in the style picker.
->
-	let g:colortemplate_popup_notifications = 1
-<
-					*g:colortemplate_popup_quotes*
-A List of quotes to be displayed as sample text in the style picker.
->
-	let g:colortemplate_popup_quotes = [<some wisdom>]
-<
-					*g:colortemplate_popup_star*
-The one-character symbol used for stars in the style picker.
->
-	let g:colortemplate_popup_marker = '*'
-<
-					*g:colortemplate_quiet*
-Set to 0 if you want Colortemplate to open the generated color scheme in
-a split window immediately after building it.
->
-	let g:colortemplate_quiet = 1
-<
 					*g:colortemplate_rtp*
 By default, Colortemplate prepends the default output directory (see
-|b:colortemplate_outdir|) to |runtimepath| to make sure that the correct color
-scheme is found when you test your color scheme. Set this option to 0 if you
-do not want Colortemplate to ever touch your |runtimepath|.
+|b:colortemplate_outdir|) to |runtimepath| to make sure that your color scheme
+is found when you test it. Set this option to |false| if you do not want
+Colortemplate to ever touch your |runtimepath|.
 >
-	g:colortemplate_rtp = 1
-<
-					*g:colortemplate_slider_ascii*
-Set to 1 to use ASCII symbols for the level bars in the style picker. This
-option is ignored if |g:colortemplate_slider_symbols| is defined.
->
-	let g:colortemplate_slider_ascii = 0
-<
-					*g:colortemplate_slider_symbols*
-A List of nine elements to be used to draw level bars in the style picker.
->
-	let g:colortemplate_slider_symbols =
-            \ [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", '█']
+	g:colortemplate_rtp = true
 <
 					*g:colortemplate_toolbar*
-Set to 0 if you do not want to use the toolbar.
+Set to |false| if you do not want to use the toolbar.
 >
-	let g:colortemplate_toolbar = 1
+	g:colortemplate_toolbar = true
 <
 					*g:colortemplate_toolbar_items*
 A List with the names of the menu entries to be used in the window toolbar.
 Each menu entry must have a corresponding definition in
 |g:colortemplate_toolbar_actions|.
 >
-	let g:colortemplate_toolbar_items = [
-	      \ 'Build!',
-	      \ 'BuildAll!',
-	      \ 'Show',
-	      \ 'Hide',
-	      \ 'Check',
-	      \ 'Stats',
-	      \ 'Source',
-	      \ 'HiTest',
-	      \ 'OutDir',
-	      \ ])
+	g:colortemplate_toolbar_items = [
+	    'Build!',
+	    'BuildAll!',
+	    'Show',
+	    'Hide',
+	    'Check',
+	    'Stats',
+	    'Source',
+	    'HiTest',
+	    'OutDir',
+	])
 <
 					*g:colortemplate_toolbar_actions*
 A Dictionary mapping menu entries to the corresponding commands. For instance:
 >
-	let g:colortemplate_toolbar_actions = {
-	     \ 'Build!': ':Colortemplate!<cr>'
-	     \ }
+	g:colortemplate_toolbar_actions = {
+	    'Build!': ':Colortemplate!<cr>',
+            'StylePicker': ':StylePicker<cr>',
+	}
 <
 This option only defines the actions associated to each label. For a menu
 entry to actually be visible in the toolbar, it must be listed in
@@ -834,34 +756,36 @@ Colortemplate commands				*colortemplate-commands*
 Global commands ~
 
 						*:ColortemplateImport*
-Creates a template document in a new buffer by extracting information from the
+Create a template document in a new buffer by extracting information from the
 currently defined highlight groups. A typical workflow to import an existing
 color scheme is as follows:
 
-- run `vim --clean`;
-- load (with |:colorscheme|) the color scheme to be imported;
-- execute `:ColortemplateImport`.
+1. Create a minimal |vimrc| with the following content:
+>
+	syntax on
+	set viminfofile=NONE
+<
+   Using a minimal vimrc will ensure that most "extra" highlight group
+   definitions (from plugins, etc.) will not be imported.
+2. Run `vim -Nu vimrc` where `vimrc` is the script above;
+3. Choose a color scheme with |:colorscheme|.
+4. Execute |:ColortemplateImport|.
 
 Note: although the generated template should compile out of the box and
 faithfully reproduce your currently active color scheme, keep in mind that
 this function is only meant to facilitate the initial scaffolding of a new
 template.
 
-						*:ColortemplateStyle*
-Opens a |popup| window that allows you to dynamically change the colors and
-style of highlight groups. The command takes the name of a highlight group as
-an optional argument. See |colortemplate-popup| for the details.
-
 Buffer-local commands ~
 						*:Colortemplate[!]*
-Creates a Vim color scheme from the template in the current buffer. If used
+Create a Vim color scheme from the template in the current buffer. If used
 without arguments, the output is written in |b:colortemplate_outdir|. The
 command takes an optional argument, which is an alternative path to
 a directory where the output should be saved. If `!` is present, any existing
 files will be overwritten.
 
 						*:ColortemplateAll[!]*
-Builds the template in the current buffer and all the other templates in the
+Build the template in the current buffer and all the other templates in the
 same directory as the current buffer (if any). This is useful to build several
 color schemes at once. If used without arguments, the output is written in
 |b:colortemplate_outdir|. The command takes an optional argument, which is an
@@ -869,17 +793,17 @@ alternative path to a directory where the output should be saved. If `!` is
 present, any existing files will be overwritten.
 
 						*:ColortemplateCheck*
-Runs a series of checks on the generated color scheme using Vim's validation
+Run a series of checks on the generated color scheme using Vim's validation
 script `$VIMRUNTIME/colors/tools/check_colors.vim`.
 
 						*:ColortemplateOutdir*
-Shows the current value of |b:colortemplate_outdir| in the command line and
-prompts for a new path. Leave empty and press Enter or press Esc if you do not
+Show the current value of |b:colortemplate_outdir| in the command line and
+prompt for a new path. Leave empty and press Enter or press Esc if you do not
 want to change the path.
 
 						*:ColortemplateStats*
-Computes some color statistics and shows them in a scratch buffer.
-See |colortemplate-stats| for more information.
+Compute some color statistics and show them in a scratch buffer. See
+|colortemplate-stats| for more information.
 
 ==============================================================================
 Window toolbar					*colortemplate-toolbar*
@@ -897,177 +821,38 @@ The menu entries and the corresponding actions may be customised with
 default, the window toolbar has the following menu entries:
 
 Build! ~
-Executes |:Colortemplate!| in the current buffer and writes the output inside
-the default output directory (see |b:colortemplate_outdir|).
+Execute |:Colortemplate!|
 
 BuildAll! ~
-Executes |:ColortemplateAll!| in the current buffer and writes the output
-inside the default output directory (see |b:colortemplate_outdir|).
+Execute |:ColortemplateAll!|
 
 Show ~
-Enables the color scheme corresponding to the template in the current buffer.
+Enable the color scheme corresponding to the template in the current buffer.
 
 Hide ~
-Switches back to the original color scheme.
+Switch back to the original color scheme.
 
 Check ~
-Executes |:ColortemplateCheck|.
+Execute |:ColortemplateCheck|
 
 Stats ~
-Executes |:ColortemplateStats|.
+Execute |:ColortemplateStats|
 
 Source ~
-Edits the generated color scheme in a split window.
+Edit the generated color scheme in a split window.
 
 HiTest ~
-Enables the color scheme and executes `runtime` `syntax/hitest.vim`.
+Enable the color scheme and execute `runtime` `syntax/hitest.vim`.
 
 OutDir ~
-Shows the current output directory and allows you to change it. See
-|b:colortemplate_oudir|.
-
-==============================================================================
-The style picker					*colortemplate-popup*
-
-Colortemplate implements a sophisticated "style picker", with which you can
-modify a color scheme in real time. This enables frictionless experimentation
-with color schemes directly within Vim. This feature is based on Vim's |popup|
-and |text-properties|.
-
-The style picker can be opened with |gs|, |ColortemplateStyle| or by invoking
-|colortemplate#style#open()|. Both the command and the function take the name
-of a highlight group as an optional argument. When no argument is given, the
-popup reflects the status of the highlight group under the cursor. Providing
-a highlight group is necessary for editing the elements of Vim's interface
-that are not inside buffers, such as status lines. Note that |gs| is
-a filetype-specific mapping and |ColortemplateStyle| becomes available only
-after opening a Colortemplate buffer. The function, however, can be invoked
-anywhere at any time. See |colortemplate-mappings| if you want to open the
-style picker from any buffer.
-
-If this is the first time you use the style picker, you may want to open it
-now and try using it while reading this section.
-
-The popup window consists of four panes: RGB, HSB, Grayscale, and Help, which
-can be selected by typing |R|, |H|, |G|, and |?|, respectively.
-
-Use up and down arrow keys to choose an item in the popup. The current item
-has a marker on the side. When a level bar is selected, you may change the
-corresponding value with the left and right keys. Changes are applied
-immediately. The amount by which a slider is changed can be set by simply
-typing a number between 1 and 99 while the marker is on a level bar. The
-current step is shown below the sliders. When the marker is elsewhere, the
-numbers you type are passed to the underlying buffer, so you can continue
-using counts with your mappings (e.g., you may type `5j` to move down five
-lines).
-
-To choose a new color, press |E|. If the environment supports millions of
-colors, you will be asked to enter a hex value. If the value has one, two, or
-three characters, it will be automatically expanded to its six character
-version (e.g., `#cd` will be interpreted as `#cdcdcd`). If the environment
-does not support true colors, you will be asked to enter a new terminal color,
-i.e., a value between 16 and 255. To clear a color (i.e., to set it to
-`NONE`), press |Z|.
-
-To choose a specific highlight group, press |N|. Attributes such as boldface,
-italics, and so on, can be toggled by pressing a key: |B| for bolface, |I| for
-italics, etc. See the Help pane for the details. Press |Tab| or |S-Tab| to
-cycle through the foreground, background, and special color for the current
-highlight group.
-
-In the middle of the pane, some information is displayed about the current
-color. It looks as follows:
->
-	██ #9fbec6 ****  ██ 109 **    Δ7.1 BIUSV~-
-<
-Here you may see the hex value of the color (`#9fbec6`), its best terminal
-approximation (`109`), the difference between the GUI and terminal color
-(`7.1`, see |colortemplate-stats|), and which attributes are applied to the
-current highlight group (`BIUSV~-`, attributes that are active are
-highlighted). Besides, an evaluation of the "quality" of the GUI and terminal
-colors against the background of the current highlight group are provided in
-the form of stars. A color can have up to five stars, according to how many of
-the following tests it passes:
-
-- the contrast ratio (CR) between the (foreground/special) color and the
-  background is >=3.0;
-- CR >= 4.5;
-- CR >= 7.0;
-- the color difference between the color and the background is >=500;
-- the brightness difference between the color and the background is >=125.
-
-When the background color is active, the foreground of the highlight group is
-used for comparison.
-
-The thresholds are based on W3C guidelines:
-
-    https://www.w3.org/TR/AERT/
-    https://www.w3.org/TR/2008/REC-WCAG20-20081211/
-
-Generally speaking, I'd say that you should aim at getting at least two/three
-stars for each highlight group, and at least four/five for the |Normal| group.
-This will ensure that your color scheme will have good legibility, even for
-people with color deficits. That said, use with a grain of salt: if you are
-developing a low-contrast color scheme for your programming night sessions,
-your colors will most likely get zero or one star. That does not necessarily
-make your color scheme "bad"—just one that can be used subject to some
-constraints (e.g, low-light conditions and visually unimpaired users).
-
-As you modify a color scheme, the style picker remembers the ten most recently
-used colors. With the marker in the Recent section, you may press |Enter| to
-select a recent color, |D| to remove a color from the list, or |Y| to yank a
-recent color into the unnamed register.
-
-The bottom part of the style picker hosts a section for your favorite colors.
-To make a color a favorite one, type |A|. Choosing, deleting or yanking
-a favorite color is done in the same way as for recent colors. Favorite colors
-persist across Vim sessions: they are written to disk at the location
-specified by |g:colortemplate_popup_fav_path|. The saved file is just a text
-file with one color per line; it can be easily edited by hand if desired.
-
-When the marker is on a level bar, type |Y| to yank the current color. The
-reverse is also possible: if the unnamed register contains a hex color, you
-may paste it into the style picker as the current color by typing |P|.
-
-Press |x| or click on the upper-right corner of the popup window to dismiss
-it. If you want to revert your changes by resetting the current color scheme,
-press |X| instead.
-
-You may drag the popup around with the mouse. The window is not resizable.
-
-Note: when the popup is open all keystrokes are filtered by the popup. Only
-the keys that are not used by the popup are "passed through" to the underlying
-buffer. That means that none of the keys used by the popup are available to
-the underlying buffer. For instance, you cannot select text with |V| while the
-popup is open, because |V| is used by the popup to toggle reverse text. But
-you can still use |v|, because the style popup does not map that key. If the
-popup gets in the way, just close it with |x|.
+Show the current output directory and prompt for a new path. See
+|b:colortemplate_outdir|.
 
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*
 
-These are some utility functions that advanced users may find useful.
-
-					*colortemplate#style#favorite()*
-Returns the list of favorite colors in the style picker.
-
-					*colortemplate#style#recent()*
-Returns the list of recent colors currently in the style picker.
-
-					*colortemplate#syn#balloonexpr()*
-This function can be used to display some information about the highlight
-group under the mouse pointer when |ballooneval| or |balloonevalterm| is set.
-The information that is displayed is similar to the output of
-|colortemplate#syn#toggle()|.
-
-To enable these popups in Colortemplate buffers, just set |ballooneval| or
-|balloonevalterm|. To enable these popups globally, you also need to set
-|balloonexpr| to this function.
-
-Note: these popups require |+popupwin| and |+textprop|.
-
-					*colortemplate#syn#toggle()*
-Toggles the display of highlight group information for the text under the
+				*colortemplate#util#ToggleHighlightInfo()*
+Toggle the display of highlight group information for the text under the
 cursor. The information is displayed in the command line and has the following
 form:
 >
@@ -1077,11 +862,12 @@ form:
 From left to right and top to bottom, this shows:
 
 - the nesting of highlight groups, or "synstack" (`⊂`);
-- a sample of how the text looks like with the current hi group (`xxx`);
-- the hi group to which the current hi group resolves, if any (`→`);
-- the terminal/GUI values of the foreground, background, and special color.
-
-See also |colortemplate-mappings|.
+- a sample of how the text looks like with the current highlight group
+  (`xxx`);
+- the highlight group to which the current highlight group resolves, if any
+  (`→`);
+- the terminal/GUI values of the foreground, background, and special color, if
+  they are defined.
 
 ==============================================================================
 Best practices					*colortemplate-best-practices*
@@ -1103,9 +889,7 @@ Here are some guidelines to develop outstanding hackable color schemes:
   (see |cterm-colors|).
 
 - Do not define many options. The ideal number of options for a color scheme
-  is… zero. Colortemplate does not define any option by default. Note that
-  some features such as italics are detected automatically, so in general you
-  won't need an option for italics.
+  is… zero.
 
 - If your color scheme has some option, document it!
 
@@ -1231,18 +1015,16 @@ Here are some guidelines to develop outstanding hackable color schemes:
   in the latter there are two independent vertical bars.
 
 - Some users like to use a transparent background (e.g., with custom images)
-  in the terminal. You may easily support that by adapting this snippet:
+  in the terminal. You may easily support that by defining a discriminator:
   >
-	Variant: 256 16 8
-	#if get(g:, '@optionprefix_transp_bg', 0)
-	  Normal some_color none
-	  ; Other definitions specific for transparency
-	#else
-	  Normal some_color some_other_color
-	  ; Other definitions specific for opaqueness
-	#endif
+	#const transp_bg = get(g:, '@prefix_transp_bg', 0)
 <
-  Do not forget to document `@optionprefix_transp_bg`!
+  Then, for any highlight group that should have a transparent background if
+  the option is on, define an override. For instance:
+>
+        Normal white black /256/8+transp_bg omit none
+<
+  Do not forget to document `@prefix_transp_bg`!
 
 - Verbatim blocks and aux files allow you to get fancy. Avoid getting too
   fancy.

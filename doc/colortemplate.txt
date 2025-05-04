@@ -224,17 +224,18 @@ support. See |colortemplate-variants| for details.
 ==============================================================================
 Backgrounds              	 		*colortemplate-background*
 
-You must specify whether color definitions and highlight group definitions
-apply to a dark background or to a light background. You do so with
-a `Background` directive, which may have one of three values:
+A template must specify whether color definitions and highlight group
+definitions apply to a dark background, to a light background or to any
+background. This can be done with a `Background` directive, which may have one
+of three values:
 >
 	Background: dark
 	Background: light
 	Background: any
 <
 All definitions appearing after a `Background` directive until the end of the
-file or until another `Background` directive apply to the specified
-background(s).
+template or until another `Background` directive appears apply to the
+specified background(s).
 
 If only one background is mentioned in the template, the generated color
 scheme will have a command to set it accordingly, e.g.:
@@ -251,7 +252,7 @@ have this structure:
 	endif
 <
 ==============================================================================
-Variants						*colortemplate-variants*
+Variants					*colortemplate-variants*
 
 The `Variants` metadata directive declares for which environments highlight
 group definitions should be generated. It must consist of a space-separated
@@ -271,7 +272,7 @@ to GUI colors, add this to your template:
 	Variants: 256 16
 <
 ==============================================================================
-Color definitions					*colortemplate-colors*
+Color definitions				*colortemplate-colors*
 
 Color definitions consist of lines with the following syntax:
 >
@@ -400,7 +401,7 @@ For example:
 <
 Overriding the default definitions ~
 
-Default definitions can be overriden for some variants or based on the value
+Default definitions can be overridden for some variants or based on the value
 of some variable. For example:
 >
 	Normal      white  gray
@@ -444,6 +445,10 @@ can be collapsed into one by omitting the second occurrence of `Normal`:
 	      +transp_bg 1  white  none
 <
 Note: each highlight group can have at most one associated discriminator.
+A discriminator, however, can assume an unbounded number of distinct values.
+
+Discriminator values can be integers, strings, or the values "true" and
+"false". The values must not be quoted.
 
 Variant and discriminator-based overrides can be combined. For example:
 >
@@ -456,6 +461,46 @@ This will make `Normal` white on black by default, but white with
 a transparent background in 256-/16-/8-color terminals if the user sets
 `g:foo_transp_bg` to 1. In GUI Vim, the setting won't have any effect.
 
+When an override uses a variant and another override for the same highlight
+group uses only a discriminator, it is not immediately clear how the two
+definitions interact. Consider the following example:
+>
+        Variants: gui 256
+	Normal              white        black   ; Default definition
+	Normal+transp_bg 1  white        none    ; Override 1
+        Normal/256          lightgrey   darkblue ; Override 2
+<
+How will the color scheme appear in 256-color terminals when `transp_bg` is
+set to 1?
+
+When a variant is not explicitly provided, Colortemplate interprets the
+declaration as if it applies to every variant. In this example, Override 1 is
+essentially equivalent to:
+>
+	Normal /gui/256 +transp_bg 1  white none
+<
+This reads as follows: «Normal, when the environment supports true colors
+(gui) or 256 colors, and `transp_bg` is set to 1, is white over a transparent
+background».
+
+Override 2 on the other hand says: «Normal, when the environment has 256
+colors, is light gray over dark blue».
+
+So, Override 1 is more specific than Override 2: therefore, with `transp_bg`
+set to 1, the 256-color terminal will have white text and a transparent
+background (when `transp_bg` has another value, the terminal will be light
+gray on dark blue). Note that the order of the overrides is irrelevant.
+
+While the above declarations are perfectly fine, they might be difficult to
+parse. When a highlight group definition has more than a couple of variations
+is likely a good idea to be more verbose. The following is equivalent to the
+above:
+>
+	Normal                  white        black   ; Default definition
+        Normal/gui+transp_bg 1  white        none    
+        Normal/256              lightgrey    darkblue
+	Normal/256+transp_bg 1  white        none
+<
 ==============================================================================
 Verbatim blocks					*colortemplate-verbatim*
 
@@ -563,7 +608,7 @@ Auxfiles blocks may appear anywhere in your template, although they are
 typically put in separate files included by your main template.
 
 ==============================================================================
-Include directive					*colortemplate-include*
+Include directive				*colortemplate-include*
 
 You may split your template into several files, and include snippets from one
 file into another. You do so with an `Include` directive. For example, you
@@ -594,7 +639,7 @@ NOTE: avoid cyclic inclusions: they will cause Colortemplate to run into an
 infinite loop!
 
 ==============================================================================
-Colors statistics					*colortemplate-stats*
+Colors statistics				*colortemplate-stats*
 
 Colortemplate can compute some useful statistics to help you assess the
 quality of your color scheme. Such information is displayed in a scratch
@@ -660,35 +705,38 @@ no less than 125.
 Colortemplate mappings				*colortemplate-mappings*
 
 If you do not want Colortemplate to define any mapping, set
-|g:colortemplate_no_mappings|. Colortemplate also honours |g:no_plugin_maps|.
+|g:colortemplate_no_mappings| to |true|. Colortemplate also honours
+|g:no_plugin_maps|.
 
-Buffer-local mappings ~
-							*colortemplate-ga*
+Note that all mappings defined by Colortemplate are buffer-local.
+
+						*colortemplate-ga*
 [count]ga		If the cursor is on a `Color` line, display some
 			information about the given color, including [count]
 			best xterm approximations for the color.
 
-							*colortemplate-gl*
+						*colortemplate-gl*
 gl			Toggle the display of highlight group information
                         under the under the cursor. To choose what display to
                         use, set |g:colortemplate_higroup_popup| and
                         |g:colortemplate_higroup_command_line|.
 
-							*colortemplate-gs*
+						*colortemplate-gs*
 gs			Open the style picker. For this to work, you must
 			install the StylePicker plugin
 			(https://github.com/lifepillar/vim-stylepicker).
 
-							*colortemplate-gx*
+						*colortemplate-gx*
 [count]gx		If the cursor is on a `Color` line, replace `~` with
 			the [count]th best xterm approximation of the color.
 
-							*colortemplate-gy*
+						*colortemplate-gy*
 [count]gy		If the cursor is on a `Color` line, show the xterm
-			approximations of the color at distance at most
-			[count] from the GUI value in the command line.
+                        approximations of the color at perceptual distance
+                        (CIELAB ΔE*) at most [count] from the GUI value in the
+                        command line.
 
-							*colortemplate-ctrl-l*
+						*colortemplate-ctrl-l*
 CTRL-L			Show/redraw the window toolbar and redraw the screen.
 			Useful if the toolbar got hidden for some reason.
 
@@ -1115,6 +1163,18 @@ if the GUI version is chosen as the default, or
 <
 if the terminal version is chosen as the default.
 
+Italics is not managed by Colortemplate ~
+
+Colortemplate v2 would automatically generate code to support toggling italics
+via an option any time a highlight group had an "italic" attribute. Since
+detection of italics in terminals is not reliable, this feature has been
+removed. You may manage italics yourself using a discriminator. For example:
+>
+	#const italic = &t_ZH != '' && &t_ZH != '^[[7m'
+	; ...
+	Comment           gray  black
+	  /256+italic 1   omit  omit  s=omit  italic
+<
 The special color must appear before the style attributes ~
 
 This now raises an error:

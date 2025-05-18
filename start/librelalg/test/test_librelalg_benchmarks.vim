@@ -14,6 +14,8 @@ type Relation              = ra.Relation
 type Tuple                 = ra.Tuple
 
 const Int                  = ra.Int
+const Str                  = ra.Str
+const Float                = ra.Float
 const Recursive            = ra.Recursive
 const RelEq                = ra.RelEq
 const Select               = ra.Select
@@ -55,8 +57,6 @@ def Test_RA_Perf__RecursiveCount()
   assert_true(RelEq(expected, result))
 enddef
 
-
-
 def Test_RA_Perf__T1()
   var r0 = Rel.new('r0', {Node: Int, Next: Int}, [['Node']])
   var i = 0
@@ -81,5 +81,17 @@ def Test_RA_Perf__Insert()
   tt.AssertBenchmark(I, 'Insert', {repeat: 5})
 enddef
 
+def Test_RA_Perf__Lookup()
+  var r = Rel.new('r', {A: Int, B: Int, C: Float}, [['A'], ['B'], ['C']])
+  var n = 100000
+
+  for i in range(n)
+    r.Insert({A: i, B: 2 * i, C: i + 3.14})
+  endfor
+
+  tt.AssertBenchmark(() => {
+    r.Lookup(['A'], [rand() % n])
+  }, 'Lookup', {repeat: 5})
+enddef
 
 tt.Run('_RA_Perf__')

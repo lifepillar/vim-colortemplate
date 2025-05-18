@@ -1528,6 +1528,10 @@ def Test_RA_Lookup()
   assert_equal({A: 1, B: 'x'}, R.Lookup(['A'], [1]))
   assert_equal({A: 3, B: 'y'}, R.Lookup(['A'], [3]))
   assert_equal({A: 5, B: 'z'}, R.Lookup(['A'], [5]))
+
+  AssertFails(() => {
+    R.Lookup(['X'], [1])
+  }, 'not a key of R')
 enddef
 
 def Test_RA_Extend()

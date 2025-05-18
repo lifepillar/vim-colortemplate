@@ -648,11 +648,14 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def Lookup(key: AttrList, value: list<any>): Tuple
-    if key->IsNotIn(this.keys)
-      throw printf(E010, key, this.name)
-    endif
+    var idx: Index
 
-    var idx = this._key_indexes[String(key)]
+    try
+      idx = this._key_indexes[String(key)]
+    catch /^Vim\%((\a\+)\)\=:E716:/
+      throw printf(E010, key, this.name)
+    endtry
+
     var result = idx.Search(value)
 
     return empty(result) ? KEY_NOT_FOUND : result[0]

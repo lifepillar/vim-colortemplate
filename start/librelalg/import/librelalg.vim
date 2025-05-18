@@ -1099,13 +1099,13 @@ export def EquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
   var prefix    = get(opts, 'prefix', '_')
 
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
-    const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
-    const Cont = From(Arg1)
-    const rel: IRel = Arg2
+    var MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+    var Cont = From(Arg1)
+    var rel: IRel = Arg2
 
     return (Emit: Consumer) => {
       Cont((t: Tuple) => {
-        const u = rel.Lookup(rAttrList, Values(t, lAttrList))
+        var u = rel.Lookup(rAttrList, Values(t, lAttrList))
 
         if u isnot KEY_NOT_FOUND
           Emit(MergeTuples(t, u))
@@ -1114,7 +1114,7 @@ export def EquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
     }
   endif
 
-  const Pred = EquiJoinPred(lAttrList, rAttrList)
+  var Pred = EquiJoinPred(lAttrList, rAttrList)
 
   return Join(Arg1, Arg2, Pred, prefix)
 enddef
@@ -1789,9 +1789,13 @@ export def Recursive(
 enddef
 
 # Returns a textual representation of a relation
-export def Table(
-    R: any, name = null_string, columns: any = null, gap = 1, sep = '─'
-): string
+# export def Table(R: any, name = null_string, columns: any = null, gap = 1, sep = '─'): string
+export def Table(R: any, opts: dict<any> = {}): string
+  var name    = get(opts, 'name', null_string)
+  var columns = get(opts, 'columns', null_list)
+  var gap     = get(opts, 'gap', 1)
+  var sep     = get(opts, 'sep', '─')
+
   if strchars(sep) != 1
     throw printf(E300, sep)
   endif

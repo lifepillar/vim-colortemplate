@@ -671,6 +671,10 @@ export class Rel implements IRel, ICheckable, ITransactable
       throw printf(E100, TupleStr(t, this.keys[0]), this.name)
     endif
 
+    if u == t
+      return
+    endif
+
     Transaction(() => {
       this.Delete((v) => v == u)
       this.Insert(t)

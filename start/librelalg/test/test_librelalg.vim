@@ -399,6 +399,8 @@ def Test_RA_Upsert()
 
   R.Upsert({A: 2, B: 'y', C: true, D: 'd3'})     # Insert new tuple
   R.Upsert({A: 0, B: 'x', C: true, D: 'new-d1'}) # Update tuple
+  R.Upsert({A: 0, B: 'x', C: true, D: 'new-d1'}) # No-op
+  R.Upsert({A: 2, B: 'y', C: true, D: 'd3'})     # No-op
 
   const expected = [
     {A: 0, B: 'x', C: true, D: 'new-d1'},

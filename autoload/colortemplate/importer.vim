@@ -2,9 +2,10 @@ vim9script
 
 import 'librelalg.vim'     as ra
 import 'libcolor.vim'      as libcolor
-import './colorscheme.vim' as themes
+import '../../import/colortemplate/colorscheme.vim' as colorscheme
 
 const Extend            = ra.Extend
+const EquiJoin          = ra.EquiJoin
 const Max               = ra.Max
 const Select            = ra.Select
 const Sort              = ra.Sort
@@ -15,8 +16,7 @@ const Approximate       = libcolor.Approximate
 const CtermColorNumber  = libcolor.CtermColorNumber
 const RgbName2Hex       = libcolor.RgbName2Hex
 const Xterm2Hex         = libcolor.Xterm2Hex
-const NO_DISCR          = themes.DEFAULT_DISCR_VALUE
-type  Colorscheme       = themes.Colorscheme
+type  Colorscheme       = colorscheme.Colorscheme
 
 const ADJECTIVES = [
   'bald',
@@ -130,14 +130,14 @@ def CompareDistinct(s1: string, s2: string): number
 enddef
 
 def CompareByHiGroupName(t: dict<any>, u: dict<any>): number
-  if t.HiGroupName == u.HiGroupName
+  if t.HiGroup == u.HiGroup
     return 0
-  elseif t.HiGroupName == 'Normal'
+  elseif t.HiGroup == 'Normal'
     return -1
-  elseif u.HiGroupName == 'Normal'
+  elseif u.HiGroup == 'Normal'
     return 1
   else
-    return CompareDistinct(t.HiGroupName, u.HiGroupName)
+    return CompareDistinct(t.HiGroup, u.HiGroup)
   endif
 enddef
 
@@ -145,15 +145,15 @@ def Fatal(t: string)
   echohl Error
   echomsg '[Colortemplate]' t .. '.'
   echohl None
-  call interrupt()
+  interrupt()
 enddef
 
 def Shuffle(x: list<string>): list<string>
   for i in reverse(range(len(x) - 1))
-    const j = rand() % (i + 1)
-    const t = x[i]
-    x[i] = x[j]
-    x[j] = t
+    var j = rand() % (i + 1)
+    var t = x[i]
+    x[i]  = x[j]
+    x[j]  = t
   endfor
 
   return x
@@ -171,7 +171,7 @@ class NameGenerator
 
   def GetName(hex: string): string
     if !this._invmap->has_key(hex)
-      const name = this.NextColorName_()
+      var name = this.NextColorName_()
       this._colmap[name] = hex
       this._invmap[hex]  = name
     endif
@@ -202,8 +202,10 @@ endclass
 #                   links to StatusLine
 #
 # The second line would result in an empty name: that's why filter() is used.
+#
+# TODO: use hlget()
 def HiGroupNames(): list<string>
-  const names = split(execute('hi'), '\n')
+  var names = split(execute('hi'), '\n')
   return filter(mapnew(names, (_, v) => matchstr(v, "^\\S\\+")), (_, w) => !empty(w))
 enddef
 
@@ -247,7 +249,7 @@ enddef
 def GetColorValues(synid: number, kind: string): dict<string>
   var   gui   = synIDattr(synid, kind, 'gui')
   var   cterm = GetCtermColor(synid, kind)
-  const fail  = {GUIValue: '', Base256Value: '', Base256HexValue: '', Base16Value: ''}
+  const fail  = {GUI: '', Base256: '', Base256Hex: '', Base16: ''}
 
   if empty(gui) && empty(cterm)
     return fail
@@ -283,7 +285,7 @@ def GetColorValues(synid: number, kind: string): dict<string>
     base16 = ''
   endif
 
-  return {GUIValue: gui, Base256Value: base256, Base256HexValue: base256Hex, Base16Value: base16}
+  return {GUI: gui, Base256: base256, Base256Hex: base256Hex, Base16: base16}
 enddef
 
 const ATTRIBUTES = [
@@ -313,11 +315,11 @@ def GetAttributes(synid: number, mode: string): string
 enddef
 
 class Importer
-  var theme: Colorscheme
-  var background: string
+  var theme:          Colorscheme
+  var background:     string
   var _nameGenerator: NameGenerator
-  var _hiGroupWidth: number = 0 # Maximum length of a highlight group's name
-  var _colorWidth: number = 0 # Maximum length of a color name
+  var _hiGroupWidth:  number = 0 # Maximum length of a highlight group's name
+  var _colorWidth:    number = 0 # Maximum length of a color name
 
   def new()
     this.theme                              = Colorscheme.new()
@@ -326,19 +328,19 @@ class Importer
     this.theme.fullname                     = get(g:, 'colors_name', '')
     this.theme.shortname                    = get(g:, 'colors_name', '')
     this.theme.author->add('Colortemplate')
-    this.theme.variants                     = ['gui', '256', '0']
+    this.theme.environments                 = ['gui', '256', '0']
     this._nameGenerator                     = NameGenerator.new()
   enddef
 
   def AddColor_(id: number, kind: string): string
     var t = GetColorValues(id, kind)
 
-    if !empty(t.GUIValue)
-      const colorName = this._nameGenerator.GetName(t.GUIValue)
+    if !empty(t.GUI)
+      const colorName = this._nameGenerator.GetName(t.GUI)
       var db = this.theme.Db(this.background)
 
-      if empty(db.Color.Lookup(['ColorName'], [colorName]))
-        db.Color.Insert({ColorName: colorName}->extend(t))
+      if empty(db.Color.Lookup(['Name'], [colorName]))
+        db.Color.Insert({Name: colorName}->extend(t))
       endif
 
       return colorName
@@ -366,7 +368,10 @@ class Importer
         const ctermAttributes = GetAttributes(id, 'cterm')
         const termAttributes  = GetAttributes(id, 'term')
 
-        db.InsertDefaultBaseGroup(
+        db.InsertBaseGroup(
+          'default', # Environment
+          '',        # DiscrName
+          '',        # DiscrValue
           hiGroupName,
           fgColorName,
           bgColorName,
@@ -375,9 +380,10 @@ class Importer
         )
 
         if ctermAttributes != guiAttributes
-          db.InsertBaseGroupOverride(
+          db.InsertBaseGroup(
             '256',
-            NO_DISCR,
+            '',
+            ''
             hiGroupName,
             fgColorName,
             bgColorName,
@@ -387,9 +393,10 @@ class Importer
         endif
 
         if termAttributes != guiAttributes
-          db.InsertBaseGroupOverride(
+          db.InsertBaseGroup(
             '0',
-            NO_DISCR,
+            '',
+            '',
             hiGroupName,
             '',
             '',
@@ -401,7 +408,10 @@ class Importer
         const hiGroupName = synIDattr(id, 'name')
         const targetGroup = synIDattr(trid, 'name')
 
-        db.InsertDefaultLinkedGroup(
+        db.InsertLinkedGroup(
+          'default',
+          '',
+          '',
           hiGroupName,
           targetGroup
         )
@@ -415,15 +425,15 @@ class Importer
 
         db.termcolors->add(colorName)
 
-        if empty(db.Color.Lookup(['ColorName'], [colorName]))
+        if empty(db.Color.Lookup(['Name'], [colorName]))
           const approx = Approximate(hex)
           const t = {
-            GUIValue: hex,
-            Base256Value: string(approx.xterm),
-            Base256HexValue: approx.hex,
-            Base16Value: ''
+            GUI:        hex,
+            Base256:    string(approx.xterm),
+            Base256Hex: approx.hex,
+            Base16:     ''
           }
-          db.Color.Insert({ColorName: colorName}->extend(t))
+          db.Color.Insert({Name: colorName}->extend(t))
         endif
       endfor
     endif
@@ -436,7 +446,7 @@ class Importer
     const db = this.theme.Db(this.background)
     const n = db.HiGroup
       ->Extend((t) => {
-        return {Length: len(t.HiGroupName)}
+        return {Length: len(t.HiGroup)}
       })
       ->Max('Length')
 
@@ -447,7 +457,7 @@ class Importer
     const db = this.theme.Db(this.background)
     const n = db.Color
       ->Extend((t) => {
-        return {Length: len(t.ColorName)}
+        return {Length: len(t.Name)}
       })
       ->Max('Length')
 
@@ -492,9 +502,9 @@ class Importer
     const db = this.theme.Db(this.background)
 
     var output = db.Color
-      ->Select((t) => t.ColorName->NotIn(['', 'fg', 'bg', 'none']))
+      ->Select((t) => t.Name->NotIn(['', 'fg', 'bg', 'none']))
       ->Transform(
-      (t) => printf('Color: %s %s %s', t.ColorName, t.GUIValue, t.Base256Value)
+      (t) => printf('Color: %s %s %s', t.Name, t.GUI, t.Base256)
     )
     output += [
       '',
@@ -510,9 +520,9 @@ class Importer
     var format = printf('%%-%ds -> %%s', this._hiGroupWidth)
 
     output += db.LinkedGroup
-      ->SortBy('HiGroupName')
+      ->SortBy('HiGroup')
       ->Transform(
-      (t) => printf(format, t.HiGroupName, t.TargetGroup)
+      (t) => printf(format, t.HiGroup, t.TargetGroup)
     )
 
     output->add('')
@@ -524,7 +534,7 @@ class Importer
       ->Sort(CompareByHiGroupName)
       ->Transform(
         (t) => printf(format,
-        t.HiGroupName,
+        t.HiGroup,
         t.Fg,
         t.Bg,
         empty(t.Special) || t.Special == 'none' ? '' : 's=' .. t.Special,
@@ -541,17 +551,20 @@ class Importer
       this._hiGroupWidth - 5, this._colorWidth, this._colorWidth, this._colorWidth + 2
     )
 
-    output += db.BaseGroupOverride
-      ->Select((t) => t.Variant == '256')
-      ->Sort(CompareByHiGroupName)
-      ->Transform(
-        (t) => printf(format,
-        t.HiGroupName,
+    output += EquiJoin(
+      db.BaseGroup,
+      db.Condition->Select((t) => t.Environment == '256'),
+      {on: 'Condition'}
+    )
+    ->Sort(CompareByHiGroupName)
+    ->Transform(
+      (t) => printf(format,
+        t.HiGroup,
         t.Fg,
         t.Bg,
         empty(t.Special) || t.Special == 'none' ? '' : 's=' .. t.Special,
         t.Style)
-      )
+    )
 
     return output
   enddef
@@ -563,10 +576,13 @@ class Importer
       this._hiGroupWidth - 3, this._colorWidth, this._colorWidth, this._colorWidth + 2
     )
 
-    output += db.BaseGroupOverride
-      ->Select((t) => t.Variant == '0')
-      ->Sort(CompareByHiGroupName)
-      ->Transform((t) => printf(format, t.HiGroupName, 'omit', 'omit', '', t.Style))
+    output += EquiJoin(
+      db.BaseGroup,
+      db.Condition->Select((t) => t.Environment == '0'),
+      {on: 'Condition'}
+    )
+    ->Sort(CompareByHiGroupName)
+    ->Transform((t) => printf(format, t.HiGroup, 'omit', 'omit', '', t.Style))
 
     return output
   enddef

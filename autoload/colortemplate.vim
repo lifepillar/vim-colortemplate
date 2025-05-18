@@ -1,15 +1,11 @@
 vim9script
 
-import 'libpath.vim'                     as path
-import 'libparser.vim'                   as libparser
-import './colortemplate/colorscheme.vim' as themes
-import './colortemplate/parser.vim'      as parser
-import './colortemplate/generator.vim'   as gen
-import './colortemplate/colorstats.vim'  as stats
+import 'libpath.vim'                    as path
+import '../import/libcolortemplate.vim' as lib
+import '../import/colortemplate/generator/dummy.vim' as dummygenerator
 
-type Colorscheme = themes.Colorscheme
-type Result      = libparser.Result
-type Generator   = gen.Generator
+type Colorscheme = lib.Colorscheme
+type Result      = lib.ParserResult
 
 # Cache for generated color schemes
 var theme_cache: dict<Colorscheme>
@@ -58,21 +54,20 @@ def IsColortemplateBuffer(bufname: string): bool
   return getbufvar(bufname, '&ft') == 'colortemplate'
 enddef
 
-# export def RegisterBackend(generator: IGenerator)
-# enddef
-
-def CheckMetadata(theme: Colorscheme)
+def CheckMetadata(theme: Colorscheme): bool
   if empty(theme.fullname)
-    throw 'Please define the full name of the color scheme'
+    return Error('Please define the full name of the color scheme')
   endif
 
   if empty(theme.shortname)
-    throw 'Please define the short name of the color scheme'
+    return Error('Please define the short name of the color scheme')
   endif
 
   if empty(theme.author)
-    throw 'Please define the author of the color scheme'
+    return Error('Please define the author of the color scheme')
   endif
+
+  return true
 enddef
 
 def WriteFile(filePath: string, content: list<string>, overwrite: bool = false): bool
@@ -220,7 +215,11 @@ endclass
 # }}}
 
 # Public {{{
-export const toolbar = Toolbar.new()
+const toolbar = Toolbar.new()
+
+export def GetToolbar(): Toolbar
+  return toolbar
+enddef
 
 export def ColorTest(bufnr: number)
   ShowColorscheme(bufnr)
@@ -332,7 +331,13 @@ enddef
 # }}}
 
 # Main {{{
-export def Build(bufnr: number, outdir: string = '', bang: string = '', parseOnly = false): bool
+export def Build(
+    bufnr:     number,
+    outdir:    string        = '',
+    bang:      string        = '',
+    parseOnly: bool          = false,
+    generator: lib.Generator = dummygenerator.Generator.new()
+    ): bool
   if !IsColortemplateBuffer(bufname(bufnr))
     return Error('Command can be executed only on Colortemplate buffers')
   endif
@@ -346,11 +351,11 @@ export def Build(bufnr: number, outdir: string = '', bang: string = '', parseOnl
     return Error('Output directory not set: please set b:colortemplate_outdir')
   endif
 
-  Notice(printf('Building%s…', empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)))
+  Notice('Building' .. (empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)) .. '…')
 
-  const startTime = reltime()
-  const [result: Result, theme: Colorscheme] = parser.Parse(text, path.Parent(inputPath))
-  const elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
+  var startTime = reltime()
+  var [result: Result, theme: Colorscheme] = lib.Parse(text, path.Parent(inputPath))
+  var elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
 
   if !result.success
     ReportError(result, bufnr)
@@ -364,14 +369,15 @@ export def Build(bufnr: number, outdir: string = '', bang: string = '', parseOnl
     return true
   endif
 
-  CheckMetadata(theme)
+  if !CheckMetadata(theme)
+    return false
+  endif
 
-  const startGen       = reltime()
-  const generator      = Generator.new(theme)
-  const content        = generator.Generate()
-  const elapsedGen     = 1000.0 * reltimefloat(reltime(startGen))
-  const name           = theme.shortname .. '.vim'
-  const filePath       = path.Join(outputDir, 'colors', name)
+  var startGen   = reltime()
+  var content    = generator.Generate(theme)
+  var elapsedGen = 1000.0 * reltimefloat(reltime(startGen))
+  var name       = theme.shortname .. '.vim'
+  var filePath   = path.Join(outputDir, 'colors', name)
 
   if !WriteFile(filePath, content, overwrite)
     return false
@@ -442,7 +448,7 @@ export def Stats()
   const nr = bufnr()
 
   if IsCached(nr) || Build(nr, null_string, null_string, true)
-    stats.ColorStats(CachedTheme(nr))
+    lib.ColorStats(CachedTheme(nr))
   endif
 enddef
 # }}}

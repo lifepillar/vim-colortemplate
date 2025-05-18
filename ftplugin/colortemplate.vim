@@ -54,7 +54,7 @@ enddef
 g:InitOutputDir()
 
 if !get(g:, 'colortemplate_no_mappings', get(g:, 'no_plugin_maps', 0))
-  nnoremap <silent> <buffer> <c-l> <scriptcmd>colortemplate.toolbar.Show()<cr><c-l>
+  nnoremap <silent> <buffer> <c-l> <scriptcmd>colortemplate.GetToolbar().Show()<cr><c-l>
   nnoremap <silent> <buffer> ga    <scriptcmd>util.GetColorInfo(v:count1)<cr>
   nnoremap <silent> <buffer> gl    <scriptcmd>util.ToggleHighlightInfo()<cr>
   nnoremap <silent> <buffer> gx    <scriptcmd>util.ApproximateColor(v:count1)<cr>
@@ -83,11 +83,11 @@ augroup END
 
 if get(g:, 'colortemplate_toolbar', true) && has('menu')
   augroup colortemplate
-    autocmd BufEnter,WinEnter *.colortemplate colortemplate.toolbar.Show()
-    autocmd BufLeave,WinLeave *.colortemplate colortemplate.toolbar.Hide()
+    autocmd BufEnter,WinEnter *.colortemplate colortemplate.GetToolbar().Show()
+    autocmd BufLeave,WinLeave *.colortemplate colortemplate.GetToolbar().Hide()
   augroup END
 endif
 
-colortemplate.toolbar.Show()
+colortemplate.GetToolbar().Show()
 
 # vim: foldmethod=marker nowrap et ts=2 sw=2

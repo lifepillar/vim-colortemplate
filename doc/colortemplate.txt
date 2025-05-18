@@ -1,4 +1,4 @@
-*colortemplate.txt*	For Vim version 9.1	Last change: 2025 May 4
+*colortemplate.txt*	For Vim version 9.1	Last change: 2025 May 16
 
 	  .,-:::::     ...      :::         ...    :::::::.. :::::::::::: ~
 	,;;;'````'  .;;;;;;;.   ;;;      .;;;;;;;. ;;;;``;;;;;;;;;;;;'''' ~
@@ -21,7 +21,7 @@ CONTENTS					*ft-colortemplate*
 
     1. Getting started ...... |colortemplate-quickstart|
     2. Templates' structure . |colortemplate-structure|
-    3. Metadata block ....... |colortemplate-meta|
+    3. Metadata ............. |colortemplate-meta|
     4. Backgrounds .......... |colortemplate-background|
     5. Variants ............. |colortemplate-variants|
     6. Color definitions .... |colortemplate-colors|
@@ -123,7 +123,7 @@ templates, set the modeline in your template to
 or save your template with a `.colortemplate` suffix.
 
 ==============================================================================
-Templates' structure				*colortemplate-structure*
+Template's structure				*colortemplate-structure*
 
 A template consists of:
 
@@ -142,8 +142,7 @@ Include directives allow you to import template code from other files. See
 |colortemplate-include|.
 
 Colors and highlight groups define how your color scheme looks like. They may
-appear in almost any order, provided that the following two constraints are
-satisfied:
+appear in almost any order. The following two constraints must be satisfied:
 
 - a color must be defined before it is mentioned in a highlight group;
 - a default highlight group definition must appear before any variant-specific
@@ -158,7 +157,7 @@ Finally, line comments may appear anywhere: they start with a semicolon and
 they are ignored by Colortemplate.
 
 ==============================================================================
-Metadata block					*colortemplate-meta*
+Metadata					*colortemplate-meta*
 
 Information about a color scheme consists of the following mandatory and
 optional fields, usually appearing at the top of your template:
@@ -226,8 +225,8 @@ Backgrounds              	 		*colortemplate-background*
 
 A template must specify whether color definitions and highlight group
 definitions apply to a dark background, to a light background or to any
-background. This can be done with a `Background` directive, which may have one
-of three values:
+background. This can be done with a special metadata directive, which may have
+one of three values:
 >
 	Background: dark
 	Background: light
@@ -245,10 +244,10 @@ scheme will have a command to set it accordingly, e.g.:
 If the template uses both backgrounds then the generated color scheme will
 have this structure:
 >
-	if &background ==# 'dark'
-	  " Dark variant of the color scheme
+	if &background == 'dark'
+	  # Dark variant of the color scheme
 	else
-	  " Light variant of the color scheme
+	  # Light variant of the color scheme
 	endif
 <
 ==============================================================================
@@ -332,7 +331,7 @@ Base Highlight Groups ~
 Default highlight group definitions consist of lines having the following
 syntax:
 >
-	<Group name> <fg color> <bg color> [<sp color> <style attributes>]
+	<Group name> <fg> <bg> [s=<special> <style attributes>]
 <
 In order:
 
@@ -340,7 +339,7 @@ In order:
 - the name of the foreground color;
 - the name of the background color;
 - (optional) the name of the special color;
-- (optional) style attributes (see |attr-list|).
+- (optional) style attributes as in |attr-list|.
 
 For example:
 >
@@ -466,8 +465,8 @@ group uses only a discriminator, it is not immediately clear how the two
 definitions interact. Consider the following example:
 >
         Variants: gui 256
-	Normal              white        black   ; Default definition
-	Normal+transp_bg 1  white        none    ; Override 1
+	Normal              white       black    ; Default definition
+	Normal+transp_bg 1  white       none     ; Override 1
         Normal/256          lightgrey   darkblue ; Override 2
 <
 How will the color scheme appear in 256-color terminals when `transp_bg` is

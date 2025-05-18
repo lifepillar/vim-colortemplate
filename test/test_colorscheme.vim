@@ -1,154 +1,268 @@
 vim9script
 
-import 'libtinytest.vim'                           as tt
-import '../autoload/colortemplate/parser.vim'      as parser
-import '../autoload/colortemplate/colorscheme.vim' as themes
+import 'librelalg.vim'                           as ra
+import 'libtinytest.vim'                         as tt
+import '../import/colortemplate/colorscheme.vim' as colorscheme
 
-const Parse       = parser.Parse
-const NO_DISCR    = themes.DEFAULT_DISCR_VALUE
-type  Colorscheme = themes.Colorscheme
+type Colorscheme = colorscheme.Colorscheme
+type Database    = colorscheme.Database
 
-def Test_CS_GetVariantMetadata()
-  const template =<< trim END
-  Background: dark
-  Variants: gui 256
-  Color: black #333333 231 black
-  Color: white #fafafa 250 white
-  END
+const KEY_NOT_FOUND = colorscheme.KEY_NOT_FOUND
 
-  const [_, theme: Colorscheme] = Parse(join(template, "\n"))
-  const db = theme.dark
-  const metaGUI = db.GetVariantMetadata('gui')
-  const meta256 = db.GetVariantMetadata('256')
+const Count      = ra.Count
+const Project    = ra.Project
+const Query      = ra.Query
+const RelEq      = ra.RelEq
+const Select     = ra.Select
+const SortBy     = ra.SortBy
+const Transform  = ra.Transform
 
-  assert_true(metaGUI.Colors->has_key('black'))
-  assert_true(metaGUI.Colors->has_key('white'))
-  assert_equal('#333333',      metaGUI.Colors['black'])
-  assert_equal('#fafafa',      metaGUI.Colors['white'])
-  assert_equal('gui',          metaGUI.Variant)
-  assert_equal(16777216,       metaGUI.NumColors)
-  assert_equal('GUIValue',     metaGUI.ColorAttr)
-  assert_equal('guifg',        metaGUI.Fg)
-  assert_equal('guibg',        metaGUI.Bg)
-  assert_equal('gui',          metaGUI.Style)
-  assert_equal('font',         metaGUI.Font)
 
-  assert_true(meta256.Colors->has_key('black'))
-  assert_true(meta256.Colors->has_key('white'))
-  assert_equal('231',          meta256.Colors['black'])
-  assert_equal('250',          meta256.Colors['white'])
-  assert_equal('256',          meta256.Variant)
-  assert_equal(256,            meta256.NumColors)
-  assert_equal('Base256Value', meta256.ColorAttr)
-  assert_equal('ctermfg',      meta256.Fg)
-  assert_equal('ctermbg',      meta256.Bg)
-  assert_equal('cterm',        meta256.Style)
-  assert_equal('',             meta256.Font)
+def Test_Colorscheme_DatabaseBackground()
+  var db1 = Database.new('dark')
+  var db2 = Database.new('light')
+
+  assert_equal('dark',  db1.background)
+  assert_equal('light', db2.background)
+
+  tt.AssertFails(() => {
+    var db3 = Database.new('foobar')
+    }, 'Invalid background')
 enddef
 
-def Test_CS_HiGroupDef()
-  const template =<< trim END
-  Background: dark
-  Variants: gui 256
-  Color: black #333333 231 black
-  Color: white #fafafa 251 white
-  Normal white black
-  Comment black white reverse
-     /256 white black s=white bold
-  #const foobar = "X"
-  Comment+foobar "X" white white
-  Comment+foobar "Y" -> NonText
-  END
+def Test_Colorscheme_Database()
+  var db = Database.new('dark')
 
-  const [_, theme: Colorscheme] = Parse(join(template, "\n"))
-  const db = theme.dark
-  const t0 = db.HiGroupDef('Normal', 'gui')
-  const t1 = db.HiGroupDef('Comment', 'gui')
-  const t2 = db.HiGroupDef('Comment', '256')
-  const t3 = db.HiGroupDef('Comment', '256', '"X"')
-  const t4 = db.HiGroupDef('Comment', 'gui', '"Y"')
-
-  assert_false(empty(t0))
-  assert_equal('Normal', t0.HiGroupName)
-  assert_equal('black',  t0.Bg)
-  assert_equal('white',  t0.Fg)
-  assert_equal('none',   t0.Special)
-  assert_equal('NONE',   t0.Style)
-  assert_false(empty(t1))
-  assert_equal('Comment', t1.HiGroupName)
-  assert_equal('white',   t1.Bg)
-  assert_equal('black',   t1.Fg)
-  assert_equal('none',    t1.Special)
-  assert_equal('reverse', t1.Style)
-  assert_false(empty(t2))
-  assert_equal('Comment', t2.HiGroupName)
-  assert_equal('black',   t2.Bg)
-  assert_equal('white',   t2.Fg)
-  assert_equal('white',   t2.Special)
-  assert_equal('bold',    t2.Style)
-  assert_false(empty(t3))
-  assert_equal('Comment', t3.HiGroupName)
-  assert_equal('white',   t3.Bg)
-  assert_equal('white',   t3.Fg)
-  assert_equal('none',    t3.Special)
-  assert_equal('NONE',    t3.Style)
-  assert_false(empty(t4))
-  assert_equal('Comment', t4.HiGroupName)
-  assert_equal('NonText', t4.TargetGroup)
+  # The default environment must be defined
+  assert_equal(
+    'default',
+    db.Environment.Lookup(['Environment'], ['default']).Environment
+  )
+  # Aliases for colors must be predefined
+  assert_equal(['', 'bg', 'fg', 'none'],
+    db.Color->Project('Name')->SortBy('Name')->Transform((t) => t.Name)
+  )
+  # A default empty discriminator must be predefined
+  assert_equal(
+    [{DiscrName: '', Definition: '', DiscrNum: 0}],
+    db.Discriminator.Instance()
+  )
+  # A default condition must be predefined
+  assert_equal(
+    [{Condition: 0, Environment: 'default', DiscrName: '', DiscrValue: ''}],
+    db.Condition.Instance()
+  )
 enddef
 
-def Test_CS_SingleDefMultipleVariants()
-  const template =<< trim END
-    Background: dark
-    #const italic = get(g:, 'italic', 1)
-    Color: grey            rgb(146, 131, 116)    102 DarkGray
-    Color: fg4             rgb(168, 153, 132)    137 Gray
-    Comment                              grey   none          italic
-                 /gui/256   +italic 0    grey   none
-                 /8                      fg4    grey          italic
-                 /8         +italic 0    omit   omit s=omit
-  END
-  const [_, theme: Colorscheme] = Parse(join(template, "\n"))
-  const db = theme.dark
-  const t0 = db.HiGroupDef('Comment', 'gui')
-  const t1 = db.HiGroupDef('Comment', 'gui', '0')
-  const t2 = db.HiGroupDef('Comment', '256')
-  const t3 = db.HiGroupDef('Comment', '256', '0')
-  const t4 = db.HiGroupDef('Comment', '8')
-  const t5 = db.HiGroupDef('Comment', '8', '0')
+def Test_Colorscheme_InsertLinkedGroup()
+  var db = Database.new('dark')
 
-  assert_equal('Comment', t0.HiGroupName)
-  assert_equal('grey',    t0.Fg)
-  assert_equal('none',    t0.Bg)
-  assert_equal('none',    t0.Special)
-  assert_equal('italic',  t0.Style)
-  assert_equal('Comment', t1.HiGroupName)
-  assert_equal('grey',    t1.Fg)
-  assert_equal('none',    t1.Bg)
-  assert_equal('none',    t1.Special)
-  assert_equal('NONE',    t1.Style)
-  assert_equal('Comment', t2.HiGroupName)
-  assert_equal('grey',    t2.Fg)
-  assert_equal('none',    t2.Bg)
-  assert_equal('none',    t2.Special)
-  assert_equal('italic',  t2.Style)
-  assert_equal('Comment', t3.HiGroupName)
-  assert_equal('grey',    t3.Fg)
-  assert_equal('none',    t3.Bg)
-  assert_equal('none',    t3.Special)
-  assert_equal('NONE',    t3.Style)
-  assert_equal('Comment', t4.HiGroupName)
-  assert_equal('fg4',     t4.Fg)
-  assert_equal('grey',    t4.Bg)
-  assert_equal('none',    t4.Special)
-  assert_equal('italic',  t4.Style)
-  assert_equal('Comment', t5.HiGroupName)
-  assert_equal('',        t5.Fg)
-  assert_equal('',        t5.Bg)
-  assert_equal('',        t5.Special)
-  assert_equal('NONE',    t5.Style)
+  assert_equal([], db.HighlightGroup.Instance())
+  assert_equal([], db.HighlightGroupDef.Instance())
+  assert_equal([], db.LinkedGroup.Instance())
+
+  db.InsertLinkedGroup('default', '', '', 'Comment', 'String')
+
+  assert_true(RelEq(
+    [{HiGroup: 'Comment', DiscrName: ''}],
+    db.HighlightGroup.Instance()
+  ), '01')
+
+  assert_true(RelEq(
+    [{HiGroup: 'Comment', Condition: 0, IsLinked: true}],
+    db.HighlightGroupDef.Instance()
+  ), '02')
+
+  assert_true(RelEq(
+    [{HiGroup: 'Comment', Condition: 0, TargetGroup: 'String'}],
+    db.LinkedGroup.Instance()
+  ), '03')
+
+  tt.AssertFails(() => {
+    db.InsertLinkedGroup('default', 'titled', 'true', 'Comment', 'Title')
+  }, 'Referential integrity failed') # 'titled' discriminator is undefined
+
+  db.InsertDiscriminator('titled', 'def goes here')
+  db.InsertLinkedGroup('default', 'titled', 'true', 'Comment', 'Title')
+
+  assert_true(RelEq([
+    {HiGroup: 'Comment', DiscrName: 'titled'}],
+    db.HighlightGroup.Instance()
+  ), '04')
+
+  assert_true(RelEq([
+    {HiGroup: 'Comment', Condition: 0, IsLinked: true},
+    {HiGroup: 'Comment', Condition: 1, IsLinked: true},
+  ],
+    db.HighlightGroupDef.Instance()
+  ), '05')
+
+  assert_true(RelEq([
+    {HiGroup: 'Comment', Condition: 0, TargetGroup: 'String'},
+    {HiGroup: 'Comment', Condition: 1, TargetGroup: 'Title'},
+  ],
+    db.LinkedGroup.Instance()
+  ), '06')
+
+  tt.AssertFails(() => {
+    db.InsertLinkedGroup('default', 'foobar', 'xyz', 'Comment', 'String')
+  }, 'Inconsistent discriminator') # Cannot have more than one discriminator per highlight group
+enddef
+
+def Test_Colorscheme_InsertBaseGroup()
+  var db = Database.new('light')
+
+  assert_equal([], db.HighlightGroup.Instance())
+  assert_equal([], db.HighlightGroupDef.Instance())
+  assert_equal([], db.BaseGroup.Instance())
+
+  db.InsertBaseGroup('default', '', '', 'Normal', 'fg', 'bg', 'none', 'bold')
+
+  assert_true(RelEq([
+    {HiGroup: 'Normal', DiscrName: ''}],
+    db.HighlightGroup.Instance()
+  ), '01')
+
+  assert_true(RelEq([
+    {HiGroup: 'Normal', Condition: 0, IsLinked: false},
+  ],
+    db.HighlightGroupDef.Instance()
+  ), '02')
+
+  assert_equal([{
+    HiGroup:   'Normal',
+    Condition:  0,
+    Fg:        'fg',
+    Bg:        'bg',
+    Special:   'none',
+    Style:     'bold',
+    Font:      '',
+    Start:     '',
+    Stop:      '',
+  }],
+    db.BaseGroup.Instance()
+  )
+enddef
+
+def Test_Colorscheme_InsertionOrder()
+  # It is possible to insert highlight group definitions in any order
+  var db = Database.new('dark')
+
+  db.InsertDiscriminator('italic', 'def goes here')
+  db.InsertBaseGroup('256',      '',       '',     'String', 'fg', 'bg',   '',     ''      )
+  db.InsertBaseGroup('16',       'italic', 'true', 'String', 'fg', 'bg',   '',     'italic')
+  db.InsertBaseGroup('default',  '',       '',     'String', 'fg', 'none', 'none', 'bold'  )
+
+  assert_equal(3, Count(db.Condition))
+
+  assert_true(RelEq([
+    {Condition: 0, Environment: 'default', DiscrName: '',       DiscrValue: ''    },
+    {Condition: 1, Environment: '256',     DiscrName: '',       DiscrValue: ''    },
+    {Condition: 2, Environment: '16',      DiscrName: 'italic', DiscrValue: 'true'},
+  ],
+  db.Condition.Instance()
+  ))
+
+  assert_true(RelEq([
+    {
+      HiGroup:   'String',
+      Condition:  0,
+      Fg:        'fg',
+      Bg:        'none',
+      Special:   'none',
+      Style:     'bold',
+      Font:      '',
+      Start:     '',
+      Stop:      '',
+    },
+    {
+      HiGroup:   'String',
+      Condition:  1,
+      Fg:        'fg',
+      Bg:        'bg',
+      Special:   '',
+      Style:     '',
+      Font:      '',
+      Start:     '',
+      Stop:      '',
+    },
+    {
+      HiGroup:   'String',
+      Condition:  2,
+      Fg:        'fg',
+      Bg:        'bg',
+      Special:   '',
+      Style:     'italic',
+      Font:      '',
+      Start:     '',
+      Stop:      '',
+    },
+  ],
+  db.BaseGroup.Instance()
+  ), $'Unexpectedly, got {db.BaseGroup.Instance()}')
+enddef
+
+def Test_Colorscheme_HiGroupDef()
+  var db = Database.new('dark')
+
+  db.InsertDiscriminator('italic', 'def goes here')
+  db.InsertBaseGroup('256',      '',       '',     'String', 'fg', 'bg',   '',     ''      )
+  db.InsertBaseGroup('16',       'italic', 'true', 'String', 'fg', 'bg',   '',     'italic')
+  db.InsertBaseGroup('default',  '',       '',     'String', 'fg', 'none', 'none', 'bold'  )
+  db.InsertLinkedGroup('8', '', '', 'String', 'Title')
+
+  assert_equal({
+    HiGroup:   'String',
+    Condition:  0,
+    Fg:        'fg',
+    Bg:        'none',
+    Special:   'none',
+    Style:     'bold',
+    Font:      '',
+    Start:     '',
+    Stop:      ''
+    },
+    db.HiGroupDef('String', 'default'), '01'
+  )
+  assert_equal({
+    HiGroup:   'String',
+    Condition:  1,
+    Fg:        'fg',
+    Bg:        'bg',
+    Special:   '',
+    Style:     '',
+    Font:      '',
+    Start:     '',
+    Stop:      ''
+    },
+    db.HiGroupDef('String', '256'), '02'
+  )
+  assert_equal({
+    HiGroup:   'String',
+    Condition:  2,
+    Fg:        'fg',
+    Bg:        'bg',
+    Special:   '',
+    Style:     'italic',
+    Font:      '',
+    Start:     '',
+    Stop:      ''
+    },
+    db.HiGroupDef('String', '16', 'italic', 'true'), '03'
+  )
+  assert_equal({
+    HiGroup:    'String',
+    Condition:   3,
+    TargetGroup: 'Title',
+    },
+    db.HiGroupDef('String', '8'), '04'
+  )
+
+  assert_true(db.HiGroupDef('String', '8', 'italic', 'true') is KEY_NOT_FOUND)
+  assert_true(db.HiGroupDef('String', '8', 'italic', 'false') is KEY_NOT_FOUND)
+  assert_true(db.HiGroupDef('String', 'default', 'italic', 'true') is KEY_NOT_FOUND)
+  assert_true(db.HiGroupDef('String', '16') is KEY_NOT_FOUND)
 enddef
 
 
-tt.Run('_CS_')
-
+tt.Run('_Colorscheme_')

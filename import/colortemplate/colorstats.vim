@@ -2,10 +2,9 @@ vim9script
 
 import 'libcolor.vim'      as libcolor
 import 'librelalg.vim'     as ra
-import './colorscheme.vim' as themes
+import './colorscheme.vim' as colorscheme
 
-type Colorscheme           = themes.Colorscheme
-const NO_DISCR             = themes.DEFAULT_DISCR_VALUE
+type Colorscheme           = colorscheme.Colorscheme
 
 const BrightnessDifference = libcolor.BrightnessDifference
 const ColorDifference      = libcolor.ColorDifference
@@ -39,25 +38,34 @@ enddef
 
 # Print details about the color palette for the specified background
 def SimilarityTable(theme: Colorscheme, background: string): list<string>
-  const db     = theme.Db(background)
-  const colors = db.Color
-    ->Select((t) => index(['', 'none', 'fg', 'bg'], t.ColorName) == -1)
+  var db     = theme.Db(background)
+  var colors = db.Color
+    ->Select((t) => index(['', 'none', 'fg', 'bg'], t.Name) == -1)
     ->Extend((t) => {
-      const rgbGui = Hex2Rgb(t.GUIValue)
-      const rgbTerm = Hex2Rgb(t.Base256HexValue)
+      var rgbGui  = Hex2Rgb(t.GUI)
+      var rgbTerm = Hex2Rgb(t.Base256Hex)
       return {
-            \ 'GUI RGB':  printf('(%3d, %3d, %3d)', rgbGui[0], rgbGui[1], rgbGui[2]),
-            \ 'Xterm RGB': printf('(%3d, %3d, %3d)', rgbTerm[0], rgbTerm[1], rgbTerm[2]),
-            \ 'DeltaValue': PerceptualDifference(t.GUIValue, t.Base256HexValue),
-            \ 'Delta':    printf('%.6f', PerceptualDifference(t.GUIValue, t.Base256HexValue))
-            \ }
+        'GUI RGB':    printf('(%3d, %3d, %3d)', rgbGui[0], rgbGui[1], rgbGui[2]),
+        'Xterm RGB':  printf('(%3d, %3d, %3d)', rgbTerm[0], rgbTerm[1], rgbTerm[2]),
+        'DeltaValue': PerceptualDifference(t.GUI, t.Base256Hex),
+        'Delta':      printf('%.6f', PerceptualDifference(t.GUI, t.Base256Hex))
+      }
     })
     ->Sort((t, u): number => Cmp(t.DeltaValue, u.DeltaValue))
 
   var output = [printf('{{{ Color Similarity Table (%s)', background)]
-  output += split(Table(
-    colors, null_string, ['ColorName', 'GUIValue', 'GUI RGB', 'Base256Value', 'Xterm RGB', 'Delta'], 2
-  ), '\n')
+
+  output += split(Table(colors, {
+    columns: [
+      'ColorName',
+      'GUIValue',
+      'GUI RGB',
+      'Base256Value',
+      'Xterm RGB',
+      'Delta'
+    ],
+    gap: 2,
+  }), '\n')
   output->add('}}} Color Similarity Table')
 
   return output
@@ -65,54 +73,54 @@ enddef
 
 # Info about fg/bg pairs with low contrast
 def CriticalPairs(theme: Colorscheme, background: string, gui: bool): list<string>
-  const db        = theme.Db(background)
-  const variant   = gui ? 'gui'      : '256'
-  const colorAttr = gui ? 'GUIValue' : 'Base256HexValue'
-  const report    = gui ? 'gui'      : 'terminal'
-
-  const variantDefault = Query(db.BaseGroupOverride
-    ->Select((t) => t.Variant == variant && t.DiscrValue == NO_DISCR)
-  )
-
-  const defaultDefs = Query(db.BaseGroup
-    ->AntiEquiJoin(variantDefault, 'HiGroupName')
-    ->Extend((t): dict<any> => {
-      return { Variant: '', DiscrValue: '' }
-    })
-  )
-
-  const pairs = Query(defaultDefs
-    ->Union(db.BaseGroupOverride->Select((t) => t.Variant == variant))
-    ->Select((t) => t.Fg->NotIn(['', 'none', 'fg', 'bg']) && t.Bg->NotIn(['', 'none', 'fg', 'bg']))
-    ->GroupBy(['Fg', 'Bg', 'Variant'], StringAgg('HiGroupName', ', ', '', false), 'HighlightGroup')
-    ->EquiJoin(db.Color, 'Fg', 'ColorName')
-    ->EquiJoin(db.Color, 'Bg', 'ColorName', 'fg_')
-    ->Extend((t): dict<any> => {
-      return { ContrastRatio:  ContrastRatio(t['fg_' .. colorAttr], t[colorAttr]) }
-    })
-    ->Select((t) => t.ContrastRatio < 3.0)
-    ->Extend((t): dict<any> => {
-      return {
-            \ BrightnessDiff: BrightnessDifference(t['fg_' .. colorAttr], t[colorAttr]),
-            \ ColorDiff: PerceptualDifference(t['fg_' .. colorAttr], t[colorAttr]),
-            \ Definition: empty(t.Variant) ? 'default' : 'override',
-            \ }
-    })
-    ->Sort((t, u): number => Cmp(t.ContrastRatio, u.ContrastRatio))
-  )
+#   var db        = theme.Db(background)
+#   var variant   = gui ? 'gui'      : '256'
+#   var colorAttr = gui ? 'GUIValue' : 'Base256HexValue'
+#   var report    = gui ? 'gui'      : 'terminal'
+#   var hiGroups  = Query(EquiJoin(db.BaseGroup, db.Condition, {on: 'Condition'}))
+#
+#   var variantDefault = Query(
+#     hiGroups->Select((t) => t.Environment == variant && empty(t.DiscrName))
+#   )
+#
+#   var defaultDefs = Query(db.BaseGroup
+#     ->AntiEquiJoin(variantDefault, 'HiGroupName')
+#     ->Extend((t): dict<any> => {
+#       return { Variant: '', DiscrValue: '' }
+#     })
+#   )
+#
+#   var pairs = Query(defaultDefs
+#     ->Union(db.BaseGroupOverride->Select((t) => t.Variant == variant))
+#     ->Select((t) => t.Fg->NotIn(['', 'none', 'fg', 'bg']) && t.Bg->NotIn(['', 'none', 'fg', 'bg']))
+#     ->GroupBy(['Fg', 'Bg', 'Variant'], StringAgg('HiGroupName', ', ', '', false), 'HighlightGroup')
+#     ->EquiJoin(db.Color, 'Fg', 'ColorName')
+#     ->EquiJoin(db.Color, 'Bg', 'ColorName', 'fg_')
+#     ->Extend((t): dict<any> => {
+#       return { ContrastRatio:  ContrastRatio(t['fg_' .. colorAttr], t[colorAttr]) }
+#     })
+#     ->Select((t) => t.ContrastRatio < 3.0)
+#     ->Extend((t): dict<any> => {
+#       return {
+#             \ BrightnessDiff: BrightnessDifference(t['fg_' .. colorAttr], t[colorAttr]),
+#             \ ColorDiff: PerceptualDifference(t['fg_' .. colorAttr], t[colorAttr]),
+#             \ Definition: empty(t.Variant) ? 'default' : 'override',
+#             \ }
+#     })
+#     ->Sort((t, u): number => Cmp(t.ContrastRatio, u.ContrastRatio))
+#   )
 
   var output: list<string> = []
 
-  output->add(printf('{{{ Critical Pairs (%s %s)', background, report))
-  output->add('Pairs of foreground/background colors not conforming to ISO-9241-3')
-  output->add('')
-  output += split(Table(
-    pairs,
-    printf('%s (%s)', gui ? 'GUI' : 'Terminal', background),
-    ['Fg', 'Bg', 'ContrastRatio', 'BrightnessDiff', 'ColorDiff', 'HighlightGroup', 'Definition'],
-    2
-  ), '\n')
-  output->add('}}} Critical Pairs')
+  # output->add(printf('{{{ Critical Pairs (%s %s)', background, report))
+  # output->add('Pairs of foreground/background colors not conforming to ISO-9241-3')
+  # output->add('')
+  # output += split(Table(pairs, {
+  #   name:    printf('%s (%s)', gui ? 'GUI' : 'Terminal', background),
+  #   columns: ['Fg', 'Bg', 'ContrastRatio', 'BrightnessDiff', 'ColorDiff', 'HighlightGroup', 'Definition'],
+  #   gap:     2,
+  # }), '\n')
+  # output->add('}}} Critical Pairs')
 
   return output
 enddef

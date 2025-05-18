@@ -1046,7 +1046,7 @@ def MakeTupleMerger(prefix: string): func(Tuple, Tuple): Tuple
     var tnew: Tuple = {}
 
     for attr in keys(t)
-      const newAttr = u->has_key(attr) ? prefix .. attr : attr
+      var newAttr = u->has_key(attr) ? prefix .. attr : attr
       tnew[newAttr] = t[attr]
     endfor
 
@@ -1093,11 +1093,10 @@ export def EquiJoinPred(lAttrs: AttrList, rAttrs: AttrList = null_list): BinaryP
 enddef
 
 # TODO: build index on the fly
-export def EquiJoin(
-    Arg1: any, Arg2: any, lAttrs: any, rAttrs: any = lAttrs, prefix = '_'
-): Continuation
-  const lAttrList = Listify(lAttrs)
-  const rAttrList = Listify(rAttrs)
+export def EquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
+  var lAttrList = Listify(get(opts, 'onleft',  get(opts, 'on', [])))
+  var rAttrList = Listify(get(opts, 'onright', get(opts, 'on', [])))
+  var prefix    = get(opts, 'prefix', '_')
 
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
     const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)

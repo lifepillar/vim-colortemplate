@@ -1131,16 +1131,31 @@ Divide({rel1}, {rel2})				*librelalg.Divide()*
 		projection of the dividend on X.
 
 						*librelalg.EquiJoin()*
-EquiJoin({rel1}, {rel2}, {list1}[, {list2}, {prefix}])
+EquiJoin({rel1}, {rel2}[, {opts}])
 		Perform an equi-join between two relations {rel1} and {rel2}.
 
-		The |list| {list1} is a subset of the attributes of {rel1}.
-		{list2} is a matching |list| of attributes of {rel2}, that is,
-		the two lists must have the same length. Attributes at the
-		same position in the two lists are compared for equality. When
-		{list2} is omitted, it is taken to be equal to {list1}. Lists
-		of one attribute can also be replaced by strings. For
-		{prefix}, see |librelalg.Join()|. Examples:
+		{opts} is a dictionary that may contain the following keys:
+
+		- "on": the list of common attributes on which to perform the
+		  equi-join.
+
+		- "onleft": a list of attributes of {rel1} on which to
+		  perform the join. If this key is present then "onright"
+		  should also be present.
+
+		- "onright": a list of attributes of {rel2} on which to
+		  perform the join. If this key is present then "onleft"
+		  should also be present.
+
+		- "prefix": see |librelalg.Join()|.
+		
+		When "onleft" and "onright" are used, they must be lists with
+		the same length. Attributes at the same position in the two
+		lists are compared for equality. Lists of one attribute may be
+		replaced by strings. Note: if {opts} is omitted then this
+		operator behaves like a Cartesian product.
+
+		Examples:
 >
 		var r = [
 		  {A: 1, B: 6},
@@ -1151,7 +1166,7 @@ EquiJoin({rel1}, {rel2}, {list1}[, {list2}, {prefix}])
 		  {C: 6, D: 50},
 		  {C: 2, D: 60},
 		]
-		const result = Query(EquiJoin(r, s, ['B'], ['C']))
+		var result = Query(EquiJoin(r, s, {onleft: 'B', onright: 'C'}))
 		echo Table(result)
 <
 		Output:
@@ -1164,8 +1179,8 @@ EquiJoin({rel1}, {rel2}, {list1}[, {list2}, {prefix}])
 <
 		To join all the buffers with all their tags:
 >
-		const result = Query(
-		    EquiJoin(Buffer, Tag, 'BufId', 'BufId', 't_')
+		var result = Query(
+		    EquiJoin(Buffer, Tag, {on: 'BufId', prefix: 't_'})
 		  )
 		echo Table(result)
 <

@@ -1117,13 +1117,23 @@ def Test_RA_EquiJoin()
   ]
 
 
-  assert_equal(expected1, From(R)->EquiJoin(S, ['B'], ['B'], 'r_')->SortBy('A'))
-  assert_equal(expected2, From(S)->EquiJoin(R, 'B', 'B', 's_')->SortBy('A'))
-  assert_equal(expected3, From(R)->EquiJoin(S, ['A'], ['C'], 'r_')->SortBy('A'))
-  assert_equal(expected4, From(S)->EquiJoin(R, 'C', 'A', 's_')->SortBy('A'))
+  assert_equal(expected1, From(R)->EquiJoin(S, {on: 'B', prefix: 'r_'})->SortBy('A'))
+  assert_equal(expected2, From(S)->EquiJoin(R, {on: 'B', prefix: 's_'})->SortBy('A'))
+  assert_equal(expected3, From(R)->EquiJoin(S, {onleft: 'A', onright: 'C', prefix: 'r_'})->SortBy('A'))
+  assert_equal(expected4, From(S)->EquiJoin(R, {onleft: 'C', onright: 'A', prefix: 's_'})->SortBy('A'))
 
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
+
+  assert_true(RelEq(
+    Query(Product(S, R)),
+    Query(EquiJoin(S, R)) # Behaves like a Cartesian product
+  ))
+
+  assert_true(RelEq(
+    Query(Product(R, R)),
+    Query(EquiJoin(R, R))
+  ))
 enddef
 
 def Test_RA_Product()

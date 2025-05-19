@@ -859,8 +859,8 @@ def Test_RA_Rename()
     {X: 'a2', B: 2.0, W: 80},
   ]
 
-  assert_equal(instance, From(R)->Rename([], [])->Build())
-  assert_equal(expected, From(R)->Rename(['A', 'C'], ['X', 'W'])->Build())
+  assert_equal(instance, From(R)->Rename({})->Build())
+  assert_equal(expected, From(R)->Rename({A: 'X', C: 'W'})->Build())
   assert_equal(instance, r)
 enddef
 
@@ -1005,11 +1005,11 @@ def Test_RA_Join()
   ]
 
 
-  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, 'r_')->SortBy('A'))
-  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, 's_')->SortBy('A'))
-  assert_equal(expected3, From(R)->Join(S, (rt, st) => rt.A <= st.C, 'r_')->SortBy(['A', 'B']))
-  assert_equal(expected4, From(S)->Join(R, (st, rt) => rt.A <= st.C, 's_')->SortBy(['C', 'A']))
-  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, 's_')->SortBy('B'))
+  assert_equal(expected1, From(R)->Join(S, (rt, st) => rt.B == st.B, {prefix: 'r_'})->SortBy('A'))
+  assert_equal(expected2, From(S)->Join(R, (st, rt) => rt.B == st.B, {prefix: 's_'})->SortBy('A'))
+  assert_equal(expected3, From(R)->Join(S, (rt, st) => rt.A <= st.C, {prefix: 'r_'})->SortBy(['A', 'B']))
+  assert_equal(expected4, From(S)->Join(R, (st, rt) => rt.A <= st.C, {prefix: 's_'})->SortBy(['C', 'A']))
+  assert_equal(expected5, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0, {prefix: 's_'})->SortBy('B'))
   assert_equal(expected6, From(S)->Join(S, (s1, s2) => s1.C >= s2.C && s2.C == 0)->SortBy('B'))
 
   assert_equal(instanceR, r)
@@ -1384,9 +1384,9 @@ enddef
 
 def Test_RA_AntiEquiJoin()
   var R = Rel.new('R', {A: Int, B: Int}, 'A')
-  const r = R.Instance()
+  var r = R.Instance()
 
-  const instanceR = [
+  var instanceR = [
     {A: 0, B: 1},
     {A: 1, B: 2},
     {A: 2, B: 1},
@@ -1394,9 +1394,9 @@ def Test_RA_AntiEquiJoin()
   R.InsertMany(instanceR)
 
   var S = Rel.new('S', {B: Int, C: Int}, 'C')
-  const s = S.Instance()
+  var s = S.Instance()
 
-  const instanceS = [
+  var instanceS = [
     {B: 3, C: 1},
     {B: 1, C: 0},
   ]
@@ -1416,14 +1416,14 @@ def Test_RA_AntiEquiJoin()
     {A: 2, B: 1},
   ]
 
-  assert_equal(expected1, Query(From(R)->AntiEquiJoin(S, 'B')))
-  assert_equal(expected1, Query(From(R)->AntiEquiJoin(S, 'B', 'C')))
-  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, 'B')))
-  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, 'B', 'A')))
-  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, 'B', 'A')))
-  assert_equal(expected3, Query(From(R)->AntiEquiJoin(S, 'A', 'B')))
-  assert_equal(expected4, Query(From(R)->AntiEquiJoin(S, 'A', 'C')))
-  assert_equal([],        Query(From(S)->AntiEquiJoin(R, 'C', 'A')))
+  assert_equal(expected1, Query(From(R)->AntiEquiJoin(S, {on: 'B'})))
+  assert_equal(expected1, Query(From(R)->AntiEquiJoin(S, {onleft: 'B', onright: 'C'})))
+  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, {on: 'B'})))
+  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, {onleft: 'B', onright: 'A'})))
+  assert_equal(expected2, Query(From(S)->AntiEquiJoin(R, {onleft: 'B', onright: 'A'})))
+  assert_equal(expected3, Query(From(R)->AntiEquiJoin(S, {onleft: 'A', onright: 'B'})))
+  assert_equal(expected4, Query(From(R)->AntiEquiJoin(S, {onleft: 'A', onright: 'C'})))
+  assert_equal([],        Query(From(S)->AntiEquiJoin(R, {onleft: 'C', onright: 'A'})))
   assert_equal(instanceR, r)
   assert_equal(instanceS, s)
 enddef
@@ -1467,7 +1467,7 @@ def Test_RA_LeftNatJoin()
   ])
 
   const summary = Query(From(Tag)->GroupBy(['BufId'], Count, 'num_tags'))
-  const result = Query(From(Buffer)->LeftNatJoin(summary, [{'num_tags': 0}]))
+  const result = Query(From(Buffer)->LeftNatJoin(summary, {filler: [{'num_tags': 0}]}))
   const expected = [
     {BufId: 1, BufName: 'foo', num_tags: 3},
     {BufId: 2, BufName: 'bar', num_tags: 1},
@@ -1490,7 +1490,7 @@ def Test_RA_LeftEquiJoin()
     {C: 'z', A: 20},
     {C: 'z', A: 30},
   ]
-  const result = Query(LeftEquiJoin(r, s, 'B', 'C', [{C: 'NA', A: 0}]))
+  var result = Query(LeftEquiJoin(r, s, {onleft: 'B', onright: 'C', filler: [{C: 'NA', A: 0}]}))
   const expected = [
     {_A: 1, B: 'x', C:  'x', A: 10},
     {_A: 2, B: 'x', C:  'x', A: 10},
@@ -1520,7 +1520,7 @@ def Test_RA_LeftEquiJoinFastPath()
     {A: 3, C: 3.0},
   ])
 
-  const result = Query(LeftEquiJoin(R, S, 'A', 'A', [{A: -1, C: -1.0}]))
+  var result = Query(LeftEquiJoin(R, S, {on: 'A', filler: [{A: -1, C: -1.0}]}))
   const expected = [
     {_A: 0, B: 'zero', A:  0, C:  0.0},
     {_A: 1, B: 'one',  A:  1, C:  1.0},
@@ -1869,10 +1869,10 @@ def Test_RA_MaxBy()
 enddef
 
 def Test_RA_MinBy()
-  assert_equal([], From([])->MinBy([], 'A'))
-  assert_equal([], From([])->MinBy([], 'B'))
-  assert_equal([], From([])->MinBy(['A'], 'A'))
-  assert_equal([], From([])->MinBy('B', 'A'))
+  assert_equal([], []->MinBy([], 'A'))
+  assert_equal([], []->MinBy([], 'B'))
+  assert_equal([], []->MinBy(['A'], 'A'))
+  assert_equal([], []->MinBy('B', 'A'))
 
   const r = [
     {A: 0, B: 10.0},
@@ -2561,7 +2561,7 @@ def Test_RA_TransitiveClosure()
   ]
 
   var Path = (R: any): any => {
-    return NatJoin(Rename(R, ['To'], ['_']), Rename(Edge, ['From'], ['_']))->Project(['From', 'To'])
+    return NatJoin(Rename(R, {To: '_'}), Rename(Edge, {From: '_'}))->Project(['From', 'To'])
   }
 
   var result = Recursive(Edge, Path)
@@ -2609,8 +2609,8 @@ def Test_RA_TransitiveClosureOfCyclicGraph()
   ]
 
   var Path = (R: Relation): Continuation => NatJoin(
-    Rename(R,    ['To'],   ['X']),
-    Rename(Edge, ['From'], ['X'])
+    Rename(R,    {To: 'X'}),
+    Rename(Edge, {From: 'X'})
   )->Project(['From', 'To'])
 
   var result = Recursive(Edge, Path)

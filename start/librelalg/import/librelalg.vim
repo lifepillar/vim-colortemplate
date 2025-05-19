@@ -496,7 +496,7 @@ export class Rel implements IRel, ICheckable, ITransactable
   var insert_constraints: list<Constraint> = []
   var delete_constraints: list<Constraint> = []
 
-  public var type_check:  bool             = true
+  public var typecheck:   bool             = true
 
   var _instance:          Relation         = []
   var _key_indexes:       dict<Index>      = {}
@@ -509,7 +509,7 @@ export class Rel implements IRel, ICheckable, ITransactable
       this.name,
       this.schema,
       relKeys: any,
-      this.type_check = v:none
+      opts: dict<any> = {},
       )
     if empty(relKeys)
       throw printf(E000, this.name)
@@ -517,6 +517,7 @@ export class Rel implements IRel, ICheckable, ITransactable
 
     var keys_: list<AttrList> = ListifyKeys(relKeys)
 
+    this.typecheck      = get(opts, 'typecheck', true)
     this.attributes     = keys(this.schema)->sort()
     this.key_attributes = flattennew(keys_)->sort()->uniq()
     this.descriptors    = filter(
@@ -661,12 +662,12 @@ export class Rel implements IRel, ICheckable, ITransactable
     return empty(result) ? KEY_NOT_FOUND : result[0]
   enddef
 
-  def Upsert(t: Tuple, insert: bool = true)
+  def Upsert(t: Tuple, opts: dict<any> = {})
     # Lookup by primary key (conventionally, the first defined key)
     var u = this.Lookup(this.keys[0], Values(t, this.keys[0]))
 
     if u is KEY_NOT_FOUND
-      if insert
+      if get(opts, 'insert', true)
         this.Insert(t)
         return
       endif
@@ -685,7 +686,7 @@ export class Rel implements IRel, ICheckable, ITransactable
   enddef
 
   def TypeCheck_(t: Tuple)
-    if this.type_check
+    if this.typecheck
       if sort(keys(t)) != this.attributes
         FailedMsg(printf(E001, SchemaStr(this.schema), TupleStr(t)))
         globalTransactionManager.Rollback()
@@ -988,19 +989,18 @@ enddef
 # }}}
 
 # Pipeline operators {{{
-export def Rename(Arg: any, old: AttrList, new: AttrList): Continuation
-  const Cont = From(Arg)
+export def Rename(Arg: any, renamed: dict<string>): Continuation
+  var Cont = From(Arg)
 
   return (Emit: Consumer) => {
     def RenameAttr(t: Tuple)
       var i = 0
       var tnew = copy(t)
 
-      while i < len(old)
-        tnew[new[i]] = tnew[old[i]]
-        tnew->remove(old[i])
-        ++i
-      endwhile
+      for old_attr in keys(renamed)
+        tnew[renamed[old_attr]] = tnew[old_attr]
+        tnew->remove(old_attr)
+      endfor
 
       Emit(tnew)
     enddef
@@ -1054,10 +1054,13 @@ def MakeTupleMerger(prefix: string): func(Tuple, Tuple): Tuple
   }
 enddef
 
-export def Join(Arg1: any, Arg2: any, Pred: BinaryPredicate, prefix = '_'): Continuation
-  const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
-  const rel  = Query(Arg2)
-  const Cont = From(Arg1)
+export def Join(
+    Arg1: any, Arg2: any, Pred: BinaryPredicate, opts: dict<any> = {}
+    ): Continuation
+  var prefix = get(opts, 'prefix', '_')
+  var MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+  var rel  = Query(Arg2)
+  var Cont = From(Arg1)
 
   return (Emit: Consumer) => {
     Cont((t: Tuple) => {
@@ -1116,7 +1119,7 @@ export def EquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
 
   var Pred = EquiJoinPred(lAttrList, rAttrList)
 
-  return Join(Arg1, Arg2, Pred, prefix)
+  return Join(Arg1, Arg2, Pred, {prefix: prefix})
 enddef
 
 def NatJoinPred(t: Tuple, u: Tuple): bool
@@ -1146,10 +1149,11 @@ export def NatJoin(Arg1: any, Arg2: any): Continuation
   }
 enddef
 
-export def Product(Arg1: any, Arg2: any, prefix = '_'): Continuation
-  const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
-  const rel  = Query(Arg2)
-  const Cont = From(Arg1)
+export def Product(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
+  var prefix      = get(opts, 'prefix', '_')
+  var MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+  var rel         = Query(Arg2)
+  var Cont        = From(Arg1)
 
   return (Emit: Consumer) => {
     Cont((t: Tuple) => {
@@ -1210,8 +1214,8 @@ export def SemiJoin(Arg1: any, Arg2: any, Pred: BinaryPredicate): Continuation
 enddef
 
 export def AntiJoin(Arg1: any, Arg2: any, Pred: BinaryPredicate): Continuation
-  const rel  = Query(Arg2)
-  const Cont = From(Arg1)
+  var rel  = Query(Arg2)
+  var Cont = From(Arg1)
 
   return (Emit: Consumer) => {
     Cont((t: Tuple) => {
@@ -1226,17 +1230,18 @@ export def AntiJoin(Arg1: any, Arg2: any, Pred: BinaryPredicate): Continuation
   }
 enddef
 
-export def AntiEquiJoin(Arg1: any, Arg2: any, lAttrs: any, rAttrs: any = lAttrs): Continuation
-  const lAttrList = Listify(lAttrs)
-  const rAttrList = Listify(rAttrs)
-  const Cont = From(Arg1)
+# export def AntiEquiJoin(Arg1: any, Arg2: any, lAttrs: any, rAttrs: any = lAttrs): Continuation
+export def AntiEquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
+  var lAttrList = Listify(get(opts, 'onleft',  get(opts, 'on', [])))
+  var rAttrList = Listify(get(opts, 'onright', get(opts, 'on', [])))
+  var Cont      = From(Arg1)
 
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
-    const rel: IRel = Arg2
+    var rel: IRel = Arg2
 
     return (Emit: Consumer) => {
       Cont((t: Tuple) => {
-        const u = rel.Lookup(rAttrList, Values(t, lAttrList))
+        var u = rel.Lookup(rAttrList, Values(t, lAttrList))
 
         if u is KEY_NOT_FOUND
           Emit(t)
@@ -1254,10 +1259,10 @@ enddef
 
 # See: C. Date & H. Darwen, Outer Join with No Nulls and Fewer Tears, Ch. 20,
 # Relational Database Writings 1989–1991
-export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): Continuation
-  const rel    = Query(Arg2)
-  const Cont   = From(Arg1)
-  const filler = Query(Filler)
+export def LeftNatJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
+  var rel    = Query(Arg2)
+  var Cont   = From(Arg1)
+  var filler = Query(get(opts, 'filler', []))
 
   return (Emit: Consumer) => {
     Cont((t: Tuple) => {
@@ -1279,21 +1284,20 @@ export def LeftNatJoin(Arg1: any, Arg2: any, Filler: any): Continuation
   }
 enddef
 
-export def LeftEquiJoin(
-    Arg1: any, Arg2: any, lAttrs: any, rAttrs: any, Filler: any, prefix = '_',
-): Continuation
-  const lAttrList = Listify(lAttrs)
-  const rAttrList = Listify(rAttrs)
-  const Cont        = From(Arg1)
-  const filler      = Query(Filler)
-  const MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
+export def LeftEquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuation
+  var lAttrList   = Listify(get(opts, 'onleft',  get(opts, 'on', [])))
+  var rAttrList   = Listify(get(opts, 'onright', get(opts, 'on', [])))
+  var filler      = Query(get(opts, 'filler', []))
+  var prefix      = get(opts, 'prefix', '_')
+  var Cont        = From(Arg1)
+  var MergeTuples = empty(prefix) ? (t, u) => t->extendnew(u, 'error') : MakeTupleMerger(prefix)
 
   if IsRel(Arg2) && rAttrList->IsKeyOf(Arg2) # Fast path
-    const rel: IRel = Arg2
+    var rel: IRel = Arg2
 
     return (Emit: Consumer) => {
       Cont((t: Tuple) => {
-        const u = rel.Lookup(rAttrList, Values(t, lAttrList))
+        var u = rel.Lookup(rAttrList, Values(t, lAttrList))
 
         if u isnot KEY_NOT_FOUND
           Emit(MergeTuples(t, u))
@@ -1306,8 +1310,8 @@ export def LeftEquiJoin(
     }
   endif
 
-  const rel  = Query(Arg2)
-  const Pred = EquiJoinPred(lAttrList, rAttrList)
+  var rel  = Query(Arg2)
+  var Pred = EquiJoinPred(lAttrList, rAttrList)
 
   return (Emit: Consumer) => {
     Cont((t: Tuple) => {
@@ -1367,12 +1371,12 @@ export def GroupBy(
     Arg: any, groupBy: any, AggrFn: func(...list<any>): any, aggrName = 'aggrValue'
 ): Continuation
   var fid: dict<Relation> = PartitionBy(Arg, groupBy)
-  const groupBy_: AttrSet = Listify(groupBy)
+  var groupBy_: AttrSet = Listify(groupBy)
 
   return (Emit: Consumer) => {
     # Apply the aggregate function to each subrelation
     for groupKey in keys(fid)
-      const subrel = fid[groupKey]
+      var subrel = fid[groupKey]
       var t0: Tuple = {}
 
       for attr in groupBy_

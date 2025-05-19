@@ -21,8 +21,12 @@ dictionaries, such as this:
 	         {A: 2, B: 'aaa'},
 	         {A: 3, B: 'bbb'}]
 <
-Each dictionary is called a "tuple". Each dictionary key is called an
-"attribute". A relation must not contain any duplicate tuples.
+Each dictionary is called a "tuple" (not to be confused with Vim's |Tuples|:
+librelag's Relational tuples are not ordered). Each dictionary key in a tuple
+is called an "attribute". In the example above, r is a relation with three
+tuples on attributes A and B.
+
+A relation must not contain any duplicate tuples.
 
 Relational Algebra operators transform relations into other relations. For
 example:
@@ -34,7 +38,7 @@ example:
 	         {A: 2, B: 'aaa'},
 	         {A: 3, B: 'bbb'}]
 
-	const result = ra.Query( ra.Select(r, (t) => t.B == 'bbb') )
+	var result = ra.Query(ra.Select(r, (t) => t.B == 'bbb'))
 	echo result
 	echo ra.Table(result)
 <
@@ -48,33 +52,30 @@ Output:
 	 1 bbb
 	 3 bbb
 <
-So, at the basic level you may perform Relational queries on Vim's data
-structures. See |librelalg-ra| to learn about the available operators.
+So, at the basic level librelalg allows you to perform Relational queries on
+Vim's data structures. See |librelalg-ra| to learn about the available
+operators.
 
 But librelalg also offers support for data definition and data manipulation
 with built-in integrity. For that, start by defining a Relational schema:
 >
 	vim9script
-
 	import "librelalg.vim" as ra
-
-	type Rel         = ra.Rel
+	
+	type  Rel        = ra.Rel
 	const Int        = ra.Int
 	const Str        = ra.Str
 	const Float      = ra.Float
 	const ForeignKey = ra.ForeignKey
-
-	#               Name   Schema               Keys
+	const References = ra.References
+	
+	#        Name ───┐  Schema ────┐    Keys ────┐
+	#                ▼             ▼             ▼
 	var R = Rel.new('R',   {A: Int, B: Float},  'A')
 	var S = Rel.new('S',   {X: Str, Y: Int},    'X')
-
-	R.Check((t) => {
-	  if t.B <= 0.0
-	   throw $'B must be greater than zero: got {t.B}'
-	  endif
-	})
-
-	ForeignKey(S, 'Y', R, 'A')  # FK: S[Y] -> R[A]
+	
+	R.OnInsertCheck('B must be positive', (t) => t.B > 0.0)
+	ForeignKey(S, 'Y')->References(R)
 <
 Populate the database:
 >
@@ -96,7 +97,7 @@ Query the database:
 
 	var rel = ra.Query(
 	    ra.Select(R, (t) => t.B > 1.5)
-	    ->ra.EquiJoin(S, ['A'], ['Y'])
+	    ->ra.EquiJoin(S, {onleft: 'A', onright: 'Y'})
 	    ->ra.Project('X')
 	    ->ra.SortBy('X')
 	)
@@ -112,10 +113,18 @@ Output:
 <
 Update the database:
 >
-	R.Insert({A: 30, B: 4.3})   # Add a new tuple
-	S.Update({X: 'klm', Y: 30}) # Update tuple with key X = 'klm'
-	S.Delete((t) => t.Y == 10)  # Delete based on predicate
-	rel = ra.Query(ra.EquiJoin(R, S, ['A'], ['Y']))
+	# Add a new tuple
+	R.Insert({A: 30, B: 4.3})   
+	
+	# Update tuple with X equal to 'klm' by setting Y equal to 30
+	S.Update((t) => t.X == 'klm', (t) => {
+	  t.Y = 30
+	})
+	
+	# Delete tuples satisfying a condition
+	S.Delete((t) => t.Y == 10)  
+	
+	rel = ra.Query(ra.EquiJoin(R, S, {onleft: 'A', onright: 'Y'}))
 	echo ra.Table(rel)
 <
 Output:
@@ -262,31 +271,21 @@ straightforward task:
 
 3. Add the relevant constraints:
 >
-	Tag.Check((t) => {
-	   if t.Line <= 0
-	      throw $'Line numbers must be positive: got {t.Line}'
-	   endif
-	})
-
-	Tag.Check((t) => {
-	   if t.Column <= 0
-	      throw $'Column numbers must be positive: got {t.Column}'
-	   endif
-	})
+	Tag.OnInsertCheck('Line must be positive', (t) => t.Line > 0)
+	Tag.OnInsertCheck('Column must be positive', (t) => t.Column > 0)
 <
    A check clause defines a generic constraint, which is simply a function or
-   a lambda that, given a tuple t, checks for some condition depending on t,
-   and throws an error if the condition is not satisfied.
+   a lambda that, given a tuple t, checks for some condition depending on t.
 >
-	ForeignKey(Tag, 'BufId', Buffer, 'BufId', 'must appear in')
+	ForeignKey(Tag, 'BufId')
+	  ->References(Buffer, {key: 'BufId', verb: 'must appear in a valid'})
 <
    |librelalg.ForeignKey()| defines a foreign key constraint, in this case
-   from `BufId` in `Tag` to `BufId` in `Buffer`. The last argument is the verb
-   phrase associated to the constraint as read from the child to the parent
-   entity in the data model—see |librelalg-tutorial|: the verb phrase is used
-   in error messages when the referential integrity is violated (see an
-   example below). Using a mode of obligation ("must") typically makes the
-   constraint violation easier to understand.
+   from `BufId` in `Tag` to `BufId` in `Buffer`. A verb phrase (as read from the
+   child to the parent entity in the data model) can be also specified: the
+   verb phrase is used in error messages when the referential integrity is
+   violated (see an example below). Using a mode of obligation ("must")
+   typically makes the constraint violation easier to understand.
 
 Data Manipulation ~
 
@@ -343,45 +342,47 @@ a duplicate key error, because `BufName` is a key:
 >
 	Buffer.Insert({BufId: 4, BufName: 'foo'})
 
-	# Duplicate key value: {BufName: foo} already exists in Buffer
+	# Duplicate key: {BufName: 'foo'} already exists in relation Buffer.
 <
 Referential integrity is also guaranteed. For instance:
 >
 	Tag.Insert({BufId: 5, TagName: 'x', Line: 3, Column: 9})
 
-	# Tag must appear in Buffer:
-	# {BufId: 5} is not present in Buffer[BufId]
+	# Tag must appear in a valid Buffer:
+	# {BufId: 5} not found in Buffer[BufId].
 <
+The error message uses the verb phrase from the corresponding foreign key.
+
 And, of course, you are not allowed to insert an invalid line number either:
 >
 	Tag.Insert({BufId: 1, TagName: 'x', Line: 0, Column: 40})
 <
 This insertion is rejected with:
 >
-	Line numbers must be positive: got 0
+	Line must be positive
 <
 Updates and deletions are possible, too:
 >
-	Tag.Update({BufId: 1, TagName: 'abc', Line: 7, Column: 12})
+	Tag.Upsert({BufId: 1, TagName: 'abc', Line: 7, Column: 12})
 	Tag.Delete((t) => t.Line < 2)
-	echo Table(Tag)
+	echo Table(Tag->SortBy(['Line', 'Column']))
 <
 	Output:
 >
-	 Tag
 	───────────────────────────
 	 TagName Column Line BufId
 	───────────────────────────
 	     zzz      1    2     1
-	     abc     12    7     1
 	     xyz      1    4     1
 	     lll      8    4     1
-	     abc     15   14     2
 	     abc      3    6     3
+	     abc     12    7     1
+	     abc     15   14     2
 <
-For updates, you just pass the updated tuple. For deletions, you provide
-a predicate (typically, in the form of a lambda) that the tuples to be deleted
-must satisfy.
+Existing tuples can be updated with |librelalg.Update()| based on some
+predicate. A single tuple can also be updated using |librelalg.Upsert()| as in
+the example above. For deletions, you must provide a predicate (typically, in
+the form of a lambda) that the tuples to be deleted must satisfy.
 
 Note: nulls are not supported. A properly designed database never needs nulls,
 so this is not a loss of generality, and it is a great gain in simplicity and
@@ -401,7 +402,7 @@ Queries are expressions that are typically used as an argument to
 |librelalg.Query()|. For instance, the query "Retrieve the tags in buffer
 1 before line 6" can be formulated as follows:
 >
-	const result = Query(
+	var result = Query(
 	    From(Tag)->Select((t) => t.BufId == 1 && t.Line <= 6)
 	)
 	echo Table(result)
@@ -411,11 +412,11 @@ to filter it. The query has been written using chain notation (->), but that
 is not mandatory. Besides, using |librelalg.From()| is optional. So, the query
 can be alternatively written like this:
 >
-	const result = Query(Tag->Select((t) => t.BufId == 1 && t.Line <= 6))
+	var result = Query(Tag->Select((t) => t.BufId == 1 && t.Line <= 6))
 <
 or like this:
 >
-	const result = Query(Select(Tag, (t) => t.BufId == 1 && t.Line <= 6))
+	var result = Query(Select(Tag, (t) => t.BufId == 1 && t.Line <= 6))
 <
 In each case, the output is:
 >
@@ -432,7 +433,7 @@ constraints or indexes. They are just lists of homogeneous dictionaries.
 
 If you want to get just the tag names and lines, you may add a projection:
 >
-	const filteredTags = Query(
+	var filteredTags = Query(
 	      From(Tag)
 	    ->Select((t) => t.BufId == 1 && t.Line <= 6)
 	    ->Project(['TagName', 'Line'])
@@ -451,8 +452,8 @@ This query also uses |librelalg.Project()|. Output:
 As another example, the natural join of `Buffer` and `Tag`, sorted by `BufId`
 and `TagName`, can be written as follows:
 >
-	const btags = NatJoin(Buffer, Tag)->SortBy(['BufId', 'TagName'])
-	echo Table(btags, 'Buffer tags')
+	var btags = NatJoin(Buffer, Tag)->SortBy(['BufId', 'TagName'])
+	echo Table(btags, {name: 'Buffer tags'})
 <
 This query uses |librelalg.NatJoin()| to join buffers with tags, and
 |librelalg.SortBy()| to sort the result. Since |librelalg.SortBy()| is
@@ -478,7 +479,7 @@ Output:
 
 Classes ~
 						*librelalg.Rel*
-new{name}, {schema}, {keys} [, {typecheck}])
+new{name}, {schema}, {keys} [, {opts}])
 		Define a base relation (aka "relation object"). A base
 		relation has a descriptive {name} (a |string| used in error
 		messages) and is defined over a {schema}, which is a |dict|
@@ -537,70 +538,43 @@ new{name}, {schema}, {keys} [, {typecheck}])
 <
 		The last two forms are valid, but not recommended.
 
-		Only tuples conforming to the specified schema may be inserted
-		into a base relation. By default, an error is raised if
-		a tuple is not compatible with the relation schema. This type
-		checking can be turned off by setting {typecheck} to |false|.
-		Omitting type checking may slightly improve the performance
-		when inserting or updating tuples, but it is not recommended,
-		because the gain may be negligible, and type checking is
-		useful to detect errors.
+		{opts} is a dictionary of options. The only supported key is
+		a boolean flag called "typecheck". Since only tuples
+		conforming to the specified schema may be inserted into a base
+		relation, by default an error is raised if a tuple is not
+		compatible with the relation schema. This type checking can be
+		turned off by setting "typecheck" to |false|. Omitting type
+		checking may slightly improve the performance when inserting
+		or updating tuples, but it is not recommended, because the
+		gain may be negligible, and type checking is useful to detect
+		errors.
 
 		A |librelalg.Rel| object has the following read-only attributes:
 
 		- "name": the name of the relation.
 		- "schema": the relation schema.
-		- "instance": the relation instance.
 		- "keys": the relation keys.
 		- "attributes": the sorted list of attributes.
-		- "keyAttributes: the sorted list of key attributes.
+		- "key_attributes: the sorted list of key attributes.
 		- "descriptors": the sorted list of descriptors (that is,
 		  attributes that are not part of any key).
 
-Check({func}[, {opts}])
-		Add a generic constraint to this base relation. The constraint
-		is defined by {func}, which is a |Funcref| taking as an input
-		a tuple and raising an error when the tuple does not satisfy
-		the constraint.
-
-		A check constraint can be triggered before each insertion,
-		update or deletion in the base relation. The operations that
-		should trigger the constraint check can be specified by
-		{opts}, which is a |list| of one or more of `'I'`, `'U'`, and
-		`'D'`, for insertion, update, and deletion, respectively. By
-		default (when {opts} is not given), a constraint is checked
-		before each insertion and update, but not upon deletion.
-
-Delete([, {func}, {flag}])
+Delete([, {func}])
 		Delete all the tuples of this base relation satisfying
 		predicate {func}, which is a function that takes as an input
 		a tuple t and returns |true| if t must be deleted, |false|
 		otherwise. When {func} is not provided, all the tuples are
 		deleted unconditionally, so the relation object becomes empty.
 
-		When {flag} is passed and it is |true| the deletion is an
-		atomic operation: if a constraint is violated while deleting
-		some tuple, the relation is not modified at all. The default
-		is to delete in a non-atomic way: this is faster, but if an
-		error occurs while deletion is executing, there is no
-		guarantee on how the resulting instance will look like.
+		Returns the deleted tuples.
 
 Insert({tuple})
 		Insert a {tuple} into this base relation. Return the updated
 		relation object.
 
-InsertMany({list}[, {flag}])
+InsertMany({list})
 		Insert a {list} of tuples into this base relation. Return the
 		updated relation object.
-
-		When {flag} is passed and it is |true| the insertion is an
-		atomic operation: if a constraint is violated while inserting
-		some tuple, the relation is not modified at all. So, either
-		all tuples are inserted, or none. The default is to insert in
-		a non-atomic way: this is faster, but if an error occurs while
-		insertion is executing, then the resulting instance will
-		contain some, but not all, the tuples that should have been
-		inserted.
 
 IsEmpty()
 		Return |true| if this relation is empty, |false| otherwise.
@@ -623,8 +597,8 @@ Lookup({key}, {list})
 		    {A: 3, B: 'y'},
 		    {A: 5, B: 'z'}
 		])
-		echo Lookup(R, ['A'], [3])  # {A: 3, B: 'y'}
-		echo Lookup(R, ['A'], [9]) is ra.KEY_NOT_FOUND  # true
+		echo R.Lookup(['A'], [3])  # {A: 3, B: 'y'}
+		echo R.Lookup(['A'], [9]) is ra.KEY_NOT_FOUND  # true
 <
 		When looking up for a tuple by key, using this function is
 		generally faster than using |librelalg.Select()|, because
@@ -633,41 +607,107 @@ Lookup({key}, {list})
 
 		Note that the returned value is a tuple, not a relation!
 
-Update({tuple} [, {upsert}])
+OnDeleteCheck({name}, {func})
+		Add a generic constraint to this base relation. The constraint
+		is defined by {func}, which is a |Funcref| taking as an input
+		a tuple and returning |true| if the tuple satisfies the check,
+		and |false| otherwise. {name} is an arbitrary string, which is
+		shown in error messages when the constraint fails.
+
+		{func} may also set additional information to be displayed
+		when the constraint fails. See OnInsertCheck() for an example.
+
+OnInsertCheck({name}, {func})
+		Add a generic constraint to this base relation. The constraint
+		is defined by {func}, which is a |Funcref| taking as an input
+		a tuple and returning |true| if the tuple satisfies the check,
+		and |false| otherwise. {name} is an arbitrary string, which is
+		shown in error messages when the constraint fails.
+
+		{func} may also set additional information to be displayed
+		when the constraint fails, using |librelalg.FailedMsg()|. For
+		instance, this is a more verbose version of a constraint from
+		|librelalg-tutorial|:
+>
+		Tag.OnInsertCheck('Positive line check', (t) => {
+		  if t.Line > 0
+		    return true
+		  endif
+
+		  FailedMsg($'Line number must be positive. Got {t.Line}.')
+		  return false
+		})
+<
+Update({cond}, {func})
+		Update all the tuples satisfying unary predicate {cond}.
+		{cond} takes as input a tuple and return |true| if the tuple
+		must be update, and |false| otherwise. The tuples selected for
+		the update are updated by calling {func}, which is a function
+		with no return value, which receives a tuples and updates it.
+
+Upsert({tuple} [, {opts}])
 		Replace a tuple in this base relation with a new {tuple}. The
 		tuple that is replaced is the one with the same values of the
-		key(s) as {tuple}. An error is raised if such a tuple does not
-		exist in the base relation, unless {upsert} is |true|, in
-		which case {tuple} is inserted into the relation and no error
-		is raised. For instance:
+		primary key as {tuple} (recall that the primary key is
+		conventionally defined as the first key that is defined when
+		a relation is created). If no such tuple exists, by default 
+		{tuple} is inserted into the relation.
+
+		{opts} is a dictionary of options. The only supported key is
+		a boolean flag called "insert": when set to |false|, if no
+		tuple exists with the same primary key as {tuple} then an
+		error is raised. Examples:
 >
 		var R = Rel.new('R', {A: Int, B: Str}, 'A')
 
 		R.Insert({A: 1, B: 'v'})
-		R.Update({A: 1, B: 'w'})  # OK
-		R.Update({A: 2, B: 'z'})  # ERROR: no tuple with A == 2
-		R.Update({A: 2, B: 'z'}, true)  # OK (Upsert)
-<
-		Note that the above semantics implies that only attributes
-		that are not part of any key (the "descriptors" of the base
-		relation) can be updated. To update a key attribute, remove
-		the corresponding tuple and insert a new one.
+		R.Upsert({A: 1, B: 'w'})  # OK
+		R.Upsert({A: 2, B: 'z'}, {insert: false})  # ERROR
+		R.Upsert({A: 2, B: 'z'})  # OK (Upsert)
 
 Functions ~
-						*librelalg.ForeignKey()*
-ForeignKey({relobj1}, {attrs}, {relobj2}[, {key}, {verb}])
-		Define a referential integrity constraint between the list of
-		attributes {attrs} in base relation {relobj1} and a key in
-		base relation {relobj2}. When {key} is omitted, the target key
-		is assumed to be {attrs}; otherwise, the list of attributes
-		{key} is the target key. When {attrs} or {key} consist of
-		a single attribute, they can be passed as a string, too.
+						*librelalg.FailedMsg()*
+FailedMsg({msg})
+		Used inside constraint checks to log an error message {msg},
+		which is displayed when the constraint fails.
 
-		The string {verb} specifies a verb phrase to be read from
-		{relobj1} to {relobj2}. The default verb phrase is
-		"references". The verb phrase is used in error messages when
-		referential integrity is violated. See |librelalg-tutorial|
-		for an example.
+						*librelalg.ForeignKey()*
+ForeignKey({rel}, {fkey})
+		Declare the list of attributes {fkey} of relation {rel}
+		a foreign key in {rel}. If the foreign key consists of one
+		attribute then {fkey} can also be a string. Return a pair with
+		the input arguments.
+
+		This function must always be chained with
+		|librelalg.References()|.
+
+						*librelalg.References()*
+References({foreignkey}, {rel}[, {opts}])
+		Define a referential integrity constraint using {foreignkey}
+		as the source, where {foreignkey} is the value returned by
+		|librelalg.ForeignKey()|.
+
+		{rel} is the target relation. {opts} is a dictionary of
+		options, which may contain the following keys:
+
+		- "key": the list of target attributes: this must be a key of
+		  {rel}. If this is omitted, the target key is assumed to be
+		  {rel}'s primary key (that is, the first key defined when
+		  {rel} was created). When the foreign key consists of
+		  a single attribute, this can be a string, too.
+
+		- "verb": specifies a verb phrase read from child to parent.
+		  The default verb phrase is "references". The verb phrase is
+		  used in error messages when referential integrity is
+		  violated. See |librelalg-tutorial| for an example.
+
+						*librelalg.Transaction()*
+Transaction({body})
+		Execute {body} atomically. {body} is a function with no
+		parameters and no return value, which typically contains
+		statements that update some relation. If an error occurs
+		during a transaction, all the changes operated by the
+		transaction are reverted.
 
 ==============================================================================
 3. Relational Algebra				*librelalg-ra*
@@ -818,23 +858,26 @@ reference:
 						*librelalg.operators*
 Functions ~
 						*librelalg.AntiEquiJoin()*
-AntiEquiJoin({rel1}, {rel2}, {list1}[, {list2}])
+AntiEquiJoin({rel1}, {rel2}[, {opts}])
 		Perform the anti-equi-join of {rel1} and {rel2}. The result is
 		the set of tuples of {rel1} that cannot be joined with any
-		tuple in {rel2}. {list1} and {list2} are used as in
-		|librelalg.EquiJoin()|.
+		tuple in {rel2}. {opts} is used as in |librelalg.EquiJoin()|
+		to specify the join attributes, except that the "prefix" key
+		is not used.
 >
-		const r = [
+		var r = [
 		  {A: 0, B: 1},
 		  {A: 1, B: 2},
 		  {A: 2, B: 1},
 		]
-		const s = [
+		var s = [
 		  {B: 3, C: 1},
 		  {B: 1, C: 0},
 		]
-		const result1 = Query(AntiEquiJoin(r, s, 'B'))
-		const result2 = Query(AntiEquiJoin(r, s, 'A', 'B'))
+		var result1 = Query(AntiEquiJoin(r, s, {on: 'B'}))
+		var result2 = Query(
+		  AntiEquiJoin(r, s, {onleft: 'A', onright: 'B'})
+		)
 		echo Table(result1)
 		echo Table(result2)
 <
@@ -866,7 +909,7 @@ AntiJoin({rel1}, {rel2}, {func})		*librelalg.AntiJoin()*
 		  {C: 6, D: 50},
 		  {C: 2, D: 60},
 		]
-		const result = Query(AntiJoin(r, s, (t, u) => t.B == u.C))
+		var result = Query(AntiJoin(r, s, (t, u) => t.B == u.C))
 		echo Table(result)
 <
 		Output:
@@ -878,7 +921,7 @@ AntiJoin({rel1}, {rel2}, {func})		*librelalg.AntiJoin()*
 <
 		To obtain the buffers that have no tags before line 10:
 >
-		const result = Query(
+		var result = Query(
 		    AntiJoin(
 		      Buffer,
 		      Select(Tag, (t) => t.Line < 10),
@@ -900,7 +943,7 @@ AvgBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.AvgBy()*
 		Group the tuples of relation {rel} with respect to a |list| of
 		attributes {groupby}, and determine the average of the values
 		of attribute {attr} in each group. When grouping by a single
-		attribute, {groupby} can also be a |string|. The schema of the
+		attribute, {groupby} may also be a |string|. The schema of the
 		output relation consists of the grouping attributes plus the
 		aggregate attribute. The name of the aggregate attribute is
 		given by {name} (the default name is "avg").
@@ -912,7 +955,7 @@ AvgBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.AvgBy()*
 		    {A: 1, B: 4},
 		    {A: 2, B: 3}
 		]
-		const result = From(r)->AvgBy('A', 'B')
+		var result = r->AvgBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -958,7 +1001,7 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 		  {C: 4},
 		  {C: 2},
 		]
-		const result = Query(CoddDivide(r, s))
+		var result = Query(CoddDivide(r, s))
 		echo Table(result)
 <
 		Output:
@@ -970,9 +1013,9 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 <
 		To obtain the names of the tags that appear in every buffer:
 >
-		const result = Query(
+		var result = Query(
 		    Project(Tag, ['BufId', 'TagName'])
-		    ->CoddDivide(Project(Buffer, ['BufId']))
+		    ->CoddDivide(Project(Buffer, 'BufId'))
 		)
 		echo Table(result)
 <
@@ -1002,9 +1045,9 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 		     xyz
 <
 		Note that {hint} is ignored if the divisor is not empty,
-		because the schema can be inferred from each tuple, or if the
-		divisor is a base relation, because a base relation has an
-		associated schema.
+		because the schema can then be inferred from each tuple. If
+		the divisor is a base relation then {hint} is not used either,
+		because a base relation has an associated schema.
 
 		This is a pipeline operator, returning a continuation. See
 		also |Divide()|.
@@ -1012,7 +1055,7 @@ CoddDivide({rel1}, {rel2}[, {hint}])		*librelalg.CoddDivide()*
 CountBy({rel}, {groupby}[, {attr}, {name}])	*librelalg.CountBy()*
 		Group the tuples of a relation {rel} with respect to a |list|
 		of attributes {groupby}, and count the number of tuples in
-		each group. When grouping by a single attribute, {groupby} can
+		each group. When grouping by a single attribute, {groupby} may
 		also be a |string|. If {attr} is given and is not
 		|null_string|, then count the number of distinct values of
 		attribute {attr} in each group. The schema of the output
@@ -1030,10 +1073,10 @@ CountBy({rel}, {groupby}[, {attr}, {name}])	*librelalg.CountBy()*
 		    {N: 4, A: 200, B: 3},
 		    {N: 5, A: 100, B: 6},
 		]
-		const result1 = From(r)->CountBy('A')
-		const result2 = From(r)->CountBy('A', 'B')
-		echo Table(result1, 'Count all')
-		echo Table(result2, 'Count distinct B')
+		var result1 = r->CountBy('A')
+		var result2 = r->CountBy('A', 'B')
+		echo Table(result1, {name: 'Count all'})
+		echo Table(result2, {name: 'Count distinct B'})
 <
 		Output:
 >
@@ -1073,7 +1116,7 @@ Divide({rel1}, {rel2})				*librelalg.Divide()*
 
 		Consider the following example:
 >
-		const SP = [  # Supplier S# supplies part P#
+		var SP = [  # Supplier S# supplies part P#
 		  {'S#': 1, 'P#': 10},
 		  {'S#': 1, 'P#': 20},
 		  {'S#': 1, 'P#': 30},
@@ -1082,7 +1125,7 @@ Divide({rel1}, {rel2})				*librelalg.Divide()*
 		  {'S#': 3, 'P#': 20},
 		  {'S#': 3, 'P#': 40},
 		]
-		const PJ = [  # Part P# is used in project J#
+		var PJ = [  # Part P# is used in project J#
 		  {'P#': 10, 'J#': 100},
 		  {'P#': 20, 'J#': 100},
 		  {'P#': 20, 'J#': 200},
@@ -1093,10 +1136,10 @@ Divide({rel1}, {rel2})				*librelalg.Divide()*
 <
 		Then SP ÷ PJ and PJ ÷ SP are computed as follows:
 >
-		const sp_div_pj = Query(Divide(SP, PJ))
-		const pj_div_sp = Query(Divide(PJ, SP))
-		echo Table(sp_div_pj, 'SP ÷ PJ')
-		echo Table(pj_div_sp, 'PJ ÷ SP')
+		var sp_div_pj = Query(Divide(SP, PJ))
+		var pj_div_sp = Query(Divide(PJ, SP))
+		echo Table(sp_div_pj, {name: 'SP ÷ PJ'})
+		echo Table(pj_div_sp, {name: 'PJ ÷ SP'})
 <
 		Output:
 >
@@ -1208,7 +1251,7 @@ Extend({rel}, {func})				*librelalg.Extend()*
 >
 	var r = [{A: 1}, {A: 3}, {A: 5}]
 
-	const result = Query(
+	var result = Query(
 	    Extend(r, (t): dict<any> => {
 	       return {B: t.A * 2, C: -t.A}
 	    }))
@@ -1256,7 +1299,7 @@ Frame({rel}, {list}[, {name}])			*librelalg.Frame()*
 		    {A: 60, B: 'b', C: 'y'},
 		    {A: 70, B: 'a', C: 'y'},
 		  ]
-		const result = Query(From(r)->Frame(['B', 'C']))
+		var result = Query(From(r)->Frame(['B', 'C']))
 		echo Table(result)
 <
 		Output:
@@ -1298,7 +1341,7 @@ GroupBy({rel}, {groupby}, {func} [, {name}])	*librelalg.GroupBy()*
 		    {A: 60, B: 'b', C: 'y', D: 9},
 		    {A: 70, B: 'a', C: 'y', D: 3},
 		  ]
-		const result = Query(
+		var result = Query(
 		   From(r)->GroupBy(['B', 'C'], Min('D'), 'minD')
 		)
 		echo Table(result)
@@ -1315,7 +1358,7 @@ GroupBy({rel}, {groupby}, {func} [, {name}])	*librelalg.GroupBy()*
 <
 		To count the number of tags in each buffer with tags:
 >
-		const result = Query(
+		var result = Query(
 		    Tag->GroupBy('BufId', Count, 'num_tags')
 		  )
 		echo Table(result)
@@ -1355,7 +1398,7 @@ Intersect({rel1}, {rel2})			*librelalg.Intersect()*
 		  {A: 3, B: 'y'},
 		  {A: 6, B: 'y'},
 		]
-		const result = Query(Intersect(r, s))
+		var result = Query(Intersect(r, s))
 		echo Table(result)
 <
 		The output is:
@@ -1367,13 +1410,14 @@ Intersect({rel1}, {rel2})			*librelalg.Intersect()*
 <
 		This is a pipeline operator, returning a continuation.
 
-Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
+Join({rel1}, {rel2}, {func} [, {opts}])		*librelalg.Join()*
 		Join two relations {rel1} and {rel2}. The join condition is
 		specified by {func}, which is a |Funcref| that takes as an
 		input two tuples t1 and t2 and returns |true| if t1 and t2
-		should be joined, and returns |false| otherwise.
+		should be joined, and |false| otherwise.
 
-		{prefix} is a string that is added in the output to each
+		{opts} is a a dictionary of options. The only supported key is
+		"prefix", which is a string that is prepended to each
 		attribute of {rel1} that is also an attribute of {rel2}. The
 		default prefix is an underscore. A non-empty prefix is
 		mandatory if the relations to be joined have some attributes
@@ -1391,7 +1435,7 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 		  {C: 6, D: 50},
 		  {C: 2, D: 60},
 		]
-		const result = Query(Join(r, s, (t, u) => t.B == u.C))
+		var result = Query(Join(r, s, (t, u) => t.B == u.C))
 		echo Table(result)
 <
 		Output:
@@ -1405,7 +1449,7 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 		This join can also be done with |librelalg.EquiJoin()|. But
 		with this operator you may join on arbitrary conditions:
 >
-		const result2 = Query(Join(r, s, (t, u) => t.B > u.C))
+		var result2 = Query(Join(r, s, (t, u) => t.B > u.C))
 		echo Table(result2)
 <
 		Output:
@@ -1418,8 +1462,9 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 <
 		To join `Buffer` with `Tag` on the common `BufId` attribute:
 >
-		const result = Query(
-		    Join(Buffer, Tag, (t, u) => t.BufId == u.BufId, 't_')
+		var result = Query(
+		    Join(Buffer, Tag,
+		    (t, u) => t.BufId == u.BufId, {prefix: 't_'})
 		  )
 		echo Table(result)
 <
@@ -1445,16 +1490,23 @@ Join({rel1}, {rel2}, {func} [, {prefix}])	*librelalg.Join()*
 		This is a pipeline operator, returning a continuation.
 
 						*librelalg.LeftEquiJoin()*
-LeftEquiJoin({rel1}, {rel2}, {list1}, {list2}, {filler}[, {prefix}])
+LeftEquiJoin({rel1}, {rel2}[, {opts}])
 		Perform the left outer join of two relations {rel1} and {rel2}
-		based on an equality condition. {list1} and {list2} are
-		defined as in |librelalg.EquiJoin()|. {filler} is an arbitrary
-		relation defined on the attributes of {rel2}. {prefix} is
-		defined as in |librelalg.Join()|.
+		based on an equality condition. {opts} is a dictionary of
+		options. In addition to the same keys supported by 
+		|librelalg.EquiJoin()|, {opts} also supports the following
+		keys:
 
-		The result is the equi-join between the input relations
-		extended (by union) with the cross-product of {filler} and the
-		set of tuples in {rel1} that do not match any tuple in {rel2}.
+		- "filler": an arbitrary relation with the same schema as
+		  {rel2}. 
+
+		The result is the equi-join between the input relations,
+		extended (by union) with the cross-product of the filler
+		relation and the set of tuples in {rel1} that do not match any
+		tuple in {rel2}.
+
+		Note that if no filler relation is provided, this operator
+		behaves like an equi-join.
 
 		For instance:
 >
@@ -1470,8 +1522,9 @@ LeftEquiJoin({rel1}, {rel2}, {list1}, {list2}, {filler}[, {prefix}])
 		    {C: 'z', A: 20},
 		    {C: 'z', A: 30},
 		]
-		const result = Query(
-		    LeftEquiJoin(r, s, 'B', 'C', [{C: 'NA', A: 0}])
+		var result = Query(
+		    LeftEquiJoin(r, s, 
+		      {onleft: 'B', onright: 'C', filler: [{C: 'NA', A: 0}]})
 		)
 		echo Table(result)
 <
@@ -1487,17 +1540,18 @@ LeftEquiJoin({rel1}, {rel2}, {list1}, {list2}, {filler}[, {prefix}])
 		 30 z  z  4
 		  0 w NA  5
 <
-		Note that the attributes of {rel1} that coincide with
-		attributes of {rel2} are renamed by adding {prefix}, as
-		explained in |librelalg.Join()|.
-
-LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
+LeftNatJoin({rel1}, {rel2}[, {opts}])		*librelalg.LeftNatJoin()*
 		Perform the left natural join of two relations {rel1} and
-		{rel2}. {filler} is an arbitrary relation defined on the
-		attributes of {rel2} minus the join attributes. The result is
-		the natural join between the input relations extended (by
-		union) with the cross-product of {filler} and the set of
-		tuples in {rel1} that do not match any tuple in {rel2}.
+		{rel2}. {opts} is dictionary of options, which may be used to
+		specify a filler relation, as in |librelalg.LeftEquiJoin()|.
+
+		The returned relation is the natural join between the input
+		relations extended (by union) with the cross-product of the
+		filler relation and the set of tuples in {rel1} that do not
+		match any tuple in {rel2}.
+
+		Note that if no filler relation is provided, this operator
+		behaves like a natural join.
 
 		For instance:
 >
@@ -1513,7 +1567,7 @@ LeftNatJoin({rel1}, {rel2}, {filler})		*librelalg.LeftNatJoin()*
 		    {B: 'z', C: 20},
 		    {B: 'z', C: 30},
 		]
-		const result = Query(LeftNatJoin(r, s, [{C: -1}]))
+		var result = Query(LeftNatJoin(r, s, {filler: [{C: -1}]}))
 		echo Table(result)
 <
 		Output:
@@ -1546,7 +1600,7 @@ MaxBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.MaxBy()*
 		    {A: 100, B: 4},
 		    {A: 200, B: 3}
 		]
-		const result = From(r)->MaxBy('A', 'B')
+		var result = r->MaxBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -1575,7 +1629,7 @@ MinBy({rel}, {groupby}, {attr} [, {name}]	*librelalg.MinBy()*
 		    {A: 100, B: 4},
 		    {A: 200, B: 3}
 		]
-		const result = From(r)->MinBy('A', 'B')
+		var result = r->MinBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -1586,7 +1640,7 @@ MinBy({rel}, {groupby}, {attr} [, {name}]	*librelalg.MinBy()*
 		   3 200
 		   4 100
 <
-		This is a leaf operator, returning a continuation.
+		This is a leaf operator, returning a relation instance.
 
 Minus({rel1}, {rel2})				*librelalg.Minus()*
 		Subtract relation {rel2} from relation {rel1}. Note: the
@@ -1603,7 +1657,7 @@ Minus({rel1}, {rel2})				*librelalg.Minus()*
 		  {A: 3, B: 'y'},
 		  {A: 6, B: 'y'},
 		]
-		const result = Query(Minus(r, s))
+		var result = Query(Minus(r, s))
 		echo Table(result)
 <
 		The output is:
@@ -1629,7 +1683,7 @@ NatJoin({rel1}, {rel2})				*librelalg.NatJoin()*
 		  {B: 6, C: 50},
 		  {B: 2, C: 60},
 		]
-		const result = Query(NatJoin(r, s))
+		var result = Query(NatJoin(r, s))
 		echo Table(result)
 <
 		Output:
@@ -1642,7 +1696,7 @@ NatJoin({rel1}, {rel2})				*librelalg.NatJoin()*
 <
 		To join `Buffer` with `Tag` on the common `BufId` attribute:
 >
-		const result = Query(NatJoin(Buffer, Tag))
+		var result = Query(NatJoin(Buffer, Tag))
 		echo Table(result)
 <
 		Output:
@@ -1667,18 +1721,16 @@ Query({rel})					*librelalg.Query()*
 
 		This is a leaf operator, always returning a relation instance.
 
-Rename({rel}, {list1}, {list2})			*librelalg.Rename()*
-		Rename the attributes of a relation {rel}. {list1} is a list
-		of attributes to rename. {list2} is the corresponding list of
-		new attribute names.
-
-		Example:
+Rename({rel}, {what})				*librelalg.Rename()*
+		Rename the attributes of a relation {rel}. {what} is
+		a dictionary mapping the old names to the new names. For
+		example:
 >
 		var r = [
 		    {A: 1, B: 'u'},
 		    {A: 2, B: 'v'}
 		]
-		var s = Query(Rename(r, ['A', 'B'], ['X', 'Y']))
+		var s = Query(Rename(r, {A: 'X', B: 'Y'}))
 		echo Table(s)
 <
 		The output is:
@@ -1694,9 +1746,9 @@ Rename({rel}, {list1}, {list2})			*librelalg.Rename()*
 
 		This is a pipeline operator, returning a continuation.
 
-Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
+Product({rel1}, {rel2} [, {opts}])		*librelalg.Product()*
 		Perform the cross product of two relations {rel1} and {rel2}.
-		For {prefix}, see |librelalg.Join()|. Examples:
+		For {opts}, see |librelalg.Join()|. Examples:
 >
 		var r = [
 		  {A: 1, B: 6},
@@ -1707,7 +1759,7 @@ Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
 		  {C: 7, D: 50},
 		  {C: 4, D: 60},
 		]
-		const result = Query(Product(r, s))
+		var result = Query(Product(r, s))
 		echo Table(result)
 <
 		Output:
@@ -1724,9 +1776,9 @@ Product({rel1}, {rel2} [, {prefix}])		*librelalg.Product()*
 <
 		To obtain all the sorted pairs of tag names:
 >
-		const Tagname = Project(Tag, 'TagName')
-		const result  = Query(
-		      Product(Tagname, Tagname, 't_')
+		var Tagname = Project(Tag, 'TagName')
+		var result  = Query(
+		      Product(Tagname, Tagname, {prefix: 't_'})
 		    ->Select((t) => t.TagName < t.t_TagName)
 		    ->SortBy(['TagName', 't_TagName'])
 		)
@@ -1759,7 +1811,7 @@ Project({rel}, {attrs})				*librelalg.Project()*
 		  {A: 5, B: 'two', C: 20},
 		  {A: 5, B: 'six', C: 60},
 		]
-		const result = Query(Project(r, ['B', 'C']))
+		var result = Query(Project(r, ['B', 'C']))
 		echo Table(result)
 <
 		Output:
@@ -1774,7 +1826,7 @@ Project({rel}, {attrs})				*librelalg.Project()*
 <
 		To obtain all the tag names:
 >
-		const result = Query(Project(Tag, 'TagName'))
+		var result = Query(Project(Tag, 'TagName'))
 		echo Table(result)
 <
 		Output:
@@ -1805,7 +1857,7 @@ Select({rel}, {func})				*librelalg.Select()*
 		  {A: 5, B: 2, C: 20},
 		  {A: 5, B: 1, C:  2},
 		]
-		const result = Query(Select(r, (t) => t.C == 2 * t.B))
+		var result = Query(Select(r, (t) => t.C == 2 * t.B))
 		echo Table(result)
 <
 		Output:
@@ -1819,7 +1871,7 @@ Select({rel}, {func})				*librelalg.Select()*
 <
 		To select all the tags after line 3 in buffer 1:
 >
-		const result = Query(
+		var result = Query(
 		    Select(Tag, (t) => t.BufId == 1 && t.Line > 3)
 		  )
 		echo Table(result)
@@ -1834,7 +1886,7 @@ Select({rel}, {func})				*librelalg.Select()*
 		     lll      8    4     1
 <
 		This is a pipeline operator, returning a continuation. See
-		also |librelalg.Lookup()|.
+		also |librelalg.Lookup()| and |librelalg.Filter()|.
 
 SemiJoin({rel1}, {rel2}, {func})		*librelalg.SemiJoin()*
 		Perform the semi-join of two relations {rel1} and {rel2}. This
@@ -1851,7 +1903,7 @@ SemiJoin({rel1}, {rel2}, {func})		*librelalg.SemiJoin()*
 		  {C: 6, D: 50},
 		  {C: 2, D: 60},
 		]
-		const result = Query(SemiJoin(r, s, (t, u) => t.B == u.C))
+		var result = Query(SemiJoin(r, s, (t, u) => t.B == u.C))
 		echo Table(result)
 <
 		Output:
@@ -1863,7 +1915,7 @@ SemiJoin({rel1}, {rel2}, {func})		*librelalg.SemiJoin()*
 <
 		To obtain the buffers with tags beyond column 10:
 >
-		const result = Query(
+		var result = Query(
 		      SemiJoin(Buffer, Tag,
 		               (t, u) => t.BufId == u.BufId && u.Column > 10)
 		  )
@@ -1892,7 +1944,7 @@ Sort({rel}, {func})				*librelalg.Sort()*
 		  {A: 3, B: 9},
 		  {A: 4, B: 2},
 		]
-		const result = Query(Sort(r, (t, u): number => t.B - u.B))
+		var result = Query(Sort(r, (t, u): number => t.B - u.B))
 		echo Table(result)
 <
 		Output:
@@ -1908,7 +1960,7 @@ Sort({rel}, {func})				*librelalg.Sort()*
 		To sort tags by line number (regardless of the buffers) in
 		decreasing order:
 >
-		const result = From(Tag)->Sort((t1, t2) => t2.Line - t1.Line)
+		var result = Tag->Sort((t1, t2): number => t2.Line - t1.Line)
 		echo Table(result)
 <
 		Output:
@@ -1934,7 +1986,7 @@ SortBy({rel}, {attrs} [, {opts}])		*librelalg.SortBy()*
 		to the specified list of attributes {attrs}. When {attrs} is
 		a single attribute, a |string| may also be used. For instance:
 >
-		const result = From(Tag)->SortBy('Line')
+		var result = Tag->SortBy('Line')
 		echo Table(result)
 <
 		Output:
@@ -1953,7 +2005,7 @@ SortBy({rel}, {attrs} [, {opts}])		*librelalg.SortBy()*
 		whether to sort the values of that attribute in increasing or
 		decreasing order. For instance:
 >
-		const result = From(Tag)
+		var result = From(Tag)
 		               ->SortBy(['TagName', 'Column'], ['i', 'd'])
 		echo Table(result)
 <
@@ -1992,7 +2044,7 @@ SumBy({rel}, {groupby}, {attr} [, {name}])	*librelalg.SumBy()*
 		    {A: 100, B: 4},
 		    {A: 200, B: 3}
 		]
-		const result = From(r)->SumBy('A', 'B')
+		var result = r->SumBy('A', 'B')
 		echo Table(result)
 <
 		Output:
@@ -2021,7 +2073,7 @@ Union({rel1}, {rel2})				*librelalg.Union()*
 		    {A: 6, B: 'y'},
 		    {A: 1, B: 'x'},
 		]
-		const result = Query(Union(r, s))
+		var result = Query(Union(r, s))
 		echo Table(result)
 <
 		The output is:
@@ -2044,28 +2096,28 @@ a relation instance, an aggregate function returns a scalar. These functions
 can be used as normal leaf operators, as in the following example:
 >
 	# Count the number of tuples
-	echo From([{A: 9}, {A: 4}, {A: 6}])->Count()  # 3
+	echo [{A: 9}, {A: 4}, {A: 6}]->Count()  # 3
 <
-Aggregate functions can also be used as an argument to |librelalg.GroupBy()|
+Aggregate functions can also be used as an argument to |librelalg.GroupBy()|.
 
 Avg({rel}, {attr})				*librelalg.Avg()*
 		Return the average value of attribute {attr} in a relation
 		{rel}. Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}])->Avg('A')  # 9.0
+		echo [{A: 9}, {A: 7}, {A: 11}]->Avg('A')  # 9.0
 <
 		To return the average tag's column number:
 >
-		const avg = From(Tag)->Avg('Column')  # 6.666667
+		var avg = Tag->Avg('Column')  # 6.666667
 <
 Count({rel})					*librelalg.Count()*
 		Return the number of tuples of a relation {rel}.  Examples:
 >
-		echo From([{A: 9}, {A: 7}])->Count()  # 2
+		echo [{A: 9}, {A: 7}]->Count()  # 2
 <
 		To compute the number of buffers:
 >
-		const nBuf = From(Buffer)->Count()    # 3
+		var nBuf = Buffer->Count()    # 3
 <
 CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 		Return the number of distinct values in attribute {attr} of
@@ -2080,7 +2132,7 @@ CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
 <
 		To return the number of distinct tag names:
 >
-		const nDistinctTags = From(Tag)->CountDistinct('TagName')  # 4
+		var nDistinctTags = Tag->CountDistinct('TagName')  # 4
 <
 ListAgg({rel}, {attr}, {how}, {uniq})		*librelalg.ListAgg()*
 		Return the values of attribute {attr} in a relation {rel} as
@@ -2108,7 +2160,7 @@ ListAgg({rel}, {attr}, {how}, {uniq})		*librelalg.ListAgg()*
 		To build the sorted lists of tags in each buffer, sorted by
 		buffer:
 >
-		const result = From(Tag)
+		var result = From(Tag)
 		               ->GroupBy('BufId', ListAgg('TagName', '', false))
 		               ->SortBy(['BufId'])
 		echo Table(result)
@@ -2126,21 +2178,21 @@ Min({rel}, {attr})				*librelalg.Min()*
 		Return the minimum value of attribute {attr} in a relation
 		{rel}. Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}])->Min('A')  # 7
+		echo [{A: 9}, {A: 7}, {A: 11}]->Min('A')  # 7
 <
 		To return the minimum buffer id:
 >
-		const minBufId = From(Buffer)->Min('BufId')     # 1
+		var minBufId = Buffer->Min('BufId')  # 1
 <
 Max({rel}, {attr})				*librelalg.Max()*
 		Return the maximum value of attribute {attr} in a relation
 		{rel}. Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}])->Max('A')  # 11
+		echo [{A: 9}, {A: 7}, {A: 11}]->Max('A')  # 11
 <
 		To return the maximum column of a tag:
 >
-		const maxCol = From(Tag)->Max('Column')         # 15
+		var maxCol = Tag->Max('Column')  # 15
 <
 StringAgg({rel}, {attr}, {sep}, {how}, {uniq})	*librelalg.StringAgg()*
 		Return the values of attribute {attr} in a relation {rel}
@@ -2159,9 +2211,11 @@ StringAgg({rel}, {attr}, {sep}, {how}, {uniq})	*librelalg.StringAgg()*
 		To return the tags in each buffer joined into a string, sorted
 		by buffer:
 >
-		const result = From(Tag)
-		               ->GroupBy('BufId', StringAgg('TagName', ',', '', false))
-		               ->SortBy(['BufId'])
+		var result = Tag->GroupBy(
+		  'BufId', StringAgg('TagName', ',', '', false)
+		  )
+		  ->SortBy('BufId')
+
 		echo Table(result)
 <
 		Output:
@@ -2177,11 +2231,11 @@ Sum({rel}, {attr})				*librelalg.Sum()*
 		Return the sum of the values of attribute {attr} in a relation
 		{rel}. Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}])->Sum('A')  # 27
+		echo [{A: 9}, {A: 7}, {A: 11}]->Sum('A')  # 27
 <
 		To compute the sum of all tags' columns:
 >
-		const colSum = From(Tag)->Sum('Column')         # 40
+		var colSum = Tag->Sum('Column')  # 40
 <
 ==============================================================================
 5. Other functions				*librelalg-other-functions*
@@ -2193,7 +2247,7 @@ DictTransform({rel}, {func}[, {flatten}])	*librelalg.DictTransform()*
 		the result, so that items sharing the same dictionary key are
 		appended together into a list. For example:
 >
-		const r = [
+		var r = [
 		  {X: 'a', Y: 6},
 		  {X: 'b', Y: 2},
 		  {X: 'a', Y: 4},
@@ -2209,7 +2263,7 @@ DictTransform({rel}, {func}[, {flatten}])	*librelalg.DictTransform()*
 		When {flatten} is |true|, singleton lists are replaced by
 		their only item. For instance:
 >
-		const r = [
+		var r = [
 		  {X: 'a', Y: 6},
 		  {X: 'b', Y: 2}
 		]
@@ -2229,8 +2283,8 @@ EquiJoinPred({list1}[, {list2}])		*librelalg.EquiJoinPred()*
 
 		For example, to find the tag names that are also buffer names:
 >
-		const Pred = EquiJoinPred(['BufName'], ['TagName'])
-		const result = Query(SemiJoin(Buffer, Tag, Pred))
+		var Pred = EquiJoinPred(['BufName'], ['TagName'])
+		var result = Query(SemiJoin(Buffer, Tag, Pred))
 <
 		This will join on the condition:
 >
@@ -2259,7 +2313,7 @@ PartitionBy({rel}, {groupby})			*librelalg.PartitionBy()*
 		{groupby} attributes to the corresponding subrelation. For
 		example:
 >
-		const r = [
+		var r = [
 		    {id: 0, name: "A", balance: 10.0},
 		    {id: 1, name: "A", balance:  3.5},
 		    {id: 2, name: "B", balance: -3.0},
@@ -2333,11 +2387,11 @@ Recursive({rel}, {recfunc}[, {unionall}])	*librelalg.Recursive()*
 		]
 
 		var Path = (R) => NatJoin(
-		  Rename(R,    ['To'],   ['X']),
-		  Rename(Edge, ['From'], ['X'])
+		  Rename(R,    {To:   'X'}),
+		  Rename(Edge, {From: 'X'})
 		)->Project(['From', 'To'])
 
-		echo Table(Recursive(Edge, Path), '', ['From', 'To'])
+		echo Table(Recursive(Edge, Path), {columns: ['From', 'To']})
 <
 		Output:
 >
@@ -2366,8 +2420,8 @@ Split({rel}, {func})				*librelalg.Split()*
 		satisfy the predicate, and the second relation contains the
 		remaining tuples. For example:
 >
-		const r = [{A: 1}, {A: 3}, {A: 5}, {A: 2}, {A: 7}]
-		const [r1, r2] = r->Split((t) => t.A <= 4)
+		var r = [{A: 1}, {A: 3}, {A: 5}, {A: 2}, {A: 7}]
+		var [r1, r2] = r->Split((t) => t.A <= 4)
 		echo Table(r1)
 		echo Table(r2)
 <
@@ -2403,7 +2457,7 @@ Table({rel} [, {opts}])
 		  attribute, this can also be a |string|.
 
 		- "gap": a number that determines the spacing between columns.
-		  The default is one character.
+		  The default is one space.
 
 		- "sep": the horizontal separator symbol. This must be
 		  a single character.
@@ -2421,7 +2475,7 @@ Table({rel} [, {opts}])
 		  columns: ['Y', 'X'], name: 'A table', gap: 5, sep: '~'
 		}) "\n"
 
-		echo Table(r, {name: 'Y'})
+		echo Table(r, {columns: 'Y'})
 <
 		Output:
 >
@@ -2452,7 +2506,7 @@ Transform({rel}, {func})			*librelalg.Transform()*
 
 		For example, this turns each tuple into an integer:
 >
-		const r = [{X: 3, Y: 6}, {X: 5, Y: 2}]
+		var r = [{X: 3, Y: 6}, {X: 5, Y: 2}]
 		echo Transform(r, (t) => t.X * t.Y))
 <
 		Output:
@@ -2463,7 +2517,7 @@ Transform({rel}, {func})			*librelalg.Transform()*
 		a list of integers. Each list returned by the function is
 		automatically flattened in the result:
 >
-		const r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
+		var r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
 		echo Transform(r, (t) => [t.X * 2, t.Y * 3, t.X + t.Y])
 <
 		Output:
@@ -2472,7 +2526,7 @@ Transform({rel}, {func})			*librelalg.Transform()*
 <
 		If you do want to return a nested list, do so in the function:
 >
-		const r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
+		var r = [{X: 3, Y: 6}, {X: 5, Y: 4}]
 		echo Transform(r, (t) => [[t.X + t.Y]])
 <
 		Output:
@@ -2484,7 +2538,7 @@ Transform({rel}, {func})			*librelalg.Transform()*
 		the value of attribute `X` is added to the output only when it
 		is positive:
 >
-		const r = [{X: 2}, {X: -1}, {X: 3}, {X: 0}]
+		var r = [{X: 2}, {X: -1}, {X: 3}, {X: 0}]
 		echo Transform(r, (t) => t.X <= 0 ? null : t.X)
 <
 		Output:
@@ -2497,7 +2551,7 @@ Zip({list1}, {list2})				*librelalg.Zip()*
 		Build a tuple by "zipping" the attributes in {list1} with the
 		values in {list2}. For example:
 >
-		const t = Zip(['A', 'B'], [7, 'v'])
+		var t = Zip(['A', 'B'], [7, 'v'])
 		echo t
 <
 		outputs:

@@ -18,6 +18,7 @@ librelalg.Divide()	librelalg.txt	/*librelalg.Divide()*
 librelalg.EquiJoin()	librelalg.txt	/*librelalg.EquiJoin()*
 librelalg.EquiJoinPred()	librelalg.txt	/*librelalg.EquiJoinPred()*
 librelalg.Extend()	librelalg.txt	/*librelalg.Extend()*
+librelalg.FailedMsg()	librelalg.txt	/*librelalg.FailedMsg()*
 librelalg.Filter()	librelalg.txt	/*librelalg.Filter()*
 librelalg.Foreach()	librelalg.txt	/*librelalg.Foreach()*
 librelalg.ForeignKey()	librelalg.txt	/*librelalg.ForeignKey()*
@@ -42,6 +43,7 @@ librelalg.Product()	librelalg.txt	/*librelalg.Product()*
 librelalg.Project()	librelalg.txt	/*librelalg.Project()*
 librelalg.Query()	librelalg.txt	/*librelalg.Query()*
 librelalg.Recursive()	librelalg.txt	/*librelalg.Recursive()*
+librelalg.References()	librelalg.txt	/*librelalg.References()*
 librelalg.Rel	librelalg.txt	/*librelalg.Rel*
 librelalg.RelEq()	librelalg.txt	/*librelalg.RelEq()*
 librelalg.Rename()	librelalg.txt	/*librelalg.Rename()*
@@ -55,6 +57,7 @@ librelalg.StringAgg()	librelalg.txt	/*librelalg.StringAgg()*
 librelalg.Sum()	librelalg.txt	/*librelalg.Sum()*
 librelalg.SumBy()	librelalg.txt	/*librelalg.SumBy()*
 librelalg.Table()	librelalg.txt	/*librelalg.Table()*
+librelalg.Transaction()	librelalg.txt	/*librelalg.Transaction()*
 librelalg.Transform()	librelalg.txt	/*librelalg.Transform()*
 librelalg.Union()	librelalg.txt	/*librelalg.Union()*
 librelalg.Zip()	librelalg.txt	/*librelalg.Zip()*

@@ -1,6 +1,6 @@
 vim9script
 
-export var version = '0.1.0-alpha'
+export var version = '0.1.0-alpha1'
 
 # Author:       Lifepillar <lifepillar@lifepillar.me>
 # Maintainer:   Lifepillar <lifepillar@lifepillar.me>

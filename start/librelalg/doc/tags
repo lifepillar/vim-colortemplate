@@ -63,4 +63,3 @@ librelalg.Union()	librelalg.txt	/*librelalg.Union()*
 librelalg.Zip()	librelalg.txt	/*librelalg.Zip()*
 librelalg.operators	librelalg.txt	/*librelalg.operators*
 librelalg.txt	librelalg.txt	/*librelalg.txt*
-not	librelalg.txt	/*not*

@@ -2381,6 +2381,27 @@ def Test_RA_PartitionBy()
 
   const result2 = r->PartitionBy(['name', 'class'])
   const expected2 = {
+    A: {
+      X: [
+        {id: 0, name: "A", balance: 10.0, class: "X"},
+        {id: 1, name: "A", balance:  3.5, class: "X"},
+      ],
+      Y: [
+        {id: 3, name: "A", balance:  1.5, class: "Y"},
+      ]
+    },
+      B: {
+        X: [
+          {id: 2, name: "B", balance: -3.0, class: "X"},
+          {id: 4, name: "B", balance:  2.5, class: "X"},
+        ],
+      }
+  }
+
+  assert_equal(expected2, result2)
+
+  const result3 = r->PartitionBy(['name', 'class'], {flat: true})
+  const expected3 = {
     "['A', 'X']": [
       {id: 0, name: "A", balance: 10.0, class: "X"},
       {id: 1, name: "A", balance:  3.5, class: "X"},
@@ -2394,7 +2415,7 @@ def Test_RA_PartitionBy()
     ],
   }
 
-  assert_equal(expected2, result2)
+  assert_equal(expected3, result3)
 enddef
 
 def Test_RA_Zip()

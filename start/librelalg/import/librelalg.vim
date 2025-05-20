@@ -1377,7 +1377,7 @@ enddef
 export def GroupBy(
     Arg: any, groupBy: any, AggrFn: func(...list<any>): any, aggrName = 'aggrValue'
 ): Continuation
-  var fid: dict<Relation> = PartitionBy(Arg, groupBy)
+  var fid: dict<Relation> = FlatPartitionBy(Arg, groupBy)
   var groupBy_: AttrSet = Listify(groupBy)
 
   return (Emit: Consumer) => {
@@ -1634,13 +1634,13 @@ export def Split(Arg: any, Pred: UnaryPredicate): list<Relation>
   return [ok, tsk]
 enddef
 
-export def PartitionBy(Arg: any, groupBy: any): dict<Relation>
-  var   fid: dict<Relation> = {}
-  const Cont = From(Arg)
+def FlatPartitionBy(Arg: any, groupBy: any): dict<Relation>
+  var fid: dict<Relation> = {}
+  var Cont = From(Arg)
 
   if type(groupBy) == v:t_string
     Cont((t) => {
-      const groupKey = String(t[groupBy])
+      var groupKey = String(t[groupBy])
 
       if !fid->has_key(groupKey)
         fid[groupKey] = []
@@ -1650,8 +1650,8 @@ export def PartitionBy(Arg: any, groupBy: any): dict<Relation>
     })
   else
     Cont((t) => {
-      const groupValue = mapnew(groupBy, (_, attr) => t[attr])
-      const groupKey = string(groupValue)
+      var groupValue = mapnew(groupBy, (_, attr) => t[attr])
+      var groupKey = string(groupValue)
 
       if !fid->has_key(groupKey)
         fid[groupKey] = []
@@ -1660,6 +1660,44 @@ export def PartitionBy(Arg: any, groupBy: any): dict<Relation>
       fid[groupKey]->add(t)
     })
   endif
+
+  return fid
+enddef
+
+export def PartitionBy(Arg: any, groupBy: any, opts: dict<any> = {}): dict<any>
+  if get(opts, 'flat', false)
+    return FlatPartitionBy(Arg, groupBy)
+  endif
+
+  var fid: dict<any> = {}
+  var Cont = From(Arg)
+  var groupBy_ = Listify(groupBy)
+  var n = len(groupBy_)
+
+  Cont((t) => {
+    var i = 0
+    var dict = fid
+    var key: string
+
+    while i < n - 1
+      key = String(t[groupBy_[i]])
+
+      if !dict->has_key(key)
+        dict[key] = {}
+      endif
+
+      dict = dict[key]
+      ++i
+    endwhile
+
+    key = String(t[groupBy_[-1]])
+
+      if !dict->has_key(key)
+        dict[key] = []
+      endif
+
+    dict[key]->add(t)
+  })
 
   return fid
 enddef

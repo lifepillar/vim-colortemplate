@@ -2313,38 +2313,68 @@ NotIn({tuple}, {rel})				*librelalg.NotIn()*
 		Return |true| if {tuple} is not in base or derived relation
 		{rel}, otherwise return |false|.
 
-PartitionBy({rel}, {groupby})			*librelalg.PartitionBy()*
+PartitionBy({rel}, {groupby}[, {opts}])		*librelalg.PartitionBy()*
 		Partition a relation {rel} into several relations by forming
 		groups of records with the same value of the {groupby}
 		attribute(s). {groupby} may be a |string| or a |list| of
 		attributes. The result is a |dict| mapping the values of the
-		{groupby} attributes to the corresponding subrelation. For
-		example:
+		{groupby} attributes to the corresponding subrelation. If more
+		than one {groupby} attribute is given, the dictionary will be
+		nested by default: you may set {opts} to `{flat: true}` to get
+		a flat dictionary.
+
+		For example:
 >
 		var r = [
-		    {id: 0, name: "A", balance: 10.0},
-		    {id: 1, name: "A", balance:  3.5},
-		    {id: 2, name: "B", balance: -3.0},
-		    {id: 3, name: "A", balance:  1.5},
-		    {id: 4, name: "B", balance:  2.5},
+		    {class: 0, name: "A", balance: 10.0},
+		    {class: 1, name: "A", balance:  3.5},
+		    {class: 1, name: "B", balance: -3.0},
+		    {class: 0, name: "A", balance:  1.5},
+		    {class: 1, name: "B", balance:  2.5},
 		  ]
-		echo r->PartitionBy('name')
+		echo r->PartitionBy(['name', 'class'])
 <
 		Output:
 >
 		{
-		    A: [
-		      {id: 0, name: "A", balance: 10.0, class: "X"},
-		      {id: 1, name: "A", balance:  3.5, class: "X"},
-		      {id: 3, name: "A", balance:  1.5, class: "Y"},
-		    ],
-		    B: [
-		      {id: 2, name: "B", balance: -3.0, class: "X"},
-		      {id: 4, name: "B", balance:  2.5, class: "X"},
-		    ],
+		  A: {
+		    0: [
+		         {class: 0, name: "A", balance: 10.0},
+		         {class: 0, name: "A", balance: 1.5},
+		       ],
+		    1: [
+		         {class: 1, name: "A", balance: 3.5},
+		      ]
+		  },
+		  B: {
+		    1: [
+		      {class: 1, name: "B", balance: -3.0},
+		      {class: 1, name: "B", balance: 2.5},
+		      ]
 		  }
+		}
 <
-		Note that the result is obviously *not* a relation!
+		For a flat partition:
+>
+		echo r->PartitionBy(['name', 'class'], {flat: true})
+<
+		Output:
+>
+		{
+		  "['A', 0]": [
+		    {class: 0, name: "A", balance: 10.0},
+		    {class: 0, name: "A", balance: 1.5},
+		  ],
+		  "['A', 1]": [
+		    {class: 1, name: "A", balance: 3.5},
+		  ],
+		  "['B', 1]": [
+		    {class: 1, name: "B", balance: -3.0},
+		    {class: 1, name: "B", balance: 2.5},
+		  ]
+		}
+<
+		Note that the result is obviously not a relation!
 
 Recursive({rel}, {recfunc}[, {unionall}])	*librelalg.Recursive()*
 		Perform a recursive query. This works similarly to SQL's WITH

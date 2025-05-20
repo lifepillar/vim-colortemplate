@@ -1282,13 +1282,21 @@ Filter({rel}, {func})				*librelalg.Filter()*
 Foreach({rel})					*librelalg.Foreach()*
 		A synonym of |librelalg.From()|.
 
-Frame({rel}, {list}[, {name}])			*librelalg.Frame()*
+Frame({rel}, {list}[, {opts}])			*librelalg.Frame()*
 		Virtually partition a relation {rel} based on a {list} of
 		attributes, extend the relation with a new attribute and,
 		within this attribute, assign a distinct integer value to each
-		distinct member of the partition. The standard name of the
-		added attribute is "fid" (for "frame ID"), but a different
-		value can be set with {name}. For instance:
+		distinct member of the partition. 
+
+		{opts} is a dictionary of options with the following keys:
+
+		- "name": the name of the added attribute. The standard name
+		  of the added attribute is "fid" (for "frame ID").
+
+		- "inplace": if |true|, modify the relation in-place instead
+		  of creating new tuples. The default is |false|.
+
+		For instance:
 >
 		var r = [
 		    {A: 10, B: 'a', C: 'x'},
@@ -1299,7 +1307,7 @@ Frame({rel}, {list}[, {name}])			*librelalg.Frame()*
 		    {A: 60, B: 'b', C: 'y'},
 		    {A: 70, B: 'a', C: 'y'},
 		  ]
-		var result = Query(From(r)->Frame(['B', 'C']))
+		var result = Query(r->Frame(['B', 'C']))
 		echo Table(result)
 <
 		Output:

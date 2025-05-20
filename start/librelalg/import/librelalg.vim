@@ -1345,22 +1345,29 @@ enddef
 
 # Inspired by the framing operator described in
 # EF Codd, The Relational Model for Database Management: Version 2, 1990
-export def Frame(Arg: any, attrs: any, name: string = 'fid'): Continuation
+export def Frame(Arg: any, attrs: any, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'fid')
+  var inplace = get(opts, 'inplace', false)
   var fid = 0  # Frame identifier
   var seen: dict<number> = {}
-  const attrList: AttrSet = Listify(attrs)
-  const Cont = From(Arg)
+  var attrList: AttrSet = Listify(attrs)
+  var Cont = From(Arg)
 
   return (Emit: Consumer) => {
     def FrameTuple(t: Tuple)
-      const groupby = string(ProjectTuple(t, attrList))
+      var groupby = string(ProjectTuple(t, attrList))
 
       if !seen->has_key(groupby)
         seen[groupby] = fid
         ++fid
       endif
 
-      Emit(extendnew(t, {[name]: seen[groupby]}, 'error'))
+      if inplace
+        t[name] = seen[groupby]
+        Emit(t)
+      else
+        Emit(extendnew(t, {[name]: seen[groupby]}, 'error'))
+      endif
     enddef
 
     Cont((t) => FrameTuple(t))
@@ -1612,7 +1619,7 @@ export def NotIn(t: Tuple, R: any): bool
 enddef
 
 export def Split(Arg: any, Pred: UnaryPredicate): list<Relation>
-  const Cont = From(Arg)
+  var Cont = From(Arg)
   var ok:  Relation = []
   var tsk: Relation = []
 

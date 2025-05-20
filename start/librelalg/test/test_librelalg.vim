@@ -1928,7 +1928,7 @@ def Test_RA_Frame()
 
   var result = Query(
     From(R)->Extend((t) => {
-      return {'fid': t.A / 30}
+      return {fid: t.A / 30}
     })
   )
   var expected = [
@@ -1954,17 +1954,23 @@ def Test_RA_Frame()
   ]
   assert_equal(expected, result)
 
-  result = Query(R->Frame('B'))
+  result = Query(R->Frame('B', {name: 'foo'}))
   expected = [
-    {A: 10, B: 'a', C: 'x', fid: 0},
-    {A: 20, B: 'b', C: 'y', fid: 1},
-    {A: 30, B: 'a', C: 'x', fid: 0},
-    {A: 40, B: 'a', C: 'x', fid: 0},
-    {A: 50, B: 'b', C: 'x', fid: 1},
-    {A: 60, B: 'b', C: 'y', fid: 1},
-    {A: 70, B: 'a', C: 'y', fid: 0},
+    {A: 10, B: 'a', C: 'x', foo: 0},
+    {A: 20, B: 'b', C: 'y', foo: 1},
+    {A: 30, B: 'a', C: 'x', foo: 0},
+    {A: 40, B: 'a', C: 'x', foo: 0},
+    {A: 50, B: 'b', C: 'x', foo: 1},
+    {A: 60, B: 'b', C: 'y', foo: 1},
+    {A: 70, B: 'a', C: 'y', foo: 0},
   ]
   assert_equal(expected, result)
+  assert_equal(Query(Project(expected, ['A', 'B', 'C'])), R.Instance())
+
+  result = Query(R->Frame('B', {name: 'foo', inplace: true}))
+
+  assert_equal(expected, result)
+  assert_equal(expected, R.Instance())
 enddef
 
 def Test_RA_GroupBy()

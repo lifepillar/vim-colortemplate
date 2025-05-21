@@ -3,7 +3,51 @@ vim9script
 import 'librelalg.vim'  as ra
 import 'libversion.vim' as vv
 
-vv.Require('librelalg', ra.version, '0.1.0-alpha')
+vv.Require('librelalg', ra.version, '0.1.0-alpha1')
+
+#
+#                            Colortemplate's Data Model
+#
+#    ┌───────────┐
+#    │           │
+#    │Environment│
+#    │           │
+#    └────┬─┬────┘                       ┌───────────┐
+#         │ │         supports           │           │
+#           └───────────────────────────●│ Attribute │
+#         │                              │           │
+#                                        └───────────┘
+#         │          ┌───────────┐
+#                    │           │
+#         │          │ Discrim.  │
+#      scopes/       │           │
+#   holds within     └─────┬┬────┘
+#                                        ┌───────────┐
+#         │                ││   varies   │ Highlight │
+#                   defines └ ─ ─ ─ ─ ─ ●│           │
+#         │                │             │   Group   │
+#                          ●             └─────┬─────┘
+#         │          ┌───────────┐             │manifests itself
+#                    │           │             │through
+#         └─ ─ ─ ─ ─●│ Condition │             │      ┌───────────┐
+#    ┌───────────┐   │           │             └─────●│ Highlight │
+#    │           │   └─────┬─────┘   qualifies/       │   Group   │
+#    │   Color   │         └─────────────────────────●│    Def    │
+#    │           │                is restricted by    └─────┬─────┘
+#    └────┬┬┬────┘                                       ___○___
+#         │││                                            ───────
+#                                              ┌───────────┘ └──────────┐
+#         │││                                  ●                        │
+#                                        ┌───────────┐                  │
+#         │││                            │  Linked   │                  │
+#                                        │           │                  │
+#         │││                            │  Group    │                  ●
+#                                        └───────────┘            ┌───────────┐
+#         ││└ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ is foreground of ─ ─ ●│   Base    │
+#          └ ─ ─ ─ ─ ─ ─ ─ ─ ─ is background of ─ ─ ─ ─ ─ ─ ─ ─ ─●│           │
+#         └─ ─ ─ is special color of ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ●│   Group   │
+#                                                                 └───────────┘
+
 
 # Aliases {{{
 type Attr           = ra.Attr
@@ -96,7 +140,7 @@ export class Database
     AttrType:    Str,
     AttrKey:     Str,
   },
-  [['Environment', 'AttrKey', 'AttrType']]
+  [['Environment', 'AttrKey']]
   ).InsertMany([
     {Environment: 'default', AttrType: 'Fg',      AttrKey: 'guifg'  },
     {Environment: 'default', AttrType: 'Bg',      AttrKey: 'guibg'  },
@@ -145,15 +189,15 @@ export class Database
     Base16:     Str,
   }, 'Name'
   ).InsertMany([
-    {Name: '',     GUI: '',     Base256: '',     Base256Hex: '', Base16: '',   },
+    {Name: '',     GUI: '',     Base256: '',     Base256Hex: '', Base16: '',   }, # For when color is omitted
     {Name: 'none', GUI: 'NONE', Base256: 'NONE', Base256Hex: '', Base16: 'NONE'},
     {Name: 'fg',   GUI: 'fg',   Base256: 'fg',   Base256Hex: '', Base16: 'fg', },
     {Name: 'bg',   GUI: 'bg',   Base256: 'bg',   Base256Hex: '', Base16: 'bg', }
   ])
 
   # Discriminators are variables that can be used to conditionally define
-  # highlight group variants. The empty discriminator is used when no
-  # discriminator exists.
+  # highlight group variants. The empty discriminator (discriminator 0) is
+  # used when no discriminator exists for a highlight group.
   var Discriminator = Rel.new('Discriminator', {
     DiscrName:  Str,
     Definition: Str,
@@ -215,17 +259,38 @@ export class Database
     this.Color.OnInsertCheck('Valid color',           IsValidColorName)
     this.Color.OnInsertCheck('Valid 256-based color', IsValidBase256Value)
 
-    ForeignKey(this.Attribute,         'Environment'           )->References(this.Environment,       {verb: 'is supported by'})
-    ForeignKey(this.Condition,         'Environment'           )->References(this.Environment,       {verb: 'holds within'})
-    ForeignKey(this.Condition,         'DiscrName'             )->References(this.Discriminator,     {verb: 'is defined by '})
-    ForeignKey(this.HighlightGroup,    'DiscrName'             )->References(this.Discriminator,     {verb: 'is varied by'})
-    ForeignKey(this.HighlightGroupDef, 'HiGroup'               )->References(this.HighlightGroup,    {verb: 'refers to'})
-    ForeignKey(this.HighlightGroupDef, 'Condition'             )->References(this.Condition,         {verb: 'is restricted by'})
-    ForeignKey(this.LinkedGroup,       ['HiGroup', 'Condition'])->References(this.HighlightGroupDef, {verb: 'is a'})
-    ForeignKey(this.BaseGroup,         ['HiGroup', 'Condition'])->References(this.HighlightGroupDef, {verb: 'is a'})
-    ForeignKey(this.BaseGroup,         'Fg'                    )->References(this.Color,             {verb: 'must adopt as foreground color a valid'})
-    ForeignKey(this.BaseGroup,         'Bg'                    )->References(this.Color,             {verb: 'must adopt as background color a valid'})
-    ForeignKey(this.BaseGroup,         'Special'               )->References(this.Color,             {verb: 'must adopt as special color a valid'})
+    ForeignKey(this.Attribute, 'Environment')
+      ->References(this.Environment, {verb: 'is supported by'})
+
+    ForeignKey(this.Condition, 'Environment')
+      ->References(this.Environment, {verb: 'holds within'})
+
+    ForeignKey(this.Condition, 'DiscrName')
+      ->References(this.Discriminator, {verb: 'is defined by'})
+
+    ForeignKey(this.HighlightGroup, 'DiscrName')
+      ->References(this.Discriminator, {verb: 'is varied by'})
+
+    ForeignKey(this.HighlightGroupDef, 'HiGroup')
+      ->References(this.HighlightGroup, {verb: 'refers to'})
+
+    ForeignKey(this.HighlightGroupDef, 'Condition')
+      ->References(this.Condition, {verb: 'is restricted by'})
+
+    ForeignKey(this.LinkedGroup, ['HiGroup', 'Condition'])
+      ->References(this.HighlightGroupDef, {verb: 'is a'})
+
+    ForeignKey(this.BaseGroup, ['HiGroup', 'Condition'])
+      ->References(this.HighlightGroupDef, {verb: 'is a'})
+
+    ForeignKey(this.BaseGroup, 'Fg')
+      ->References(this.Color, {verb: 'must adopt as foreground color a valid'})
+
+    ForeignKey(this.BaseGroup, 'Bg')
+      ->References(this.Color, {verb: 'must adopt as background color a valid'})
+
+    ForeignKey(this.BaseGroup, 'Special')
+      ->References(this.Color, {verb: 'must adopt as special color a valid'})
   enddef
 
   def InsertDiscriminator(
@@ -375,6 +440,67 @@ export class Database
     return this.LinkedGroup.Lookup(['HiGroup', 'Condition'], [hiGroupName, cond.Condition])
   enddef
 
+  def LinkedGroupDictionaries(environment: string, discrName  = '', discrValue = ''): list<dict<string>>
+    # Return the highlight group definitions for the given conditions.
+    return EquiJoin(
+      this.LinkedGroup,
+      this.Condition->Select(
+        (t) => t.Environment == environment && t.DiscrName == discrName && t.DiscrValue == discrValue
+      ),
+      {on: 'Condition'}
+    )->Transform((t) => {
+      return {HiGroup: t.HiGroup, TargetGroup: t.TargetGroup}
+    })
+  enddef
+
+  def BaseGroupDictionaries(environment: string, discrName  = '', discrValue = ''): list<dict<string>>
+    # Return the highlight group definitions for the given condition as a list
+    # of dictionaries, where each dictionary has the correct attributes with
+    # the correct values. For instance, a dictionary for a highlight group in
+    # 256-color terminals may look as follows:
+    #
+    #     {ctermfg: '203': ctermbg: '16', ctermul: 'NONE', cterm: 'bold'}
+    #
+    # Which keys are returned depends on the environment.
+    var attributes = this.Attribute
+      ->Select((t) => t.Environment == environment)
+      ->DictTransform((t) => {
+        return {[t.AttrKey]: t.AttrType}
+      }, true)
+
+    var colorAttr: string
+
+    if environment == 'gui' || environment == 'default'
+      colorAttr = 'GUI'
+    elseif str2nr(environment) > 16
+      colorAttr = 'Base256'
+    else
+      colorAttr = 'Base16'
+    endif
+
+    var records = EquiJoin(
+      this.BaseGroup,
+      this.Condition->Select(
+        (t) => t.Environment == environment && t.DiscrName == discrName && t.DiscrValue == discrValue
+      ),
+      {on: 'Condition'}
+    )->Transform((t) => {
+      var out: dict<string> = {HiGroup: t.HiGroup}
+
+      for [attr_key, attr_type] in items(attributes)
+        if attr_type == 'Fg' || attr_type == 'Bg' || attr_type == 'Special'
+          out[attr_key] = this.Color.Lookup(['Name'], [t[attr_type]])[colorAttr]
+        else
+          out[attr_key] = t[attr_type]
+        endif
+      endfor
+
+      return out
+    })
+
+    return records
+  enddef
+
   def GetColor(name: string, kind: string): string
     const t = this.Color.Lookup(['Name'], [name])
 
@@ -396,168 +522,6 @@ export class Database
   def ColorGui(name: string): string
     return this.GetColor(name, 'gui')
   enddef
-
-  # Retrieve the relevant metadata for the given environment, including the
-  # names of the attributes for the specified environment. An empty string
-  # indicates that the environment does not support the corresponding
-  # attribute. For example, for a terminal supporting 256 colors, this would
-  # be:
-  #
-  #    {
-  #      Environment: '256',
-  #      NumColors:   256,
-  #      ColorAttr:   'Base256',
-  #      Colors:      {colname1: '50', ..., colnameN: '253'},
-  #      Fg:          'ctermfg',
-  #      Bg:          'ctermbg',
-  #      Special:     'ctermul',
-  #      Style:       'cterm',
-  #      Font:        '',
-  #      Start:       '',
-  #      Stop:        '',
-  #      GuiColors:   {
-  #                      Colors:  {colname1: #111111, ..., colnameN: #nnnnnn},
-  #                      Fg:      'guifg',
-  #                      Bg:      'guibg',
-  #                      Special: 'guisp',
-  #                   }
-  #    }
-  def GetEnvironmentMetadata(environment: string): dict<any>
-    var numColors = this.Environment.Lookup(['Environment'], [environment]).NumColors
-    var colorAttr = numColors <= 16 ? 'Base16' : numColors <= 256 ? 'Base256' : 'GUI'
-    var metadata  = {
-      Environment: environment,
-      NumColors:   numColors,
-      ColorAttr:   colorAttr,
-      Colors:      this.Color->DictTransform((t) => ({[t.Name]: t[colorAttr]}), true),
-      GuiColors:   {
-        Colors:    this.Color->DictTransform((t) => ({[t.Name]: t.GUI}), true),
-        Fg:        'guifg',
-        Bg:        'guibg',
-        Special:   'guisp',
-      }
-    }
-
-    for key in ['Fg', 'Bg', 'Special', 'Style', 'Font', 'Start', 'Stop']
-      metadata[key] = get(
-        this.Attribute.Lookup(['Environment', 'AttrType'], [variant, key]),
-        'AttrKey',
-        ''
-      )
-    endfor
-
-    return metadata
-  enddef
-
-  # Return the tuple corresponding to the default definition for the given
-  # variant. This may be the global default definition or a variant-specific
-  # override if it exists (e.g., `Comment/256 fgColor bgColor`).
-  #
-  # Parameters:
-  #
-  # hiGroupName  The name of a highlight group (e.g., 'Normal')
-  # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
-  #
-  # Returns:
-  #   a tuple containing the pieces of information that are needed to build
-  #   the requested highlight group definition.
-  def GetDefaultDef(hiGroupName: string, variant: string): Tuple
-    var t = this.GetOverrideDef(hiGroupName, variant, DEFAULT_DISCR_VALUE)
-
-    if empty(t)  # Look for the global default definition
-      t = this.BaseGroup.Lookup(['HiGroupName'], [hiGroupName])
-
-      if empty(t)
-        t = this.LinkedGroup.Lookup(['HiGroupName'], [hiGroupName])
-      endif
-    endif
-
-    return t
-  enddef
-
-  # Return the tuple corresponding to an overriding definition for the given
-  # variant and discriminator value.
-  #
-  # Parameters:
-  #
-  # hiGroupName  The name of a highlight group (e.g., 'Normal')
-  # variant      The name of a variant (e.g., 'gui', '256', '16', etc.)
-  # discrValue   The value of the discriminator associated to the highlight
-  #              group.
-  #
-  # Returns:
-  #   a tuple containing the pieces of information that are needed to build
-  #   the requested highlight group definition. When an overriding definition
-  #   matching the input cannot be found, an empty tuple is returned.
-  def GetOverrideDef(
-      hiGroupName: string, variant: string, discrValue: string
-      ): Tuple
-    const t = this.HiGroupOverride.Lookup(
-      ['HiGroupName', 'Variant', 'DiscrValue'],
-      [hiGroupName, variant, discrValue]
-    )
-
-    if empty(t)
-      return t
-    endif
-
-    if t.IsLinked
-      return this.LinkedGroupOverride.Lookup(
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        [hiGroupName, variant, discrValue]
-      )
-    endif
-
-    return this.BaseGroupOverride.Lookup(
-      ['HiGroupName', 'Variant', 'DiscrValue'],
-      [hiGroupName, variant, discrValue]
-    )
-  enddef
-
-  # Return the discriminators in the order they have been defined.
-  def Discriminators(): list<dict<any>>
-    return this.Discriminator
-      ->Select((t) => !empty(t.DiscrName))
-      ->SortBy('DiscrNum')
-  enddef
-
-  # Return all the default definitions for the given variant. Note that the
-  # result is NOT a relation, because it is a list of heterogeneous tuples.
-  def DefaultDefinitions(variant: string): list<dict<any>>
-    return this.HiGroup->Transform((t) => this.GetDefaultDef(t.HiGroupName, variant))
-  enddef
-
-  # Return only variant-specific definitions for the given variant, except
-  # those that depend on a discriminator. Note that the result is NOT
-  # a relation.
-  def VariantSpecificDefinitions(variant: string): list<dict<any>>
-    return Query(
-      this.HiGroupOverride
-      ->Select((t) => t.DiscrValue == DEFAULT_DISCR_VALUE && t.Variant == variant)
-      ->LeftEquiJoin(this.LinkedGroupOverride,
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
-      ->LeftEquiJoin(this.BaseGroupOverride,
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
-    )
-  enddef
-
-  # Return the discriminator-based definitions for the given variant. The
-  # returned value is a dictionary of list of heterogeneous tuples, keyed
-  # by discriminator's name.
-  def OverridingDefsByDiscrName(variant: string): dict<list<dict<any>>>
-    return this.HiGroupOverride
-      ->Select((t) => t.Variant == variant && t.DiscrValue != DEFAULT_DISCR_VALUE)
-      ->EquiJoin(this.HiGroup, ['HiGroupName'], ['HiGroupName'])
-      ->LeftEquiJoin(this.LinkedGroupOverride,
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
-      ->LeftEquiJoin(this.BaseGroupOverride,
-        ['HiGroupName', 'Variant', 'DiscrValue'],
-        ['HiGroupName', 'Variant', 'DiscrValue'], [{}])
-      ->PartitionBy('DiscrName')
-  enddef
 endclass
 
 export class Colorscheme
@@ -565,13 +529,13 @@ export class Colorscheme
   var light: Database
 
   # Color scheme's metadata
-  public var author:       list<string>       = []
+  public var authors:      list<string>       = []
   public var description:  list<string>       = []
   public var fullname:     string             = ''
   public var license:      string             = ''
-  public var maintainer:   list<string>       = []
+  public var maintainers:  list<string>       = []
   public var shortname:    string             = ''
-  public var url:          list<string>       = []
+  public var urls:         list<string>       = []
   public var version:      string             = ''
   public var environments: list<string>       = []
   public var backgrounds:  dict<bool>         = {dark: false, light: false}

@@ -132,12 +132,12 @@ enddef
 
 def SetAuthor(v: list<string>, ctx: Context)
   var theme: Colorscheme = ctx.state.theme
-  theme.author->add(v[2])
+  theme.authors->add(v[2])
 enddef
 
 def SetMaintainer(v: list<string>, ctx: Context)
   var theme: Colorscheme = ctx.state.theme
-  theme.maintainer->add(v[2])
+  theme.maintainers->add(v[2])
 enddef
 
 def SetDescription(v: list<string>, ctx: Context)
@@ -159,7 +159,7 @@ enddef
 
 def SetURL(v: list<string>, ctx: Context)
   var theme: Colorscheme = ctx.state.theme
-  theme.url->add(v[2])
+  theme.urls->add(v[2])
 enddef
 
 def SetTermColors(v: list<string>, ctx: Context)
@@ -337,11 +337,11 @@ def FindReplacement(placeholder: string, ctx: Context): string
 
     try
       if key == 'author'
-        return theme.author[num]
+        return theme.authors[num]
       elseif key == 'maintainer'
-        return theme.maintainer[num]
+        return theme.maintainers[num]
       elseif key == 'url'
-        return theme.url[num]
+        return theme.urls[num]
       elseif key == 'description'
         return theme.description[num]
       endif

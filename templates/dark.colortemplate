@@ -30,7 +30,7 @@ Prefix: drk
 ; Variants tell Colortemplate for which environments to generate highlight
 ; group definitions. The 'gui' variant is always enabled and doesn't have to be
 ; specified (unless it's the only one to be supported).
-Variants:   gui 256 8 0
+Environments:   gui 256 8 0
 
 ; A template can import other templates:
 Include: _help.colortemplate

@@ -2,7 +2,7 @@ vim9script
 
 import 'libpath.vim'                    as path
 import '../import/libcolortemplate.vim' as lib
-import '../import/colortemplate/generator/dummy.vim' as dummygenerator
+import '../import/colortemplate/generator/vim9.vim' as vim9generator
 
 type Colorscheme = lib.Colorscheme
 type Result      = lib.ParserResult
@@ -63,7 +63,7 @@ def CheckMetadata(theme: Colorscheme): bool
     return Error('Please define the short name of the color scheme')
   endif
 
-  if empty(theme.author)
+  if empty(theme.authors)
     return Error('Please define the author of the color scheme')
   endif
 
@@ -336,7 +336,7 @@ export def Build(
     outdir:    string        = '',
     bang:      string        = '',
     parseOnly: bool          = false,
-    generator: lib.Generator = dummygenerator.Generator.new()
+    generator: lib.Generator = vim9generator.Generator.new()
     ): bool
   if !IsColortemplateBuffer(bufname(bufnr))
     return Error('Command can be executed only on Colortemplate buffers')
@@ -445,7 +445,7 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
 enddef
 
 export def Stats()
-  const nr = bufnr()
+  var nr = bufnr()
 
   if IsCached(nr) || Build(nr, null_string, null_string, true)
     lib.ColorStats(CachedTheme(nr))

@@ -265,4 +265,36 @@ def Test_Colorscheme_HiGroupDef()
 enddef
 
 
+def Test_Colorscheme_LinkedGroupDictionaries()
+  var db = Database.new('dark')
+
+  db.InsertDiscriminator('italic', 'def goes here')
+  db.InsertBaseGroup('default', '', '', 'String', 'fg', 'none', 'none', 'bold')
+  db.InsertLinkedGroup('256', '', '', 'String', 'Title')
+  db.InsertLinkedGroup('256', 'italic', 'true', 'String', 'Comment')
+  db.InsertLinkedGroup('256', 'italic', 'true', 'DiffAdd', 'Folded')
+  db.InsertLinkedGroup('8', '', '', 'String', 'Foobar')
+
+  assert_true(empty(db.LinkedGroupDictionaries('default')), '01')
+  assert_equal([{HiGroup: 'String', TargetGroup: 'Title'}], db.LinkedGroupDictionaries('256'))
+  assert_true(RelEq([
+    {HiGroup: 'String', TargetGroup: 'Comment'},
+    {HiGroup: 'DiffAdd', TargetGroup: 'Folded'}
+  ],
+  db.LinkedGroupDictionaries('256', 'italic', 'true')
+  ), '02')
+enddef
+
+def Test_Colorscheme_BaseGroupDictionaries()
+  var db = Database.new('dark')
+  db.InsertDiscriminator('italic', 'def goes here')
+  db.InsertBaseGroup('default', '', '', 'String', 'fg', 'none', 'none', 'bold')
+  db.InsertBaseGroup('default', '', '', 'Folded', 'fg', 'bg', 'none', 'underline')
+  db.InsertBaseGroup('256', '', '', 'Comment', 'fg', 'bg', 'fg', 'bold,italic')
+
+  assert_equal([], db.BaseGroupDictionaries('default'))
+
+  echo ra.Table(db.BaseGroupDictionaries('default'))
+enddef
+
 tt.Run('_Colorscheme_')

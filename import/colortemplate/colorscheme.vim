@@ -3,7 +3,7 @@ vim9script
 import 'librelalg.vim'  as ra
 import 'libversion.vim' as vv
 
-vv.Require('librelalg', ra.version, '0.1.0-alpha1')
+vv.Require('librelalg', ra.version, '0.2.0-alpha1')
 
 #
 #                            Colortemplate's Data Model

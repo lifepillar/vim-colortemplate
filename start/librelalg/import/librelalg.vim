@@ -1,6 +1,6 @@
 vim9script
 
-export var version = '0.1.0-alpha1'
+export var version = '0.2.0-alpha1'
 
 # Author:       Lifepillar <lifepillar@lifepillar.me>
 # Maintainer:   Lifepillar <lifepillar@lifepillar.me>
@@ -155,44 +155,6 @@ def Values(t: Tuple, attrs: AttrSet): list<any>
   endfor
 
   return values
-enddef
-
-if has("patch-9.1.0547")
-  def NumArgs(Fn: func): number
-    return get(Fn, "arity").required
-  enddef
-else
-  def NumArgs(Fn: func): number
-    return len(split(matchstr(typename(Fn), '([^)]\+)'), ','))
-  enddef
-endif
-
-# Implement currying with a twist: if the last argument is a function,
-# put it at the beginning. This trick allows the following syntaxes to be
-# equivalent:
-#
-#     CurriedFunc(F, 'arg1', 'arg2')
-# and
-#     CurriedFunc('arg1', 'arg2', F)
-#
-# besides, of course, allowing partial application.
-def Curry(Fn: func, ...values: list<any>): func
-  # const n = get(Fn, "arity").required
-  var n = NumArgs(Fn)
-
-  return (...args: list<any>) => {
-    var totalArgs = values + args
-
-    if len(totalArgs) < n
-        return call(Curry, [Fn] + totalArgs)
-    else
-      if type(totalArgs[-1]) == v:t_func
-        return call(Fn, totalArgs[-1 : ] + totalArgs[ : -2])
-      else
-        return call(Fn, totalArgs)
-      endif
-    endif
-  }
 enddef
 # }}}
 
@@ -1374,28 +1336,6 @@ export def Frame(Arg: any, attrs: any, opts: dict<any> = {}): Continuation
   }
 enddef
 
-export def GroupBy(
-    Arg: any, groupBy: any, AggrFn: func(...list<any>): any, aggrName = 'aggrValue'
-): Continuation
-  var fid: dict<Relation> = FlatPartitionBy(Arg, groupBy)
-  var groupBy_: AttrSet = Listify(groupBy)
-
-  return (Emit: Consumer) => {
-    # Apply the aggregate function to each subrelation
-    for groupKey in keys(fid)
-      var subrel = fid[groupKey]
-      var t0: Tuple = {}
-
-      for attr in groupBy_
-        t0[attr] = subrel[0][attr]
-      endfor
-
-      t0[aggrName] = Scan(subrel)->AggrFn()
-      Emit(t0)
-    endfor
-  }
-enddef
-
 # Returns all the tuples which, concatenated with a tuple of s, produce
 # a tuple of r. Relational division is a derived operator, defined as follows:
 #
@@ -1477,135 +1417,169 @@ enddef
 # }}}
 
 # Aggregate functions {{{
-def Aggregate(Arg: any, initValue: any, Fn: func(Tuple, any): any): any
-  const Cont = From(Arg)
+export def Aggregate(Arg: any, Fn: func(any): any): Continuation
+  if type(Arg) == v:t_dict # Input from GroupBy()
+    var attrs = Arg.attributes
+    var groups: list<Relation> = values(Arg.groups)
 
-  var Res: any = initValue
+    return (Emit: Consumer) => {
+      for group in groups
+        var Cont = From(Fn(group))
 
-  Cont((t) => {
-    Res = Fn(t, Res)
-  })
+        Cont((t) => {
+          for attr in attrs
+            t[attr] = group[0][attr]
+          endfor
 
-  return Res
-enddef
-
-def ListAgg_(Arg: any, attr: Attr, How: any, unique: bool): list<any>
-  var agg: list<any> = []
-  const Cont = From(Arg)
-
-  Cont((t) => {
-    agg->add(t[attr])
-  })
-
-  if How == null
-    return agg
-  elseif unique
-    return sort(agg, How)->uniq()
+          Emit(t)
+        })
+      endfor
+    }
   endif
 
-  return sort(agg, How)
+  return From(Fn(Arg))
 enddef
 
-export const ListAgg = Curry(ListAgg_)
-
-def StringAgg_(Arg: any, attr: Attr, sep: string, How: any, unique: bool): string
-  return ListAgg_(Arg, attr, How, unique)->join(sep)
+export def Count(Arg: any, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'count')
+  return Aggregate(Arg, (R): Relation => [{[name]: len(Query(R))}])
 enddef
 
-export const StringAgg = Curry(StringAgg_)
+export def CountDistinct(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'count')
 
-export def Count(...ArgList: list<any>): number
-  var count = 0
-  const Cont = From(ArgList[0])
+  return Aggregate(Arg, (R): Relation => {
+    var count = 0
+    var seen: dict<bool> = {}
+    var Cont = From(R)
 
-  Cont((t) => {
-    ++count
+    Cont((t) => {
+      var v = String(t[attr])
+
+      if !seen->has_key(v)
+        ++count
+        seen[v] = true
+      endif
+    })
+
+    return [{[name]: count}]
   })
-
-  return count
 enddef
 
-def CountDistinct_(Arg: any, attr: Attr): number
-  var count = 0
-  var seen: dict<bool> = {}
-  const Cont = From(Arg)
+export def Max(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'max')
 
-  Cont((t) => {
-    const v = String(t[attr])
+  return Aggregate(Arg, (R): Relation => {
+    var first = true
+    var max: any = null
+    var Cont = From(R)
 
-    if !seen->has_key(v)
+    Cont((t) => {
+      var v = t[attr]
+
+      if first
+        max = v
+        first = false
+      elseif CompareValues(v, max) == 1
+        max = v
+      endif
+    })
+
+    return [{[name]: max}]
+  })
+enddef
+
+export def Min(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'min')
+
+  return Aggregate(Arg, (R): Relation => {
+    var first = true
+    var min: any = null
+    var Cont = From(R)
+
+    Cont((t) => {
+      var v = t[attr]
+
+      if first
+        min = v
+        first = false
+      elseif CompareValues(v, min) == -1
+        min = v
+      endif
+    })
+
+    return [{[name]: min}]
+  })
+enddef
+
+export def Sum(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'sum')
+
+  return Aggregate(Arg, (R): Relation => {
+    var sum = 0.0
+    var Cont = From(R)
+
+    Cont((t) => {
+      sum += t[attr]
+    })
+
+    return [{[name]: sum}]
+  })
+enddef
+
+export def Avg(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', 'avg')
+
+  return Aggregate(Arg, (R): Relation => {
+    var sum: float = 0.0
+    var count = 0
+    var Cont = From(R)
+
+    Cont((t) => {
+      sum += t[attr]
       ++count
-      seen[v] = true
+    })
+
+    return [{[name]: count == 0 ? null : sum / count}]
+  })
+enddef
+
+export def ListAggregate(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', attr)
+
+  return Aggregate(Arg, (R): Relation => {
+    var agg: list<any> = []
+    var Cont = From(R)
+
+    Cont((t) => {
+      agg->add(t[attr])
+    })
+
+    var How = get(opts, 'how', null)
+
+    if How == null
+      return [{[name]: agg}]
+    elseif get(opts, 'unique', false)
+      return [{[name]: sort(agg, How)->uniq()}]
     endif
+
+    return [{[name]: sort(agg, How)}]
   })
-
-  return count
 enddef
 
-export const CountDistinct = Curry(CountDistinct_)
+export def StringAggregate(Arg: any, attr: Attr, opts: dict<any> = {}): Continuation
+  var name = get(opts, 'name', attr)
 
-def Max_(Arg: any, attr: Attr): any
-  var first = true
-  var max: any = null
-  const Cont = From(Arg)
+  var sep = get(opts, 'sep', '')
+  var Cont = ListAggregate(Arg, attr, opts)
 
-  Cont((t) => {
-    const v = t[attr]
-
-    if first
-      max = v
-      first = false
-    elseif CompareValues(v, max) == 1
-      max = v
-    endif
-  })
-
-  return max
+  return (Emit: Consumer) => {
+    Cont((t) => {
+      t[name] = t[name]->join(sep)
+      Emit(t)
+    })
+  }
 enddef
-
-export const Max = Curry(Max_)
-
-def Min_(Arg: any, attr: Attr): any
-  var first = true
-  var min: any = null
-  const Cont = From(Arg)
-
-  Cont((t) => {
-    const v = t[attr]
-
-    if first
-      min = v
-      first = false
-    elseif CompareValues(v, min) == -1
-      min = v
-    endif
-  })
-
-  return min
-enddef
-
-export const Min = Curry(Min_)
-
-def Sum_(Arg: any, attr: Attr): any
-  return Aggregate(Arg, 0, (t, sum) => sum + t[attr])
-enddef
-
-export const Sum = Curry(Sum_)
-
-def Avg_(Arg: any, attr: Attr): any
-  var sum: float = 0.0
-  var count = 0
-  const Cont = From(Arg)
-
-  Cont((t: Tuple) => {
-    sum += t[attr]
-    ++count
-  })
-
-  return count == 0 ? null : sum / count
-enddef
-
-export const Avg = Curry(Avg_)
 # }}}
 # }}}
 
@@ -1662,6 +1636,10 @@ def FlatPartitionBy(Arg: any, groupBy: any): dict<Relation>
   endif
 
   return fid
+enddef
+
+export def GroupBy(Arg: any, groupBy: any): dict<any> # TODO: use Vim's tuple
+  return {attributes: Listify(groupBy), groups: FlatPartitionBy(Arg, groupBy)}
 enddef
 
 export def PartitionBy(Arg: any, groupBy: any, opts: dict<any> = {}): dict<any>
@@ -1856,7 +1834,7 @@ export def Table(R: any, opts: dict<any> = {}): string
     rel = (<IRel>R).Instance()
     relname = empty(name) ? (<IRel>R).name : name
   else
-    rel = R
+    rel = Query(R)
     relname = name
   endif
 

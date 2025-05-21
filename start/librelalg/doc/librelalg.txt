@@ -61,19 +61,19 @@ with built-in integrity. For that, start by defining a Relational schema:
 >
 	vim9script
 	import "librelalg.vim" as ra
-	
+
 	type  Rel        = ra.Rel
 	const Int        = ra.Int
 	const Str        = ra.Str
 	const Float      = ra.Float
 	const ForeignKey = ra.ForeignKey
 	const References = ra.References
-	
+
 	#        Name ───┐  Schema ────┐    Keys ────┐
 	#                ▼             ▼             ▼
 	var R = Rel.new('R',   {A: Int, B: Float},  'A')
 	var S = Rel.new('S',   {X: Str, Y: Int},    'X')
-	
+
 	R.OnInsertCheck('B must be positive', (t) => t.B > 0.0)
 	ForeignKey(S, 'Y')->References(R)
 <
@@ -114,16 +114,16 @@ Output:
 Update the database:
 >
 	# Add a new tuple
-	R.Insert({A: 30, B: 4.3})   
-	
+	R.Insert({A: 30, B: 4.3})
+
 	# Update tuple with X equal to 'klm' by setting Y equal to 30
 	S.Update((t) => t.X == 'klm', (t) => {
 	  t.Y = 30
 	})
-	
+
 	# Delete tuples satisfying a condition
-	S.Delete((t) => t.Y == 10)  
-	
+	S.Delete((t) => t.Y == 10)
+
 	rel = ra.Query(ra.EquiJoin(R, S, {onleft: 'A', onright: 'Y'}))
 	echo ra.Table(rel)
 <
@@ -232,6 +232,7 @@ straightforward task:
 	const Int        = ra.Int
 	const Str        = ra.Str
 	const ForeignKey = ra.ForeignKey
+	const References = ra.References
 	const Table      = ra.Table
 	# etc.
 <
@@ -403,7 +404,7 @@ Queries are expressions that are typically used as an argument to
 1 before line 6" can be formulated as follows:
 >
 	var result = Query(
-	    From(Tag)->Select((t) => t.BufId == 1 && t.Line <= 6)
+	  From(Tag)->Select((t) => t.BufId == 1 && t.Line <= 6)
 	)
 	echo Table(result)
 <
@@ -650,7 +651,7 @@ Upsert({tuple} [, {opts}])
 		tuple that is replaced is the one with the same values of the
 		primary key as {tuple} (recall that the primary key is
 		conventionally defined as the first key that is defined when
-		a relation is created). If no such tuple exists, by default 
+		a relation is created). If no such tuple exists, by default
 		{tuple} is inserted into the relation.
 
 		{opts} is a dictionary of options. The only supported key is
@@ -1191,7 +1192,7 @@ EquiJoin({rel1}, {rel2}[, {opts}])
 		  should also be present.
 
 		- "prefix": see |librelalg.Join()|.
-		
+
 		When "onleft" and "onright" are used, they must be lists with
 		the same length. Attributes at the same position in the two
 		lists are compared for equality. Lists of one attribute may be
@@ -1286,7 +1287,7 @@ Frame({rel}, {list}[, {opts}])			*librelalg.Frame()*
 		Virtually partition a relation {rel} based on a {list} of
 		attributes, extend the relation with a new attribute and,
 		within this attribute, assign a distinct integer value to each
-		distinct member of the partition. 
+		distinct member of the partition.
 
 		{opts} is a dictionary of options with the following keys:
 
@@ -1330,66 +1331,6 @@ From({rel})					*librelalg.From()*
 		a relation {rel} and emits each tuple. If {rel} is already
 		a continuation, then this function just returns it. This is
 		a root operator, that is, an operator that starts a query.
-
-GroupBy({rel}, {groupby}, {func} [, {name}])	*librelalg.GroupBy()*
-		Group the tuples of a relation {rel} with respect to a |list|
-		of attributes {groupby}, and apply an aggregate function
-		{func} to each group. When grouping by a single attribute,
-		{groupby} can also be a |string|. The schema of the output
-		relation consists of the grouping attributes and the aggregate
-		attribute. The name of the aggregate attribute is given by
-		{name}. Examples:
->
-		var r = [
-		    {A: 10, B: 'a', C: 'x', D: 4},
-		    {A: 20, B: 'b', C: 'y', D: 7},
-		    {A: 30, B: 'a', C: 'x', D: 3},
-		    {A: 40, B: 'a', C: 'x', D: 0},
-		    {A: 50, B: 'b', C: 'x', D: 3},
-		    {A: 60, B: 'b', C: 'y', D: 9},
-		    {A: 70, B: 'a', C: 'y', D: 3},
-		  ]
-		var result = Query(
-		   From(r)->GroupBy(['B', 'C'], Min('D'), 'minD')
-		)
-		echo Table(result)
-<
-		Output:
->
-		──────────
-		 B C minD
-		──────────
-		 a y    3
-		 b x    3
-		 a x    0
-		 b y    7
-<
-		To count the number of tags in each buffer with tags:
->
-		var result = Query(
-		    Tag->GroupBy('BufId', Count, 'num_tags')
-		  )
-		echo Table(result)
-<
-		Output:
->
-		────────────────
-		 num_tags BufId
-		────────────────
-		        4     1
-		        1     2
-		        1     3
-<
-		|librelalg.Min()| and |librelalg.Count()| are aggregate
-		functions. For more aggregate functions, see
-		|librelalg-aggregates|.
-
-		For the most common aggregate functions, specialized operators
-		exist, which are generally preferrable over GroupBy(): see
-		|librelalg.AvgBy()|, |librelalg.CountBy()|,
-		|librelalg.MaxBy()|, |librelalg.MinBy()|, |librelalg.SumBy()|.
-
-		This is a pipeline operator, returning a continuation.
 
 Intersect({rel1}, {rel2})			*librelalg.Intersect()*
 		Return the intersection of two relations {rel1} and {rel2}.
@@ -1501,12 +1442,12 @@ Join({rel1}, {rel2}, {func} [, {opts}])		*librelalg.Join()*
 LeftEquiJoin({rel1}, {rel2}[, {opts}])
 		Perform the left outer join of two relations {rel1} and {rel2}
 		based on an equality condition. {opts} is a dictionary of
-		options. In addition to the same keys supported by 
+		options. In addition to the same keys supported by
 		|librelalg.EquiJoin()|, {opts} also supports the following
 		keys:
 
 		- "filler": an arbitrary relation with the same schema as
-		  {rel2}. 
+		  {rel2}.
 
 		The result is the equi-join between the input relations,
 		extended (by union) with the cross-product of the filler
@@ -1531,7 +1472,7 @@ LeftEquiJoin({rel1}, {rel2}[, {opts}])
 		    {C: 'z', A: 30},
 		]
 		var result = Query(
-		    LeftEquiJoin(r, s, 
+		    LeftEquiJoin(r, s,
 		      {onleft: 'B', onright: 'C', filler: [{C: 'NA', A: 0}]})
 		)
 		echo Table(result)
@@ -2099,78 +2040,142 @@ Union({rel1}, {rel2})				*librelalg.Union()*
 ==============================================================================
 4. Aggregate functions				*librelalg-aggregates*
 
-An aggregate function is a special type of leaf operator: instead of returning
-a relation instance, an aggregate function returns a scalar. These functions
-can be used as normal leaf operators, as in the following example:
+Aggregate functions are implemented as pipeline operators. For example:
 >
 	# Count the number of tuples
-	echo [{A: 9}, {A: 4}, {A: 6}]->Count()  # 3
+	echo Table([{A: 9}, {A: 4}, {A: 6}]->Sum('A'))
 <
-Aggregate functions can also be used as an argument to |librelalg.GroupBy()|.
-
-Avg({rel}, {attr})				*librelalg.Avg()*
-		Return the average value of attribute {attr} in a relation
-		{rel}. Examples:
+The output is a relation:
 >
-		echo [{A: 9}, {A: 7}, {A: 11}]->Avg('A')  # 9.0
+	──────
+	  sum
+	──────
+	 19.0
+<
+If you want to get a scalar value, you may wrap an aggregate function in your
+own scalar leaf operator. For instance:
+>
+	def ScalarSum(R: any, attr: string): float
+	  return Query(R->Sum(attr))[0].sum
+	enddef
+
+	echo [{A: 9}, {A: 4}, {A: 6}]->ScalarSum('A')  # 19.0
+<
+Aggregate functions can also be chained after |librelalg.GroupBy()|.
+
+Aggregate({arg}, {func})			*librelalg.Aggregate()*
+		Compute an aggregated result by executing {func} on {arg}.
+		{func} is a function that receives a relation instance,
+		relation object, or continuation, and outputs another relation
+		or continuation (so, in general, an aggregate function does
+		not have to return a single value, or even a single tuple).
+
+		If {arg} is a base relation, relation instance or continuation
+		then it is passed to {func} directly, and the result is
+		returned.
+
+		{arg} may also be the value returned by |librelalg.GroupBy()|.
+		In this case, {func} is called once for each group.
+
+		This function can be used to define custom aggregates. For the
+		most common cases, you may use the predefined aggregate
+		functions provided by librelalg and documented below.
+
+Avg({arg}, {attr}[, {opts}])			*librelalg.avg()*
+		Return the average of the values of attribute {attr}. For
+		{arg}, see |librelalg.Aggregate()|. {opts} can be used to set
+		the name of the aggregate attribute, which is "avg" by
+		default. For example:
+>
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}]->Avg('A', {name: 'mean'})
+		)
+		# [{'mean': 9.0}]
 <
 		To return the average tag's column number:
 >
-		var avg = Tag->Avg('Column')  # 6.666667
+		var avg = Query(Tag->Avg('Column'))[0].avg  # .666667
 <
-Count({rel})					*librelalg.Count()*
-		Return the number of tuples of a relation {rel}.  Examples:
+Count({arg}[, {opts}])				*librelalg.Count()*
+		Return the number of tuples of a relation {rel}. For {arg},
+		see |librelalg.Aggregate()|. {opts} is the same as in
+		|librelalg.Avg()|. Examples:
 >
-		echo [{A: 9}, {A: 7}]->Count()  # 2
+		echo Query([{A: 9}, {A: 7}]->Count())  # [{'count': 2}]
 <
 		To compute the number of buffers:
 >
-		var nBuf = Buffer->Count()    # 3
+		var nBuf = Query(Buffer->Count())[0].count    # 3
 <
-CountDistinct({rel}, {attr})			*librelalg.CountDistinct()*
+CountDistinct({arg}, {attr}[, {opts}])		*librelalg.CountDistinct()*
 		Return the number of distinct values in attribute {attr} of
-		a relation {rel}. Examples:
+		a relation {rel}. For {arg}, see |librelalg.Aggregate()|.
+		Examples: Examples:
 >
-		echo From([
+		echo Query([
 		  {X: 0, Y: 1},
 		  {X: 1, Y: 1},
 		  {X: 2, Y: 3},
 		  {X: 3, Y: 3},
-		])->CountDistinct('Y')  # 2
+		]->CountDistinct('Y'))  # [{count: 2}]
 <
 		To return the number of distinct tag names:
 >
-		var nDistinctTags = Tag->CountDistinct('TagName')  # 4
+		var nDistinctTags = Query(
+		  Tag->CountDistinct('TagName')
+		)[0].count  # 4
 <
-ListAgg({rel}, {attr}, {how}, {uniq})		*librelalg.ListAgg()*
-		Return the values of attribute {attr} in a relation {rel} as
-		a |list|, sorted using the method specified by {how}. For the
-		possible values of {how}, see |sort()|. If you want the lists
-		to remain unsorted, pass |null|. If {uniq} is |true| then
-		second and succeeding copies of repeated adjacent values are
-		removed. Note: all the arguments are mandatory! Examples:
+ListAggregate({arg}, {attr}[, {opts}])		*librelalg.ListAgg()*
+		Return the values of attribute {attr} in {arg} as |list|s,
+		possibly sorted in some way. For {arg}, see
+		|librelalg.Aggregate()|.
+
+		{opts} is a dictionary of options, which may contain the
+		following keys:
+
+		- "name": the name of the aggregate attribute. By default,
+		  {attr} is used.
+
+		- "how": specifies how to sort each list. For the possible
+		  values, see |sort()|. By default, the lists are left
+		  unsorted.
+
+		- "unique": if |true| then second and succeeding copies of
+		  repeated adjacent values are removed. The defauls it
+		  |false|.
+
+		Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A', null, false)  # [9, 7, 11]
+		echo Query([{A: 9}, {A: 7}, {A: 11}]->ListAggregate('A'))
+		# [{A: [9, 7, 11]}]
 
-		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A', 'f', false)  # [7, 9, 11]
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}]->ListAggregate('A', {how: 'f'})
+		)
+		# [7, 9, 11]
 
-		echo From([{A: 9}, {A: 7}, {A: 11}])
-			->ListAgg('A', '', false)  # [11, 7, 9]
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}]->ListAggregate('A', {how: ''})
+		)
+		# [11, 7, 9]
 
-		echo From([{A: 9}, {A: 7}, {A: 7}])
-			->ListAgg('A', '', false)  # [9, 7, 7]
+		echo Query([{A: 9}, {A: 7}, {A: 7}]->ListAggregate('A'))
+		# [9, 7, 7]
 
-		echo From([{A: 9}, {A: 7}, {A: 7}])
-			->ListAgg('A', 'f', true)  # [7, 11]
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 7}]
+		  ->ListAggregate('A', {how: 'f', unique: true})
+		)
+		# [7, 9]
 <
 		To build the sorted lists of tags in each buffer, sorted by
 		buffer:
 >
 		var result = From(Tag)
-		               ->GroupBy('BufId', ListAgg('TagName', '', false))
-		               ->SortBy(['BufId'])
+		  ->GroupBy('BufId')
+		  ->ListAggregate('TagName', {how: ''})
+		  ->SortBy('BufId')
+
 		echo Table(result)
 <
 		Output:
@@ -2182,46 +2187,58 @@ ListAgg({rel}, {attr}, {how}, {uniq})		*librelalg.ListAgg()*
 		                      ['abc']     2
 		                      ['abc']     3
 <
-Min({rel}, {attr})				*librelalg.Min()*
-		Return the minimum value of attribute {attr} in a relation
-		{rel}. Examples:
+Min({agr}, {attr}[, {opts}])			*librelalg.Min()*
+		Return the minimum value of attribute {attr} in {rel}.
+		{opts} is as in |librelalg.Avg()|. Examples:
 >
-		echo [{A: 9}, {A: 7}, {A: 11}]->Min('A')  # 7
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}]->Min('A')
+		)
+		# [{min: 7}]
 <
 		To return the minimum buffer id:
 >
-		var minBufId = Buffer->Min('BufId')  # 1
+		var minBufId = Query(Buffer->Min('BufId'))[0].min  # 1
 <
-Max({rel}, {attr})				*librelalg.Max()*
-		Return the maximum value of attribute {attr} in a relation
-		{rel}. Examples:
+Max({arg}, {attr}[, {opts}])			*librelalg.Max()*
+		Return the maximum value of attribute {attr} in {arg}.
+		{opts} is as in |librelalg.Avg()|. Examples:
 >
-		echo [{A: 9}, {A: 7}, {A: 11}]->Max('A')  # 11
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}]->Max('A')
+		)
+		# [{max: 11}]
 <
 		To return the maximum column of a tag:
 >
-		var maxCol = Tag->Max('Column')  # 15
+		var maxCol = Query(Tag->Max('Column'))[0].max  # 15
 <
-StringAgg({rel}, {attr}, {sep}, {how}, {uniq})	*librelalg.StringAgg()*
-		Return the values of attribute {attr} in a relation {rel}
-		joined into a |string|. The values in the string are separated
-		by string {sep}. The items are sorted using |sort()|. {how} is
-		defined as in |sort()|. If {uniq} is |true| then duplicated
-		values are removed. Note: all the arguments are mandatory!
+StringAggregate({arg}, {attr}[, {opts}])	*librelalg.StringAgg()*
+		Return the values of attribute {attr} in {arg} joined into
+		|string|s. For {arg}, see |librelalg.Aggregate()|. {opts} is
+		as in |librelalg.ListAggregate(), but in addition it supports
+		a "sep" key to define a separator between the joined items.
+		The default separator is the empty string.
 		Examples:
 >
-		echo From([{A: 9}, {A: 7}, {A: 11}, {A: 9}])
-			->StringAgg('A', ', ', 'n', false)  # '7, 9, 9, 11'
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}, {A: 9}]
+		  ->StringAggregate('A', {sep: ', ', how: 'n'})
+		)
+		# [{A: '7, 9, 9, 11'}]
 
-		echo From([{A: 9}, {A: 7}, {A: 11}, {A: 9}])
-			->StringAgg('A', ', ', 'n', true)  # '7, 9, 11'
+		echo Query(
+		  [{A: 9}, {A: 7}, {A: 11}, {A: 9}]
+		  ->StringAggregate('A', {how: 'n', unique: true})
+		)
+		# [{A: '7911'}]
 <
 		To return the tags in each buffer joined into a string, sorted
 		by buffer:
 >
-		var result = Tag->GroupBy(
-		  'BufId', StringAgg('TagName', ',', '', false)
-		  )
+		var result = Tag
+		  ->GroupBy('BufId')
+		  ->StringAggregate('TagName', {sep: ',', how: ''})
 		  ->SortBy('BufId')
 
 		echo Table(result)
@@ -2235,15 +2252,16 @@ StringAgg({rel}, {attr}, {sep}, {how}, {uniq})	*librelalg.StringAgg()*
 		             abc     2
 		             abc     3
 <
-Sum({rel}, {attr})				*librelalg.Sum()*
-		Return the sum of the values of attribute {attr} in a relation
-		{rel}. Examples:
+Sum({arg}, {attr}[, {opts}])			*librelalg.Sum()*
+		Return the sum of the values of attribute {attr} in {rel}.
+		{opts} is as in |librelalg.Avg()|. Examples:
 >
-		echo [{A: 9}, {A: 7}, {A: 11}]->Sum('A')  # 27
+		echo Query([{A: 9}, {A: 7}, {A: 11}]->Sum('A'))
+		# [{sum: 27.0}]
 <
 		To compute the sum of all tags' columns:
 >
-		var colSum = Tag->Sum('Column')  # 40
+		var colSum = Query(Tag->Sum('Column'))[0].sum  # 40.0
 <
 ==============================================================================
 5. Other functions				*librelalg-other-functions*
@@ -2305,6 +2323,51 @@ EquiJoinPred({list1}[, {list2}])		*librelalg.EquiJoinPred()*
 		───────────────
 		     xyz     3
 <
+GroupBy({rel}, {groupby})			*librelalg.GroupBy()*
+		Group the tuples of a relation {rel} with respect to a |list|
+		of attributes {groupby}. When grouping by a single attribute,
+		{groupby} can also be a |string|. The result is a dictionary
+		containing the list of group-by attributes and the groups.
+		Typically, the result of GroupBy() is passed to an aggregate
+		function: see |librelalg-aggregates| for more examples.
+>
+		var r = [
+		    {A: 10, B: 'a', C: 'x', D: 4},
+		    {A: 20, B: 'b', C: 'x', D: 7},
+		    {A: 30, B: 'a', C: 'x', D: 3},
+		    {A: 40, B: 'a', C: 'x', D: 0},
+		    {A: 50, B: 'b', C: 'x', D: 3},
+		    {A: 60, B: 'b', C: 'y', D: 9},
+		    {A: 70, B: 'a', C: 'y', D: 3},
+		  ]
+		var result = r->GroupBy(['B', 'C'])
+		echo result
+<
+		Output:
+>
+		{
+		  attributes: ['B', 'C'],
+		  groups: {
+		    ['a', 'x']': [
+		      {A: 10, B: 'a', C: 'x', D: 4},
+		      {A: 30, B: 'a', C: 'x', D: 3},
+		      {A: 40, B: 'a', C: 'x', D: 0},
+		    ],
+		    ['a', 'y']': [
+		      {A: 70, B: 'a', C: 'y', D: 3},
+		    ],
+		    ['b', 'x']': [
+		     {A: 20, B: 'b', C: 'x', D: 7},
+		     {A: 50, B: 'b', C: 'x', D: 3},
+		    ],
+		    ['b', 'y']': [
+		      {A: 60, B: 'b', C: 'y', D: 9},
+		    ],
+		  }
+		}
+<
+		Note that the result is obviously not a relation!
+
 In({tuple}, {rel})				*librelalg.In()*
 		Return |true| if {tuple} is in base or derived relation {rel},
 		otherwise return |false|.

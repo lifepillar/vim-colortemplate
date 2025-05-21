@@ -48,7 +48,7 @@ const Intersect            = ra.Intersect
 const Join                 = ra.Join
 const LeftEquiJoin         = ra.LeftEquiJoin
 const LeftNatJoin          = ra.LeftNatJoin
-const ListAgg              = ra.ListAgg
+const ListAggregate        = ra.ListAggregate
 const Max                  = ra.Max
 const MaxBy                = ra.MaxBy
 const Min                  = ra.Min
@@ -71,7 +71,7 @@ const Sort                 = ra.Sort
 const SortBy               = ra.SortBy
 const Split                = ra.Split
 const Str                  = ra.Str
-const StringAgg            = ra.StringAgg
+const StringAggregate      = ra.StringAggregate
 const Sum                  = ra.Sum
 const SumBy                = ra.SumBy
 const Table                = ra.Table
@@ -1466,7 +1466,7 @@ def Test_RA_LeftNatJoin()
     {BufId: 2, TagName: 'abc', Line: 14, Column: 15},
   ])
 
-  const summary = Query(From(Tag)->GroupBy(['BufId'], Count, 'num_tags'))
+  const summary = Query(Tag->GroupBy('BufId')->Count({name: 'num_tags'}))
   const result = Query(From(Buffer)->LeftNatJoin(summary, {filler: [{'num_tags': 0}]}))
   const expected = [
     {BufId: 1, BufName: 'foo', num_tags: 3},
@@ -1567,10 +1567,10 @@ def Test_RA_Max()
   var R = Rel.new('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.Instance()
 
-  assert_equal(null, From(R)->Max('A'))
-  assert_equal(null, From(R)->Max('B'))
-  assert_equal(null, From(R)->Max('C'))
-  assert_equal(null, From(R)->Max('D'))
+  assert_equal([{max: null}], Query(R->Max('A')))
+  assert_equal([{max: null}], Query(R->Max('B')))
+  assert_equal([{max: null}], Query(R->Max('C')))
+  assert_equal([{maximum: null}], Query(R->Max('D', {name: 'maximum'})))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D:  true},
@@ -1581,10 +1581,11 @@ def Test_RA_Max()
   ]
   R.InsertMany(instance)
 
-  assert_equal(4,    From(R)->Max('A'))
-  assert_equal('Z',  From(R)->Max('B'))
-  assert_equal(10.0, From(R)->Max('C'))
-  assert_equal(true, From(R)->Max('D'))
+  assert_equal([{max:    4}], Query(R->Max('A')))
+  assert_equal([{max:  'Z'}], Query(R->Max('B')))
+  assert_equal([{max: 10.0}], Query(R->Max('C')))
+  assert_equal([{max: true}], Query(R->Max('D')))
+
   assert_equal(instance, r)
 enddef
 
@@ -1592,10 +1593,10 @@ def Test_RA_Min()
   var R = Rel.new('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.Instance()
 
-  assert_equal(null, From(R)->Min('A'))
-  assert_equal(null, From(R)->Min('B'))
-  assert_equal(null, From(R)->Min('C'))
-  assert_equal(null, From(R)->Min('D'))
+  assert_equal([{min: null}], Query(R->Min('A')))
+  assert_equal([{min: null}], Query(R->Min('B')))
+  assert_equal([{min: null}], Query(R->Min('C')))
+  assert_equal([{minimum: null}], Query(R->Min('D', {name: 'minimum'})))
 
   const instance = [
     {A: 0, B: "X", C: 10.0, D:  true},
@@ -1606,10 +1607,10 @@ def Test_RA_Min()
   ]
   R.InsertMany(instance)
 
-  assert_equal(0,     From(R)->Min('A'))
-  assert_equal('X',   From(R)->Min('B'))
-  assert_equal(-3.0,  From(R)->Min('C'))
-  assert_equal(false, From(R)->Min('D'))
+  assert_equal([{min: 0}],     Query(R->Min('A')))
+  assert_equal([{min: 'X'}],   Query(R->Min('B')))
+  assert_equal([{min: -3.0}],  Query(R->Min('C')))
+  assert_equal([{min: false}], Query(R->Min('D')))
   assert_equal(instance, r)
 enddef
 
@@ -1617,8 +1618,8 @@ def Test_RA_Sum()
   var R = Rel.new('R', {A: Int, B: Float}, [['A']])
   const r = R.Instance()
 
-  assert_equal(0, From(R)->Sum('A'))
-  assert_equal(0, From(R)->Sum('B'))
+  assert_equal([{sum: 0.0}], Query(R->Sum('A')))
+  assert_equal([{sum: 0.0}], Query(R->Sum('B')))
 
   const instance = [
     {A: 0, B: 10.0},
@@ -1629,10 +1630,8 @@ def Test_RA_Sum()
   ]
   R.InsertMany(instance)
 
-  assert_equal(10, From(R)->Sum('A'))
-  assert_equal(v:t_number, type(From(R)->Sum('A')))
-  assert_equal(13.5, From(R)->Sum('B'))
-  assert_equal(v:t_float, type(From(R)->Sum('B')))
+  assert_equal([{sum: 10.0}], Query(R->Sum('A')))
+  assert_equal([{sum: 13.5}], Query(R->Sum('B')))
   assert_equal(instance, r)
 enddef
 
@@ -1640,8 +1639,8 @@ def Test_RA_Avg()
   var R = Rel.new('R', {A: Int, B: Float}, [['A']])
   const r = R.Instance()
 
-  assert_equal(null, From(R)->Avg('A'))
-  assert_equal(null, From(R)->Avg('B'))
+  assert_equal([{avg: null}], Query(R->Avg('A')))
+  assert_equal([{mean: null}], Query(R->Avg('B', {name: 'mean'})))
 
   const instance = [
     {A: 0, B: 10.0},
@@ -1652,10 +1651,8 @@ def Test_RA_Avg()
   ]
   R.InsertMany(instance)
 
-  assert_equal(2.0, From(R)->Avg('A'))
-  assert_equal(v:t_float, type(From(R)->Avg('A')))
-  assert_equal(2.7, From(R)->Avg('B'))
-  assert_equal(v:t_float, type(From(R)->Avg('B')))
+  assert_equal([{avg: 2.0}], Query(R->Avg('A')))
+  assert_equal([{avg: 2.7}], Query(R->Avg('B')))
   assert_equal(instance, r)
 enddef
 
@@ -1669,8 +1666,8 @@ def Test_RA_Count()
     {id: 5, A: 4, B:  2.5},
   ]
 
-  assert_equal(0, From([])->Count())
-  assert_equal(6, From(r)->Count())
+  assert_equal([{count: 0}], Query([]->Count()))
+  assert_equal([{n: 6}], Query(r->Count({name: 'n'})))
 enddef
 
 def Test_RA_CountDistinct()
@@ -1683,12 +1680,12 @@ def Test_RA_CountDistinct()
     {id: 5, A: 4, B:  2.5},
   ]
 
-  assert_equal(0, From([])->CountDistinct('A'))
-  assert_equal(3, From(r)->CountDistinct('A'))
-  assert_equal(4, From(r)->CountDistinct('B'))
+  assert_equal([{count: 0}], Query([]->CountDistinct('A')))
+  assert_equal([{count: 3}], Query(r->CountDistinct('A')))
+  assert_equal([{n: 4}], Query(r->CountDistinct('B', {name: 'n'})))
 enddef
 
-def Test_RA_ListAgg()
+def Test_RA_ListAggregate()
   const r = [
     {id: 0, A: 0, B: 10.0},
     {id: 1, A: 2, B:  2.5},
@@ -1698,19 +1695,42 @@ def Test_RA_ListAgg()
     {id: 5, A: 4, B:  2.5},
   ]
   const expected = [
-    {A: 0, aggrValue: [10.0]},
-    {A: 2, aggrValue: [2.5, -3.0, 1.5]},
-    {A: 4, aggrValue: [2.5, 2.5]},
+    {A: 0, B: [10.0]},
+    {A: 2, B: [2.5, -3.0, 1.5]},
+    {A: 4, B: [2.5, 2.5]},
   ]
 
-  assert_equal([], From([])->ListAgg('A', '', false))
-  assert_equal([0, 2, 2, 2, 4, 4], From(r)->ListAgg('A', '', false))
-  assert_equal([10.0, 2.5, -3.0, 1.5, 2.5, 2.5], From(r)->ListAgg('B', null, false))
-  assert_equal([-3.0, 1.5, 2.5, 2.5, 2.5, 10.0], From(r)->ListAgg('B', 'f', false))
-  assert_equal(expected, From(r)->GroupBy(['A'], ListAgg('B', null, false))->SortBy('A'))
+  assert_equal([{A: []}], Query([]->ListAggregate('A')), '01')
+  assert_equal([{A: [0, 2, 2, 2, 4, 4]}], Query(r->ListAggregate('A')), '02')
+  assert_equal([{B: [10.0, 2.5, -3.0, 1.5, 2.5, 2.5]}], Query(r->ListAggregate('B', {})), '03')
+  assert_equal(
+    [{values: [-3.0, 1.5, 2.5, 2.5, 2.5, 10.0]}],
+    Query(r->ListAggregate('B', {how: 'f', name: 'values'})),
+    '04'
+  )
+
+  var grouping = r->GroupBy('A')
+
+  assert_equal(['A'], grouping.attributes)
+  assert_equal({
+    0: [
+      {id: 0, A: 0, B: 10.0},
+    ],
+    2: [
+      {id: 1, A: 2, B:  2.5},
+      {id: 2, A: 2, B: -3.0},
+      {id: 3, A: 2, B:  1.5},
+    ],
+    4: [
+      {id: 4, A: 4, B:  2.5},
+      {id: 5, A: 4, B:  2.5},
+    ],
+  }, grouping.groups)
+
+  assert_equal(expected, r->GroupBy(['A'])->ListAggregate('B')->SortBy('A'), '05')
 enddef
 
-def Test_RA_ListAggUnique()
+def Test_RA_ListAggregateUnique()
   const r = [
     {id: 0, A: 0, B: 10.0},
     {id: 1, A: 2, B:  2.5},
@@ -1720,21 +1740,21 @@ def Test_RA_ListAggUnique()
     {id: 5, A: 4, B:  3.5},
   ]
   const expected1 = [
-    {A: 0, aggrValue: [10.0]},
-    {A: 2, aggrValue: [-3.0, 2.5, 2.5]},
-    {A: 4, aggrValue: [3.5, 3.5]},
+    {A: 0, B: [10.0]},
+    {A: 2, B: [-3.0, 2.5, 2.5]},
+    {A: 4, B: [3.5, 3.5]},
   ]
   const expected2 = [
-    {A: 0, aggrValue: [10.0]},
-    {A: 2, aggrValue: [-3.0, 2.5]},
-    {A: 4, aggrValue: [3.5]},
+    {A: 0, B: [10.0]},
+    {A: 2, B: [-3.0, 2.5]},
+    {A: 4, B: [3.5]},
   ]
 
-  assert_equal(expected1, r->GroupBy('A', ListAgg('B', 'f', false))->SortBy('A'))
-  assert_equal(expected2, r->GroupBy('A', ListAgg('B', 'f', true))->SortBy('A'))
+  assert_equal(expected1, r->GroupBy('A')->ListAggregate('B', {how: 'f'})->SortBy('A'))
+  assert_equal(expected2, r->GroupBy('A')->ListAggregate('B', {how: 'f', unique: true})->SortBy('A'))
 enddef
 
-def Test_RA_StringAgg()
+def Test_RA_StringAggregate()
   const r = [
     {id: 0, A: 0, B: 'a'},
     {id: 1, A: 2, B: 'c'},
@@ -1744,29 +1764,28 @@ def Test_RA_StringAgg()
     {id: 5, A: 4, B: 'm'},
   ]
 
-  assert_equal('', From([])->StringAgg('A', '', '', false))
-  assert_equal('0.2.2.2.4.4', r->StringAgg('A', '.', '', false))
-  assert_equal('a, b, c, f, m, p', r->StringAgg('B', ', ', '', false))
+  assert_equal([{A: ''}], Query([]->StringAggregate('A')))
+  assert_equal([{A: '0.2.2.2.4.4'}], Query(r->StringAggregate('A', {sep: '.'})))
+  assert_equal(
+    [{values: 'a, b, c, f, m, p'}],
+    Query(r->StringAggregate('B', {sep: ', ', how: '', name: 'values'}))
+  )
 
-  const result = From(r)
-                 ->GroupBy('A',
-                     StringAgg('B',
-                               ',',
-                               (x, y) => x == y ? 0 : x > y ? -1 : 1,
-                               false),
-                     )
-                 ->SortBy('A')
+  var result = r
+    ->GroupBy('A')
+    ->StringAggregate('B', {sep: ',', how: (x, y) => x == y ? 0 : x > y ? -1 : 1})
+    ->SortBy('A')
 
   const expected = [
-    {A: 0, aggrValue: 'a'},
-    {A: 2, aggrValue: 'p,f,c'},
-    {A: 4, aggrValue: 'm,b'},
+    {A: 0, B: 'a'},
+    {A: 2, B: 'p,f,c'},
+    {A: 4, B: 'm,b'},
   ]
 
   assert_equal(expected, result)
 enddef
 
-def Test_RA_StringAgg_Unique()
+def Test_RA_StringAggregate_Unique()
   const r = [
     {id: 0, A: 0, B: 'a'},
     {id: 1, A: 2, B: 'a'},
@@ -1776,17 +1795,17 @@ def Test_RA_StringAgg_Unique()
     {id: 5, A: 4, B: 'b'},
   ]
   const expected1 = [
-    {A: 0, aggrValue: 'a'},
-    {A: 2, aggrValue: 'a,a,p'},
-    {A: 4, aggrValue: 'b,b'},
+    {A: 0, B: 'a'},
+    {A: 2, B: 'a,a,p'},
+    {A: 4, B: 'b,b'},
   ]
   const expected2 = [
-    {A: 0, aggrValue: 'a'},
-    {A: 2, aggrValue: 'a,p'},
-    {A: 4, aggrValue: 'b'},
+    {A: 0, B: 'a'},
+    {A: 2, B: 'a,p'},
+    {A: 4, B: 'b'},
   ]
-  const result1 = r->GroupBy('A', StringAgg('B', ',', 'i', false))->SortBy('A')
-  const result2 = r->GroupBy('A', StringAgg('B', ',', 'i', true))->SortBy('A')
+  const result1 = r->GroupBy('A')->StringAggregate('B', {sep: ',', how: 'i'})->SortBy('A')
+  const result2 = r->GroupBy('A')->StringAggregate('B', {sep: ',', how: 'i', unique: true})->SortBy('A')
 
   assert_equal(expected1, result1)
   assert_equal(expected2, result2)
@@ -1940,7 +1959,7 @@ def Test_RA_Frame()
     {A: 60, B: 'b', C: 'y', fid: 2},
     {A: 70, B: 'a', C: 'y', fid: 2},
   ]
-  assert_equal(expected, result)
+  assert_true(RelEq(expected, result), '01')
 
   result = Query(From(R)->Frame(['B', 'C']))
   expected = [
@@ -1952,6 +1971,7 @@ def Test_RA_Frame()
     {A: 60, B: 'b', C: 'y', fid: 1},
     {A: 70, B: 'a', C: 'y', fid: 3},
   ]
+  assert_true(RelEq(expected, result), '02')
   assert_equal(expected, result)
 
   result = Query(R->Frame('B', {name: 'foo'}))
@@ -1964,13 +1984,13 @@ def Test_RA_Frame()
     {A: 60, B: 'b', C: 'y', foo: 1},
     {A: 70, B: 'a', C: 'y', foo: 0},
   ]
-  assert_equal(expected, result)
-  assert_equal(Query(Project(expected, ['A', 'B', 'C'])), R.Instance())
+  assert_true(RelEq(expected, result), '03')
+  assert_true(RelEq(Query(Project(expected, ['A', 'B', 'C'])), R.Instance()), '04')
 
   result = Query(R->Frame('B', {name: 'foo', inplace: true}))
 
-  assert_equal(expected, result)
-  assert_equal(expected, R.Instance())
+  assert_true(RelEq(expected, result), '05')
+  assert_true(RelEq(expected, R.Instance()), '06')
 enddef
 
 def Test_RA_GroupBy()
@@ -1986,9 +2006,10 @@ def Test_RA_GroupBy()
   ]
   R.InsertMany(instance)
 
-  var result = From(r)
-               ->GroupBy(['name'], Sum('balance'), 'total')
-               ->SortBy('name')
+  var result = r
+    ->GroupBy(['name'])
+    ->Sum('balance', {name: 'total'})
+    ->SortBy('name')
 
   var expected = [
     {name: 'A', total: 15.0},
@@ -1997,7 +2018,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy('name', Max('balance'), 'max')->SortBy('name')
+  result = r->GroupBy('name')->Max('balance')->SortBy('name')
 
   expected = [
     {name: 'A', max: 10.0},
@@ -2006,7 +2027,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy('name', Min('balance'), 'min')->SortBy('name')
+  result = r->GroupBy('name')->Min('balance')->SortBy('name')
 
   expected = [
     {name: 'A', min: 1.5},
@@ -2015,7 +2036,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy('name', Avg('balance'), 'avg')->SortBy('name')
+  result = r->GroupBy('name')->Avg('balance')->SortBy('name')
 
   expected = [
     {name: 'A', avg: 5.0},
@@ -2024,7 +2045,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy('name', Count, 'count')->SortBy('name')
+  result = r->GroupBy('name')->Count()->SortBy('name')
 
   expected = [
     {name: 'A', count: 3},
@@ -2033,7 +2054,7 @@ def Test_RA_GroupBy()
 
   assert_equal(expected, result)
 
-  result = r->GroupBy('name', CountDistinct('class'), 'num_class')->SortBy('name')
+  result = r->GroupBy('name')->CountDistinct('class', {name: 'num_class'})->SortBy('name')
 
   expected = [
     {name: 'A', num_class: 2},
@@ -2047,8 +2068,8 @@ enddef
 
 def Test_RA_CoddDivide()
   var Subscription = Rel.new('Subscription',
-     {student: Str, date: Str, course: Str},
-     [['student', 'course']]
+    {student: Str, date: Str, course: Str},
+    [['student', 'course']]
   )
   const subscription = Subscription.Instance()
   const subscription_instance = [
@@ -2257,8 +2278,8 @@ def Test_RA_DeeDum()
   assert_equal([{}],         From(dee)->AntiJoin(dum, (t1, t2) => true)->Build(),  "dee ▷ dum")
   assert_equal([],           From(dee)->AntiJoin(dee, (t1, t2) => true)->Build(),  "dee ▷ dee")
 
-  assert_equal([],           From(dum)->GroupBy([], Count, 'agg')->Build(), "dum group by []")
-  assert_equal([{'agg': 1}], From(dee)->GroupBy([], Count, 'agg')->Build(), "dee group by []")
+  assert_equal([],           From(dum)->GroupBy([])->Count({name: 'agg'})->Build(), "dum group by []")
+  assert_equal([{'agg': 1}], From(dee)->GroupBy([])->Count({name: 'agg'})->Build(), "dee group by []")
 
   assert_equal([],           From(dum)->CoddDivide(dum)->Build(),           "dum ÷ dum")
   assert_equal([],           From(dum)->CoddDivide(dee)->Build(),           "dum ÷ dee")
@@ -2356,24 +2377,24 @@ def Test_RA_PartitionBy()
   const r = R.Instance()
 
   const instance = [
-    {id: 0, name: "A", balance: 10.0, class: "X"},
-    {id: 1, name: "A", balance:  3.5, class: "X"},
-    {id: 2, name: "B", balance: -3.0, class: "X"},
-    {id: 3, name: "A", balance:  1.5, class: "Y"},
-    {id: 4, name: "B", balance:  2.5, class: "X"},
+    {id: 0, name: "a", balance: 10.0, class: "x"},
+    {id: 1, name: "a", balance:  3.5, class: "x"},
+    {id: 2, name: "b", balance: -3.0, class: "x"},
+    {id: 3, name: "a", balance:  1.5, class: "y"},
+    {id: 4, name: "b", balance:  2.5, class: "x"},
   ]
   R.InsertMany(instance)
 
   const result1 = r->PartitionBy('name')
   const expected1 = {
-    A: [
-      {id: 0, name: "A", balance: 10.0, class: "X"},
-      {id: 1, name: "A", balance:  3.5, class: "X"},
-      {id: 3, name: "A", balance:  1.5, class: "Y"},
+    a: [
+      {id: 0, name: "a", balance: 10.0, class: "x"},
+      {id: 1, name: "a", balance:  3.5, class: "x"},
+      {id: 3, name: "a", balance:  1.5, class: "y"},
     ],
-    B: [
-      {id: 2, name: "B", balance: -3.0, class: "X"},
-      {id: 4, name: "B", balance:  2.5, class: "X"},
+    b: [
+      {id: 2, name: "b", balance: -3.0, class: "x"},
+      {id: 4, name: "b", balance:  2.5, class: "x"},
     ],
   }
 
@@ -2381,37 +2402,37 @@ def Test_RA_PartitionBy()
 
   const result2 = r->PartitionBy(['name', 'class'])
   const expected2 = {
-    A: {
-      X: [
-        {id: 0, name: "A", balance: 10.0, class: "X"},
-        {id: 1, name: "A", balance:  3.5, class: "X"},
+    a: {
+      x: [
+        {id: 0, name: "a", balance: 10.0, class: "x"},
+        {id: 1, name: "a", balance:  3.5, class: "x"},
       ],
-      Y: [
-        {id: 3, name: "A", balance:  1.5, class: "Y"},
+      y: [
+        {id: 3, name: "a", balance:  1.5, class: "y"},
       ]
     },
-      B: {
-        X: [
-          {id: 2, name: "B", balance: -3.0, class: "X"},
-          {id: 4, name: "B", balance:  2.5, class: "X"},
-        ],
-      }
+    b: {
+      x: [
+        {id: 2, name: "b", balance: -3.0, class: "x"},
+        {id: 4, name: "b", balance:  2.5, class: "x"},
+      ],
+    }
   }
 
   assert_equal(expected2, result2)
 
   const result3 = r->PartitionBy(['name', 'class'], {flat: true})
   const expected3 = {
-    "['A', 'X']": [
-      {id: 0, name: "A", balance: 10.0, class: "X"},
-      {id: 1, name: "A", balance:  3.5, class: "X"},
+    "['a', 'x']": [
+      {id: 0, name: "a", balance: 10.0, class: "x"},
+      {id: 1, name: "a", balance:  3.5, class: "x"},
     ],
-    "['A', 'Y']": [
-      {id: 3, name: "A", balance:  1.5, class: "Y"},
+    "['a', 'y']": [
+      {id: 3, name: "a", balance:  1.5, class: "y"},
     ],
-    "['B', 'X']": [
-      {id: 2, name: "B", balance: -3.0, class: "X"},
-      {id: 4, name: "B", balance:  2.5, class: "X"},
+    "['b', 'x']": [
+      {id: 2, name: "b", balance: -3.0, class: "x"},
+      {id: 4, name: "b", balance:  2.5, class: "x"},
     ],
   }
 
@@ -2863,8 +2884,8 @@ def Test_RA_BreweryConstraints()
 
   AssertFails(() => {
     Brewery.InsertMany([
-    {Name: "Drunk Fools", City: "Dalkeith", Country:   "Scotland"},
-    {Name: "Crown & Son", City: "Anderlecht", Country: "Belgium"},
+      {Name: "Drunk Fools", City: "Dalkeith", Country:   "Scotland"},
+      {Name: "Crown & Son", City: "Anderlecht", Country: "Belgium"},
     ])
   }, "Duplicate key: {Name: 'Crown & Son'}")
 

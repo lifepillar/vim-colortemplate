@@ -4,9 +4,9 @@ librelalg-other-functions	librelalg.txt	/*librelalg-other-functions*
 librelalg-quickstart	librelalg.txt	/*librelalg-quickstart*
 librelalg-ra	librelalg.txt	/*librelalg-ra*
 librelalg-tutorial	librelalg.txt	/*librelalg-tutorial*
+librelalg.Aggregate()	librelalg.txt	/*librelalg.Aggregate()*
 librelalg.AntiEquiJoin()	librelalg.txt	/*librelalg.AntiEquiJoin()*
 librelalg.AntiJoin()	librelalg.txt	/*librelalg.AntiJoin()*
-librelalg.Avg()	librelalg.txt	/*librelalg.Avg()*
 librelalg.AvgBy()	librelalg.txt	/*librelalg.AvgBy()*
 librelalg.Build()	librelalg.txt	/*librelalg.Build()*
 librelalg.CoddDivide()	librelalg.txt	/*librelalg.CoddDivide()*
@@ -61,5 +61,6 @@ librelalg.Transaction()	librelalg.txt	/*librelalg.Transaction()*
 librelalg.Transform()	librelalg.txt	/*librelalg.Transform()*
 librelalg.Union()	librelalg.txt	/*librelalg.Union()*
 librelalg.Zip()	librelalg.txt	/*librelalg.Zip()*
+librelalg.avg()	librelalg.txt	/*librelalg.avg()*
 librelalg.operators	librelalg.txt	/*librelalg.operators*
 librelalg.txt	librelalg.txt	/*librelalg.txt*

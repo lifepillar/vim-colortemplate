@@ -94,4 +94,22 @@ def Test_RA_Perf__Lookup()
   }, 'Lookup', {repeat: 5})
 enddef
 
+def Test_RA_Perf__GroupBy()
+  var r = repeat([
+    {A: 10, B: 'a', C: 'x', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+    {A: 20, B: 'b', C: 'y', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+    {A: 30, B: 'a', C: 'x', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+    {A: 40, B: 'a', C: 'x', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+    {A: 50, B: 'b', C: 'x', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+    {A: 60, B: 'b', C: 'y', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+    {A: 70, B: 'a', C: 'y', D: 1, E: 2, F: 3, G: 4, H: 'ok', I: 'hello'},
+  ], 1000)
+
+  tt.AssertBenchmark(() => {
+    var result = ra.Query(r->ra.GroupBy(['B', 'C'], ra.Sum('A')))
+  }, 'GroupBy', {repeat: 5})
+enddef
+
+
+
 tt.Run('_RA_Perf__')

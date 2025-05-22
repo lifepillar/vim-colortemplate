@@ -1,8 +1,8 @@
 vim9script
 
-import 'libpath.vim'                    as path
-import '../import/libcolortemplate.vim' as lib
-import '../import/colortemplate/generator/vim9.vim' as vim9generator
+import 'libpath.vim'                                    as path
+import '../import/libcolortemplate.vim'                 as lib
+import '../import/colortemplate/generator/vim.vim'      as vimgenerator
 import '../import/colortemplate/generator/template.vim' as templategenerator
 
 type Colorscheme = lib.Colorscheme
@@ -338,7 +338,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
   endif
 
   var parseOnly:  bool          = get(opts, 'parseonly', false)
-  var generator:  lib.Generator = get(opts, 'generator', templategenerator.Generator.new())
+  var generator:  lib.Generator = get(opts, 'generator', null_object)
   var filesuffix: string        = get(opts, 'filesuffix', '.vim')
 
   var text      = join(getbufline(bufnr, 1, '$'), "\n")
@@ -370,6 +370,19 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   if !CheckMetadata(theme)
     return false
+  endif
+
+  if generator == null
+    if theme.options.backend == 'template'
+      generator = templategenerator.Generator.new()
+      filesuffix = '.colortemplate'
+    else
+      generator = vimgenerator.Generator.new()
+
+      if theme.options.backend == 'viml'
+        (<vimgenerator.Generator>generator).SetLanguage('viml')
+      endif
+    endif
   endif
 
   var startGen   = reltime()

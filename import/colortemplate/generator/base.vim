@@ -63,6 +63,7 @@ export interface IGenerator
 endinterface
 
 export abstract class Generator implements IGenerator
+  var language:       string       = 'vim9'
   var comment_symbol: string       = '# '
   var let_keyword:    string       = ''
   var const_keyword:  string       = 'const '
@@ -74,12 +75,14 @@ export abstract class Generator implements IGenerator
 
   def SetLanguage(language: string)
     if language == 'vim9'
+      this.language       = 'vim9'
       this.comment_symbol = '# '
       this.let_keyword    = ''
       this.const_keyword  = 'const '
       this.var_prefix     = ''
       this.header         = ['vim9script', '']
     elseif language == 'viml'
+      this.language       = 'viml'
       this.comment_symbol = '" '
       this.let_keyword    = 'let '
       this.const_keyword  = 'let '
@@ -110,13 +113,17 @@ export abstract class Generator implements IGenerator
   enddef
 
   def BuildDefaultHeader(theme: Colorscheme)
+    var sa = len(theme.authors) > 1     ? 's:' : ': '
+    var sm = len(theme.maintainers) > 1 ? 's:' : ': '
+    var su = len(theme.urls) > 1        ? 's:' : ': '
+
     this.AddMeta('Name:         %s', theme.fullname)
     this.AddMeta('Version:      %s', theme.version)
     this.AddMultivaluedMeta('Description:  %s', theme.description)
-    this.AddMultivaluedMeta('Authors:      %s', theme.authors)
-    this.AddMultivaluedMeta('Maintainers:  %s', theme.maintainers)
-    this.AddMultivaluedMeta('URLs:         %s', theme.urls)
-    this.AddMeta('License:      %s', empty(theme.license) ? 'Vim License (see `:help license`)' : theme.license)
+    this.AddMultivaluedMeta($'Author{sa}      %s', theme.authors)
+    this.AddMultivaluedMeta($'Maintainer{sm}  %s', theme.maintainers)
+    this.AddMultivaluedMeta($'URL{su}         %s', theme.urls)
+    this.AddMeta('License:      %s', theme.license)
 
     if theme.options.timestamp
       this.AddMeta('Last Change:  %s', strftime(theme.options.dateformat))

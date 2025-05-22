@@ -16,8 +16,8 @@ License:       MIT
 Include: _help.colortemplate
 ; }}}
 
-Variants:   gui 256 8 0
-Background: light
+Environments: gui 256 8 0
+Background:   light
 
 ; Common linked groups {{{
 ; Other conventional group names (see `:help group-name`)

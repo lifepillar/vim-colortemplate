@@ -1,10 +1,11 @@
 Full Name: Test 001
-Short Name: test001
 Author: No One
+Short Name: test001
 Background: dark
 Color: black #333333 ~
 Color: white #fafafa ~
 Normal white black
+Environments: gui
 Comment -> omit
 Title omit omit s=omit omit
 Options: creator=false timestamp=false

@@ -26,7 +26,9 @@ enddef
 
 def AssertGenerateTemplate(name: string)
   var template = path.Join(TESTDIR, 'templates', name .. '.colortemplate')
-  execute 'edit' template
+
+  execute 'split' template
+
   var bufnr = bufnr("%")
   var success = colortemplate.Build(bufnr, OUTDIR, '!', {
     generator: templategenerator.Generator.new(),
@@ -35,11 +37,9 @@ def AssertGenerateTemplate(name: string)
 
   assert_true(success, 'Template unexpectedly failed to build.')
 
-  try
-    Verify(name)
-  finally
-    execute $':{bufnr}bwipe'
-  endtry
+  execute $':{bufnr}bwipe'
+
+  Verify(name)
 enddef
 # }}}
 

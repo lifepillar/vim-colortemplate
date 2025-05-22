@@ -1,7 +1,7 @@
 vim9script
 
 import 'librelalg.vim'      as ra
-import './common.vim'       as common
+import './base.vim'         as base
 import '../colorscheme.vim' as colorscheme
 
 
@@ -22,8 +22,8 @@ const Transform     = ra.Transform
 type Colorscheme = colorscheme.Colorscheme
 type Database    = colorscheme.Database
 
-const CompareByHiGroupName = common.CompareByHiGroupName
-const CompareEnvironments  = common.CompareEnvironments
+const CompareByHiGroupName = base.CompareByHiGroupName
+const CompareEnvironments  = base.CompareEnvironments
 
 
 def In(v: any, items: list<any>): bool
@@ -110,7 +110,7 @@ def BaseGroupToString(t: dict<any>, space: string): string
   return $"{space}hi {t.HiGroup} {join(attributes, ' ')}"
 enddef
 
-export class Generator extends common.BaseGenerator
+export class Generator extends base.Generator
   var indent = 0
   var shiftwidth = 2
   var space = ''
@@ -158,7 +158,7 @@ export class Generator extends common.BaseGenerator
 
     # Terminal colors
     output->add(printf('%sg:terminal_ansi_colors = %s',
-      this.space, string(db.termcolors))
+      this.space, mapnew(db.termcolors, (_, name) => db.Color.Lookup(['Name'], name).GUI)
     )
     output->add('')
 

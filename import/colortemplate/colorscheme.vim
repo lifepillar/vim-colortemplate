@@ -111,9 +111,10 @@ enddef
 # }}}
 
 export class Database
-  public var background:   string
-  public var termcolors:   list<string> = []
-  public var verbatimtext: list<string> = []
+  public var background:      string
+  public var termcolors:      list<string> = []
+  public var rawverbatimtext: list<string> = []  # Non interpolated
+  public var verbatimtext:    list<string> = []  # After interpolation
 
   var _nextDiscriminatorNum = 0
   var _nextConditionNum = 0
@@ -199,12 +200,13 @@ export class Database
   # highlight group variants. The empty discriminator (discriminator 0) is
   # used when no discriminator exists for a highlight group.
   var Discriminator = Rel.new('Discriminator', {
-    DiscrName:  Str,
-    Definition: Str,
-    DiscrNum:   Int,
+    DiscrName:     Str,
+    DiscrNum:      Int,
+    RawDefinition: Str, # Not interpolated
+    Definition:    Str,    # After interpolation
   }, [['DiscrName'], ['DiscrNum']]
   ).InsertMany([
-    {DiscrName: '', Definition: '', DiscrNum: 0},
+    {DiscrName: '', RawDefinition: '', Definition: '', DiscrNum: 0},
   ])
 
   # A condition determines the context for a highlight group definition to be
@@ -294,15 +296,17 @@ export class Database
   enddef
 
   def InsertDiscriminator(
-      discrName: string,
-      definition: string,
+      discrName:     string,
+      rawDefinition: string,
+      definition:    string,
       )
     ++this._nextDiscriminatorNum
 
     this.Discriminator.Insert({
-      DiscrName:  discrName,
-      Definition: definition,
-      DiscrNum:   this._nextDiscriminatorNum,
+      DiscrName:     discrName,
+      RawDefinition: rawDefinition,
+      Definition:    definition,
+      DiscrNum:      this._nextDiscriminatorNum,
     })
   enddef
 
@@ -529,20 +533,21 @@ export class Colorscheme
   var light: Database
 
   # Color scheme's metadata
-  public var authors:      list<string>       = []
-  public var description:  list<string>       = []
-  public var fullname:     string             = ''
-  public var license:      string             = ''
-  public var maintainers:  list<string>       = []
-  public var shortname:    string             = ''
-  public var urls:         list<string>       = []
-  public var version:      string             = ''
-  public var environments: list<string>       = []
-  public var backgrounds:  dict<bool>         = {dark: false, light: false}
-  public var verbatimtext: list<string>       = []
-  public var auxfiles:     dict<list<string>> = {}  # path => content
-  public var prefix:       string             = ''
-  public var options:      dict<any>          = {
+  public var authors:         list<string>       = []
+  public var description:     list<string>       = []
+  public var fullname:        string             = ''
+  public var license:         string             = ''
+  public var maintainers:     list<string>       = []
+  public var shortname:       string             = ''
+  public var urls:            list<string>       = []
+  public var version:         string             = ''
+  public var environments:    list<string>       = []
+  public var backgrounds:     dict<bool>         = {dark: false, light: false}
+  public var rawverbatimtext: list<string>       = []  # Not interpolated
+  public var verbatimtext:    list<string>       = []  # After interpolation
+  public var auxfiles:        dict<list<string>> = {}  # path => content
+  public var prefix:          string             = ''
+  public var options:         dict<any>          = {
     backend:    'vim9',
     creator:     true,
     dateformat: '%Y %b %d',

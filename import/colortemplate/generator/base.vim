@@ -45,6 +45,10 @@ enddef
 export def CompareEnvironments(e1: string, e2: string): number
   if e1 == e2
     return 0
+  elseif e1 == 'default'
+    return -1
+  elseif e2 == 'default'
+    return 1
   elseif e1 == 'gui'
     return -1
   elseif e2 == 'gui'
@@ -58,7 +62,7 @@ export interface IGenerator
   def Generate(theme: Colorscheme): list<string>
 endinterface
 
-export abstract class BaseGenerator implements IGenerator
+export abstract class Generator implements IGenerator
   var comment_symbol: string       = '# '
   var let_keyword:    string       = ''
   var const_keyword:  string       = 'const '

@@ -3,7 +3,7 @@
 ; Mandatory
 Full name:     Dark and Light
 Short name:    dark_and_light
-Variants:      gui 256 8 0
+Environments:  gui 256 8 0
 Author:        Myself <myself@somewhere.org>
 ; Optional
 Maintainer:    Myself <myself@somewhere.org>

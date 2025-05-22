@@ -3,6 +3,7 @@ vim9script
 import 'libpath.vim'                    as path
 import '../import/libcolortemplate.vim' as lib
 import '../import/colortemplate/generator/vim9.vim' as vim9generator
+import '../import/colortemplate/generator/template.vim' as templategenerator
 
 type Colorscheme = lib.Colorscheme
 type Result      = lib.ParserResult
@@ -331,21 +332,19 @@ enddef
 # }}}
 
 # Main {{{
-export def Build(
-    bufnr:     number,
-    outdir:    string        = '',
-    bang:      string        = '',
-    parseOnly: bool          = false,
-    generator: lib.Generator = vim9generator.Generator.new()
-    ): bool
+export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): bool
   if !IsColortemplateBuffer(bufname(bufnr))
     return Error('Command can be executed only on Colortemplate buffers')
   endif
 
-  const text      = join(getbufline(bufnr, 1, '$'), "\n")
-  const overwrite = (bang == '!')
-  const outputDir = empty(outdir) ? get(b:, 'colortemplate_outdir', '') : path.Expand(outdir)
-  const inputPath = path.Expand(bufname(bufnr))
+  var parseOnly:  bool          = get(opts, 'parseonly', false)
+  var generator:  lib.Generator = get(opts, 'generator', templategenerator.Generator.new())
+  var filesuffix: string        = get(opts, 'filesuffix', '.vim')
+
+  var text      = join(getbufline(bufnr, 1, '$'), "\n")
+  var overwrite = (bang == '!')
+  var outputDir = empty(outdir) ? get(b:, 'colortemplate_outdir', '') : path.Expand(outdir)
+  var inputPath = path.Expand(bufname(bufnr))
 
   if empty(outputDir)
     return Error('Output directory not set: please set b:colortemplate_outdir')
@@ -376,8 +375,8 @@ export def Build(
   var startGen   = reltime()
   var content    = generator.Generate(theme)
   var elapsedGen = 1000.0 * reltimefloat(reltime(startGen))
-  var name       = theme.shortname .. '.vim'
-  var filePath   = path.Join(outputDir, 'colors', name)
+  var name       = theme.shortname .. filesuffix
+  var filePath   = filesuffix == '.vim' ? path.Join(outputDir, 'colors', name) : path.Join(outputDir, name)
 
   if !WriteFile(filePath, content, overwrite)
     return false

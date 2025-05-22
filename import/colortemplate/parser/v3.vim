@@ -173,7 +173,7 @@ def SetTermColors(v: list<string>, ctx: Context)
         )
       endif
 
-      db.termcolors->add(t.GUI)
+      db.termcolors->add(colorName)
     endfor
   endfor
 enddef
@@ -220,10 +220,11 @@ enddef
 
 def DefineDiscriminator(v: list<string>, ctx: Context)
   var discrName:  string = v[1]
-  var definition: string = join(Interpolate(v[3], ctx))
+  var rawDef:     string = v[3]
+  var definition: string = join(Interpolate(rawDef, ctx))
 
   for db in ActiveDatabases(ctx)
-    db.InsertDiscriminator(discrName, definition)
+    db.InsertDiscriminator(discrName, rawDef, definition)
   endfor
 enddef
 
@@ -406,12 +407,15 @@ enddef
 def GetVerbatim(v: list<string>, ctx: Context)
   var state: dict<any> = ctx.state
   var theme: Colorscheme = state.theme
-  const text = Interpolate(v[1], ctx)
+  var rawText = split(v[1], "\n")
+  var text = Interpolate(v[1], ctx)
 
   if state.background == '' || state.background == 'any'
+    theme.rawverbatimtext = theme.rawverbatimtext + rawText
     theme.verbatimtext = theme.verbatimtext + text
   else
     var db: Database = theme.Db(state.background)
+    db.rawverbatimtext = db.rawverbatimtext + rawText
     db.verbatimtext = db.verbatimtext + text
   endif
 enddef
@@ -795,7 +799,8 @@ enddef
 # Version         ::= 'Version'       ':' TEXTLINE
 
 # ColorDef        ::= 'Color' ':' IDENT GUICol Col256 [Col16]
-# GUICol          ::= '#[A-Fa-f0-9]{6}' | IDENT
+# GUICol          ::= '#[A-Fa-f0-9]{6}' | IDENT | Rgb
+# Rgb             ::= 'rgb' '(' Num256 ',' Num256 ',' Num256 ')'
 # Col256          ::= '~' | Num256
 # Num256          ::= '0' | '1' | ... | '255'
 # Col16           ::= '0' | '1' | ... | '15' | IDENT

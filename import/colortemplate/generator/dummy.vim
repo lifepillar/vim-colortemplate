@@ -1,9 +1,10 @@
 vim9script
 
-import '../../libcolortemplate.vim' as lib
+import './base.vim'         as base
+import '../colorscheme.vim' as colorscheme
 
-export class Generator implements lib.Generator
-  def Generate(theme: lib.Colorscheme): list<string>
+export class Generator extends base.Generator
+  def Generate(theme: colorscheme.Colorscheme): list<string>
     return ['vim9script', '# DUMMY']
   enddef
 endclass

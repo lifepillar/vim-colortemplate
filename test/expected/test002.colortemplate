@@ -3,9 +3,9 @@ Short name:    test002
 Author:        me
 
 Options:       backend=vim9
-Options:       timestamp=true
+Options:       timestamp=false
 Options:       shiftwidth=2
-Options:       creator=true
+Options:       creator=false
 Options:       dateformat="%Y %b %d"
 Options:       palette=false
 

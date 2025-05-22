@@ -9,11 +9,13 @@ const LOGFILE = TESTDIR .. '/test.log'
 
 # Test files
 tt.Import(path.Join(expand('<sfile>:h'), 'test_colorscheme.vim'))
-tt.Import(path.Join(expand('<sfile>:h'), 'test_parser.vim'))
-tt.Import(path.Join(expand('<sfile>:h'), 'test_generator.vim'))
+tt.Import(path.Join(expand('<sfile>:h'), 'test_parser_v3.vim'))
+tt.Import(path.Join(expand('<sfile>:h'), 'test_generator_vim9.vim'))
+tt.Import(path.Join(expand('<sfile>:h'), 'test_generator_template.vim'))
 
 # Runner!
-const success = tt.Run(get(g:, 'test', ''))
+var results = tt.Run(get(g:, 'test', ''))
+var success = (indexof(results, (_, r) => !r.Ok()) == -1)
 
 # Cleanup
 if get(g:, 'autotest', 0)

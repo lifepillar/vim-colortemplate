@@ -7,7 +7,6 @@ set background=dark
 
 hi clear
 g:colors_name = 'test003'
-g:terminal_ansi_colors = []
 
 const transp_bg = get(g:, 'test003_transp_bg', 0)
 

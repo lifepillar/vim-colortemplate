@@ -840,32 +840,6 @@ def Test_Parser_auxfile()
   assert_equal({'foo/bar': ["abc '▇' def"]}, colorscheme.auxfiles)
 enddef
 
-def Test_Parser_Generate()
-  var template =<< trim END
-    Background: dark
-    Color: base0    #839496   246     12
-    Color: base03   #002b36   235      8
-    Color: grey            rgb(146, 131, 116)    102 DarkGray
-    Color: fg4             rgb(168, 153, 132)    137 Gray
-    #const italic = get(g:, 'italic', 1)
-    Comment                              grey   none          italic
-                 /gui/256/16+italic 0    grey   none
-                 /8                      fg4    none          italic
-                 /8         +italic 0    fg4    none
-  END
-
-  var [result, colorscheme] = Parse(join(template, "\n"))
-
-  assert_equal('', result.label)
-  assert_true(result.success)
-
-  var db = colorscheme.dark
-  var classes = ra.EquiJoin(db.HighlightGroupDef, db.Condition, {on: 'Condition'})
-    ->ra.PartitionBy(['Environment', 'DiscrName'])
-
-  echo classes["['default', '']"]
-enddef
-
 
 tt.Run('_Parser_')
 

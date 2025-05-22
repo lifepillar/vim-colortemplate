@@ -1,8 +1,10 @@
+Options: creator=false timestamp=false
+
 Full Name: Test 002
 Short Name: test002
 Author: me
 Environments: gui 256
 Background: dark
 #const plugin = get(g:, 'foo_opt', 0)
-Target -> omit
+Target -> omit ; Omit default definition
 Target /gui/256+plugin 1 -> Search

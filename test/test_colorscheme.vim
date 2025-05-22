@@ -44,7 +44,7 @@ def Test_Colorscheme_Database()
   )
   # A default empty discriminator must be predefined
   assert_equal(
-    [{DiscrName: '', Definition: '', DiscrNum: 0}],
+    [{DiscrName: '', RawDefinition: '', Definition: '', DiscrNum: 0}],
     db.Discriminator.Instance()
   )
   # A default condition must be predefined
@@ -82,7 +82,7 @@ def Test_Colorscheme_InsertLinkedGroup()
     db.InsertLinkedGroup('default', 'titled', 'true', 'Comment', 'Title')
   }, 'Referential integrity failed') # 'titled' discriminator is undefined
 
-  db.InsertDiscriminator('titled', 'def goes here')
+  db.InsertDiscriminator('titled', 'raw def goes here', 'def goes here')
   db.InsertLinkedGroup('default', 'titled', 'true', 'Comment', 'Title')
 
   assert_true(RelEq([
@@ -148,12 +148,12 @@ def Test_Colorscheme_InsertionOrder()
   # It is possible to insert highlight group definitions in any order
   var db = Database.new('dark')
 
-  db.InsertDiscriminator('italic', 'def goes here')
+  db.InsertDiscriminator('italic', 'raw def', 'def')
   db.InsertBaseGroup('256',      '',       '',     'String', 'fg', 'bg',   '',     ''      )
   db.InsertBaseGroup('16',       'italic', 'true', 'String', 'fg', 'bg',   '',     'italic')
   db.InsertBaseGroup('default',  '',       '',     'String', 'fg', 'none', 'none', 'bold'  )
 
-  assert_equal(3, Count(db.Condition))
+  assert_equal(3, len(db.Condition.Instance()))
 
   assert_true(RelEq([
     {Condition: 0, Environment: 'default', DiscrName: '',       DiscrValue: ''    },
@@ -205,7 +205,7 @@ enddef
 def Test_Colorscheme_HiGroupDef()
   var db = Database.new('dark')
 
-  db.InsertDiscriminator('italic', 'def goes here')
+  db.InsertDiscriminator('italic', 'raw def', 'def')
   db.InsertBaseGroup('256',      '',       '',     'String', 'fg', 'bg',   '',     ''      )
   db.InsertBaseGroup('16',       'italic', 'true', 'String', 'fg', 'bg',   '',     'italic')
   db.InsertBaseGroup('default',  '',       '',     'String', 'fg', 'none', 'none', 'bold'  )
@@ -264,37 +264,5 @@ def Test_Colorscheme_HiGroupDef()
   assert_true(db.HiGroupDef('String', '16') is KEY_NOT_FOUND)
 enddef
 
-
-def Test_Colorscheme_LinkedGroupDictionaries()
-  var db = Database.new('dark')
-
-  db.InsertDiscriminator('italic', 'def goes here')
-  db.InsertBaseGroup('default', '', '', 'String', 'fg', 'none', 'none', 'bold')
-  db.InsertLinkedGroup('256', '', '', 'String', 'Title')
-  db.InsertLinkedGroup('256', 'italic', 'true', 'String', 'Comment')
-  db.InsertLinkedGroup('256', 'italic', 'true', 'DiffAdd', 'Folded')
-  db.InsertLinkedGroup('8', '', '', 'String', 'Foobar')
-
-  assert_true(empty(db.LinkedGroupDictionaries('default')), '01')
-  assert_equal([{HiGroup: 'String', TargetGroup: 'Title'}], db.LinkedGroupDictionaries('256'))
-  assert_true(RelEq([
-    {HiGroup: 'String', TargetGroup: 'Comment'},
-    {HiGroup: 'DiffAdd', TargetGroup: 'Folded'}
-  ],
-  db.LinkedGroupDictionaries('256', 'italic', 'true')
-  ), '02')
-enddef
-
-def Test_Colorscheme_BaseGroupDictionaries()
-  var db = Database.new('dark')
-  db.InsertDiscriminator('italic', 'def goes here')
-  db.InsertBaseGroup('default', '', '', 'String', 'fg', 'none', 'none', 'bold')
-  db.InsertBaseGroup('default', '', '', 'Folded', 'fg', 'bg', 'none', 'underline')
-  db.InsertBaseGroup('256', '', '', 'Comment', 'fg', 'bg', 'fg', 'bold,italic')
-
-  assert_equal([], db.BaseGroupDictionaries('default'))
-
-  echo ra.Table(db.BaseGroupDictionaries('default'))
-enddef
 
 tt.Run('_Colorscheme_')

@@ -444,67 +444,6 @@ export class Database
     return this.LinkedGroup.Lookup(['HiGroup', 'Condition'], [hiGroupName, cond.Condition])
   enddef
 
-  def LinkedGroupDictionaries(environment: string, discrName  = '', discrValue = ''): list<dict<string>>
-    # Return the highlight group definitions for the given conditions.
-    return EquiJoin(
-      this.LinkedGroup,
-      this.Condition->Select(
-        (t) => t.Environment == environment && t.DiscrName == discrName && t.DiscrValue == discrValue
-      ),
-      {on: 'Condition'}
-    )->Transform((t) => {
-      return {HiGroup: t.HiGroup, TargetGroup: t.TargetGroup}
-    })
-  enddef
-
-  def BaseGroupDictionaries(environment: string, discrName  = '', discrValue = ''): list<dict<string>>
-    # Return the highlight group definitions for the given condition as a list
-    # of dictionaries, where each dictionary has the correct attributes with
-    # the correct values. For instance, a dictionary for a highlight group in
-    # 256-color terminals may look as follows:
-    #
-    #     {ctermfg: '203': ctermbg: '16', ctermul: 'NONE', cterm: 'bold'}
-    #
-    # Which keys are returned depends on the environment.
-    var attributes = this.Attribute
-      ->Select((t) => t.Environment == environment)
-      ->DictTransform((t) => {
-        return {[t.AttrKey]: t.AttrType}
-      }, true)
-
-    var colorAttr: string
-
-    if environment == 'gui' || environment == 'default'
-      colorAttr = 'GUI'
-    elseif str2nr(environment) > 16
-      colorAttr = 'Base256'
-    else
-      colorAttr = 'Base16'
-    endif
-
-    var records = EquiJoin(
-      this.BaseGroup,
-      this.Condition->Select(
-        (t) => t.Environment == environment && t.DiscrName == discrName && t.DiscrValue == discrValue
-      ),
-      {on: 'Condition'}
-    )->Transform((t) => {
-      var out: dict<string> = {HiGroup: t.HiGroup}
-
-      for [attr_key, attr_type] in items(attributes)
-        if attr_type == 'Fg' || attr_type == 'Bg' || attr_type == 'Special'
-          out[attr_key] = this.Color.Lookup(['Name'], [t[attr_type]])[colorAttr]
-        else
-          out[attr_key] = t[attr_type]
-        endif
-      endfor
-
-      return out
-    })
-
-    return records
-  enddef
-
   def GetColor(name: string, kind: string): string
     const t = this.Color.Lookup(['Name'], [name])
 

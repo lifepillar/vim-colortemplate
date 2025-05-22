@@ -47,10 +47,18 @@ def Test_Vim9Generator_001()
   AssertBuild('test001')
 enddef
 
+def Test_Vim9Generator_002()
+  AssertBuild('test002')
+enddef
+
+def Test_Vim9Generator_003()
+  AssertBuild('test003')
+enddef
+def Test_Vim9Generator_004()
+  AssertBuild('test004')
+enddef
 
 var results = tt.Run('_Vim9Generator_')
 
-if indexof(results, (_, r) => !r.Ok()) == -1
-  delete(COLDIR, "rf")
-  delete(DOCDIR, "rf")
-endif
+delete(COLDIR, "d") # Delete if empty
+delete(DOCDIR, "rf")

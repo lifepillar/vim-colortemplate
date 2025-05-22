@@ -144,8 +144,9 @@ export class Generator extends base.Generator
     var db = theme.Db(background)
     var output: list<string> = []
 
+    output->add('')
+
     if theme.IsLightAndDark()
-      output->add('')
       output->add($"if &background == '{background}'")
       this.Indent()
     endif

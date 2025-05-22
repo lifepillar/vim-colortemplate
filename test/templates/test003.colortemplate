@@ -12,7 +12,7 @@ Color: darkblue  #0024ff 21
 
 #const transp_bg = get(g:, '@prefix_transp_bg', 0)
 
-; FIXME: guifg/guibg shouldn't be added to 256 defs
+; guifg/guibg attributes must not be added to 256 overrides
 Normal                  white  black
   /256+transp_bg 1  lightgrey  none s=omit omit
 

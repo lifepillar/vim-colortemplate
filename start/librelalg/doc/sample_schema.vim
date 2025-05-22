@@ -5,6 +5,8 @@ import 'librelalg.vim' as ra
 type  Rel        = ra.Rel
 const Bool       = ra.Bool
 const Int        = ra.Int
+const Query      = ra.Query
+const Sort       = ra.Sort
 const Str        = ra.Str
 const ForeignKey = ra.ForeignKey
 const References = ra.References

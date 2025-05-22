@@ -1005,14 +1005,17 @@ enddef
 
 def MakeTupleMerger(prefix: string): func(Tuple, Tuple): Tuple
   return (t: Tuple, u: Tuple): Tuple => {
-    var tnew: Tuple = {}
+    var unew: Tuple = {}
 
-    for attr in keys(t)
-      var newAttr = u->has_key(attr) ? prefix .. attr : attr
-      tnew[newAttr] = t[attr]
+    for attr in keys(u)
+      if t->has_key(attr)
+        unew[prefix .. attr] = u[attr]
+      else
+        unew[attr] = u[attr]
+      endif
     endfor
 
-    return tnew->extend(u, 'error')
+    return unew->extend(t, 'error')
   }
 enddef
 

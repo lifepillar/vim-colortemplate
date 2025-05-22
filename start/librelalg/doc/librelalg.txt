@@ -835,7 +835,7 @@ order to avoid writing queries that unnecessarily create temporary objects.
 
 Note: some of the examples in the rest of this section are based on the sample
 instance at the end of |librelalg-tutorial|, which we report again here for
-reference:
+reference, and which you may also find in doc/sample_schema.vim.
 >
 	 Buffer
 	───────────────
@@ -1224,21 +1224,21 @@ EquiJoin({rel1}, {rel2}[, {opts}])
 		To join all the buffers with all their tags:
 >
 		var result = Query(
-		    EquiJoin(Buffer, Tag, {on: 'BufId', prefix: 't_'})
+		    EquiJoin(Buffer, Tag, {on: 'BufId', prefix: 'u_'})
 		  )
 		echo Table(result)
 <
 		Output:
 >
 		───────────────────────────────────────────
-		 Column TagName BufName Line t_BufId BufId
+		 BufId BufName u_BufId TagName Line Column
 		───────────────────────────────────────────
-		      1     zzz     foo    2       1     1
-		     12     abc     foo    7       1     1
-		      1     xyz     foo    4       1     1
-		      8     lll     foo    4       1     1
-		     15     abc     bar   14       2     2
-		      3     abc     xyz    6       3     3
+		     1     foo       1     zzz    2      1
+		     1     foo       1     xyz    4      1
+		     1     foo       1     lll    4      8
+		     1     foo       1     abc    7     12
+		     2     bar       2     abc   14     15
+		     3     xyz       3     abc    6      3
 <
 		See |librelalg.Join()| for an equivalent formulation of the
 		previous example.
@@ -1365,13 +1365,17 @@ Join({rel1}, {rel2}, {func} [, {opts}])		*librelalg.Join()*
 		input two tuples t1 and t2 and returns |true| if t1 and t2
 		should be joined, and |false| otherwise.
 
-		{opts} is a a dictionary of options. The only supported key is
-		"prefix", which is a string that is prepended to each
-		attribute of {rel1} that is also an attribute of {rel2}. The
-		default prefix is an underscore. A non-empty prefix is
-		mandatory if the relations to be joined have some attributes
-		in common, because the attributes in a relation must be all
-		distinct. The prefix must not be used inside {func}.
+		{opts} is a a dictionary of options. The only supported
+		options is:
+
+		- "prefix": a string that is prepended to each attribute of
+		  {rel2} that is also an attribute of {rel1}. The default
+		  prefix is an underscore.
+
+		A non-empty prefix is mandatory if the relations to be joined
+		have some attributes in common, because the attributes in
+		a relation must be all distinct. The prefix must not be used
+		inside {func}.
 
 		Examples:
 >
@@ -1413,20 +1417,21 @@ Join({rel1}, {rel2}, {func} [, {opts}])		*librelalg.Join()*
 >
 		var result = Query(
 		    Join(Buffer, Tag,
-		    (t, u) => t.BufId == u.BufId, {prefix: 't_'})
+		    (t, u) => t.BufId == u.BufId, {prefix: 'u_'})
 		  )
 		echo Table(result)
 <
 		Output:
 >
-		 Column TagName BufName Line t_BufId BufId
 		───────────────────────────────────────────
-		      1     zzz     foo    2       1     1
-		     12     abc     foo    7       1     1
-		      1     xyz     foo    4       1     1
-		      8     lll     foo    4       1     1
-		     15     abc     bar   14       2     2
-		      3     abc     xyz    6       3     3
+		 BufId BufName u_BufId TagName Line Column
+		───────────────────────────────────────────
+		     1     foo       1     zzz    2      1
+		     1     foo       1     xyz    4      1
+		     1     foo       1     lll    4      8
+		     1     foo       1     abc    7     12
+		     2     bar       2     abc   14     15
+		     3     xyz       3     abc    6      3
 <
 		If the prefix in the query above were empty then the query
 		would produce an error:
@@ -1457,6 +1462,11 @@ LeftEquiJoin({rel1}, {rel2}[, {opts}])
 		Note that if no filler relation is provided, this operator
 		behaves like an equi-join.
 
+		Note also that this function does not check whether the filler
+		conforms to the schema of {rel2} (in general, this is not
+		possible because {rel2} might be an empty relation instance
+		carrying no explicit information about its schema).
+
 		For instance:
 >
 		var r = [
@@ -1468,6 +1478,7 @@ LeftEquiJoin({rel1}, {rel2}[, {opts}])
 		]
 		var s = [
 		    {C: 'x', A: 10},
+		    {C: 'w', A: 15},
 		    {C: 'z', A: 20},
 		    {C: 'z', A: 30},
 		]
@@ -1479,15 +1490,15 @@ LeftEquiJoin({rel1}, {rel2}[, {opts}])
 <
 		Output:
 >
-		────────────
-		  A B  C _A
-		────────────
-		 10 x  x  1
-		 10 x  x  2
-		  0 y NA  3
-		 20 z  z  4
-		 30 z  z  4
-		  0 w NA  5
+		───────────
+		 A B  C _A
+		───────────
+		 1 x  x 10
+		 2 x  x 10
+		 3 y NA  0
+		 4 z  z 20
+		 4 z  z 30
+		 5 w NA  0
 <
 LeftNatJoin({rel1}, {rel2}[, {opts}])		*librelalg.LeftNatJoin()*
 		Perform the left natural join of two relations {rel1} and
@@ -1727,16 +1738,16 @@ Product({rel1}, {rel2} [, {opts}])		*librelalg.Product()*
 >
 		var Tagname = Project(Tag, 'TagName')
 		var result  = Query(
-		      Product(Tagname, Tagname, {prefix: 't_'})
-		    ->Select((t) => t.TagName < t.t_TagName)
-		    ->SortBy(['TagName', 't_TagName'])
+		      Product(Tagname, Tagname, {prefix: 'u_'})
+		    ->Select((t) => t.TagName < t.u_TagName)
+		    ->SortBy(['TagName', 'u_TagName'])
 		)
 		echo Table(result)
 <
 		Output:
 >
-		 ───────────────────
-		 TagName t_TagName
+		───────────────────
+		 TagName u_TagName
 		───────────────────
 		     abc       lll
 		     abc       xyz

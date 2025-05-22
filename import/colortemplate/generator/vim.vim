@@ -403,10 +403,10 @@ export class Generator extends base.Generator
           )
 
           if first
-            output->add($"{this.space}if {discrName} == {cond.DiscrValue}")
+            output->add($"{this.space}if {this.var_prefix}{discrName} == {cond.DiscrValue}")
           else
             this.Deindent()
-            output->add($"{this.space}elseif {discrName} == {cond.DiscrValue}")
+            output->add($"{this.space}elseif {this.var_prefix}{discrName} == {cond.DiscrValue}")
           endif
 
           this.Indent()
@@ -448,7 +448,7 @@ export class Generator extends base.Generator
 
   def GenerateDiscriminators(db: Database, space: string): list<string>
     return db.Discriminator->Filter((t) => !empty(t.DiscrName))->SortBy('DiscrNum')->Transform(
-      (t) => $'{space}{this.const_keyword}{t.DiscrName} = {t.Definition}'
+      (t) => $'{space}{this.const_keyword}{this.var_prefix}{t.DiscrName} = {t.Definition}'
     )
   enddef
 endclass

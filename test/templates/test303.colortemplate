@@ -1,9 +1,10 @@
-Full Name:    Test 003
-Short Name:   test003
+Options: creator=false timestamp=false
+
+Full Name:    Test 303
+Short Name:   test303
 Author:       me
 Environments: gui 256
 Background:   dark
-Options: creator=false timestamp=false
 
 Color: white     #ffffff 231
 Color: black     #000000 16

@@ -43,12 +43,12 @@ def AssertGenerateTemplate(name: string)
 enddef
 # }}}
 
-def Test_Template_Generator_001()
-  AssertGenerateTemplate('test001')
+def Test_Template_Generator_301()
+  AssertGenerateTemplate('test301')
 enddef
 
-def Test_Template_Generator_002()
-  AssertGenerateTemplate('test002')
+def Test_Template_Generator_302()
+  AssertGenerateTemplate('test302')
 enddef
 
 

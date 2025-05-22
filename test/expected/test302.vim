@@ -1,12 +1,12 @@
 vim9script
 
-# Name:         Test 002
+# Name:         Test 302
 # Author:       me
 
 set background=dark
 
 hi clear
-g:colors_name = 'test002'
+g:colors_name = 'test302'
 
 const plugin = get(g:, 'foo_opt', 0)
 

@@ -43,19 +43,19 @@ def AssertBuild(name: string)
 enddef
 # }}}
 
-def Test_Vim9Generator_001()
-  AssertBuild('test001')
+def Test_Vim9Generator_301()
+  AssertBuild('test301')
 enddef
 
-def Test_Vim9Generator_002()
-  AssertBuild('test002')
+def Test_Vim9Generator_302()
+  AssertBuild('test302')
 enddef
 
-def Test_Vim9Generator_003()
-  AssertBuild('test003')
+def Test_Vim9Generator_303()
+  AssertBuild('test303')
 enddef
-def Test_Vim9Generator_004()
-  AssertBuild('test004')
+def Test_Vim9Generator_304()
+  AssertBuild('test304')
 enddef
 
 var results = tt.Run('_Vim9Generator_')

@@ -1,6 +1,6 @@
-Full Name:     Test 002
-Short name:    test002
-Author:        me
+Full Name:     Test 301
+Short name:    test301
+Author:        No One
 
 Options:       backend=vim9
 Options:       timestamp=false
@@ -9,16 +9,16 @@ Options:       creator=false
 Options:       dateformat="%Y %b %d"
 Options:       palette=false
 
-Environments: gui 256
+Environments: gui
 
 Background: dark
 
+Color: black #333333 236
+Color: white #fafafa 231
 
-#const plugin = get(g:, 'foo_opt', 0)
-
-Target -> omit
-Target/gui+plugin 1 -> Search
-Target/256+plugin 1 -> Search
+Normal white black
+Comment -> omit
+Title omit omit s=omit omit
 
 
 ; vim: ft=colortemplate fdm=marker nowrap et sw=2 ts=2

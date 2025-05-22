@@ -136,8 +136,8 @@ enddef
 
 def HiGroupDefinitions(db: Database): list<string>
   var output: list<string> = []
-  # SourceGroup -> TargetGroup
-  var linked_format = '%s -> %s'
+  # SourceGroup [/environment +discriminator value] -> TargetGroup
+  var linked_format = '%s%s%s%s -> %s'
   # HiGroup [/environment +discriminator value] fg bg [s=special style_attributes]
   var base_format = '%s%s%s%s %s %s %s%s'
 
@@ -159,7 +159,13 @@ def HiGroupDefinitions(db: Database): list<string>
   ->Sort(CompareByHiGroupNameEnvironmentDiscrValue)
   ->Transform((t) => {
     if t.IsLinked
-      return printf(linked_format, t.HiGroup, empty(t.TargetGroup) ? 'omit' : t.TargetGroup)
+      return printf(linked_format,
+        t.HiGroup,
+        t.Environment == 'default' ? '' : '/' .. t.Environment,
+        empty(t.DiscrName)         ? '' : '+' .. t.DiscrName,
+        empty(t.DiscrName)         ? '' : ' ' .. t.DiscrValue,
+        empty(t.TargetGroup) ? 'omit' : t.TargetGroup
+      )
     else
       return printf(base_format,
         t.HiGroup,
@@ -178,7 +184,7 @@ def HiGroupDefinitions(db: Database): list<string>
 enddef
 
 def TermHiGroupDefinitions(db: Database): list<string>
-  var linked_format = '%s -> %s'
+  var linked_format = '%s%s%s%s -> %s'
   var base_format = '%s/0%s%s omit omit%s'
   var output: list<string> = []
 
@@ -200,7 +206,12 @@ def TermHiGroupDefinitions(db: Database): list<string>
   ->Sort(CompareByHiGroupNameEnvironmentDiscrValue)
   ->Transform((t) => {
     if t.IsLinked
-      return printf(linked_format, t.HiGroup, empty(t.TargetGroup) ? 'omit' : t.TargetGroup)
+      return printf(linked_format,
+        t.HiGroup,
+        t.Environment == 'default' ? '' : '/' .. t.Environment,
+        empty(t.DiscrName)         ? '' : '+' .. t.DiscrName,
+        empty(t.DiscrName)         ? '' : ' ' .. t.DiscrValue,
+        empty(t.TargetGroup) ? 'omit' : t.TargetGroup)
     else
       return printf(base_format,
         t.HiGroup,

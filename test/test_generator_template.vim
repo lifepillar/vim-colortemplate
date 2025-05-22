@@ -52,6 +52,6 @@ def Test_Template_Generator_002()
 enddef
 
 
-tt.Run('_Template_Generator_001')
+tt.Run('_Template_')
 
 delete(OUTDIR, "d") # Delete if empty

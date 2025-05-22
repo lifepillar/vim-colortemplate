@@ -188,7 +188,7 @@ export class Database
     Base256:    Str,
     Base256Hex: Str,
     Base16:     Str,
-  }, 'Name'
+  }, ['Name', ['GUI', 'Base256', 'Base16']]
   ).InsertMany([
     {Name: '',     GUI: '',     Base256: '',     Base256Hex: '', Base16: '',   }, # For when color is omitted
     {Name: 'none', GUI: 'NONE', Base256: 'NONE', Base256Hex: '', Base16: 'NONE'},

@@ -139,7 +139,7 @@ def HiGroupDefinitions(db: Database): list<string>
   # SourceGroup [/environment +discriminator value] -> TargetGroup
   var linked_format = '%s%s%s%s -> %s'
   # HiGroup [/environment +discriminator value] fg bg [s=special style_attributes]
-  var base_format = '%s%s%s%s %s %s %s%s'
+  var base_format = '%s%s%s%s %s %s%s%s'
 
   output += EquiJoin(
     db.HighlightGroupDef,

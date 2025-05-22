@@ -1,8 +1,8 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: gui
 Full name:Test 82
 Short name:test82
 Author:y
-Variant: gui
 Background:dark
 Color:white #FFFFFF 231
 Color:black #a34C9E 133

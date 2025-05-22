@@ -81,6 +81,7 @@ export abstract class Generator implements IGenerator
       this.const_keyword  = 'const '
       this.var_prefix     = ''
       this.header         = ['vim9script', '']
+      this.footer         = []
     elseif language == 'viml'
       this.language       = 'viml'
       this.comment_symbol = '" '
@@ -88,6 +89,7 @@ export abstract class Generator implements IGenerator
       this.const_keyword  = 'let '
       this.var_prefix     = 's:'
       this.header         = []
+      this.footer         = []
     endif
   enddef
 
@@ -113,6 +115,8 @@ export abstract class Generator implements IGenerator
   enddef
 
   def BuildDefaultHeader(theme: Colorscheme)
+    this.header = this.language == 'vim9' ? ['vim9script', ''] : []
+
     var sa = len(theme.authors) > 1     ? 's:' : ': '
     var sm = len(theme.maintainers) > 1 ? 's:' : ': '
     var su = len(theme.urls) > 1        ? 's:' : ': '
@@ -152,6 +156,8 @@ export abstract class Generator implements IGenerator
   enddef
 
   def BuildDefaultFooter(theme: Colorscheme)
+    this.footer = []
+
     if theme.options.palette # Write the color palette as a comment
       for background in ['dark', 'light']
         if theme.HasBackground(background)
@@ -176,6 +182,7 @@ export abstract class Generator implements IGenerator
       endfor
     endif
 
+    this.footer->add('')
     this.footer->add(this.comment_symbol .. $'vim: et ts=8 sw={theme.options.shiftwidth} sts={theme.options.shiftwidth}')
   enddef
 endclass

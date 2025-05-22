@@ -1,9 +1,9 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: 16
 Full name:Test15
 Short name:test15
 Author:y
 Maintainer:w
-Variant:16
 Background:dark
 Color: #000000 0 Black
 Color:white #ffffff 255 White

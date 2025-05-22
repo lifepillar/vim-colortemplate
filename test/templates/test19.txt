@@ -1,9 +1,9 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: 256
 Full name:Test 19
 Short name:test19
 Author:y
 Maintainer:w
-Variant:256
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 256 White

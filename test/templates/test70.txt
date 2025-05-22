@@ -1,18 +1,18 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: gui 8 0
 Full name:Test 70
 Short name:test70
 Author:y
 Maintainer:w
-Variant: gui 8 0
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
-Variant: gui 8
-Normal omit black omit
-CursorLine white omit t=underline g=omit s=omit
-Variant: 0
+Normal          omit  black              omit
+CursorLine     white   omit s=omit
+CursorLine/gui  omit   omit              omit
+CursorLine/8    omit   omit         bold,underline
 Background:dark
-Normal omit omit
-CursorLine omit omit underline
+Normal/0        omit   omit omit
+CursorLine /0   omit   omit underline
 
 ; vim: ft=colortemplate

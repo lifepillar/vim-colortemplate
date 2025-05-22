@@ -35,7 +35,7 @@ def AssertBuild(name: string)
     generator: vim9generator.Generator.new(),
   })
 
-  assert_true(success, 'Template unexpectedly failed to build.')
+  assert_true(success, 'Template failed to build.')
 
   execute $':{bufnr}bwipe'
 

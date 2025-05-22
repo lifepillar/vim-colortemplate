@@ -10,6 +10,7 @@ const LOGFILE = TESTDIR .. '/test.log'
 # Test files
 tt.Import(path.Join(expand('<sfile>:h'), 'test_colorscheme.vim'))
 tt.Import(path.Join(expand('<sfile>:h'), 'test_parser_v3.vim'))
+tt.Import(path.Join(expand('<sfile>:h'), 'test_generator_viml.vim'))
 tt.Import(path.Join(expand('<sfile>:h'), 'test_generator_vim9.vim'))
 tt.Import(path.Join(expand('<sfile>:h'), 'test_generator_template.vim'))
 

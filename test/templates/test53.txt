@@ -1,4 +1,5 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
 Full name:Test 53
 Short name:test53
 Author:y

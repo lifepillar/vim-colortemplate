@@ -1,15 +1,17 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
 Full name:Test 94
 Short name:test94
 Author:y
+Background:any
+
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
-
-Background:dark
 
 Normal white black
 Comment white black
 Bold white black bold
+Background: dark
 Italic white black italic
 
 ; vim: ft=colortemplate

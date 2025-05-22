@@ -1,16 +1,14 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: 8 0
 Full name:Test 71
 Short name:test71
 Author:y
 Maintainer:w
-Variant: 8 0
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
-Variant: 8
-Normal omit omit omit
-Variant: 0
-Normal omit omit
-CursorLine omit omit omit
+Normal/8 omit omit omit
+Normal/0 omit omit
+CursorLine/0 omit omit omit
 
 ; vim: ft=colortemplate

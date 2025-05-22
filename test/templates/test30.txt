@@ -1,11 +1,12 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
 Full name:Test 30
 Short name:test30
 Author:y
 Maintainer:w
-documentation
+helpfile
   @shortname_transp_bg
-enddocumentation
+endhelpfile
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White

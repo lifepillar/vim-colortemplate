@@ -1,8 +1,8 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: 256
 Full name:Test 68a
 Short name:test68a
 Author:y
-Variant:256
 Background:dark
 Color:black #000000 16 Black
 Include: test68b

@@ -1,2 +1,3 @@
-Color: white rgb(255,255,255) ~
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
 ; vim: ft=colortemplate

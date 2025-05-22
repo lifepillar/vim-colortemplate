@@ -1,4 +1,5 @@
-Short name:test44a
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
 Author:y
 Maintainer:w
 Background:dark

@@ -1,8 +1,8 @@
-Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
 Full name:Test 85
 Short name:test85
 Author:y
-Variant: gui
 Background:dark
 Color:foo #000000 16  Black
 Color:bar #ffffff 255 White

@@ -58,8 +58,13 @@ enddef
 def Test_Vim9Generator_303()
   AssertBuild('test303')
 enddef
+
 def Test_Vim9Generator_304()
   AssertBuild('test304')
+enddef
+
+def Test_Vim9Generator_305()
+  AssertBuild('test305')
 enddef
 
 var results = tt.Run('_Vim9Generator_')

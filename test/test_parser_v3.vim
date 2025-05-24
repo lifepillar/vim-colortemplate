@@ -232,10 +232,27 @@ def Test_Parser_Lookahead()
   assert_equal('NONE', t0.Style)
 enddef
 
-def Test_Parser_HiGroupDef()
+def Test_Parser_HiGroupDefWithDiscr()
   var template =<< trim END
   Background:   dark
   Environments: gui 256
+  Color:        black #333333 231 black
+  Color:        white #fafafa 251 white
+
+  #const foobar = "X"
+  Comment+foobar "X" white black ; Discriminator without environment
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success)
+  assert_equal('Unexpected token', result.label)
+enddef
+
+def Test_Parser_HiGroupDef()
+  var template =<< trim END
+  Background:   dark
+  Environments: gui 256 16
   Color:        black #333333 231 black
   Color:        white #fafafa 251 white
 
@@ -243,8 +260,8 @@ def Test_Parser_HiGroupDef()
   Comment black white reverse
      /256 white black s=white bold
   #const foobar = "X"
-  Comment+foobar "X" white white
-  Comment+foobar "Y" -> NonText
+  Comment/gui+foobar "X" white white
+  Comment/16 +foobar "Y" -> NonText
   END
 
   var [_, colorscheme] = Parse(join(template, "\n"))
@@ -254,6 +271,8 @@ def Test_Parser_HiGroupDef()
   var t2 = db.HiGroupDef('Comment', '256')
   var t3 = db.HiGroupDef('Comment', 'default', 'foobar', '"X"')
   var t4 = db.HiGroupDef('Comment', 'default', 'foobar', '"Y"')
+  var t5 = db.HiGroupDef('Comment', 'gui',     'foobar', '"X"')
+  var t6 = db.HiGroupDef('Comment', '16',      'foobar', '"Y"')
 
   assert_false(empty(t0), 't0 should not be empty')
   assert_equal('Normal', t0.HiGroup)
@@ -276,16 +295,19 @@ def Test_Parser_HiGroupDef()
   assert_equal('white',   t2.Special)
   assert_equal('bold',    t2.Style)
 
-  assert_false(empty(t3), 't3 should not be empty')
-  assert_equal('Comment', t3.HiGroup)
-  assert_equal('white',   t3.Bg)
-  assert_equal('white',   t3.Fg)
-  assert_equal('none',    t3.Special)
-  assert_equal('NONE',    t3.Style)
+  assert_true(empty(t3), 't3 should be empty')
+  assert_true(empty(t4), 't4 should be empty')
 
-  assert_false(empty(t4), 't4 should not be empty')
-  assert_equal('Comment', t4.HiGroup)
-  assert_equal('NonText', t4.TargetGroup)
+  assert_false(empty(t5), 't5 should not be empty')
+  assert_equal('Comment', t5.HiGroup)
+  assert_equal('white',   t5.Bg)
+  assert_equal('white',   t5.Fg)
+  assert_equal('none',    t5.Special)
+  assert_equal('NONE',    t5.Style)
+
+  assert_false(empty(t6), 't6 should not be empty')
+  assert_equal('Comment', t6.HiGroup)
+  assert_equal('NonText', t6.TargetGroup)
 enddef
 
 def Test_Parser_SingleDefMultipleVariantsCS()

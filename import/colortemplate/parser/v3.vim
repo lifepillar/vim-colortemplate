@@ -623,13 +623,12 @@ const HiGroupVar      = Seq(
                           OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))    ->Apply(SetEnvironments),
                           OneOf(DiscrDef, HiGroupDef)
                         )
-const HiGroupVers     = OneOf(HiGroupVar, DiscrDef)
 const HiGroupRest     = OneOf(
                           Seq(
                             HiGroupDef,
-                            Many(HiGroupVers)
+                            Many(HiGroupVar)
                           ),
-                          OneOrMore(HiGroupVers)
+                          OneOrMore(HiGroupVar)
                         )
 const HiGroupName     = Seq(Bol, HIGROUPNAME)                         ->Apply(SetHiGroupName)
 const HiGroupDecl     = Seq(HiGroupName, HiGroupRest)
@@ -828,8 +827,7 @@ enddef
 # Col16           ::= '0' | '1' | ... | '15' | IDENT
 
 # HiGroupDecl     ::= ^HiGroupName HiGroupRest
-# HiGroupRest     ::= HiGroupDef HiGroupVersion* | HiGroupVersion+
-# HiGroupVersion  ::= HiGroupVariant | DiscrDef
+# HiGroupRest     ::= HiGroupDef HiGroupVariant* | HiGroupVariant+
 # HiGroupVariant  ::= ('/' ENVIRONMENT)+ (DiscrDef | HiGroupDef)
 # DiscrDef        ::= '+' IDENT DiscrRest
 # DiscrRest       ::= (DiscrValue HiGroupDef)+

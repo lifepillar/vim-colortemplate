@@ -1298,12 +1298,13 @@ export def LeftEquiJoin(Arg1: any, Arg2: any, opts: dict<any> = {}): Continuatio
   }
 enddef
 
-export def Extend(Arg: any, Fn: func(Tuple): Tuple): Continuation
-  const Cont = From(Arg)
+export def Extend(Arg: any, Fn: func(Tuple): Tuple, opts: dict<any> = {}): Continuation
+  var Cont = From(Arg)
+  var match = get(opts, 'force', false) ? 'keep' : 'error'
 
   return (Emit: Consumer) => {
     Cont((t: Tuple) => {
-      Emit(Fn(t)->extend(t, 'error'))
+      Emit(Fn(t)->extend(t, match))
     })
   }
 enddef

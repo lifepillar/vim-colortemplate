@@ -1588,13 +1588,34 @@ def Test_RA_Extend()
     {A: 3, B: 6,  C: 'ok'},
     {A: 5, B: 10, C: 'ok'},
   ]
-  const result = Query(
-    From(R)->Extend((t) => {
+  var result = Query(
+    R->Extend((t) => {
       return {B: t.A * 2, C: 'ok'}
     })
   )
 
   assert_equal(expected, result)
+
+  const expected2 = [
+    {A: 2, C: 0},
+    {A: 4, C: 2},
+    {A: 6, C: 4},
+  ]
+  var result2 = Query(
+    R->Extend((t) => {
+      return {A: t.A + 1, C: t.A - 1}
+    }, {force: true})
+  )
+
+  assert_equal(expected, result)
+
+  tt.AssertFails(() => {
+    Query(
+      R->Extend((t) => {
+        return {A: t.A + 1, C: t.A - 1}
+      })
+    )
+  }, 'Key already exists: A')
 enddef
 
 def Test_RA_Max()

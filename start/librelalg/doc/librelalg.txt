@@ -1245,18 +1245,32 @@ EquiJoin({rel1}, {rel2}[, {opts}])
 
 		This is a pipeline operator, returning a continuation.
 
-Extend({rel}, {func})				*librelalg.Extend()*
+Extend({rel}, {func}[, {opts}])			*librelalg.Extend()*
 	Extend each tuple of relation {rel} with a tuple computed by {func}.
-	{func} receives a tuple and returns another tuple, which must not have
-	any attribute in common with the input tuple. For example:
+	{func} receives a tuple and returns another tuple. {opts} is
+	a dictionary of options. The only supported key is:
+
+	- "force": if set to |true|, the extending tuple can have attributes
+	  from {rel}, which are replaced by the new values. By default, the
+	  tuple returned by {func} must not have any attribute in common with
+	  {rel}.
+
+	For example:
 >
 	var r = [{A: 1}, {A: 3}, {A: 5}]
 
-	var result = Query(
+	var result1 = Query(
 	    Extend(r, (t): dict<any> => {
 	       return {B: t.A * 2, C: -t.A}
-	    }))
-	echo Table(result)
+	    })
+	)
+	var result2 = Query(
+	    Extend(r, (t): dict<any> => {
+	       return {A: t.A - 1, C: t.A + 1}
+	    }, {force: true})
+	)
+	echo Table(result1)
+	echo Table(result2)
 <
 	The output is:
 >
@@ -1266,9 +1280,16 @@ Extend({rel}, {func})				*librelalg.Extend()*
 	 1  2 -1
 	 3  6 -3
 	 5 10 -5
+
+	─────
+	 A C
+	─────
+	 0 2
+	 2 4
+	 4 6
 <
 	Note that {func} should consistently return tuples over the same,
-	fixed, schema, for the result to be a valid relation instance.
+	fixed, schema for the result to be a valid relation instance.
 
 	This is a pipeline operator, returning a continuation.
 

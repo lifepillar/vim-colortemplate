@@ -97,8 +97,8 @@ def Test_Parser_GUIColorName()
   var template =<< trim END
     Background: dark
 
-    Color: myblack  Black  16  Black
-    Color: myblue   Blue    ~  Blue
+    Color: myblack  "Black"  16  Black
+    Color: myblue   "Blue"    ~  Blue
 
     Normal myblack myblue
   END

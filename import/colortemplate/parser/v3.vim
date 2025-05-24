@@ -191,13 +191,28 @@ def ToHexColor(v: list<string>, ctx: Context): string
   return Rgb2Hex(r, g, b)
 enddef
 
+# Remove leading and trailing quotes
+def Strip(name: string): string
+  return substitute(name, '^"\(.\+\)"$', '\1', '')
+enddef
+
 def DefineColor(v: list<string>, ctx: Context)
-  const colorName: string = v[2]
-  const vGui:      string = tolower(v[3])
-  const vGuiHex:   string = vGui[0] == '#' ? vGui : RgbName2Hex(vGui)
-  const v16:       string = v[5]
-  var   v256:      string
-  var   v256Hex:   string
+  var colorName: string = v[2]
+  var vGui:      string = tolower(v[3])
+  var vGuiHex:   string = vGui
+  var v16:       string = v[5]
+  var v256:      string
+  var v256Hex:   string
+
+  if vGui[0] != '#' # A color name: infer hex value
+    vGui = Strip(vGui)
+
+    vGuiHex = RgbName2Hex(vGui)
+
+    if vGui =~ '\s' # Names containing spaces must be quoted
+      vGui = $"'{vGui}'"
+    endif
+  endif
 
   if v[4] == '~'
     var approxColor: dict<any> = Approximate(vGuiHex)
@@ -519,10 +534,10 @@ const ATTRIBUTE      = R(printf('\C\%(%s\)\>',
 const COL16          = R('\%(\d\+\)\|' .. join(ANSI_COLORS, '\|'))
 const NUM256         = R('\d\{1,3}\>')
 const NUMBER         = R('-\=\d\+\%(\.\d*\)\=')
+const STRING         = R('"[^"]*"')
 const BACKGROUND     = R('dark\>\|light\|any\>')
 const HEXCOL         = R('#[A-Fa-f0-9]\{6}')
-const GUICOL         = OneOf(HEXCOL, IDENTIFIER)
-const STRING         = R('"[^"]*"')
+const GUICOL         = OneOf(HEXCOL, STRING)
 const TEXTLINE       = R('[^\r\n]\+')
 const THEMENAME      = R('[0-9A-Z-a-z_-]\+')
 const VERBTEXT       = R('\_.\{-}\ze\%(end\%(verbatim\|help\|auxfile\)\)')

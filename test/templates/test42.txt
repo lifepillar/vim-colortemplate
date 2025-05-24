@@ -6,9 +6,14 @@ Author:y
 Maintainer:w
 Background:dark
 ; Color names from $VIMRUNTIME/rgb.txt are accepted, even with spaces
-Color:c1 snow                     ~
-Color:c2 ghost white              ~
-Color:c3 BlanchedAlmond           ~
-Normal c2 c3
+Color:c1 "snow1"          ~
+Color:c2 "ghost white"    ~
+Color:c3 "BlanchedAlmond" ~
+Color:c4 "light yellow"   ~
+Color:c5 "Salmon"         ~
+Color:c6 "X11 Purple"     ~
+Normal  c2 c3
+Comment c1 c4
+Folded  c5 c6
 
 ; vim: ft=colortemplate

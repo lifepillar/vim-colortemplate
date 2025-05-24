@@ -1,0 +1,14 @@
+Background:   dark
+; When the base-16 specification is not given, Colortemplate must use the
+; base-256 value if it's less than 16, otherwise the value should be NONE.
+Color:        black #000000 0
+Color:        white #ffffff ~
+
+Normal  white omit  ; Foreground should become ctermfg=NONE
+Comment omit  black ; Background should become ctermfg=0
+
+Full Name:    Test 305
+Short Name:   test305
+Author:       me
+Environments: 16
+Options: creator=false timestamp=false

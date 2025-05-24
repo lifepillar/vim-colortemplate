@@ -200,10 +200,11 @@ def DefineColor(v: list<string>, ctx: Context)
   var colorName: string = v[2]
   var vGui:      string = tolower(v[3])
   var vGuiHex:   string = vGui
-  var v16:       string = empty(v[5]) ? 'NONE' : v[5]
+  var v16:       string = v[5]
   var v256:      string
   var v256Hex:   string
 
+  # GUI value
   if vGui[0] != '#' # A color name: infer hex value
     vGui = Strip(vGui)
 
@@ -214,6 +215,7 @@ def DefineColor(v: list<string>, ctx: Context)
     endif
   endif
 
+  # Base-256 value
   if v[4] == '~'
     var approxColor: dict<any> = Approximate(vGuiHex)
     v256    = string(approxColor.xterm)
@@ -223,6 +225,12 @@ def DefineColor(v: list<string>, ctx: Context)
     v256Hex = ColorNumber2Hex(str2nr(v256))
   endif
 
+  # Base-16 value
+  if empty(v16)
+    v16 = str2nr(v256) < 16 ? v256 : 'NONE'
+  endif
+
+  # Insert color!
   for db in ActiveDatabases(ctx)
     db.Color.Insert({
       Name:       colorName,

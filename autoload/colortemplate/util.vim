@@ -1,8 +1,8 @@
 vim9script
 
-import 'libcolor.vim'  as libcolor
-import 'libparser.vim' as libparser
-import './parser.vim'  as parser
+import 'libcolor.vim'                             as libcolor
+import 'libparser.vim'                            as libparser
+import '../../import/colortemplate/parser/v3.vim' as parser
 
 const Approximate  = libcolor.Approximate
 const Hex2Rgb      = libcolor.Hex2Rgb

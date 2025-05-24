@@ -6,7 +6,7 @@ Author:y
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
-#const foo = get(g:, 'foo', 1)
+#const foo = get(g:, 'foo', 0)
 Normal black white
 Normal+foo 1 white black
 

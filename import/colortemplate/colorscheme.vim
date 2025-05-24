@@ -135,7 +135,8 @@ export class Database
     {Environment:       '0', NumColors:        0},
   ])
 
-  # Supported attributes for each environment
+  # Supported attributes for each environment. Attributes for «default» are
+  # inserted dynamically based on requested environments.
   var Attribute = Rel.new("Attribute", {
     Environment: Str,
     AttrType:    Str,
@@ -143,22 +144,11 @@ export class Database
   },
   [['Environment', 'AttrKey']]
   ).InsertMany([
-    {Environment: 'default', AttrType: 'Fg',      AttrKey: 'guifg'  },
-    {Environment: 'default', AttrType: 'Bg',      AttrKey: 'guibg'  },
-    {Environment: 'default', AttrType: 'Special', AttrKey: 'guisp'  },
-    {Environment: 'default', AttrType: 'Style',   AttrKey: 'gui'    },
-    {Environment: 'default', AttrType: 'Font',    AttrKey: 'font'   },
-    {Environment: 'default', AttrType: 'Fg',      AttrKey: 'ctermfg'},
-    {Environment: 'default', AttrType: 'Bg',      AttrKey: 'ctermbg'},
-    {Environment: 'default', AttrType: 'Special', AttrKey: 'ctermul'},
-    {Environment: 'default', AttrType: 'Style',   AttrKey: 'cterm'  },
-    {Environment: 'default', AttrType: 'Style',   AttrKey: 'term'   },
-    {Environment: 'default', AttrType: 'Start',   AttrKey: 'start'  },
-    {Environment: 'default', AttrType: 'Stop',    AttrKey: 'stop'   },
     {Environment: 'gui',     AttrType: 'Fg',      AttrKey: 'guifg'  },
     {Environment: 'gui',     AttrType: 'Bg',      AttrKey: 'guibg'  },
     {Environment: 'gui',     AttrType: 'Special', AttrKey: 'guisp'  },
     {Environment: 'gui',     AttrType: 'Style',   AttrKey: 'gui'    },
+    {Environment: 'gui',     AttrType: 'Style',   AttrKey: 'cterm'  }, # for capable terminals when termguicolors is set
     {Environment: 'gui',     AttrType: 'Font',    AttrKey: 'font'   },
     {Environment: '256',     AttrType: 'Fg',      AttrKey: 'ctermfg'},
     {Environment: '256',     AttrType: 'Bg',      AttrKey: 'ctermbg'},
@@ -506,6 +496,16 @@ export class Colorscheme
 
   def HasBackground(background: string): bool
     return this.backgrounds[background]
+  enddef
+
+  def InsertDefaultAttributes(environments: list<string>)
+    for db in [this.dark, this.light]
+      var attributes = Query(db.Attribute->Select((t) => index(environments, t.Environment) != -1))
+
+      for t in attributes
+        db.Attribute.Upsert({Environment: 'default', AttrKey: t.AttrKey, AttrType: t.AttrType})
+      endfor
+    endfor
   enddef
 
   def Db(background: string): Database

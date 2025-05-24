@@ -11,10 +11,13 @@ g:colors_name = 'test304'
 const transp_bg = get(g:, 'foo_transp_bg', 0)
 
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=248 ctermbg=21 ctermul=NONE cterm=NONE
+if transp_bg == 1
+  hi Normal guifg=#ffffff guibg=NONE guisp=NONE gui=NONE ctermfg=231 ctermbg=NONE ctermul=NONE cterm=NONE
+endif
 
 if has('gui_running') || (has('termguicolors') && &termguicolors)
   if transp_bg == 1
-    hi Normal guifg=#ffffff guibg=NONE guisp=NONE gui=NONE
+    hi Normal guifg=#aaaaaa guibg=NONE guisp=NONE gui=NONE cterm=NONE
   endif
 endif
 

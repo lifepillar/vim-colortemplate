@@ -14,9 +14,9 @@ Color: darkblue  #0024ff 21
 #const transp_bg = get(g:, 'foo_transp_bg', 0)
 
 Normal/256             lightgrey darkblue
-Normal+transp_bg 1         white    none
-Normal/gui+transp_bg 1     white    none
-Normal                     white    black    ; Default definition
-Normal/256+transp_bg 1     white    none
+Normal+transp_bg 1         white     none
+Normal/gui+transp_bg 1     lightgrey none
+Normal                     white     black    ; Default definition
+Normal/256+transp_bg 1     white     none
 
 ; vim: ft=colortemplate

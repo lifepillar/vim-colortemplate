@@ -97,24 +97,24 @@ def Test_Parser_GUIColorName()
   var template =<< trim END
     Background: dark
 
-    Color: black  Black  16  Black
-    Color: blue   Blue    ~  Blue
+    Color: myblack  Black  16  Black
+    Color: myblue   Blue    ~  Blue
 
-    Normal black blue
+    Normal myblack myblue
   END
 
   var [result, colorscheme] = Parse(join(template, "\n"))
 
   assert_equal('', result.label)
   assert_true(result.success)
-  assert_equal('Black',   colorscheme.dark.Color.Lookup(['Name'], ['black']).GUI)
-  assert_equal('16',      colorscheme.dark.Color.Lookup(['Name'], ['black']).Base256)
-  assert_equal('#000000', colorscheme.dark.Color.Lookup(['Name'], ['black']).Base256Hex)
-  assert_equal('Black',   colorscheme.dark.Color.Lookup(['Name'], ['black']).Base16)
-  assert_equal('Blue',    colorscheme.dark.Color.Lookup(['Name'], ['blue']).GUI)
-  assert_equal('21',      colorscheme.dark.Color.Lookup(['Name'], ['blue']).Base256)
-  assert_equal('#0000ff', colorscheme.dark.Color.Lookup(['Name'], ['blue']).Base256Hex)
-  assert_equal('Blue',    colorscheme.dark.Color.Lookup(['Name'], ['blue']).Base16)
+  assert_equal('black',   colorscheme.dark.Color.Lookup(['Name'], ['myblack']).GUI)
+  assert_equal('16',      colorscheme.dark.Color.Lookup(['Name'], ['myblack']).Base256)
+  assert_equal('#000000', colorscheme.dark.Color.Lookup(['Name'], ['myblack']).Base256Hex)
+  assert_equal('Black',   colorscheme.dark.Color.Lookup(['Name'], ['myblack']).Base16)
+  assert_equal('blue',    colorscheme.dark.Color.Lookup(['Name'], ['myblue']).GUI)
+  assert_equal('21',      colorscheme.dark.Color.Lookup(['Name'], ['myblue']).Base256)
+  assert_equal('#0000ff', colorscheme.dark.Color.Lookup(['Name'], ['myblue']).Base256Hex)
+  assert_equal('Blue',    colorscheme.dark.Color.Lookup(['Name'], ['myblue']).Base16)
 enddef
 
 def Test_Parser_RgbColorDefinition()

@@ -108,6 +108,7 @@ enddef
 
 def SetSupportedEnvironments(v: list<string>, ctx: Context)
   var theme: Colorscheme = ctx.state.theme
+  theme.InsertDefaultAttributes(v)
   theme.environments = v
   theme.environments->sort()->uniq()
 enddef
@@ -192,7 +193,7 @@ enddef
 
 def DefineColor(v: list<string>, ctx: Context)
   const colorName: string = v[2]
-  const vGui:      string = v[3]
+  const vGui:      string = tolower(v[3])
   const vGuiHex:   string = vGui[0] == '#' ? vGui : RgbName2Hex(vGui)
   const v16:       string = v[5]
   var   v256:      string

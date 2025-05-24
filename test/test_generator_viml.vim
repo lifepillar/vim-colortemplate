@@ -20,9 +20,6 @@ def Verify(name: string)
   var output   = path.Join(COLDIR, $'{name}.vim')
   var expected = path.Join(EXPDIR, $'{name}.vim')
 
-  assert_true(path.Exists(output),   $'Output not found at {output}')
-  assert_true(path.Exists(expected), $'Expected output not found at {expected}')
-
   var fail = assert_equalfile(expected, output)
 
   if !fail
@@ -36,11 +33,15 @@ def AssertBuild(name: string)
   execute 'split' template
 
   var bufnr = bufnr("%")
-  var success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {generator: generator})
+  var success: bool
+
+  try
+    success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {generator: generator})
+  finally
+    execute $':{bufnr}bwipe'
+  endtry
 
   assert_true(success, 'Template failed to build.')
-
-  execute $':{bufnr}bwipe'
 
   Verify(name)
 enddef

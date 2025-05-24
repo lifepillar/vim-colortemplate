@@ -31,13 +31,17 @@ def AssertBuild(name: string)
   execute 'split' template
 
   var bufnr = bufnr("%")
-  var success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {
-    generator: vim9generator.Generator.new(),
-  })
+  var success: bool
+
+  try
+    success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {
+      generator: vim9generator.Generator.new(),
+    })
+  finally
+    execute $':{bufnr}bwipe'
+  endtry
 
   assert_true(success, 'Template failed to build.')
-
-  execute $':{bufnr}bwipe'
 
   Verify(name)
 enddef

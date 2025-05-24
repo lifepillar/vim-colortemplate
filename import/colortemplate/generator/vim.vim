@@ -5,6 +5,7 @@ import './base.vim'         as base
 import '../colorscheme.vim' as colorscheme
 
 
+type  Relation      = ra.Relation
 const DictTransform = ra.DictTransform
 const Extend        = ra.Extend
 const EquiJoin      = ra.EquiJoin
@@ -32,7 +33,7 @@ enddef
 
 def InstantiateBaseGroups(
     db:          Database,
-    groups:      list<dict<any>>,
+    groups:      Relation,
     environment: string,
     discrName:   string = '',
     discrValue:  string = ''
@@ -51,21 +52,15 @@ def InstantiateBaseGroups(
       return {[t.AttrKey]: t.AttrType}
     }, true)
 
-  var colorAttr: string
-
-  if environment == 'gui' || environment == 'default'
-    colorAttr = 'GUI'
-  elseif str2nr(environment) > 16
-    colorAttr = 'Base256'
-  else
-    colorAttr = 'Base16'
-  endif
+  var numColors = db.Environment.Lookup(['Environment'], [environment]).NumColors
 
   var records = groups->Transform((t) => {
     var out: dict<string> = {HiGroup: t.HiGroup}
 
     for [attr_key, attr_type] in items(attributes)
       if attr_type == 'Fg' || attr_type == 'Bg' || attr_type == 'Special'
+        var colorAttr = attr_key[0] == 'g' ? 'GUI' : (numColors > 16 ? 'Base256' : 'Base16')
+
         out[attr_key] = db.Color.Lookup(['Name'], [t[attr_type]])[colorAttr]
       else
         out[attr_key] = t[attr_type]
@@ -168,7 +163,7 @@ export class Generator extends base.Generator
     endif
 
     # Definitions of discriminator variables
-    output += this.GenerateDiscriminators(db, this.space)
+    output += this.EmitDiscriminators(db, this.space)
     output->add('')
 
     var [default_linked_group, linked_group_override] = Split(EquiJoin(
@@ -221,11 +216,20 @@ export class Generator extends base.Generator
           endif
         endif
 
-        return {
-         guifg: db.Color.Lookup(['Name'], [fg]).GUI,
-         guibg: db.Color.Lookup(['Name'], [bg]).GUI,
-         guisp: db.Color.Lookup(['Name'], [sp]).GUI,
-         gui:   style}
+        var u = {
+          guifg: db.Color.Lookup(['Name'], [fg]).GUI,
+          guibg: db.Color.Lookup(['Name'], [bg]).GUI,
+          guisp: db.Color.Lookup(['Name'], [sp]).GUI,
+          gui:   style,
+          cterm: style} # For capable terminals when termguicolors is set
+
+        # See https://github.com/lifepillar/vim-colortemplate/issues/15
+        if u.guifg == 'NONE' && u.guibg == 'NONE'
+          u['ctermfg'] = 'NONE'
+          u['ctermbg'] = 'NONE'
+        endif
+
+        return u
       }))
     endif
 
@@ -287,7 +291,7 @@ export class Generator extends base.Generator
           ctermbg: db.Color.Lookup(['Name'], [bg])[cterm_attr],
           ctermul: db.Color.Lookup(['Name'], [sp])[cterm_attr],
           cterm: style}
-      }))
+      }, {force: true}))
     endif
 
     # Add `term` attribute if required
@@ -323,12 +327,22 @@ export class Generator extends base.Generator
       ->Sort(CompareByHiGroupName)
       ->Transform((t) => BaseGroupToString(t, this.space))
 
+    var discriminators = sort(
+      db.Discriminator
+      ->Transform((t) => empty(t.DiscrName) ? null_string : t.DiscrName)
+    )
+
+    # Default discriminator-specific overrides
+    output += this.EmitDiscriminatorBasedDefinitions(
+      db,
+      'default',
+      discriminators,
+      linked_group_override,
+      base_group_override
+    )
+
     # Now we have to deal with the remaining environment-specific and
     # discriminator-specific definitions
-
-    var discriminators = db.Discriminator
-      ->Transform((t) => empty(t.DiscrName) ? null_string : t.DiscrName)
-
     for environment in sort(theme.environments, CompareEnvironments)
       var env_linked = Query(
         linked_group_override->Select((t) => t.Environment == environment)
@@ -379,54 +393,13 @@ export class Generator extends base.Generator
         ->Transform((t) => BaseGroupToString(t, this.space))
 
       # Discriminator-specific overrides
-      for discrName in sort(discriminators)
-        var conditions = db.Condition
-          ->Select((t) => t.Environment == environment && t.DiscrName == discrName)
-          ->SortBy('DiscrValue')
-
-        if empty(conditions)
-          continue
-        endif
-
-        var first = true
-
-        for cond in conditions
-          var discr_linked = Query(
-            env_linked_discr->Select(
-              (u) => u.DiscrName == discrName && u.DiscrValue == cond.DiscrValue
-            )
-          )
-          var discr_base = Query(
-            env_base_discr->Select(
-              (u) => u.DiscrName == discrName && u.DiscrValue == cond.DiscrValue
-            )
-          )
-
-          if first
-            output->add($"{this.space}if {this.var_prefix}{discrName} == {cond.DiscrValue}")
-          else
-            this.Deindent()
-            output->add($"{this.space}elseif {this.var_prefix}{discrName} == {cond.DiscrValue}")
-          endif
-
-          this.Indent()
-
-          # Output discriminator-specific overrides for the current environment
-          output += discr_linked
-            ->Sort(CompareByHiGroupName)
-            ->Transform((t) => LinkedGroupToString(t, this.space))
-
-          output += InstantiateBaseGroups(db, discr_base, environment)
-            ->Sort(CompareByHiGroupName)
-            ->Transform((t) => BaseGroupToString(t, this.space))
-
-          first = false
-        endfor
-
-        this.Deindent()
-
-        output->add(this.space .. 'endif')
-      endfor
+      output += this.EmitDiscriminatorBasedDefinitions(
+        db,
+        environment,
+        discriminators,
+        env_linked_discr,
+        env_base_discr
+      )
 
       if environment != 'gui'
         output->add(this.space .. 'finish')
@@ -446,9 +419,60 @@ export class Generator extends base.Generator
     return output
   enddef
 
-  def GenerateDiscriminators(db: Database, space: string): list<string>
+  def EmitDiscriminators(db: Database, space: string): list<string>
     return db.Discriminator->Filter((t) => !empty(t.DiscrName))->SortBy('DiscrNum')->Transform(
       (t) => $'{space}{this.const_keyword}{this.var_prefix}{t.DiscrName} = {t.Definition}'
     )
+  enddef
+
+  def EmitDiscriminatorBasedDefinitions(
+      db:             Database,
+      environment:    string,
+      discriminators: list<string>,
+      linked_groups:  Relation,
+      base_groups:    Relation
+      ): list<string>
+    var output: list<string> = []
+
+    for discrName in sort(discriminators)
+      var conditions = db.Condition
+        ->Select((t) => t.Environment == environment && t.DiscrName == discrName)
+        ->SortBy('DiscrValue')
+
+      if empty(conditions)
+        continue
+      endif
+
+      var first = true
+
+      for condition in conditions
+        var discr_linked = Query(linked_groups->Select((u) => u.Condition == condition.Condition))
+        var discr_base = Query(base_groups->Select((u) => u.Condition == condition.Condition))
+
+        if first
+          output->add($"{this.space}if {this.var_prefix}{discrName} == {condition.DiscrValue}")
+        else
+          this.Deindent()
+          output->add($"{this.space}elseif {this.var_prefix}{discrName} == {condition.DiscrValue}")
+        endif
+
+        this.Indent()
+
+        output += discr_linked
+          ->Sort(CompareByHiGroupName)
+          ->Transform((t) => LinkedGroupToString(t, this.space))
+
+        output += InstantiateBaseGroups(db, discr_base, environment)
+          ->Sort(CompareByHiGroupName)
+          ->Transform((t) => BaseGroupToString(t, this.space))
+
+        first = false
+      endfor
+
+      this.Deindent()
+      output->add(this.space .. 'endif')
+    endfor
+
+      return output
   enddef
 endclass

@@ -251,11 +251,11 @@ def SetHiGroupName(v: list<string>, ctx: Context)
   state.hiGroupName = hiGroup
 enddef
 
-def SetVariants(v: list<any>, ctx: Context)
-  var state                  = ctx.state
-  var variants: list<string> = flattennew(v)
+def SetEnvironments(v: list<any>, ctx: Context)
+  var state                      = ctx.state
+  var environments: list<string> = flattennew(v)
 
-  state.environments = variants
+  state.environments = environments
   state.discrName    = ''
   state.discrValue   = ''
 enddef
@@ -491,9 +491,9 @@ const K_RGB          = R('rgb\>')
 const K_SHORT        = T('Short')
 const K_SPECIAL      = R('s\|sp\>')
 const K_TERM         = R('Term\%[inal\]')
-const K_URL          = R('URL')
+const K_URL          = T('URL')
 const K_ENVIRONMENT  = R('\(gui\|256\|88\|16\|8\|0\)\>')
-const K_ENVIRONMENTS = T('Environments')
+const K_ENVIRONMENTS = R('\(Environments\|Variants\)\>')
 const K_VERBATIM     = Regex('verbatim')
 const K_VERSION      = T('Version')
 
@@ -612,7 +612,7 @@ const DiscrDef       = Seq(
                          DiscrRest
                        )
 const HiGroupVar     = Seq(
-                         OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))   ->Apply(SetVariants),
+                         OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))   ->Apply(SetEnvironments),
                          OneOf(DiscrDef, HiGroupDef)
                        )
 const HiGroupVers    = OneOf(HiGroupVar, DiscrDef)
@@ -660,7 +660,7 @@ const EnvironmentList = Lab(
 const Prefix         = Seq(K_PREFIX,         L_COLON, L_IDENTIFIER)  ->Apply(SetOptionsPrefix)
 const Options        = Seq(K_OPTIONS,        L_COLON, OptionsList)
 const Version        = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
-const Variants       = Seq(K_ENVIRONMENTS,   L_COLON, EnvironmentList)
+const Environments   = Seq(K_ENVIRONMENTS,   L_COLON, EnvironmentList)
 const URL            = Seq(K_URL,            L_COLON, L_TEXTLINE)    ->Apply(SetURL)
 const TermColors     = Seq(K_TERM, L_COLORS, L_COLON, TermColorList)
 const Shortname      = Seq(K_SHORT, L_NAME,  L_COLON, L_THEMENAME)   ->Apply(SetShortName)
@@ -709,7 +709,7 @@ const Directive      = Seq(LookAhead(Regex('\%(\w\|\s\)\+\_s*:')),
                            Shortname,
                            TermColors,
                            URL,
-                           Variants,
+                           Environments,
                            Version,
                            Options,
                            Prefix

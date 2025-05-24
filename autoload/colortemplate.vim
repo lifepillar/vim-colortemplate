@@ -459,7 +459,7 @@ enddef
 export def Stats()
   var nr = bufnr()
 
-  if IsCached(nr) || Build(nr, null_string, null_string, true)
+  if IsCached(nr) || Build(nr, null_string, null_string, {parseonly: true})
     lib.ColorStats(CachedTheme(nr))
   endif
 enddef

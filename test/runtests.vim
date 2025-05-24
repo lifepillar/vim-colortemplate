@@ -5,6 +5,7 @@ import 'libpath.vim'     as path
 import 'libtinytest.vim' as tt
 
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+const DOCDIR  = path.Join(TESTDIR, 'doc')
 const LOGFILE = TESTDIR .. '/test.log'
 
 # Test files
@@ -19,6 +20,10 @@ var results = tt.Run(get(g:, 'test', ''))
 var success = (indexof(results, (_, r) => !r.Ok()) == -1)
 
 # Cleanup
+if success
+  delete(DOCDIR, "rf")
+endif
+
 if get(g:, 'autotest', 0)
   if success
     delete(LOGFILE)

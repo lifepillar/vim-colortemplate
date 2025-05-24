@@ -90,7 +90,7 @@ def Test_Parser_MinimalColorDefinition()
   assert_equal('#000000', colorscheme.dark.Color.Lookup(['Name'], ['black']).GUI)
   assert_equal('16',      colorscheme.dark.Color.Lookup(['Name'], ['black']).Base256)
   assert_equal('#000000', colorscheme.dark.Color.Lookup(['Name'], ['black']).Base256Hex)
-  assert_equal('',        colorscheme.dark.Color.Lookup(['Name'], ['black']).Base16)
+  assert_equal('NONE',    colorscheme.dark.Color.Lookup(['Name'], ['black']).Base16)
 enddef
 
 def Test_Parser_GUIColorName()
@@ -203,12 +203,12 @@ def Test_Parser_OptionalBase16()
   assert_equal('#fafafa',  colorscheme.dark.Color.Lookup(['Name'], ['bg2']).GUI)
   assert_equal('239',      colorscheme.dark.Color.Lookup(['Name'], ['bg2']).Base256)
   assert_equal('#4e4e4e',  colorscheme.dark.Color.Lookup(['Name'], ['bg2']).Base256Hex)
-  assert_equal('',         colorscheme.dark.Color.Lookup(['Name'], ['bg2']).Base16)
+  assert_equal('NONE',     colorscheme.dark.Color.Lookup(['Name'], ['bg2']).Base16)
 
   assert_equal('#343433',  colorscheme.dark.Color.Lookup(['Name'], ['bg3']).GUI)
   assert_equal('59',       colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base256)
   assert_equal('#5f5f5f',  colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base256Hex)
-  assert_equal('',         colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base16)
+  assert_equal('NONE',     colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base16)
 enddef
 
 def Test_Parser_Lookahead()

@@ -5,8 +5,8 @@ Short name:test74
 Author:y
 Background:dark
 Color:white #ffffff 231 15
-; `none` must result is cterm(fg|bg)=NONE:
-Color:black #000000 16 none
+; Omitting the base16 value must result is cterm(fg|bg)=NONE:
+Color:black #000000 16
 Normal white black
 NonText black white
 Conceal black black

@@ -200,7 +200,7 @@ def DefineColor(v: list<string>, ctx: Context)
   var colorName: string = v[2]
   var vGui:      string = tolower(v[3])
   var vGuiHex:   string = vGui
-  var v16:       string = v[5]
+  var v16:       string = empty(v[5]) ? 'NONE' : v[5]
   var v256:      string
   var v256Hex:   string
 
@@ -467,263 +467,261 @@ def RefInclude(name: string): func(list<string>, Context)
   }
 enddef
 
-const K_AUTHOR       = T('Author')
-const K_AUXFILE      = T('auxfile')
-const K_BACKGROUND   = T('Background')
-const K_COLOR        = T('Color')
-const K_COLORS       = R('[Cc]olors')
-const K_CONST        = T('#const')
-const K_DESCRIPTION  = T('Description')
-const K_ENDAUXFILE   = T('endauxfile')
-const K_ENDHELPFILE  = T('endhelpfile')
-const K_ENDVERBATIM  = T('endverbatim')
-const K_FULL         = T('Full')
-const K_HELPFILE     = T('helpfile')
-const K_INCLUDE      = T('Include')
-const K_LICENSE      = T('License')
-const K_MAINTAINER   = T('Maintainer')
-const K_NAME         = R('[Nn]ame')
-const K_OPTIONS      = T('Options')
-const K_OPTN         = R('\%(backend\|creator\|dateformat\|palette\|shiftwidth\|timestamp\)\>')
-const K_OPTV         = R('\%(true\|false\)\>\|\d\+\|\w\+\|"[^"]*"')
-const K_PREFIX       = T('Prefix')
-const K_RGB          = R('rgb\>')
-const K_SHORT        = T('Short')
-const K_SPECIAL      = R('s\|sp\>')
-const K_TERM         = R('Term\%[inal\]')
-const K_URL          = T('URL')
-const K_ENVIRONMENT  = R('\(gui\|256\|88\|16\|8\|0\)\>')
-const K_ENVIRONMENTS = R('\(Environments\|Variants\)\>')
-const K_VERBATIM     = Regex('verbatim')
-const K_VERSION      = T('Version')
+const K_AUTHOR        = T('Author')
+const K_AUXFILE       = T('auxfile')
+const K_BACKGROUND    = T('Background')
+const K_COLOR         = T('Color')
+const K_COLORS        = R('[Cc]olors')
+const K_CONST         = T('#const')
+const K_DESCRIPTION   = T('Description')
+const K_ENDAUXFILE    = T('endauxfile')
+const K_ENDHELPFILE   = T('endhelpfile')
+const K_ENDVERBATIM   = T('endverbatim')
+const K_FULL          = T('Full')
+const K_HELPFILE      = T('helpfile')
+const K_INCLUDE       = T('Include')
+const K_LICENSE       = T('License')
+const K_MAINTAINER    = T('Maintainer')
+const K_NAME          = R('[Nn]ame')
+const K_OPTIONS       = T('Options')
+const K_OPTN          = R('\%(backend\|creator\|dateformat\|palette\|shiftwidth\|timestamp\)\>')
+const K_OPTV          = R('\%(true\|false\)\>\|\d\+\|\w\+\|"[^"]*"')
+const K_PREFIX        = T('Prefix')
+const K_RGB           = R('rgb\>')
+const K_SHORT         = T('Short')
+const K_SPECIAL       = R('s\|sp\>')
+const K_TERM          = R('Term\%[inal\]')
+const K_URL           = T('URL')
+const K_ENVIRONMENT   = R('\(gui\|256\|88\|16\|8\|0\)\>')
+const K_ENVIRONMENTS  = R('\(Environments\|Variants\)\>')
+const K_VERBATIM      = Regex('verbatim')
+const K_VERSION       = T('Version')
 
-const BAR            = T('/')
-const COLON          = T(':')
-const COMMA          = T(',')
-const EQ             = T('=')
-const LPAREN         = T('(')
-const RPAREN         = T(')')
-const PLUS           = T('+')
-const RARROW         = T('->')
-const SEMICOLON      = T(';')
-const TILDE          = T('~')
-const TRUE           = T('true')
-const FALSE          = T('false')
+const BAR             = T('/')
+const COLON           = T(':')
+const COMMA           = T(',')
+const EQ              = T('=')
+const LPAREN          = T('(')
+const RPAREN          = T(')')
+const PLUS            = T('+')
+const RARROW          = T('->')
+const SEMICOLON       = T(';')
+const TILDE           = T('~')
+const TRUE            = T('true')
+const FALSE           = T('false')
 
-const IDENTIFIER     = R('\<\h\w*\>')
-const HIGROUPNAME    = IDENTIFIER
-const DISCRNAME      = IDENTIFIER
-const COLORNAME      = IDENTIFIER
-const FGCOLOR        = COLORNAME
-const BGCOLOR        = COLORNAME
-const ATTRIBUTE      = R(printf('\C\%(%s\)\>',
-                       join(['bold',
-                         'italic',
-                         'underline',
-                         'undercurl',
-                         'reverse',
-                         'inverse',
-                         'standout',
-                         'strikethrough',
-                         'underdashed',
-                         'underdouble',
-                         'underdotted',
-                         'nocombine',
-                         'omit'
-                       ], '\|')))
-const COL16          = R('\%(\d\+\)\|' .. join(ANSI_COLORS, '\|'))
-const NUM256         = R('\d\{1,3}\>')
-const NUMBER         = R('-\=\d\+\%(\.\d*\)\=')
-const STRING         = R('"[^"]*"')
-const BACKGROUND     = R('dark\>\|light\|any\>')
-const HEXCOL         = R('#[A-Fa-f0-9]\{6}')
-const GUICOL         = OneOf(HEXCOL, STRING)
-const TEXTLINE       = R('[^\r\n]\+')
-const THEMENAME      = R('[0-9A-Z-a-z_-]\+')
-const VERBTEXT       = R('\_.\{-}\ze\%(end\%(verbatim\|help\|auxfile\)\)')
+const IDENTIFIER      = R('\<\h\w*\>')
+const HIGROUPNAME     = IDENTIFIER
+const DISCRNAME       = IDENTIFIER
+const COLORNAME       = IDENTIFIER
+const FGCOLOR         = COLORNAME
+const BGCOLOR         = COLORNAME
+const ATTRIBUTE       = R(printf('\C\%(%s\)\>',
+                        join(['bold',
+                          'italic',
+                          'underline',
+                          'undercurl',
+                          'reverse',
+                          'inverse',
+                          'standout',
+                          'strikethrough',
+                          'underdashed',
+                          'underdouble',
+                          'underdotted',
+                          'nocombine',
+                          'omit'
+                        ], '\|')))
+const COL16           = R('\%(\d\+\)\|' .. join(ANSI_COLORS, '\|'))
+const NUM256          = R('\d\{1,3}\>')
+const NUMBER          = R('-\=\d\+\%(\.\d*\)\=')
+const STRING          = R('"[^"]*"')
+const BACKGROUND      = R('dark\>\|light\|any\>')
+const HEXCOL          = R('#[A-Fa-f0-9]\{6}')
+const GUICOL          = OneOf(HEXCOL, STRING)
+const TEXTLINE        = R('[^\r\n]\+')
+const THEMENAME       = R('[0-9A-Z-a-z_-]\+')
+const VERBTEXT        = R('\_.\{-}\ze\%(end\%(verbatim\|help\|auxfile\)\)')
 
-const L_ATTRIBUTE    = Lab(ATTRIBUTE,            "Expected an attribute")
-const L_BACKGROUND   = Lab(BACKGROUND,           "Expected a valid background ('light', 'dark', or 'any')")
-const L_BGCOLOR      = Lab(BGCOLOR,              "Expected the name of the background color")
-const L_COL256       = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or tilde")
-const L_COLON        = Lab(COLON,                "Expected a colon")
-const L_COLORNAME    = Lab(COLORNAME,            "Expected a color name")
-const L_COLORS       = Lab(K_COLORS,             "Expected keyword 'Colors'")
-const L_COMMA        = Lab(COMMA,                "Expected a comma")
-const L_DISCRNAME    = Lab(DISCRNAME,            "Expected a discriminator name")
-const L_ENDAUXFILE   = Lab(K_ENDAUXFILE,         "Expected keyword 'endauxfile'")
-const L_ENDHELPFILE  = Lab(K_ENDHELPFILE,        "Expected keyword 'endhelpfile'")
-const L_ENDVERBATIM  = Lab(K_ENDVERBATIM,        "Expected keyword 'endverbatim'")
-const L_EQ           = Lab(EQ,                   "Expected an equal sign")
-const L_HIGROUPNAME  = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
-const L_IDENTIFIER   = Lab(IDENTIFIER,           "Expected an identifier")
-const L_LPAREN       = Lab(LPAREN,               "Expected open parenthesis")
-const L_NAME         = Lab(K_NAME,               "Expected 'Name'")
-const L_NUM256       = Lab(NUM256,               "Expected a number")
-const L_OPTV         = Lab(K_OPTV,               "Expected a valid option value")
-const L_PATH         = Lab(TEXTLINE,             "Expected a relative path")
-const L_RPAREN       = Lab(RPAREN,               "Expected closed parenthesis")
-const L_SPCOLOR      = Lab(COLORNAME,            "Expected the name of the special color")
-const L_TEXTLINE     = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
-const L_THEMENAME    = Lab(THEMENAME,            "Expected a valid color scheme's name")
-const L_ENVIRONMENT  = Lab(K_ENVIRONMENT,        "Expected an environment value (gui, 256, 88, 16, 8, or 0)")
-const L_VERBTEXT     = Lab(VERBTEXT,             "Expected end of verbatim block")
+const L_ATTRIBUTE     = Lab(ATTRIBUTE,            "Expected an attribute")
+const L_BACKGROUND    = Lab(BACKGROUND,           "Expected a valid background ('light', 'dark', or 'any')")
+const L_BGCOLOR       = Lab(BGCOLOR,              "Expected the name of the background color")
+const L_COL256        = Lab(OneOf(TILDE, NUM256), "Expected a 256-color value or tilde")
+const L_COLON         = Lab(COLON,                "Expected a colon")
+const L_COLORNAME     = Lab(COLORNAME,            "Expected a color name")
+const L_COLORS        = Lab(K_COLORS,             "Expected keyword 'Colors'")
+const L_COMMA         = Lab(COMMA,                "Expected a comma")
+const L_DISCRNAME     = Lab(DISCRNAME,            "Expected a discriminator name")
+const L_ENDAUXFILE    = Lab(K_ENDAUXFILE,         "Expected keyword 'endauxfile'")
+const L_ENDHELPFILE   = Lab(K_ENDHELPFILE,        "Expected keyword 'endhelpfile'")
+const L_ENDVERBATIM   = Lab(K_ENDVERBATIM,        "Expected keyword 'endverbatim'")
+const L_EQ            = Lab(EQ,                   "Expected an equal sign")
+const L_HIGROUPNAME   = Lab(HIGROUPNAME,          "Expected the name of a highlight group")
+const L_IDENTIFIER    = Lab(IDENTIFIER,           "Expected an identifier")
+const L_LPAREN        = Lab(LPAREN,               "Expected open parenthesis")
+const L_NAME          = Lab(K_NAME,               "Expected 'Name'")
+const L_NUM256        = Lab(NUM256,               "Expected a number")
+const L_OPTV          = Lab(K_OPTV,               "Expected a valid option value")
+const L_PATH          = Lab(TEXTLINE,             "Expected a relative path")
+const L_RPAREN        = Lab(RPAREN,               "Expected closed parenthesis")
+const L_SPCOLOR       = Lab(COLORNAME,            "Expected the name of the special color")
+const L_TEXTLINE      = Lab(TEXTLINE,             "Expected the value of the directive (which cannot be empty)")
+const L_THEMENAME     = Lab(THEMENAME,            "Expected a valid color scheme's name")
+const L_ENVIRONMENT   = Lab(K_ENVIRONMENT,        "Expected an environment value (gui, 256, 88, 16, 8, or 0)")
+const L_VERBTEXT      = Lab(VERBTEXT,             "Expected end of verbatim block")
 
-const AuxFile        = OneOf(
-                         Seq(
-                           K_AUXFILE,
-                           L_PATH,
-                           L_VERBTEXT,
-                           L_ENDAUXFILE
-                         )                                           ->Apply(GetAuxFile),
-                         Seq(
-                           K_HELPFILE,
-                           L_VERBTEXT,
-                           L_ENDHELPFILE
-                         )                                           ->Apply(GetHelpFile)
-                       )
+const AuxFile         = OneOf(
+                          Seq(
+                            K_AUXFILE,
+                            L_PATH,
+                            L_VERBTEXT,
+                            L_ENDAUXFILE
+                          )                                           ->Apply(GetAuxFile),
+                          Seq(
+                            K_HELPFILE,
+                            L_VERBTEXT,
+                            L_ENDHELPFILE
+                          )                                           ->Apply(GetHelpFile)
+                        )
 
-const VerbatimBlock  = Seq(
-                         K_VERBATIM,
-                         L_VERBTEXT,
-                         L_ENDVERBATIM
-                       )                                             ->Apply(GetVerbatim)
+const VerbatimBlock   = Seq(
+                          K_VERBATIM,
+                          L_VERBTEXT,
+                          L_ENDVERBATIM
+                        )                                             ->Apply(GetVerbatim)
 
-const Attributes     = Seq(
-                         ATTRIBUTE,
-                         Many(Seq(Skip(COMMA), L_ATTRIBUTE))
-                       )                                             ->Map((v, _) => flattennew(v))
-const SpecialColor   = Seq(K_SPECIAL, EQ, L_SPCOLOR)                 ->Map((v, _) => v[2])
-const BaseGroup      = Seq(
-                         FGCOLOR                                     ->Map(CheckColorName),
-                         L_BGCOLOR                                   ->Map(CheckColorName),
-                         Opt(SpecialColor)                           ->Map(CheckColorName),
-                         Opt(Attributes)
-                       )                                             ->Apply(DefineBaseGroup)
-const LinkedGroup    = Seq(RARROW, L_HIGROUPNAME)                    ->Apply(DefineLinkedGroup)
-const HiGroupDef     = OneOf(LinkedGroup, BaseGroup)
-const DiscrValue     = OneOf(NUMBER, STRING, TRUE, FALSE)            ->Apply(SetDiscrValue)
-const DiscrRest      = OneOrMore(Seq(
-                         DiscrValue,
-                         HiGroupDef
-                       ))
-const DiscrDef       = Seq(
-                         Seq(PLUS, L_DISCRNAME)                     ->Apply(SetDiscrName),
-                         DiscrRest
-                       )
-const HiGroupVar     = Seq(
-                         OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))   ->Apply(SetEnvironments),
-                         OneOf(DiscrDef, HiGroupDef)
-                       )
-const HiGroupVers    = OneOf(HiGroupVar, DiscrDef)
-const HiGroupRest    = OneOf(
-                         Seq(
-                           HiGroupDef,
-                           Many(HiGroupVers)
-                         ),
-                         OneOrMore(HiGroupVers)
-                       )
-const HiGroupName    = Seq(Bol, HIGROUPNAME)                        ->Apply(SetHiGroupName)
-const HiGroupDecl    = Seq(HiGroupName, HiGroupRest)
+const Attributes      = Seq(
+                          ATTRIBUTE,
+                          Many(Seq(Skip(COMMA), L_ATTRIBUTE))
+                        )                                             ->Map((v, _) => flattennew(v))
+const SpecialColor    = Seq(K_SPECIAL, EQ, L_SPCOLOR)                 ->Map((v, _) => v[2])
+const BaseGroup       = Seq(
+                          FGCOLOR                                     ->Map(CheckColorName),
+                          L_BGCOLOR                                   ->Map(CheckColorName),
+                          Opt(SpecialColor)                           ->Map(CheckColorName),
+                          Opt(Attributes)
+                        )                                             ->Apply(DefineBaseGroup)
+const LinkedGroup     = Seq(RARROW, L_HIGROUPNAME)                    ->Apply(DefineLinkedGroup)
+const HiGroupDef      = OneOf(LinkedGroup, BaseGroup)
+const DiscrValue      = OneOf(NUMBER, STRING, TRUE, FALSE)            ->Apply(SetDiscrValue)
+const DiscrRest       = OneOrMore(Seq(
+                          DiscrValue,
+                          HiGroupDef
+                        ))
+const DiscrDef        = Seq(
+                          Seq(PLUS, L_DISCRNAME)                      ->Apply(SetDiscrName),
+                          DiscrRest
+                        )
+const HiGroupVar      = Seq(
+                          OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))    ->Apply(SetEnvironments),
+                          OneOf(DiscrDef, HiGroupDef)
+                        )
+const HiGroupVers     = OneOf(HiGroupVar, DiscrDef)
+const HiGroupRest     = OneOf(
+                          Seq(
+                            HiGroupDef,
+                            Many(HiGroupVers)
+                          ),
+                          OneOrMore(HiGroupVers)
+                        )
+const HiGroupName     = Seq(Bol, HIGROUPNAME)                         ->Apply(SetHiGroupName)
+const HiGroupDecl     = Seq(HiGroupName, HiGroupRest)
 
-const TermColorList  = Seq(
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME,
-                         L_COLORNAME
-                       )                                             ->Apply(SetTermColors)
+const TermColorList   = Seq(
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME,
+                          L_COLORNAME
+                        )                                             ->Apply(SetTermColors)
 
-const OptionsList    = Lab(
-                         OneOrMore(
-                           Seq(K_OPTN, L_EQ, L_OPTV)                 ->Apply(SetOption)
-                         ),
-                         'Expected a Colortemplate option'
-                       )
+const OptionsList     = Lab(
+                          OneOrMore(
+                            Seq(K_OPTN, L_EQ, L_OPTV)                 ->Apply(SetOption)
+                          ),
+                          'Expected a Colortemplate option'
+                        )
 
 const EnvironmentList = Lab(
-                         OneOrMore(K_ENVIRONMENT),
-                         "Expected one of: gui, 256, 88, 16, 8, 0"
-                       )                                             ->Apply(SetSupportedEnvironments)
+                          OneOrMore(K_ENVIRONMENT),
+                          "Expected one of: gui, 256, 88, 16, 8, 0"
+                        )                                             ->Apply(SetSupportedEnvironments)
 
-const Prefix         = Seq(K_PREFIX,         L_COLON, L_IDENTIFIER)  ->Apply(SetOptionsPrefix)
-const Options        = Seq(K_OPTIONS,        L_COLON, OptionsList)
-const Version        = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
-const Environments   = Seq(K_ENVIRONMENTS,   L_COLON, EnvironmentList)
-const URL            = Seq(K_URL,            L_COLON, L_TEXTLINE)    ->Apply(SetURL)
-const TermColors     = Seq(K_TERM, L_COLORS, L_COLON, TermColorList)
-const Shortname      = Seq(K_SHORT, L_NAME,  L_COLON, L_THEMENAME)   ->Apply(SetShortName)
-const Maintainer     = Seq(K_MAINTAINER,     L_COLON, L_TEXTLINE)    ->Apply(SetMaintainer)
-const License        = Seq(K_LICENSE,        L_COLON, L_TEXTLINE)    ->Apply(SetLicense)
-const Fullname       = Seq(K_FULL,  L_NAME,  L_COLON, L_TEXTLINE)    ->Apply(SetFullName)
-const Description    = Seq(K_DESCRIPTION,    L_COLON, L_TEXTLINE)    ->Apply(SetDescription)
-const Author         = Seq(K_AUTHOR,         L_COLON, L_TEXTLINE)    ->Apply(SetAuthor)
-const Background     = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveDatabases)
-const Include        = Seq(K_INCLUDE,        L_COLON, L_PATH)        ->Apply(RefInclude('ParseInclude'))
-const RgbColor       = Seq(
-                         K_RGB,
-                         L_LPAREN,
-                         L_NUM256,
-                         L_COMMA,
-                         L_NUM256,
-                         L_COMMA,
-                         L_NUM256,
-                         L_RPAREN)                                   ->Map(ToHexColor)
-const GuiColor       = Lab(
-                        OneOf(RgbColor, GUICOL),
-                        "Expected a valid GUI color definition"
-                      )
-
-export const ColorParser  = Seq(
-                        K_COLOR,
-                        L_COLON,
-                        L_COLORNAME,
-                        GuiColor,
-                        L_COL256,
-                        Opt(COL16)
-                      )
-
-const ColorDef       = ColorParser                                 ->Apply(DefineColor)
-
-const Directive      = Seq(LookAhead(Regex('\%(\w\|\s\)\+\_s*:')),
-                         Lab(OneOf(
-                           ColorDef,
-                           Include,
-                           Background,
-                           Author,
-                           Description,
-                           Fullname,
-                           License,
-                           Maintainer,
-                           Shortname,
-                           TermColors,
-                           URL,
-                           Environments,
-                           Version,
-                           Options,
-                           Prefix
-                         ), 'Expected a valid metadata directive')
+const Prefix          = Seq(K_PREFIX,         L_COLON, L_IDENTIFIER)  ->Apply(SetOptionsPrefix)
+const Options         = Seq(K_OPTIONS,        L_COLON, OptionsList)
+const Version         = Seq(K_VERSION,        L_COLON, L_TEXTLINE)    ->Apply(SetVersion)
+const Environments    = Seq(K_ENVIRONMENTS,   L_COLON, EnvironmentList)
+const URL             = Seq(K_URL,            L_COLON, L_TEXTLINE)    ->Apply(SetURL)
+const TermColors      = Seq(K_TERM, L_COLORS, L_COLON, TermColorList)
+const Shortname       = Seq(K_SHORT, L_NAME,  L_COLON, L_THEMENAME)   ->Apply(SetShortName)
+const Maintainer      = Seq(K_MAINTAINER,     L_COLON, L_TEXTLINE)    ->Apply(SetMaintainer)
+const License         = Seq(K_LICENSE,        L_COLON, L_TEXTLINE)    ->Apply(SetLicense)
+const Fullname        = Seq(K_FULL,  L_NAME,  L_COLON, L_TEXTLINE)    ->Apply(SetFullName)
+const Description     = Seq(K_DESCRIPTION,    L_COLON, L_TEXTLINE)    ->Apply(SetDescription)
+const Author          = Seq(K_AUTHOR,         L_COLON, L_TEXTLINE)    ->Apply(SetAuthor)
+const Background      = Seq(K_BACKGROUND,     L_COLON, L_BACKGROUND)  ->Apply(SetActiveDatabases)
+const Include         = Seq(K_INCLUDE,        L_COLON, L_PATH)        ->Apply(RefInclude('ParseInclude'))
+const RgbColor        = Seq(
+                          K_RGB,
+                          L_LPAREN,
+                          L_NUM256,
+                          L_COMMA,
+                          L_NUM256,
+                          L_COMMA,
+                          L_NUM256,
+                          L_RPAREN)                                   ->Map(ToHexColor)
+const GuiColor        = Lab(
+                         OneOf(RgbColor, GUICOL),
+                         "Expected a valid GUI color definition"
                        )
 
-const Statement      = Seq(
-                         K_CONST,
-                         L_IDENTIFIER,
-                         L_EQ,
-                         L_TEXTLINE
-                       )                                            ->Apply(DefineDiscriminator)
+const ColorDef        = Seq(
+                         K_COLOR,
+                         L_COLON,
+                         L_COLORNAME,
+                         GuiColor,
+                         L_COL256,
+                         Opt(COL16)
+                       )                                              ->Apply(DefineColor)
 
-const Declaration    = OneOf(Statement, VerbatimBlock, AuxFile, Directive, HiGroupDecl)
+const Directive       = Seq(LookAhead(Regex('\%(\w\|\s\)\+\_s*:')),
+                          Lab(OneOf(
+                            ColorDef,
+                            Include,
+                            Background,
+                            Author,
+                            Description,
+                            Fullname,
+                            License,
+                            Maintainer,
+                            Shortname,
+                            TermColors,
+                            URL,
+                            Environments,
+                            Version,
+                            Options,
+                            Prefix
+                          ), 'Expected a valid metadata directive')
+                        )
+
+const Statement       = Seq(
+                          K_CONST,
+                          L_IDENTIFIER,
+                          L_EQ,
+                          L_TEXTLINE
+                        )                                             ->Apply(DefineDiscriminator)
+
+const Declaration     = OneOf(Statement, VerbatimBlock, AuxFile, Directive, HiGroupDecl)
 
 export const Template = Seq(
                         Skip(SpaceOrComment),

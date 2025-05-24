@@ -179,4 +179,3 @@ var results = tt.Run('_VimLGenerator_')
 
 delete(COLDIR, "d") # Delete if empty
 delete(DOCDIR, "rf")
-

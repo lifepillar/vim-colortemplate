@@ -96,7 +96,11 @@ enddef
 def Colors(db: Database): list<string>
   var output = db.Color
     ->Select((t) => t.Name->NotIn(['', 'fg', 'bg', 'none']))
-    ->Transform((t) => $"Color: {t.Name} {t.GUI} {t.Base256}{empty(t.Base16) ? '' : ' ' .. t.Base16}")
+    ->Transform((t) => {
+      var base16 = empty(t.Base16) || t.Base16 == 'NONE' ? '' : ' ' .. t.Base16
+
+      return $"Color: {t.Name} {t.GUI} {t.Base256}{base16}"
+    })
 
 
   if !empty(db.termcolors)

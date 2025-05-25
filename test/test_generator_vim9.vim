@@ -79,6 +79,10 @@ def Test_Vim9Generator_307()
   AssertBuild('test307')
 enddef
 
+def Test_Vim9Generator_308()
+  AssertBuild('test308')
+enddef
+
 var results = tt.Run('_Vim9Generator_')
 
 delete(COLDIR, "d") # Delete if empty

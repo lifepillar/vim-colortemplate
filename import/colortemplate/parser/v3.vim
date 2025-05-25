@@ -619,16 +619,16 @@ const DiscrDef        = Seq(
                           Seq(PLUS, L_DISCRNAME)                      ->Apply(SetDiscrName),
                           DiscrRest
                         )
-const HiGroupVar      = Seq(
+const HiGroupVariant  = Seq(
                           OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))    ->Apply(SetEnvironments),
-                          OneOf(DiscrDef, HiGroupDef)
+                          OneOf(OneOrMore(DiscrDef), HiGroupDef)
                         )
 const HiGroupRest     = OneOf(
+                          OneOrMore(HiGroupVariant),
                           Seq(
                             HiGroupDef,
-                            Many(HiGroupVar)
+                            Many(HiGroupVariant)
                           ),
-                          OneOrMore(HiGroupVar)
                         )
 const HiGroupName     = Seq(Bol, HIGROUPNAME)                         ->Apply(SetHiGroupName)
 const HiGroupDecl     = Seq(HiGroupName, HiGroupRest)
@@ -829,8 +829,8 @@ enddef
 # Col16           ::= '0' | '1' | ... | '15' | IDENT
 
 # HiGroupDecl     ::= ^HiGroupName HiGroupRest
-# HiGroupRest     ::= HiGroupDef HiGroupVariant* | HiGroupVariant+
-# HiGroupVariant  ::= ('/' ENVIRONMENT)+ (DiscrDef | HiGroupDef)
+# HiGroupRest     ::= HiGroupVariant+ | HiGroupDef HiGroupVariant*
+# HiGroupVariant  ::= ('/' ENVIRONMENT)+ (DiscrDef+ | HiGroupDef)
 # DiscrDef        ::= '+' IDENT DiscrRest
 # DiscrRest       ::= (DiscrValue HiGroupDef)+
 # DiscrValue      ::= NUMBER | STRING | TRUE | FALSE

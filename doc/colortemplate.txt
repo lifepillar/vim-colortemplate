@@ -1125,6 +1125,11 @@ This is just a way to specify for which color environments highlight group
 definitions should be created. It appears once in a template, usually at the
 top together with the other metadata fields. See |colortemplate-environments|.
 
+No implicit background ~
+
+In Colortemplate v3, the background must be explicitly defined before any
+color or highlight group definition. An error is raised otherwise.
+
 No more "gui=" and "term=" ~
 
 If you used "gui=" and "term=" (or their abbreviated forms "g=" and "t=") in

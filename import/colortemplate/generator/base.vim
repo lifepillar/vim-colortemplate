@@ -4,13 +4,18 @@ import 'librelalg.vim'      as ra
 import '../colorscheme.vim' as colorscheme
 import '../version.vim'     as version
 
-const EquiJoin    = ra.EquiJoin
-const Filter      = ra.Filter
-const Query       = ra.Query
-const Select      = ra.Select
-const SortBy      = ra.SortBy
-const Table       = ra.Table
-const Transform   = ra.Transform
+const DictTransform = ra.DictTransform
+const Extend        = ra.Extend
+const EquiJoin      = ra.EquiJoin
+const Filter        = ra.Filter
+const Query         = ra.Query
+const Select        = ra.Select
+const Sort          = ra.Sort
+const SortBy        = ra.SortBy
+const Table         = ra.Table
+const Transform     = ra.Transform
+type  Relation      = ra.Relation
+type  Tuple         = ra.Tuple
 
 type  Colorscheme = colorscheme.Colorscheme
 type  Database    = colorscheme.Database
@@ -58,6 +63,234 @@ export def CompareEnvironments(e1: string, e2: string): number
   else
     return str2nr(e1) > str2nr(e2) ? -1 : 1
   endif
+enddef
+
+export def MergeTuple(t: Tuple, other_groups: Relation): Tuple
+  # Return colors and style attributes of t except when a corresponding tuple in
+  # other_groups exists, in which case prefer the attributes in other_groups.
+  #
+  # t:            a tuple from Database.BaseGroup.
+  # other_groups: a subset of Database.BaseGroup. This should contain at most
+  #               one tuple with HiGroup equal to t.HiGroup.
+  var fg    = t.Fg
+  var bg    = t.Bg
+  var sp    = t.Special
+  var style = t.Style
+  var r     = Query(other_groups->Select((u) => u.HiGroup == t.HiGroup))
+
+  if len(r) > 0
+    if !empty(r[0].Fg)
+      fg = r[0].Fg
+    endif
+
+    if !empty(r[0].Bg)
+      bg = r[0].Bg
+    endif
+
+    if !empty(r[0].Special)
+      sp = r[0].Special
+    endif
+
+    if !empty(r[0].Style)
+      style = r[0].Style
+    endif
+  endif
+
+  return {Fg: fg, Bg: bg, Special: sp, Style: style}
+enddef
+
+export def MergeStyle(t: Tuple, other_groups: Relation): string
+  # Return the style attribute from t, except when a corresponding tuple in
+  # other_groups exists, in which case prefer the other style.
+  #
+  # t:            a tuple from Database.BaseGroup.
+  # other_groups: a subset of Database.BaseGroup. This should contain at most
+  #               one tuple with HiGroup equal to t.HiGroup.
+  var style = t.Style
+  var r     = Query(other_groups->Select((u) => u.HiGroup == t.HiGroup))
+
+  if len(r) > 0
+    if !empty(r[0].Style)
+      style = r[0].Style
+    endif
+  endif
+
+  return style
+enddef
+
+export def InstantiateBaseGroups(
+    db:          Database,
+    groups:      Relation,
+    environment: string,
+    discrName:   string = '',
+    discrValue:  string = ''
+    ): list<dict<string>>
+  # Return the highlight group definitions for the given condition as a list
+  # of dictionaries, where each dictionary has the correct attributes with
+  # the correct values. For instance, a dictionary for a highlight group in
+  # 256-color terminals may look as follows:
+  #
+  #     {ctermfg: '203': ctermbg: '16', ctermul: 'NONE', cterm: 'bold'}
+  #
+  # Which keys are returned depends on the environment.
+  var attributes = db.Attribute
+    ->Select((t) => t.Environment == environment)
+    ->DictTransform((t) => {
+      return {[t.AttrKey]: t.AttrType}
+    }, true)
+
+  var numColors = db.Environment.Lookup(['Environment'], [environment]).NumColors
+
+  var records = groups->Transform((t) => {
+    var out: dict<string> = {HiGroup: t.HiGroup}
+
+    for [attr_key, attr_type] in items(attributes)
+      if attr_type == 'Fg' || attr_type == 'Bg' || attr_type == 'Special'
+        var colorAttr = attr_key[0] == 'g' ? 'GUI' : (numColors > 16 ? 'Base256' : 'Base16')
+
+        out[attr_key] = db.Color.Lookup(['Name'], [t[attr_type]])[colorAttr]
+      else
+        out[attr_key] = t[attr_type]
+      endif
+    endfor
+
+    return out
+  })
+
+  return records
+enddef
+
+export def LinkedGroupToString(t: Tuple, space: string): string
+  if empty(t.TargetGroup)
+    return null_string  # Skip definition
+  endif
+
+  return $"{space}hi! link {t.HiGroup} {t.TargetGroup}"
+enddef
+
+export def BaseGroupToString(t: Tuple, space: string): string
+  var attributes: list<string> = []
+
+  for attr in ['guifg', 'guibg', 'guisp', 'gui', 'font', 'ctermfg', 'ctermbg', 'ctermul', 'cterm', 'term', 'start', 'stop']
+    var value = get(t, attr, '')
+
+    if !empty(value)
+      attributes->add($'{attr}={value}')
+    endif
+  endfor
+
+  if empty(attributes)
+    return null_string  # Skip definition
+  endif
+
+  return $"{space}hi {t.HiGroup} {join(attributes, ' ')}"
+enddef
+
+export def BestCtermEnvironment(environments: list<string>): string
+  for env in ['256', '88', '16', '8']
+    if env->In(environments)
+      return env
+    endif
+  endfor
+  return ''
+enddef
+
+export def EmitDefaultDefinitions(
+    db:                  Database,
+    environments:        list<string>,
+    cterm_env:           string,
+    default_base_groups: Relation,
+    group_overrides:     Relation,
+    space:               string
+    ): list<string>
+  # We want the default definitions to be as complete as possible, so gui,
+  # cterm, and term attributes are merged into a single definition.
+  #
+  # db:                 a color scheme database
+  # environments:       the color scheme's environments (Environments
+  #                     metadata)
+  # cterm_env:          cterm environment to merge (use '' if no cterm should
+  #                     be merged).
+  # default_base_group: definitions for the default environment. Note that
+  #                     this variable is modified in-place.
+  # group_overrides:    environment-specific definitions
+  # space:              indentation level
+  var output: list<string> = []
+  var groups = default_base_groups
+
+  if 'gui'->In(environments)
+    # Extend the default highlight group definitions with `gui*`
+    # attributes, whose values are taken from the 'gui' environment if
+    # a corresponding specific definition was provided, otherwise the
+    # default values are used.
+    var gui_base_groups = Query(
+      group_overrides
+      ->Select((t) => t.Environment == 'gui' && empty(t.DiscrName))
+    )
+
+    groups = Query(groups->Extend((t) => {
+      var t0 = MergeTuple(t, gui_base_groups)
+      var u  = {
+        guifg: db.Color.Lookup(['Name'], [t0.Fg]).GUI,
+        guibg: db.Color.Lookup(['Name'], [t0.Bg]).GUI,
+        guisp: db.Color.Lookup(['Name'], [t0.Special]).GUI,
+        gui:   t0.Style,
+        cterm: t0.Style} # For capable terminals when termguicolors is set
+
+      # See https://github.com/lifepillar/vim-colortemplate/issues/15
+      if u.guifg == 'NONE' && u.guibg == 'NONE'
+        u['ctermfg'] = 'NONE'
+        u['ctermbg'] = 'NONE'
+      endif
+
+      return u
+    }))
+  endif
+
+  if !empty(cterm_env)
+    var cterm_attr = str2nr(cterm_env) > 16 ? 'Base256' : 'Base16'
+    var cterm_base_groups = Query(
+      group_overrides
+      ->Select((t) => t.Environment == cterm_env && empty(t.DiscrName))
+    )
+
+    # Extend the default highlight group definitions with `cterm*`
+    # attributes, whose values are taken from the best cterm environment if
+    # a corresponding specific definition was provided, otherwise the
+    # default values are used.
+    groups = Query(groups->Extend((t) => {
+      var t0 = MergeTuple(t, cterm_base_groups)
+
+      return {
+        ctermfg: db.Color.Lookup(['Name'], [t0.Fg])[cterm_attr],
+        ctermbg: db.Color.Lookup(['Name'], [t0.Bg])[cterm_attr],
+        ctermul: db.Color.Lookup(['Name'], [t0.Special])[cterm_attr],
+        cterm: t0.Style}
+    }, {force: true}))
+  endif
+
+  # Add `term` attribute if required
+  if '0'->In(environments)
+    var bw_base_groups = Query(group_overrides
+      ->Select((t) => t.Environment == '0' && empty(t.DiscrName))
+    )
+
+    # Extend the default highlight group definitions with a `term`
+    # attribute, whose value is taken from a '0' environment if
+    # a corresponding definition was provided, otherwise the default style
+    # is used.
+    groups = Query(groups->Extend((t) => {
+      var style = MergeStyle(t, bw_base_groups)
+
+      return {term: style}
+    }))
+  endif
+
+  output += groups
+    ->Sort(CompareByHiGroupName)
+    ->Transform((t) => BaseGroupToString(t, space))
+
+  return output
 enddef
 
 # In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of
@@ -235,11 +468,11 @@ export abstract class Generator implements IGenerator
     output: list<string> = []
 
     if CheckBugBg234(db, environment, discrName, discrValue)
-        output->add($"{this.space}if !has('patch-8.0.0616') {this.comment_symbol} Fix for Vim bug")
-        this.Indent()
-        output->add($'{this.space}set background={this.background}')
-        this.Deindent()
-        output->add($'{this.space}endif')
+      output->add($"{this.space}if !has('patch-8.0.0616') {this.comment_symbol} Fix for Vim bug")
+      this.Indent()
+      output->add($'{this.space}set background={this.background}')
+      this.Deindent()
+      output->add($'{this.space}endif')
     endif
 
     return output

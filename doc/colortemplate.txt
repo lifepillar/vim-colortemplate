@@ -416,16 +416,19 @@ Overriding the default definitions ~
 
 Default definitions can be overridden for specific environments. For example:
 >
-	Normal      white  gray  ; Default definition
-	Normal /256 omit   black ; Default for 256-colors terminals
+	Normal      white  gray
+	SpellRare   white  black  s=cyan  bold,reverse
+
+	Normal /256  omit  black ; Specific for 256-color terminals
+	SpellRare/8 -> SpellBad  ; Specific for 8-color terminals
 <
-The first line defines the default `Normal` highlight group, as explained
-above. The second line overrides the default definition for 256-color
-terminals. The overriding clause is a slash followed by an environment.
+The first two lines provide default definitions for two highlight groups. The
+last two lines override the default definitions for specific environments. The
+overriding clauses consist of a slash followed by an environment.
 
 When overriding a definition, you may use `omit` to inherit the value from
-from the default definition. In the example above, the foreground color will
-be white when 256 colors are available.
+from the default definition. In the example above, the foreground color of the
+`Normal` highlight group will be white in 256-color terminals.
 
 Multiple overriding clauses are possible, and spaces do not matter. For
 example:
@@ -469,6 +472,22 @@ highlight group definitions can be collapsed into one:
 Note: each highlight group can have at most one associated discriminator.
 A discriminator, however, can assume an unbounded number of distinct values.
 
+It is possible to provide definitions for different discriminator values under
+the same environment clause. For example:
+>
+	Folded/256/8
+	  +foo 0 brightblack white
+	  +foo 1 black white
+	  +foo 2 brightblack brightwhite
+<
+The discriminator name does not need to be repeated. This is the same as the
+above:
+>
+	Folded/256/8
+	  +foo 0 brightblack white
+	       1 black white
+	       2 brightblack brightwhite
+<
 Discriminator values can be integers, strings, or the values `true` and
 `false`. Strings must be double-quoted.
 

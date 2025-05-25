@@ -1,9 +1,9 @@
 vim9script
 
-import 'libpath.vim'                               as path
-import 'libtinytest.vim'                           as tt
-import '../autoload/colortemplate.vim'             as colortemplate
-import '../import/colortemplate/generator/vim.vim' as vim9generator
+import 'libpath.vim'                                as path
+import 'libtinytest.vim'                            as tt
+import '../autoload/colortemplate.vim'              as colortemplate
+import '../import/colortemplate/generator/vim9.vim' as vim9generator
 
 # Helper functions {{{
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')

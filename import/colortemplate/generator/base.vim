@@ -65,7 +65,7 @@ export def CompareEnvironments(e1: string, e2: string): number
   endif
 enddef
 
-export def MergeTuple(t: Tuple, other_groups: Relation): Tuple
+def MergeTuple(t: Tuple, other_groups: Relation): Tuple
   # Return colors and style attributes of t except when a corresponding tuple in
   # other_groups exists, in which case prefer the attributes in other_groups.
   #
@@ -99,7 +99,7 @@ export def MergeTuple(t: Tuple, other_groups: Relation): Tuple
   return {Fg: fg, Bg: bg, Special: sp, Style: style}
 enddef
 
-export def MergeStyle(t: Tuple, other_groups: Relation): string
+def MergeStyle(t: Tuple, other_groups: Relation): string
   # Return the style attribute from t, except when a corresponding tuple in
   # other_groups exists, in which case prefer the other style.
   #
@@ -294,9 +294,10 @@ export def EmitDefaultDefinitions(
 enddef
 
 # In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of
-# 'background'. This function generates code to reset the background if
-# needed. The function's name is a reference to the original issue report,
+# 'background'. This function checks the conditions under which that may
+# happen The function's name is a reference to the original issue report,
 # which had an example using color 234.
+#
 # See https://github.com/lifepillar/vim-colortemplate/issues/13.
 export def CheckBugBg234(db: Database, environment: string, discrName: string = '', discrValue = ''): bool
   var definition = Query(EquiJoin(

@@ -25,6 +25,7 @@ const LinkedGroupToString    = base.LinkedGroupToString
 const BaseGroupToString      = base.BaseGroupToString
 const BestCtermEnvironment   = base.BestCtermEnvironment
 const EmitDefaultDefinitions = base.EmitDefaultDefinitions
+const CheckBugBg234          = base.CheckBugBg234
 
 
 def In(v: any, items: list<any>): bool
@@ -35,7 +36,7 @@ export class Generator extends base.Generator
   def Generate(theme: Colorscheme): list<string>
     var output: list<string> = []
 
-    this.SetLanguage('vim9')
+    this.SetLanguage('viml')
 
     this.shiftwidth = theme.options.shiftwidth
     this.indent = 0
@@ -74,7 +75,7 @@ export class Generator extends base.Generator
 
     # Terminal colors
     if !empty(db.termcolors)
-      output->add(printf($'{this.space}g:terminal_ansi_colors = %s',
+      output->add(printf($'{this.space}let g:terminal_ansi_colors = %s',
         mapnew(db.termcolors, (_, name) => db.Color.Lookup(['Name'], [name]).GUI)
       ))
       output->add('')
@@ -119,6 +120,8 @@ export class Generator extends base.Generator
       base_group_overrides,
       this.space
     )
+
+    output += this.GenerateCodeForBugBg234(db, environments, 'default')
 
     # Deal with the remaining environment-specific definitions
     for environment in environments
@@ -170,6 +173,8 @@ export class Generator extends base.Generator
         ->Sort(CompareByHiGroupName)
         ->Transform((t) => BaseGroupToString(t, this.space))
 
+      output += this.GenerateCodeForBugBg234(db, environments, environment)
+
       # Generate discriminator-specific overrides
       output += this.EmitDiscriminatorBasedDefinitions(
         db,
@@ -179,8 +184,12 @@ export class Generator extends base.Generator
         env_base_discr
       )
 
-      # Closing statements
+
       if environment != 'gui'
+        for discriminator in discriminators
+          output->add($'{this.space}unlet s:{discriminator}')
+        endfor
+
         output->add(this.space .. 'finish')
       endif
 
@@ -200,7 +209,7 @@ export class Generator extends base.Generator
 
   def EmitDiscriminators(db: Database, space: string): list<string>
     return db.Discriminator->Filter((t) => !empty(t.DiscrName))->SortBy('DiscrNum')->Transform(
-      (t) => $'{space}const {t.DiscrName} = {t.Definition}'
+      (t) => $'{space}let s:{t.DiscrName} = {t.Definition}'
     )
   enddef
 
@@ -225,14 +234,15 @@ export class Generator extends base.Generator
       var first = true
 
       for condition in conditions
+        var discrValue   = condition.DiscrValue
         var discr_linked = Query(linked_groups->Select((u) => u.Condition == condition.Condition))
-        var discr_base = Query(base_groups->Select((u) => u.Condition == condition.Condition))
+        var discr_base   = Query(base_groups->Select((u) => u.Condition == condition.Condition))
 
         if first
-          output->add($"{this.space}if {discrName} == {condition.DiscrValue}")
+          output->add($"{this.space}if s:{discrName} == {discrValue}")
         else
           this.Deindent()
-          output->add($"{this.space}elseif {discrName} == {condition.DiscrValue}")
+          output->add($"{this.space}elseif s:{discrName} == {discrValue}")
         endif
 
         this.Indent()
@@ -245,12 +255,42 @@ export class Generator extends base.Generator
           ->Sort(CompareByHiGroupName)
           ->Transform((t) => BaseGroupToString(t, this.space))
 
+        output += this.GenerateCodeForBugBg234(db, [], environment, discrName, discrValue)
+
         first = false
       endfor
 
       this.Deindent()
       output->add(this.space .. 'endif')
     endfor
+
+    return output
+  enddef
+
+  def GenerateCodeForBugBg234(
+      db:           Database,
+      environments: list<string>,
+      environment:  string,
+      discrName:    string = '',
+      discrValue:   string = ''
+      ): list<string>
+    # Code needs to be generated only for cterm environments
+    if environment == 'default' && indexof(environments, (_, v) => str2nr(v) > 0) == -1
+        return []
+    elseif !(str2nr(environment) > 0)
+      return []
+    endif
+
+    var output: list<string> = []
+
+    if CheckBugBg234(db, environment, discrName, discrValue)
+      output->add('')
+      output->add($"{this.space}if !has('patch-8.0.0616') \" Fix for Vim bug")
+      this.Indent()
+      output->add($'{this.space}set background={db.background}')
+      this.Deindent()
+      output->add($"{this.space}endif")
+    endif
 
     return output
   enddef

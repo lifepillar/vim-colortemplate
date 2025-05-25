@@ -1,9 +1,9 @@
 vim9script
 
-import 'libpath.vim'                               as path
-import 'libtinytest.vim'                           as tt
-import '../autoload/colortemplate.vim'             as colortemplate
-import '../import/colortemplate/generator/vim.vim' as vim9generator
+import 'libpath.vim'                                as path
+import 'libtinytest.vim'                            as tt
+import '../autoload/colortemplate.vim'              as colortemplate
+import '../import/colortemplate/generator/viml.vim' as vimlgenerator
 
 # Helper functions {{{
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')
@@ -11,7 +11,7 @@ const COLDIR  = path.Join(TESTDIR, 'colors')
 const DOCDIR  = path.Join(TESTDIR, 'doc')
 const EXPDIR  = path.Join(TESTDIR, 'expected')
 
-var generator = vim9generator.Generator.new()
+var generator = vimlgenerator.Generator.new()
 
 generator.SetLanguage('viml')
 

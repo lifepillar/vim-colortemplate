@@ -3,6 +3,7 @@ vim9script
 import 'libpath.vim'                                     as path
 import '../import/libcolortemplate.vim'                  as lib
 import '../import/colortemplate/generator/vim9.vim'      as vim9generator
+import '../import/colortemplate/generator/viml.vim'      as vimlgenerator
 import '../import/colortemplate/generator/template.vim'  as templategenerator
 
 type Colorscheme = lib.Colorscheme
@@ -376,12 +377,12 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     if theme.options.backend == 'template'
       generator = templategenerator.Generator.new()
       filesuffix = '.colortemplate'
-    else
+    elseif theme.options.backend == 'vim9'
       generator = vim9generator.Generator.new()
-
-      if theme.options.backend == 'viml'
-        (<vim9generator.Generator>generator).SetLanguage('viml')
-      endif
+    elseif theme.options.backend == 'viml'
+      generator = vimlgenerator.Generator.new()
+    else
+      throw $'Unexpected value for generator: {theme.options.backend}'
     endif
   endif
 

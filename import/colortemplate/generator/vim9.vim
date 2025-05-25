@@ -8,6 +8,7 @@ import '../colorscheme.vim' as colorscheme
 type  Relation      = ra.Relation
 const EquiJoin      = ra.EquiJoin
 const Filter        = ra.Filter
+const PartitionBy   = ra.PartitionBy
 const Query         = ra.Query
 const Select        = ra.Select
 const Sort          = ra.Sort
@@ -121,28 +122,42 @@ export class Generator extends base.Generator
     )
 
     # Deal with the remaining environment-specific definitions
-    for environment in environments
-      var env_linked = Query(
-        linked_group_overrides->Select((t) => t.Environment == environment)
-      )
+    var env_linked_classes = linked_group_overrides->PartitionBy('Environment')
+    var env_base_classes = base_group_overrides->PartitionBy('Environment')
 
-      var env_base: list<dict<any>>
-
-      # Skip definitions incorporated into the default definitions above
-      if environment->In(['gui', best_cterm_env, '0'])
-        env_base = Query(
-          base_group_overrides->Select(
-            (t) => t.Environment == environment && !empty(t.DiscrName)
-          )
-        )
-      else
-        env_base = Query(
-          base_group_overrides->Select((t) => t.Environment == environment)
+    # Skip definitions incorporated into the default definitions above
+    for environment in ['gui', best_cterm_env, '0']
+      if env_base_classes->has_key(environment)
+        env_base_classes[environment] = Query(
+          env_base_classes[environment]->Select((t) => !empty(t.DiscrName))
         )
       endif
+    endfor
 
+    var i = 0
+
+    while i < len(environments)
+      var environment = environments[i]
+      var env_linked = get(env_linked_classes, environment, [])
+      var env_base = get(env_base_classes, environment, [])
+
+      ++i
+
+      # If there are no environment-specific overrides for the current
+      # environment and for the next one, this iteration can be skipped. If
+      # this environment is empty, but the next one is not, we still need to
+      # generate a `finish` statement to avoid falling through less capable
+      # environments.
       if empty(env_linked) && empty(env_base)
-        continue
+        if environment == 'gui'
+          continue
+        endif
+
+        var next_env = get(environments, i, '')
+
+        if empty(get(env_linked_classes, next_env, [])) && empty(get(env_base_classes, next_env, []))
+          continue
+        endif
       endif
 
       var startif = environment == 'gui'
@@ -187,7 +202,7 @@ export class Generator extends base.Generator
       this.Deindent()
 
       output->add(this.space .. 'endif')
-    endfor
+    endwhile
 
     if theme.IsLightAndDark()
       output->add(this.space .. 'finish')

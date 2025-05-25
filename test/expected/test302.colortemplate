@@ -3,11 +3,12 @@ Short name:    test302
 Author:        me
 
 Options:       backend=vim9
-Options:       timestamp=false
-Options:       shiftwidth=2
 Options:       creator=false
 Options:       dateformat="%Y %b %d"
 Options:       palette=false
+Options:       shiftwidth=2
+Options:       timestamp=false
+Options:       vimlcompatibility=0
 
 Environments: gui 256
 

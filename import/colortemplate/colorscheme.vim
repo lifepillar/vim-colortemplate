@@ -477,12 +477,13 @@ export class Colorscheme
   public var auxfiles:        dict<list<string>> = {}  # path => content
   public var prefix:          string             = ''
   public var options:         dict<any>          = {
-    backend:    'vim9',
-    creator:     true,
-    dateformat: '%Y %b %d',
-    palette:     false,
-    shiftwidth:  2,
-    timestamp:   true,
+    backend:           'vim9',
+    creator:           true,
+    dateformat:        '%Y %b %d',
+    palette:           false,
+    shiftwidth:        2,
+    timestamp:         true,
+    vimlcompatibility: 0,
   }
 
   def new()

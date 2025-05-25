@@ -1,7 +1,7 @@
-Options: creator=false timestamp=false backend=viml vimlcompatibility=1
-Environments: gui 256 16 8
-Full name:Test 88
-Short name:test88
+Options: creator=false timestamp=false backend=vim9
+Environments: gui 256 8
+Full name:Test 309
+Short name:test309
 Author:y
 Maintainer:w
 Background:dark
@@ -11,6 +11,4 @@ Color:white #ffffff 255 White
 Normal white black
 Normal/8 white black2
 
-
 ; vim: ft=colortemplate
-

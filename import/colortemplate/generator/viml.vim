@@ -8,6 +8,7 @@ import '../colorscheme.vim' as colorscheme
 type  Relation      = ra.Relation
 const EquiJoin      = ra.EquiJoin
 const Filter        = ra.Filter
+const PartitionBy   = ra.PartitionBy
 const Query         = ra.Query
 const Select        = ra.Select
 const Sort          = ra.Sort
@@ -121,31 +122,47 @@ export class Generator extends base.Generator
       this.space
     )
 
-    output += this.GenerateCodeForBugBg234(db, environments, 'default')
+    if theme.options.vimlcompatibility > 0
+      output += this.GenerateCodeForBugBg234(db, environments, 'default')
+    endif
 
     # Deal with the remaining environment-specific definitions
-    for environment in environments
-      var env_linked = Query(
-        linked_group_overrides->Select((t) => t.Environment == environment)
-      )
+    var env_linked_classes = linked_group_overrides->PartitionBy('Environment')
+    var env_base_classes = base_group_overrides->PartitionBy('Environment')
 
-      var env_base: list<dict<any>>
-
-      # Skip definitions incorporated into the default definitions above
-      if environment->In(['gui', best_cterm_env, '0'])
-        env_base = Query(
-          base_group_overrides->Select(
-            (t) => t.Environment == environment && !empty(t.DiscrName)
-          )
-        )
-      else
-        env_base = Query(
-          base_group_overrides->Select((t) => t.Environment == environment)
+    # Skip definitions incorporated into the default definitions above
+    for environment in ['gui', best_cterm_env, '0']
+      if env_base_classes->has_key(environment)
+        env_base_classes[environment] = Query(
+          env_base_classes[environment]->Select((t) => !empty(t.DiscrName))
         )
       endif
+    endfor
 
+    var i = 0
+
+    while i < len(environments)
+      var environment = environments[i]
+      var env_linked = get(env_linked_classes, environment, [])
+      var env_base = get(env_base_classes, environment, [])
+
+      ++i
+
+      # If there are no environment-specific overrides for the current
+      # environment and for the next one, this iteration can be skipped. If
+      # this environment is empty, but the next one is not, we still need to
+      # generate a `finish` statement to avoid falling through less capable
+      # environments.
       if empty(env_linked) && empty(env_base)
-        continue
+        if environment == 'gui'
+          continue
+        endif
+
+        var next_env = get(environments, i, '')
+
+        if empty(get(env_linked_classes, next_env, [])) && empty(get(env_base_classes, next_env, []))
+          continue
+        endif
       endif
 
       var startif = environment == 'gui'
@@ -173,7 +190,9 @@ export class Generator extends base.Generator
         ->Sort(CompareByHiGroupName)
         ->Transform((t) => BaseGroupToString(t, this.space))
 
-      output += this.GenerateCodeForBugBg234(db, environments, environment)
+      if theme.options.vimlcompatibility > 0
+        output += this.GenerateCodeForBugBg234(db, environments, environment)
+      endif
 
       # Generate discriminator-specific overrides
       output += this.EmitDiscriminatorBasedDefinitions(
@@ -181,9 +200,9 @@ export class Generator extends base.Generator
         environment,
         discriminators,
         env_linked_discr,
-        env_base_discr
+        env_base_discr,
+        theme.options.vimlcompatibility
       )
-
 
       if environment != 'gui'
         for discriminator in discriminators
@@ -196,7 +215,7 @@ export class Generator extends base.Generator
       this.Deindent()
 
       output->add(this.space .. 'endif')
-    endfor
+    endwhile
 
     if theme.IsLightAndDark()
       output->add(this.space .. 'finish')
@@ -218,7 +237,8 @@ export class Generator extends base.Generator
       environment:    string,
       discriminators: list<string>,
       linked_groups:  Relation,
-      base_groups:    Relation
+      base_groups:    Relation,
+      compatibility:  number
       ): list<string>
     var output: list<string> = []
 
@@ -255,7 +275,9 @@ export class Generator extends base.Generator
           ->Sort(CompareByHiGroupName)
           ->Transform((t) => BaseGroupToString(t, this.space))
 
-        output += this.GenerateCodeForBugBg234(db, [], environment, discrName, discrValue)
+        if compatibility > 0
+          output += this.GenerateCodeForBugBg234(db, [], environment, discrName, discrValue)
+        endif
 
         first = false
       endfor
@@ -275,17 +297,29 @@ export class Generator extends base.Generator
       discrValue:   string = ''
       ): list<string>
     # Code needs to be generated only for cterm environments
-    if environment == 'default' && indexof(environments, (_, v) => str2nr(v) > 0) == -1
-        return []
-    elseif !(str2nr(environment) > 0)
+    var numColors: number
+
+    if environment == 'default'
+      numColors = str2nr(BestCtermEnvironment(environments))
+    else
+      numColors = str2nr(environment)
+    endif
+
+    if numColors == 0
       return []
     endif
 
     var output: list<string> = []
 
-    if CheckBugBg234(db, environment, discrName, discrValue)
+    if CheckBugBg234(db, environment, numColors, discrName, discrValue)
       output->add('')
-      output->add($"{this.space}if !has('patch-8.0.0616') \" Fix for Vim bug")
+
+      if environment == 'default'
+        output->add($"{this.space}if !has('patch-8.0.0616') && !has('gui_running') \" Fix for Vim bug")
+      else
+        output->add($"{this.space}if !has('patch-8.0.0616') \" Fix for Vim bug")
+      endif
+
       this.Indent()
       output->add($'{this.space}set background={db.background}')
       this.Deindent()

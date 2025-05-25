@@ -166,6 +166,14 @@ def Test_VimLGenerator_84()
   AssertBuild('test84')
 enddef
 
+def Test_VimLGenerator_88()
+  AssertBuild('test88')
+enddef
+
+def Test_VimLGenerator_89()
+  AssertBuild('test89')
+enddef
+
 def Test_VimLGenerator_93()
   AssertBuild('test-93')
 enddef

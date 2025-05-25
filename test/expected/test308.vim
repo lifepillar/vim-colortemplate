@@ -26,6 +26,10 @@ if str2nr(&t_Co) >= 256
   finish
 endif
 
+if str2nr(&t_Co) >= 16
+  finish
+endif
+
 if str2nr(&t_Co) >= 8
   if foo == 0
     hi Folded ctermfg=DarkGray ctermbg=Gray ctermul=NONE cterm=NONE

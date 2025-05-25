@@ -70,7 +70,8 @@ def Header(theme: Colorscheme): list<string>
 
   header->add('')
 
-  for [option, value] in items(theme.options)
+  for option in sort(keys(theme.options))
+    var value = theme.options[option]
     var v = option == 'dateformat' ? $'"{value}"' : value
 
     header->add($"Options:       {option}={v}")

@@ -68,8 +68,10 @@ const FailedMsg     = ra.FailedMsg
 const Float         = ra.Float
 const ForeignKey    = ra.ForeignKey
 const Int           = ra.Int
+const Minus         = ra.Minus
 const LeftEquiJoin  = ra.LeftEquiJoin
 const PartitionBy   = ra.PartitionBy
+const Project       = ra.Project
 const Query         = ra.Query
 const References    = ra.References
 const Select        = ra.Select
@@ -461,6 +463,19 @@ export class Database
   def ColorGui(name: string): string
     return this.GetColor(name, 'gui')
   enddef
+
+  def MissingDefaultDefs(): list<string>
+    # Return the highlight groups for which no default definition exists
+    return this.HighlightGroup
+      ->Project('HiGroup')
+      ->Minus(this.HighlightGroupDef
+        ->Select((t) => t.Condition == 0)
+        ->Project('HiGroup')
+      )
+      ->SortBy('HiGroup')
+      ->Transform((t) => t.HiGroup)
+  enddef
+
 endclass
 
 export class Colorscheme

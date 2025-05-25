@@ -72,6 +72,20 @@ def CheckMetadata(theme: Colorscheme): bool
   return true
 enddef
 
+def CheckMissing(theme: Colorscheme): bool
+  for background in ['dark', 'light']
+    var db = theme.Db(background)
+    var missing = db.MissingDefaultDefs()
+
+    if !empty(missing)
+      return Error($'Default definitions are missing for: {missing}')
+    endif
+  endfor
+
+    return true
+enddef
+
+
 def WriteFile(filePath: string, content: list<string>, overwrite: bool = false): bool
   if overwrite || !path.Exists(filePath)
     const dirPath = path.Parent(filePath)
@@ -370,6 +384,10 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
   endif
 
   if !CheckMetadata(theme)
+    return false
+  endif
+
+  if !CheckMissing(theme)
     return false
   endif
 

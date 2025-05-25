@@ -379,7 +379,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
       filesuffix = '.colortemplate'
     elseif theme.options.backend == 'vim9'
       generator = vim9generator.Generator.new()
-    elseif theme.options.backend == 'viml'
+    elseif theme.options.backend->In(['viml', 'legacy'])
       generator = vimlgenerator.Generator.new()
     else
       throw $'Unexpected value for generator: {theme.options.backend}'

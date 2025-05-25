@@ -293,13 +293,22 @@ export def EmitDefaultDefinitions(
   return output
 enddef
 
+const dark_regex  = '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
+const light_regex = '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$'
+
 # In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of
 # 'background'. This function checks the conditions under which that may
 # happen The function's name is a reference to the original issue report,
 # which had an example using color 234.
 #
 # See https://github.com/lifepillar/vim-colortemplate/issues/13.
-export def CheckBugBg234(db: Database, environment: string, discrName: string = '', discrValue = ''): bool
+export def CheckBugBg234(
+    db: Database,
+    environment: string,
+    numColors:   number,
+    discrName:   string = '',
+    discrValue:  string = ''
+    ): bool
   var definition = Query(EquiJoin(
     db.BaseGroup->Select((t) => t.HiGroup == 'Normal'),
     db.Condition->Select(
@@ -312,15 +321,16 @@ export def CheckBugBg234(db: Database, environment: string, discrName: string = 
     return false
   endif
 
-  var numColors = db.Environment.Lookup(['Environment'], [environment]).NumColors
   var bg = Query(db.Color->EquiJoin(definition, {onleft: 'Name', onright: 'Bg'}))[0]
 
   if db.background == 'dark'
-    var regex = '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
-    return numColors > 16 && (empty(bg.Base256) || bg.Base16 =~? regex)
+    return (
+      numColors > 16       &&
+      bg.Base256 != 'NONE' &&
+      (str2nr(bg.Base256) >= 10 || str2nr(bg.Base256) == 7 || str2nr(bg.Base256) == 9)
+    ) || bg.Base16 =~? dark_regex
   else # light background
-    var regex = '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$'
-    return numColors > 0 && numColors <= 16 && bg.Base16 =~# regex
+    return numColors > 0 && numColors <= 16 && bg.Base16 =~# light_regex
   endif
 enddef
 

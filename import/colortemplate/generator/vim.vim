@@ -25,6 +25,7 @@ type Database    = colorscheme.Database
 
 const CompareByHiGroupName = base.CompareByHiGroupName
 const CompareEnvironments  = base.CompareEnvironments
+const CheckBugBg234        = base.CheckBugBg234
 
 
 def In(v: any, items: list<any>): bool
@@ -100,20 +101,6 @@ def BaseGroupToString(t: dict<any>, space: string): string
 enddef
 
 export class Generator extends base.Generator
-  var indent = 0
-  var shiftwidth = 2
-  var space = ''
-
-  def Indent()
-    this.indent += this.shiftwidth
-    this.space = repeat(' ', this.indent)
-  enddef
-
-  def Deindent()
-    this.indent -= this.shiftwidth
-    this.space = repeat(' ', this.indent)
-  enddef
-
   def Generate(theme: Colorscheme): list<string>
     var output: list<string> = []
 

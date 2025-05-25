@@ -4,7 +4,9 @@ import 'librelalg.vim'      as ra
 import '../colorscheme.vim' as colorscheme
 import '../version.vim'     as version
 
+const EquiJoin    = ra.EquiJoin
 const Filter      = ra.Filter
+const Query       = ra.Query
 const Select      = ra.Select
 const SortBy      = ra.SortBy
 const Table       = ra.Table
@@ -58,6 +60,36 @@ export def CompareEnvironments(e1: string, e2: string): number
   endif
 enddef
 
+# In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of
+# 'background'. This function generates code to reset the background if
+# needed. The function's name is a reference to the original issue report,
+# which had an example using color 234.
+# See https://github.com/lifepillar/vim-colortemplate/issues/13.
+export def CheckBugBg234(db: Database, environment: string, discrName: string = '', discrValue = ''): bool
+  var definition = Query(EquiJoin(
+    db.BaseGroup->Select((t) => t.HiGroup == 'Normal'),
+    db.Condition->Select(
+      (t) => t.Environment == environment && t.DiscrName == discrName && t.DiscrValue == discrValue
+    ),
+    {on: 'Condition'}
+  ))
+
+  if empty(definition)
+    return false
+  endif
+
+  var numColors = db.Environment.Lookup(['Environment'], [environment]).NumColors
+  var bg = Query(db.Color->EquiJoin(definition, {onleft: 'Name', onright: 'Bg'}))[0]
+
+  if db.background == 'dark'
+    var regex = '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
+    return numColors > 16 && (empty(bg.Base256) || bg.Base16 =~? regex)
+  else # light background
+    var regex = '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$'
+    return numColors > 0 && numColors <= 16 && bg.Base16 =~# regex
+  endif
+enddef
+
 export interface IGenerator
   def Generate(theme: Colorscheme): list<string>
 endinterface
@@ -70,8 +102,21 @@ export abstract class Generator implements IGenerator
   var var_prefix:     string       = ''
   var header:         list<string> = ['vim9script', '']
   var footer:         list<string> = ['']
+  var indent:         number       = 0
+  var shiftwidth:     number       = 2
+  var space:          string       = ''
 
   abstract def Generate(theme: Colorscheme): list<string>
+
+  def Indent()
+    this.indent += this.shiftwidth
+    this.space = repeat(' ', this.indent)
+  enddef
+
+  def Deindent()
+    this.indent -= this.shiftwidth
+    this.space = repeat(' ', this.indent)
+  enddef
 
   def SetLanguage(language: string)
     if language == 'vim9'
@@ -100,18 +145,18 @@ export abstract class Generator implements IGenerator
   enddef
 
   def AddMultivaluedMeta(template: string, items: list<string>)
-  if !empty(items)
-    this.AddMeta(template, items[0])
+    if !empty(items)
+      this.AddMeta(template, items[0])
 
-    var n = len(items)
-    var space = repeat(' ', 14)
-    var i = 1
+      var n = len(items)
+      var space = repeat(' ', 14)
+      var i = 1
 
-    while i < n
-      this.header->add(this.comment_symbol .. printf('%s%s', space, items[i]))
-      ++i
-    endwhile
-  endif
+      while i < n
+        this.header->add(this.comment_symbol .. printf('%s%s', space, items[i]))
+        ++i
+      endwhile
+    endif
   enddef
 
   def BuildDefaultHeader(theme: Colorscheme)
@@ -184,5 +229,19 @@ export abstract class Generator implements IGenerator
 
     this.footer->add('')
     this.footer->add(this.comment_symbol .. $'vim: et ts=8 sw={theme.options.shiftwidth} sts={theme.options.shiftwidth}')
+  enddef
+
+  def CheckBugBg234(db: Database, environment: string, discrName: string = '', discrValue = ''): list<string>
+    output: list<string> = []
+
+    if CheckBugBg234(db, environment, discrName, discrValue)
+        output->add($"{this.space}if !has('patch-8.0.0616') {this.comment_symbol} Fix for Vim bug")
+        this.Indent()
+        output->add($'{this.space}set background={this.background}')
+        this.Deindent()
+        output->add($'{this.space}endif')
+    endif
+
+    return output
   enddef
 endclass

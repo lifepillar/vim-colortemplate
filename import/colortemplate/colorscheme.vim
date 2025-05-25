@@ -3,7 +3,13 @@ vim9script
 import 'librelalg.vim'  as ra
 import 'libversion.vim' as vv
 
-vv.Require('librelalg', ra.version, '0.2.0-alpha1')
+try
+  vv.Require('librelalg', ra.version, '0.3.0-alpha0')
+catch /.*/
+  echohl Error
+  echomsg v:exception
+  echohl NONE
+endtry
 
 #
 #                            Colortemplate's Data Model

@@ -11,7 +11,7 @@ const ColorsWithin = libcolor.ColorsWithin
 const ColorParser  = parser.ColorParser
 type  Context      = libparser.Context
 
-var sBalloonID = 0
+var sBalloonID        = 0
 var sLastBalloonText  = ''
 
 hi clear ColortemplateInfoFg
@@ -29,29 +29,29 @@ prop_type_add('ct_hisp', {highlight: 'ColortemplateInfoSp'})
 #
 # n: the desired number of terminal approximations for the given color.
 export def GetColorInfo(n: number)
-  var ctx = Context.new(getline('.'))
-  const result = ColorParser(ctx)
+  var ctx    = Context.new(getline('.'))
+  var result = ColorParser(ctx)
 
   if !result.success
     return
   endif
 
-  const colorName  = result.value[2]
-  const guiValue   = result.value[3]
-  const bestApprox = Approximate(guiValue)
-  const best256    = bestApprox.xterm
-  const [r, g, b]  = Hex2Rgb(guiValue)
-  const approx     = n == 1 ? [bestApprox] : Neighbours(guiValue, n)
+  var colorName  = result.value[2]
+  var guiValue   = result.value[3]
+  var bestApprox = Approximate(guiValue)
+  var best256    = bestApprox.xterm
+  var [r, g, b]  = Hex2Rgb(guiValue)
+  var approx     = n == 1 ? [bestApprox] : Neighbours(guiValue, n)
 
-  echon printf('%s: %s/rgb(%d,%d,%d) ', colorName, guiValue, r, g, b)
+  echon $'{colorName}: {guiValue}/rgb({r},{g},{b}) '
 
   if has('gui_running') || (has('termguicolors') && &termguicolors)
     try
-      execute printf(
-        "hi! ColortemplateInfoFg ctermfg=%d guifg=%s ctermbg=NONE guibg=NONE", best256, guiValue
+      execute (
+        $'hi! ColortemplateInfoFg ctermfg={best256} guifg={guiValue} ctermbg=NONE guibg=NONE'
       )
-      execute printf(
-        "hi! ColortemplateInfoBg ctermbg=%d guibg=%s ctermfg=NONE guifg=NONE", best256, guiValue
+      execute (
+        $'hi! ColortemplateInfoBg ctermbg={best256} guibg={guiValue} ctermfg=NONE guifg=NONE'
       )
     catch /^Vim\%((\a\+)\)\=:E254/ # Cannot allocate color
       hi clear ColortemplateInfoFg
@@ -66,45 +66,45 @@ export def GetColorInfo(n: number)
   echon ' Best xterm approx:'
 
   for item in approx
-    echon printf(' %d', item.xterm)
-    execute printf(
-      "hi! ColortemplateInfoBg%d ctermbg=%d guibg=%s ctermfg=NONE guifg=NONE",
-      item.xterm, item.xterm, item.hex
+    echon $' {item.xterm}'
+    execute (
+      $'hi! ColortemplateInfoBg{item.xterm} ctermbg={item.xterm} guibg={item.hex} ctermfg=NONE guifg=NONE'
     )
     execute 'echohl ColortemplateInfoBg' .. item.xterm | echon '   ' | echohl None
     echon printf('@%.2f', item.delta)
   endfor
 enddef
 
-var cachedHiGroup: dict<any> = { 'synid': -1 }
+var cachedHiGroup: dict<any> = {synid: -1}
 
 # Returns a Dictionary with information about the highlight group at the
 # specified position.
 #
 # See: http://vim.wikia.com/wiki/VimTip99 and hilinks.vim script.
 def GetHighlightInfoAt(line: number, col: number): dict<any>
-  const synid0 = synID(line, col, false)
+  var synid0 = synID(line, col, false)
 
   if empty(synid0) || synid0 == 0 # Apparently, sometimes synID() fails to return a value
     return {}
   endif
 
-  const trans  = synIDattr(synID(line, col, false), 'name')
-  const synid1 = synID(line, col, true)
-  const higrp  = synIDattr(synid1, 'name')
-  const synid  = synIDtrans(synid1)
-  const logrp  = synIDattr(synid, 'name')
+  var synid1 = synID(line, col, true)
+  var synid  = synIDtrans(synid1)
 
   if synid == cachedHiGroup.synid
     return cachedHiGroup
   endif
 
-  const fgterm = synIDattr(synid, 'fg',  'cterm')
-  const fggui  = synIDattr(synid, 'fg#', 'gui')
-  const bgterm = synIDattr(synid, 'bg',  'cterm')
-  const bggui  = synIDattr(synid, 'bg#', 'gui')
-  const spterm = synIDattr(synid, 'ul',  'cterm') # TODO: Not implemented? Should be 'sp'?
-  const spgui  = synIDattr(synid, 'sp#', 'gui')
+  var trans  = synIDattr(synID(line, col, false), 'name')
+  var higrp  = synIDattr(synid1, 'name')
+  var logrp  = synIDattr(synid, 'name')
+
+  var fggui  = synIDattr(synid, 'fg#', 'gui')
+  var bggui  = synIDattr(synid, 'bg#', 'gui')
+  var spgui  = synIDattr(synid, 'sp#', 'gui')
+  var fgterm = synIDattr(synid, 'fg',  'cterm')
+  var bgterm = synIDattr(synid, 'bg',  'cterm')
+  var spterm = synIDattr(synid, 'ul',  'cterm')
 
   cachedHiGroup = {
     synid:     synid,
@@ -120,21 +120,21 @@ def GetHighlightInfoAt(line: number, col: number): dict<any>
   }
 
   try # The following may raise an error, e.g., if CtrlP is opened while this is active
-    execute(printf('hi! ColortemplateInfoFg ctermbg=%s guibg=%s',
-      cachedHiGroup.fgterm, cachedHiGroup.fggui
-    ))
-    execute(printf('hi! ColortemplateInfoBg ctermbg=%s guibg=%s',
-      cachedHiGroup.bgterm, cachedHiGroup.bggui
-    ))
-    execute(printf('hi! ColortemplateInfoSp ctermbg=%s guibg=%s',
-      cachedHiGroup.spterm, cachedHiGroup.spgui
-    ))
+    execute(
+      $'hi! ColortemplateInfoFg ctermbg={cachedHiGroup.fgterm} guibg={cachedHiGroup.fggui}'
+    )
+    execute(
+      $'hi! ColortemplateInfoBg ctermbg={cachedHiGroup.bgterm} guibg={cachedHiGroup.bggui}'
+    )
+    execute($'hi! ColortemplateInfoSp ctermbg={cachedHiGroup.spterm} guibg={cachedHiGroup.spgui}'
+    )
   catch /^Vim\%((\a\+)\)\=:E254/ # Cannot allocate color
     hi clear ColortemplateInfoFg
     hi clear ColortemplateInfoBg
   endtry
 
-  const synstack = synstack(line, col)
+  var synstack = synstack(line, col)
+
   # Sometimes, Vim spits E896: Argument of map() must be a List, Dictionary or
   # Blob even if synstack is a List...
   if !empty(synstack)
@@ -159,24 +159,24 @@ export def GetHighlightInfo()
   execute "echohl" info.transname | echon ' xxx ' | echohl None
 
   if info.name != info.tname
-    echon printf('T: %s → %s', info['tname'], info['name'])
+    echon $'T: {info.tname} → {info.name}'
   elseif info.name != info.transname
-    echon printf('%s → %s ', info['name'], info['transname'])
+    echon $'{info.name} → {info.transname} '
   else
-    echon printf('%s ',  info['name'])
+    echon $'{info.name} '
   endif
 
   echohl ColortemplateInfoFg | echon '  ' | echohl None
-  echon printf(' fg=%s/%s ', info.fggui, info.fgterm)
+  echon $' fg={info.fggui}/{info.fgterm} '
 
   if info.bggui != 'NONE' || info.bgterm != 'NONE'
     echohl ColortemplateInfoBg | echon '  ' | echohl None
-    echon printf(" bg=%s/%s ", info.bggui, info.bgterm)
+    echon $' bg={info.bggui}/{info.bgterm} '
   endif
 
   if info.spgui != 'NONE' || info.spterm != 'NONE'
     echohl ColortemplateInfoSp | echon "  " | echohl None
-    echon printf(" sp=%s/%s ", info.spgui, info.spterm)
+    echon $' sp={info.spgui}/{info.spterm} '
   endif
 enddef
 
@@ -251,7 +251,7 @@ export def ToggleHighlightInfo()
       augroup! colortemplate_syn_info
       echo "\r"
     else
-      cachedHiGroup = {'synid': -1}
+      cachedHiGroup = {synid: -1}
 
       augroup colortemplate_syn_info
         autocmd CursorMoved * call GetHighlightInfo()
@@ -262,21 +262,21 @@ enddef
 
 export def ApproximateColor(n: number)
   var ctx = Context.new(getline('.'))
-  const result = ColorParser(ctx)
+  var result = ColorParser(ctx)
 
   if !result.success
     return
   endif
 
-  const guiValue = result.value[3]
-  const approx   = Neighbours(guiValue, n)[-1]
+  var guiValue = result.value[3]
+  var approx   = Neighbours(guiValue, n)[-1]
 
   setline('.', substitute(getline('.'), '\~', string(approx.xterm), ''))
 enddef
 
 export def NearbyColors(n: float)
   var ctx = Context.new(getline('.'))
-  const result = ColorParser(ctx)
+  var result = ColorParser(ctx)
 
   if !result.success
     return
@@ -286,4 +286,3 @@ export def NearbyColors(n: float)
 
   echo ColorsWithin(guiValue, n)
 enddef
-

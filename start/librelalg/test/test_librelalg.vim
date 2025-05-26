@@ -271,7 +271,7 @@ def Test_RA_InsertManyFailedConstraint()
       {A: 2, B: 'b2', C: false, D: 1.0},
       {A: 1, B: 'b3', C: true,  D: 3.4},
     ])
-  }, "Duplicate key: {A: 1, C: true} already exists in relation R.")
+  }, "Duplicate key: {A: 1, C: true} already exists in R.")
 
   assert_equal(instance, R.Instance())
 enddef
@@ -297,7 +297,7 @@ def Test_RA_InsertManyDuplicateKey()
       {A: 0, B: 'b0', C: true, D: 1.2},
       {A: 0, B: 'b0', C: true, D: 0.4},
     ])
-  }, "Duplicate key: {A: 0, B: 'b0', C: true} already exists in relation RR")
+  }, "Duplicate key: {A: 0, B: 'b0', C: true} already exists in RR")
 
   assert_true(RR.IsEmpty())
 enddef

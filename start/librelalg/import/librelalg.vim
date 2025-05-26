@@ -193,14 +193,14 @@ const E000 = 'At least one key must be specified for relation %s.'
 const E001 = 'Expected a tuple on schema %s: got %s instead.'
 const E002 = 'Key %s already defined in relation %s.'
 const E003 = '%s is not an attribute of relation %s.'
-const E004 = 'Duplicate key: %s already exists in relation %s.'
+const E004 = 'Duplicate key: %s already exists in %s.'
 const E005 = 'Wrong foreign key: %s%s. %s is not an attribute of %s.'
 const E006 = 'Foreign key size mismatch: %s%s -> %s%s.'
 const E007 = 'Wrong foreign key: %s%s -> %s%s. %s is not a key of %s.'
 const E008 = '%s: %s not found in %s%s.'
 const E009 = '%s: cannot delete %s from %s because it is referenced by %s in %s.'
 const E010 = '%s is not a key of %s.'
-const E011 = '%s failed for tuple %s.'
+const E011 = '%s failed for %s.'
 const E100 = 'Update failed: no tuple with key %s exists in relation %s.'
 const E101 = 'Cannot replace %s with %s: updating key attributes is not allowed.'
 const E200 = 'Join on sets of attributes of different length: %s vs %s.'
@@ -694,7 +694,7 @@ export class Rel implements IRel, ICheckable, ITransactable
     }
 
     this._key_indexes[string(key)] = keyIndex
-    this.OnInsertCheck('Key uniqueness', IsUnique)
+    this.OnInsertCheck('Uniqueness', IsUnique)
   enddef
 
   def IsConsistent_(): bool

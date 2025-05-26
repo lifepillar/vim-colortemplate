@@ -11,10 +11,12 @@ const Filter        = ra.Filter
 const PartitionBy   = ra.PartitionBy
 const Query         = ra.Query
 const Select        = ra.Select
+const SemiJoin      = ra.SemiJoin
 const Sort          = ra.Sort
 const SortBy        = ra.SortBy
 const Split         = ra.Split
 const Transform     = ra.Transform
+const Union         = ra.Union
 
 type Colorscheme = colorscheme.Colorscheme
 type Database    = colorscheme.Database
@@ -129,7 +131,14 @@ export class Generator extends base.Generator
     for environment in ['gui', best_cterm_env, '0']
       if env_base_classes->has_key(environment)
         env_base_classes[environment] = Query(
-          env_base_classes[environment]->Select((t) => !empty(t.DiscrName))
+          env_base_classes[environment]
+          ->Select((t) => !empty(t.DiscrName))  # Exclude definitions with an empty discriminator
+          ->Union(env_base_classes[environment]
+            ->SemiJoin(
+              default_linked_groups,
+              (t, u) => t.HiGroup == u.HiGroup
+            )   # ...except those that by default were linked
+          )
         )
       endif
     endfor

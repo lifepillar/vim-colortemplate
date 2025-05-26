@@ -3,7 +3,18 @@ vim9script
 import 'libcolor.vim'       as libcolor
 import 'libparser.vim'      as parser
 import 'libpath.vim'        as path
+import 'libversion.vim'     as vv
 import '../colorscheme.vim' as colorscheme
+
+try
+  vv.Require('libcolor',  libcolor.version, '0.0.1-alpha')
+  vv.Require('libparser', parser.version,   '0.0.1-alpha')
+  vv.Require('libpath',   path.version,     '0.0.1-alpha')
+catch /.*/
+  echohl Error
+  echomsg v:exception
+  echohl NONE
+endtry
 
 # Aliases {{{
 const ANSI_COLORS         = libcolor.ANSI_COLORS

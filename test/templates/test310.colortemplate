@@ -1,0 +1,25 @@
+Options: creator=false timestamp=false backend=vim9
+Environments: gui 256 16 8 0
+Full name:Test 310
+Short name:test310
+Author:y
+Maintainer:w
+Background:dark
+Color: black  rgb(0,0,0) 16  Black
+Color: white  #ffffff    255 White
+Color: violet #6c71c4    61  13
+Color: base2  #eee8d5   254   7
+Color: base01 #586e75   242  10
+Color: red    #dc322f   160   1
+
+#const visibility = get(g:, 'visbility', 'normal')
+
+Normal                           white black
+SpellCap                         violet            none  s=violet    undercurl
+      /256/16                    violet            none  s=none      underline
+             +visibility "high"  violet            base2 s=none      underline,reverse
+                         "low"   base01            none              bold
+      /gui   +visibility "high"  violet            base2 s=red       undercurl,reverse
+      /0                         omit              omit              bold,underline
+; vim: ft=colortemplate
+

@@ -621,7 +621,9 @@ const DiscrDef        = Seq(
                         )
 const HiGroupVariant  = Seq(
                           OneOrMore(Seq(Skip(BAR), L_ENVIRONMENT))    ->Apply(SetEnvironments),
-                          OneOf(OneOrMore(DiscrDef), HiGroupDef)
+                          OneOf(OneOrMore(DiscrDef),
+                            Seq(HiGroupDef, Many(DiscrDef))
+                          )
                         )
 const HiGroupRest     = OneOf(
                           OneOrMore(HiGroupVariant),
@@ -830,7 +832,7 @@ enddef
 
 # HiGroupDecl     ::= ^HiGroupName HiGroupRest
 # HiGroupRest     ::= HiGroupVariant+ | HiGroupDef HiGroupVariant*
-# HiGroupVariant  ::= ('/' ENVIRONMENT)+ (DiscrDef+ | HiGroupDef)
+# HiGroupVariant  ::= ('/' ENVIRONMENT)+ (DiscrDef+ | HiGroupDef DiscrDef*)
 # DiscrDef        ::= '+' IDENT DiscrRest
 # DiscrRest       ::= (DiscrValue HiGroupDef)+
 # DiscrValue      ::= NUMBER | STRING | TRUE | FALSE

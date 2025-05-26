@@ -88,7 +88,7 @@ enddef
 
 def WriteFile(filePath: string, content: list<string>, overwrite: bool = false): bool
   if overwrite || !path.Exists(filePath)
-    const dirPath = path.Parent(filePath)
+    var dirPath = path.Parent(filePath)
 
     if !path.MakeDir(dirPath, 'p')
       return Error(printf('Could not create directory: %s', dirPath))
@@ -105,7 +105,7 @@ def WriteFile(filePath: string, content: list<string>, overwrite: bool = false):
 enddef
 
 def WriteAuxFiles(outputDir: string, theme: Colorscheme, overwrite: bool): bool
-  const auxfiles: dict<list<string>> = theme.auxfiles
+  var auxfiles: dict<list<string>> = theme.auxfiles
 
   for auxPath in keys(auxfiles)
     if !path.IsRelative(auxPath)
@@ -114,8 +114,8 @@ def WriteAuxFiles(outputDir: string, theme: Colorscheme, overwrite: bool): bool
       ))
     endif
 
-    const outPath = path.Expand(auxPath, outputDir)
-    const content = auxfiles[auxPath]
+    var outPath = path.Expand(auxPath, outputDir)
+    var content = auxfiles[auxPath]
 
     if !WriteFile(outPath, content, overwrite)
       return false
@@ -129,11 +129,11 @@ def ColorschemePath(bufnr: number): string
   var name: string
 
   if IsCached(bufnr)
-    const theme: Colorscheme = CachedTheme(bufnr)
+    var theme: Colorscheme = CachedTheme(bufnr)
     name = theme.shortname
   else
     # Extract the name of the color scheme from the template
-    const matchedName = matchlist(
+    var matchedName = matchlist(
       getbufline(bufnr, 1, "$"), '\m\c^\s*Short\s*name:\s*\(\w\+\)'
     )
     if empty(matchedName)  # Fallback to using the template's name
@@ -147,8 +147,8 @@ def ColorschemePath(bufnr: number): string
 enddef
 
 def ReportError(result: Result, bufnr: number)
-  const errmsg = result.label
-  const included = matchlist(errmsg, 'in included file "\(.\{-}\)", byte \(\d\+\)')
+  var errmsg   = result.label
+  var included = matchlist(errmsg, 'in included file "\(.\{-}\)", byte \(\d\+\)')
   var errpos: number
   var nr:     number
 
@@ -161,11 +161,23 @@ def ReportError(result: Result, bufnr: number)
     errpos = str2nr(included[2]) + 1
   endif
 
-  Notice(printf(
-    "Build failed: %s (line %d, byte %d)", result.label, byte2line(errpos), errpos
-  ))
+  Error(
+    $'Build failed: {errmsg} (line {byte2line(errpos)}, byte {errpos})'
+  )
+
   execute ':' nr 'buffer'
   execute 'goto' errpos
+
+  popup_atcursor(errmsg, {
+    pos:         'botleft',
+    line:        'cursor-1',
+    col:         'cursor',
+    border:      [1, 1, 1, 1],
+    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+    moved:       'any',
+    fixed:       true,
+    highlight:   'WarningMsg',
+  })
 enddef
 # }}}
 
@@ -264,7 +276,7 @@ export def AskOutputDir(): string
     b:colortemplate_outdir = ''
   endif
 
-  const newdir = input('Change to: ', '', 'dir')
+  var newdir = input('Change to: ', '', 'dir')
 
   if empty(newdir)
     return b:colortemplate_outdir
@@ -280,7 +292,7 @@ export def SetOutputDir(dirpath: string): bool
     return Error('Directory can be set only in Colortemplate buffers')
   endif
 
-  const newdir = path.Expand(dirpath)
+  var newdir = path.Expand(dirpath)
 
   if !path.IsDirectory(newdir)
     return Error(printf(
@@ -304,9 +316,9 @@ var prevColors:     string
 var prevBackground: string
 
 export def ShowColorscheme(bufnr: number)
-  const sourcePath    = ColorschemePath(bufnr)
-  const colorsName    = path.Stem(sourcePath)
-  const currentColors = get(g:, 'colors_name', 'default')
+  var sourcePath    = ColorschemePath(bufnr)
+  var colorsName    = path.Stem(sourcePath)
+  var currentColors = get(g:, 'colors_name', 'default')
 
   if currentColors->NotIn(enabledColors)
     prevColors = currentColors
@@ -332,7 +344,7 @@ export def HideColorscheme()
 enddef
 
 export def ViewSource(bufnr: number): bool
-  const sourcePath = ColorschemePath(bufnr)
+  var sourcePath = ColorschemePath(bufnr)
 
   if !path.IsReadable(sourcePath)
     return Error(printf('Color scheme not found at %s', sourcePath))
@@ -418,7 +430,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return false
   endif
 
-  const elapsed = 1000.0 * reltimefloat(reltime(startTime))
+  var elapsed = 1000.0 * reltimefloat(reltime(startTime))
 
   Notice(printf(
     'Success! %s created in %.00fms (parser: %.00fms, generator: %.00fms)',
@@ -448,11 +460,11 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
     return Error(printf('Path not readable: %s', buildDir))
   endif
 
-  const templates = path.Children(buildDir, '[^_]*.colortemplate')
-  const N         = len(templates)
-  const startTime = reltime()
-  var   success   = true
-  var   failed    = []
+  var templates = path.Children(buildDir, '[^_]*.colortemplate')
+  var N         = len(templates)
+  var startTime = reltime()
+  var success   = true
+  var failed    = []
 
   for template in templates
     execute "edit" template
@@ -462,14 +474,14 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
     endif
   endfor
 
-  const elapsed = 1000.0 * reltimefloat(reltime(startTime))
+  var elapsed = 1000.0 * reltimefloat(reltime(startTime))
 
   if success
     Notice(printf(
       'Success! %d color scheme%s built in %.00fms', N, N == 1 ? '' : 's', elapsed
     ))
   else
-    return Error(printf('Some templates failed to build (see :messages): %s', failed))
+    return Error($'Some templates failed to build (see :messages): {failed}')
   endif
 
   return true

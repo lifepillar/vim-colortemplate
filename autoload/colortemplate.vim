@@ -78,7 +78,7 @@ def CheckMissing(theme: Colorscheme): bool
     var missing = db.MissingDefaultDefs()
 
     if !empty(missing)
-      return Error($'Default definitions are missing for: {missing}')
+      return Error($"Default definitions are missing for {join(missing, ', ')} ({db.background} background)")
     endif
   endfor
 

@@ -16,6 +16,10 @@ if has('gui_running') || (has('termguicolors') && &termguicolors)
   if transp_bg == 1
     hi Normal guifg=#aaaaaa guibg=NONE guisp=NONE gui=NONE cterm=NONE
   endif
+
+  if empty(&t_Co)
+    finish
+  endif
 endif
 
 if str2nr(&t_Co) >= 256

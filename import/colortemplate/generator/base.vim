@@ -488,4 +488,15 @@ export abstract class Generator implements IGenerator
 
     return output
   enddef
+
+  def CheckForEmptyTCo(): list<string>
+    var output: list<string> = ['', this.space .. 'if empty(&t_Co)']
+
+    this.Indent()
+    output->add(this.space .. 'finish')
+    this.Deindent()
+    output->add(this.space .. 'endif')
+
+    return output
+  enddef
 endclass

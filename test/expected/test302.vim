@@ -15,6 +15,10 @@ if has('gui_running') || (has('termguicolors') && &termguicolors)
   if plugin == 1
     hi! link Target Search
   endif
+
+  if empty(&t_Co)
+    finish
+  endif
 endif
 
 if str2nr(&t_Co) >= 256

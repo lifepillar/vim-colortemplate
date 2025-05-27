@@ -148,12 +148,22 @@ export class Generator extends base.Generator
       endif
     endfor
 
+    # Keep track of which environments have no overriding definitions
+    var is_empty_env: dict<bool> = {}
+    var has_non_empty_terminal_env = false
+
+    for env in environments
+      is_empty_env[env] = empty(get(env_linked_classes, env, [])) && empty(get(env_base_classes, env, []))
+
+      if !is_empty_env[env] && env != 'gui'
+        has_non_empty_terminal_env = true
+      endif
+    endfor
+
     var i = 0
 
     while i < len(environments)
       var environment = environments[i]
-      var env_linked = get(env_linked_classes, environment, [])
-      var env_base = get(env_base_classes, environment, [])
 
       ++i
 
@@ -162,17 +172,24 @@ export class Generator extends base.Generator
       # this environment is empty, but the next one is not, we still need to
       # generate a `finish` statement to avoid falling through less capable
       # environments.
-      if empty(env_linked) && empty(env_base)
+      if is_empty_env[environment]
         if environment == 'gui'
+          if has_non_empty_terminal_env
+            output += this.CheckForEmptyTCo()
+          endif
+
           continue
         endif
 
-        var next_env = get(environments, i, '')
-
-        if empty(get(env_linked_classes, next_env, [])) && empty(get(env_base_classes, next_env, []))
+        # If there is no next environment or the next environment is empty,
+        # skip this iteration.
+        if i == len(environments) || get(is_empty_env, environments[i], true)
           continue
         endif
       endif
+
+      var env_linked = get(env_linked_classes, environment, [])
+      var env_base = get(env_base_classes, environment, [])
 
       var startif = environment == 'gui'
         ? this.space .. "if has('gui_running') || (has('termguicolors') && &termguicolors)"
@@ -213,7 +230,12 @@ export class Generator extends base.Generator
         theme.options.vimlcompatibility
       )
 
-      if environment != 'gui'
+      # Closing statements
+      if environment == 'gui'
+        if has_non_empty_terminal_env
+          output += this.CheckForEmptyTCo()
+        endif
+      else
         for discriminator in discriminators
           output->add($'{this.space}unlet s:{discriminator}')
         endfor

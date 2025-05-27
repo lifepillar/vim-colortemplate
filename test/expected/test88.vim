@@ -14,6 +14,10 @@ if !has('patch-8.0.0616') && !has('gui_running') " Fix for Vim bug
   set background=dark
 endif
 
+if empty(&t_Co)
+  finish
+endif
+
 if str2nr(&t_Co) >= 16
   finish
 endif

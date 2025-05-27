@@ -13,6 +13,10 @@ const foo = get(g:, 'foo', 0)
 hi Normal guifg=#888888 guibg=#f0f0f0 guisp=NONE gui=NONE ctermfg=102 ctermbg=255 ctermul=NONE cterm=NONE term=NONE
 hi Folded guifg=#888888 guibg=#f0f0f0 guisp=NONE gui=italic ctermfg=102 ctermbg=255 ctermul=NONE cterm=italic term=italic
 
+if empty(&t_Co)
+  finish
+endif
+
 if str2nr(&t_Co) >= 256
   if foo == 0
     hi Folded ctermfg=102 ctermbg=255 ctermul=NONE cterm=NONE

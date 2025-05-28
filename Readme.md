@@ -29,7 +29,7 @@ git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
 - [**Colortemplate**](https://github.com/lifepillar/vim-colortemplate/): the
   toolkit for developing Vim color schemes.
-- [StylePicker](https://github.com/lifepillar/vim-stylepicker): a color and
+- [**StylePicker**](https://github.com/lifepillar/vim-stylepicker): a color and
   style picker inside Vim!
 
 “alpha level” means that the library generally works, but there may be serious

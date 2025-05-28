@@ -1618,6 +1618,17 @@ def Test_RA_Extend()
   }, 'Key already exists: A')
 enddef
 
+def Test_RA_ExtendWithEmptyTuple()
+  var r = [
+    {A: 1, B: 'b'},
+    {A: 2, B: 'b'},
+  ]
+
+  assert_equal(r, Query(r->Extend((t) => {
+    return {}
+  })))
+enddef
+
 def Test_RA_Max()
   var R = Rel.new('R', {A: Int, B: Str, C: Float, D: Bool}, [['A']])
   const r = R.Instance()

@@ -1159,8 +1159,8 @@ define the way you like. For example:
 >
 	#const italic = &t_ZH != '' && &t_ZH != '^[[7m'
 	; ...
-	Comment           gray  black
-	  /256+italic 1   omit  omit  s=omit  italic
+	Comment             gray  black
+	  /256+italic true  omit  omit  s=omit  italic
 <
 The special color must appear before the style attributes ~
 

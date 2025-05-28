@@ -29,6 +29,8 @@ git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
 - [**Colortemplate**](https://github.com/lifepillar/vim-colortemplate/): the
   toolkit for developing Vim color schemes.
+- [StylePicker](https://github.com/lifepillar/vim-stylepicker): a color and
+  style picker inside Vim!
 
 “alpha level” means that the library generally works, but there may be serious
 bugs and the interface is still WIP.
@@ -36,5 +38,7 @@ bugs and the interface is still WIP.
 “beta level” means that the library is stable and has been tested, but some
 issues may still exist.
 
-You should not used alpha level libraries in your own plugins, and you should
-use beta level libraries only if you feel adventurous.
+Using alpha-level libraries in your code means that you must be ready for
+breaking changes. I do not guarantee that beta-level libraries have no breaking
+changes either, but I strive to maintain backward-compatibility for beta-level
+libraries.

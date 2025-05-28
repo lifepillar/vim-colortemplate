@@ -1,0 +1,9 @@
+Options: creator=false timestamp=false backend=viml
+Environments: 256
+Full name:Test 79
+Short name:test79
+Author:z
+Background:dark
+Color: black  #000000 0
+Normal black black
+; vim: ft=colortemplate

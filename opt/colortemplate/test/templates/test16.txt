@@ -1,0 +1,12 @@
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256 0
+Full name:Test 16
+Short name:test16
+Author:y
+Maintainer:w
+Background:dark
+Color:black (0,0,0) 0 Black  ; WRONG
+Color:white #ffffff 255 White
+Normal/0 white black ; will be undefined
+
+; vim: ft=colortemplate

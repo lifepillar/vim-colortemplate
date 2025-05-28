@@ -1,0 +1,18 @@
+Options: creator=false timestamp=false backend=viml
+Environments: gui 8 0
+Full name:Test 70
+Short name:test70
+Author:y
+Maintainer:w
+Background:dark
+Color:black rgb(0,0,0) 16 Black
+Color:white #ffffff 255 White
+Normal          omit  black              omit
+CursorLine     white   omit s=omit
+CursorLine/gui  omit   omit              omit
+CursorLine/8    omit   omit         bold,underline
+Background:dark
+Normal/0        omit   omit omit
+CursorLine /0   omit   omit underline
+
+; vim: ft=colortemplate

@@ -1,0 +1,50 @@
+; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
+
+#const transp_bg = get(g:, '@prefix_transp_bg', 0)
+
+Added                -> diffAdded
+Boolean              -> Constant
+Changed              -> diffChanged
+Character            -> Constant
+Conditional          -> Statement
+CurSearch            -> IncSearch
+CursorLineFold       -> FoldColumn
+CursorLineSign       -> SignColumn
+Debug                -> Special
+debugPC              -> SignColumn
+debugBreakpoint      -> SignColumn
+Define               -> PreProc
+Delimiter            -> Special
+Exception            -> Statement
+Float                -> Constant
+Function             -> Identifier
+Include              -> PreProc
+Keyword              -> Statement
+Label                -> Statement
+LineNrBelow          -> LineNr
+LineNrAbove          -> LinrNr
+Macro                -> PreProc
+MessageWindow        -> WarningMsg
+Number               -> Constant
+Operator             -> Statement
+PmenuKind            -> Pmenu
+PmenuKindSel         -> PmenuSel
+PmenuExtra           -> Pmenu
+PmenuExtraSel        -> PmenuSel
+PopupNotification    -> WarningMsg
+PopupSelected        -> PmenuSel
+PreCondit            -> PreProc
+QuickFixLine         -> Search
+Removed              -> diffRemoved
+Repeat               -> Statement
+SpecialChar          -> Special
+SpecialComment       -> Special
+StatusLineTerm       -> StatusLine
+StatusLineTermNC     -> StatusLineNC
+StorageClass         -> Type
+String               -> Constant
+Structure            -> Type
+Tag                  -> Special
+Typedef              -> Type
+; See `:help lCursor`
+lCursor              -> Cursor

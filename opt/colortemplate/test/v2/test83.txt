@@ -1,0 +1,40 @@
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Full name:Test 83
+Short name:test83
+Author:y
+Maintainer:w
+Description: Color scheme with custom reset block
+
+reset
+" Manually inserted reset block
+hi clear               " Manual
+if exists('syntax_on') " Manual
+  syntax reset         " Manual
+endif                  " Manual
+
+let g:colors_name     = '@shortname'
+
+let s:name            = '@fullname'
+let s:author          = '@author'
+let s:maintainer      = '@maintainer'
+let s:license         = '@license'
+let s:description     = '@description'
+endreset
+
+Variant: gui
+Background: dark
+
+Color: white #ffffff 231
+Color: black #a34c9e 133
+
+verbatim
+" Verbatim block 1
+endverbatim
+
+Normal black white
+
+verbatim
+" Verbatim block 2
+endverbatim
+
+; vim: ft=colortemplate

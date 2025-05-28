@@ -1,0 +1,11 @@
+Options: creator=false timestamp=false backend=viml
+Environments: 256
+Full name:Test 77
+Short name:test77
+Author: Me <me@somewhere.org>
+Background: dark
+Color:      black  #000000 0 Black
+Color:      white  #ffffff 7 White
+Normal white none
+EndOfBuffer black none
+; vim: ft=colortemplate

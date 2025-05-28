@@ -1,0 +1,21 @@
+Options: creator=false timestamp=false
+
+Full Name:  Test 304
+Short Name: test304
+Author:     me
+Environments: gui 256
+Background: dark
+
+Color: white     #ffffff 231
+Color: black     #000000 16
+Color: lightgrey #aaaaaa 248
+Color: darkblue  #0024ff 21
+
+#const transp_bg = get(g:, 'foo_transp_bg', 0)
+
+Normal/256             lightgrey darkblue
+Normal/gui+transp_bg 1     lightgrey none
+Normal                     white     black    ; Default definition
+Normal/256+transp_bg 1     white     none
+
+; vim: ft=colortemplate

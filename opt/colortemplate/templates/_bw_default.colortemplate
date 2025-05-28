@@ -1,0 +1,59 @@
+; Group          /0          Unused              Unused            term
+Normal           /0          omit                omit
+ColorColumn      /0          omit                omit              reverse
+Conceal          /0          omit                omit
+Cursor           /0          omit                omit
+CursorColumn     /0          omit                omit              reverse
+CursorLine       /0          omit                omit              underline
+CursorLineNr     /0          omit                omit              bold
+DiffAdd          /0          omit                omit              bold
+DiffChange       /0          omit                omit              bold
+DiffDelete       /0          omit                omit              bold
+DiffText         /0          omit                omit              reverse
+Directory        /0          omit                omit              bold
+EndOfBuffer      /0          omit                omit
+ErrorMsg         /0          omit                omit              standout
+FoldColumn       /0          omit                omit              standout
+Folded           /0          omit                omit              standout
+IncSearch        /0          omit                omit              reverse
+LineNr           /0          omit                omit              underline
+MatchParen       /0          omit                omit              reverse
+ModeMsg          /0          omit                omit              bold
+MoreMsg          /0          omit                omit              bold
+NonText          /0          omit                omit              bold
+Pmenu            /0          omit                omit
+PmenuSbar        /0          omit                omit
+PmenuSel         /0          omit                omit
+PmenuThumb       /0          omit                omit
+Question         /0          omit                omit              standout
+Search           /0          omit                omit              reverse
+SignColumn       /0          omit                omit              standout
+SpecialKey       /0          omit                omit              bold
+SpellBad         /0          omit                omit              reverse
+SpellCap         /0          omit                omit              reverse
+SpellLocal       /0          omit                omit              underline
+SpellRare        /0          omit                omit              reverse
+StatusLine       /0          omit                omit              reverse,bold
+StatusLineNC     /0          omit                omit              reverse
+TabLine          /0          omit                omit              underline
+TabLineFill      /0          omit                omit              reverse
+TabLineSel       /0          omit                omit              bold
+Title            /0          omit                omit              bold
+VertSplit        /0          omit                omit              reverse
+Visual           /0          omit                omit              reverse
+VisualNOS        /0          omit                omit              bold,underline
+WarningMsg       /0          omit                omit              standout
+WildMenu         /0          omit                omit              standout
+Comment          /0          omit                omit              bold
+Constant         /0          omit                omit              underline
+Error            /0          omit                omit              reverse
+Identifier       /0          omit                omit              underline
+Ignore           /0          omit                omit
+PreProc          /0          omit                omit              underline
+Special          /0          omit                omit              bold
+Statement        /0          omit                omit              bold
+Todo             /0          omit                omit              standout
+Type             /0          omit                omit              underline
+Underlined       /0          omit                omit              underline
+ToolbarLine      /0          omit                omit              underline
+ToolbarButton    /0          omit                omit              bold

@@ -1,0 +1,69 @@
+; vim: ft=colortemplate fdm=marker cc=22 et ts=2 sw=2
+
+; Template for black & white terminals
+; Default highlight groups {{{
+; Group              Unused Unused  Term attributes
+Normal        /0     omit omit
+ColorColumn   /0     omit omit    reverse
+Conceal       /0     omit omit
+Cursor        /0     omit omit
+CursorColumn  /0     omit omit    reverse
+CursorLine    /0     omit omit    underline
+CursorLineNr  /0     omit omit    reverse,italic,bold,underline
+DiffAdd       /0     omit omit    reverse,underline
+DiffChange    /0     omit omit    reverse,underline
+DiffDelete    /0     omit omit    reverse,underline
+DiffText      /0     omit omit    bold,reverse,underline
+Directory     /0     omit omit
+EndOfBuffer   /0     omit omit
+ErrorMsg      /0     omit omit    bold,reverse,italic
+FoldColumn    /0     omit omit    reverse
+Folded        /0     omit omit    italic,reverse,underline
+IncSearch     /0     omit omit    reverse,bold,italic
+LineNr        /0     omit omit    reverse
+MatchParen    /0     omit omit    bold,underline
+ModeMsg       /0     omit omit
+MoreMsg       /0     omit omit
+NonText       /0     omit omit
+Pmenu         /0     omit omit    reverse
+PmenuSbar     /0     omit omit
+PmenuSel      /0     omit omit
+PmenuThumb    /0     omit omit
+PopupSelected /0     omit omit    reverse
+Question      /0     omit omit    standout
+Search        /0     omit omit    underline,italic
+SignColumn    /0     omit omit    reverse
+SpecialKey    /0     omit omit    bold
+SpellBad      /0     omit omit    underline,italic
+SpellCap      /0     omit omit    underline,italic
+SpellLocal    /0     omit omit    underline,italic
+SpellRare     /0     omit omit    underline,italic
+StatusLine    /0     omit omit    reverse,bold
+StatusLineNC  /0     omit omit    reverse
+TabLine       /0     omit omit    reverse,underline,italic
+TabLineFill   /0     omit omit    reverse,underline
+TabLineSel    /0     omit omit    bold
+Title         /0     omit omit    bold
+VertSplit     /0     omit omit    reverse
+Visual        /0     omit omit    reverse
+VisualNOS     /0     omit omit
+WarningMsg    /0     omit omit    standout
+WildMenu      /0     omit omit    bold
+; Other conventional group names (see `:help group-name`)
+Comment       /0     omit omit    italic
+Constant      /0     omit omit    bold,italic
+Error         /0     omit omit    reverse
+Identifier    /0     omit omit    italic
+Ignore        /0     omit omit
+PreProc       /0     omit omit    italic
+Special       /0     omit omit    bold,italic
+Statement     /0     omit omit    bold
+Todo          /0     omit omit    bold,underline
+Type          /0     omit omit    bold
+Underlined    /0     omit omit    underline
+CursorIM      /0     omit omit
+ToolbarLine   /0     omit omit    reverse
+ToolbarButton /0     omit omit    bold,reverse
+debugBreakpoint/0    omit omit    reverse
+debugPC       /0     omit omit    reverse
+; }}}

@@ -1,0 +1,15 @@
+Options: creator=false timestamp=false backend=viml
+Environments: 16
+Full name:Test 74
+Short name:test74
+Author:y
+Background:dark
+Color:white #ffffff 231 15
+; Omitting the base16 value must result is cterm(fg|bg)=NONE:
+Color:black #000000 16
+Normal white black
+NonText black white
+Conceal black black
+Cursor white white
+
+; vim: ft=colortemplate

@@ -1,0 +1,14 @@
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Full name:Test 59
+Short name:test59
+Author:y
+Variant:256
+Background:light
+Color:black #000000 16
+Color:white #ffffff 255
+Normal white black italic ; italic must be flushed
+#if 1 " some condition
+LineNr white black italic ; ditto
+#endif " end some condition (@term256white)
+
+; vim: ft=colortemplate

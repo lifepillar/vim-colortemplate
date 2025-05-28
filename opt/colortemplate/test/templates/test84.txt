@@ -1,0 +1,13 @@
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
+Full name:Test 82
+Short name:test84
+Author:y
+Background:dark
+Color:black rgb(0,0,0) 16 Black
+Color:white #ffffff 255 White
+Normal white black
+StatusLine black white bold,italic
+StatusLine/256 omit  omit  italic
+
+; vim: ft=colortemplate

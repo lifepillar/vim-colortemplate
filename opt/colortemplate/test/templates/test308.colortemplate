@@ -1,0 +1,24 @@
+Options: creator=false timestamp=false
+Full Name:    Test 308
+Short Name:   test308
+Author:       tester
+Environments: gui 256 16 8 0
+Background:   dark
+Color: brightblack   #888888     102          DarkGray
+Color: white         #f0f0f0     255          Gray
+
+Normal   brightblack white
+
+#const foo = get(g:, 'foo', 0)
+
+Folded       brightblack       white        italic
+  /256/8
+     +foo 0  brightblack       white
+          1  brightblack       none
+     +foo 2  brightblack       none         italic
+  /256/8
+     +foo 3  none       brightblack         reverse
+
+
+
+

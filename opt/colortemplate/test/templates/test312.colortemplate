@@ -1,0 +1,15 @@
+Options: creator=false timestamp=false backend=vim9
+Environments: gui 256 16 8 0
+Full name:Test 312
+Short name:test312
+Author:y
+Maintainer:w
+Background:dark
+Color: black  rgb(0,0,0) 16  Black
+Color: white  #ffffff    255 White
+
+Normal white black
+StatusLineTermNC  white black    reverse
+StatusLineTermNC/0 -> StatusLineNC
+; vim: ft=colortemplate
+

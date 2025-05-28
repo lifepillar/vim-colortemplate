@@ -1,0 +1,13 @@
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
+Full name:Test 81
+Short name:test81
+Author:y
+Variant:256
+Background:light
+Color:black #000000 16 Black
+Normal black black
+#let x = 3
+#unlet x
+#unlet! w
+; vim: ft=colortemplate

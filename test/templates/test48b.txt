@@ -1,0 +1,6 @@
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
+Include: test48c.txt
+  **** ; Make sure that this line is reached
+
+; vim: ft=colortemplate

@@ -1,0 +1,27 @@
+Colortemplate Options: creator=0 quiet=1 source_comment=0 timestamp=0 warnings=0
+Full name:Test 64
+Short name:test64
+Author:y
+Background:light
+Color:black #000000 16 Black
+Variant:gui
+#if 1
+Variant:256
+#if 2
+Variant: 8
+#if 3
+Variant: gui 256 8
+#elseif ok
+#else
+#endif
+Normal black black
+Variant:gui
+#if 4
+Variant: 8
+#if 5
+Variant: gui 8
+#elseif good
+#else
+#endif
+
+; vim: ft=colortemplate

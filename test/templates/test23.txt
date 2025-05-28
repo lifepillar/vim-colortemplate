@@ -1,0 +1,19 @@
+Options: creator=false timestamp=false backend=viml
+Environments: gui 256
+Full name:Test 23
+Short name:test23
+Author:y
+Maintainer:w
+Background:dark
+Color:black rgb(0,0,0) 16 Black
+Color:white #ffffff 255 White
+Normal white black
+ColorColumn fg bg #ffffff
+ColorColumn fg bg ,reverse
+ColorColumn fg bg bold,,italic
+ColorColumn fg bg bold,12
+ColorColumn fg bg t-bold
+ColorColumn fg bg t==bold
+ColorColumn fg bg g(bold
+
+; vim: ft=colortemplate

@@ -1,0 +1,25 @@
+Full Name:     Test 301
+Short name:    test301
+Author:        No One
+
+Options:       backend=vim9
+Options:       creator=false
+Options:       dateformat="%Y %b %d"
+Options:       palette=false
+Options:       shiftwidth=2
+Options:       timestamp=false
+Options:       vimlcompatibility=0
+
+Environments: gui
+
+Background: dark
+
+Color: black #333333 236
+Color: white #fafafa 231
+
+Normal white black
+Comment -> omit
+Title omit omit s=omit omit
+
+
+; vim: ft=colortemplate fdm=marker nowrap et sw=2 ts=2

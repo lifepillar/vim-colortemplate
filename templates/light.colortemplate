@@ -1,0 +1,185 @@
+; vim: ft=colortemplate fdm=marker cc=22,40,58 et ts=2 sw=2
+
+; Information {{{
+; Mandatory
+Full name:     Light
+Short name:    light
+Author:        Myself <myself@somewhere.org>
+; Optional
+Maintainer:    Myself <myself@somewhere.org>
+URL:           https://me.org
+Description:   Template for a light colorscheme
+License:       MIT
+; }}}
+
+; Documentation {{{
+Include: _help.colortemplate
+; }}}
+
+Environments: gui 256 8 0
+Background:   light
+
+; Common linked groups {{{
+; Other conventional group names (see `:help group-name`)
+Added             -> diffAdded
+Boolean           -> Constant
+Changed           -> diffChanged
+Character         -> Constant
+Conditional       -> Statement
+CurSearch         -> IncSearch
+CursorLineFold    -> FoldColumn
+CursorLineSign    -> SignColumn
+Debug             -> Special
+Define            -> PreProc
+Delimiter         -> Special
+Exception         -> Statement
+Float             -> Constant
+Function          -> Identifier
+Include           -> PreProc
+Keyword           -> Statement
+Label             -> Statement
+LineNrAbove       -> LineNr
+LineNrBelow       -> LineNr
+Macro             -> PreProc
+MessageWindow     -> WarningMsg
+Number            -> Constant
+Operator          -> Statement
+PmenuKind         -> Pmenu
+PmenuKindSel      -> PmenuSel
+PmenuExtra        -> Pmenu
+PmenuExtraSel     -> PmenuSel
+PmenuMatch        -> Pmenu
+PmenuMatchSel     -> PmenuMatchSel
+PopupNotification -> WarningMsg
+PopupSelected     -> PmenuSel
+PreCondit         -> PreProc
+QuickFixLine      -> Search
+Removed           -> diffRemoved
+Repeat            -> Statement
+SpecialChar       -> Special
+SpecialComment    -> Special
+StatusLineTerm    -> StatusLine
+StatusLineTermNC  -> StatusLineNC
+StorageClass      -> Type
+String            -> Constant
+Structure         -> Type
+Tag               -> Special
+Typedef           -> Type
+; See `:help lCursor`
+lCursor           -> Cursor
+; See `:help hl-debugPC`
+debugPC           -> SignColumn
+debugBreakpoint   -> SignColumn
+; }}}
+
+; Color palette {{{
+; Color name         GUI            Base256     Base16 (optional)
+Color: black         #53585f        240         Black
+Color: red           #ff0000        196         DarkRed
+Color: green         #00ff00        46          DarkGreen
+Color: yellow        #ffff00        226         DarkYellow
+Color: blue          #0000ff        21          DarkBlue
+Color: magenta       #ff00ff        201         DarkMagenta
+Color: cyan          #00ffff        51          DarkCyan
+Color: white         #ebebeb        255         LightGrey
+Color: brightblack   #d2d2d2        252         DarkGrey
+Color: brightred     #ffd200        220         LightRed
+Color: brightgreen   #64ff00        82          LightGreen
+Color: brightyellow  #ff6464        203         LightYellow
+Color: brightblue    #0064ff        27          LightBlue
+Color: brightmagenta #ff64ff        207         LightMagenta
+Color: brightcyan    #64ffff        87          LightCyan
+Color: brightwhite   #ffffff        231         White
+; }}}
+
+; Terminal colors {{{
+Term colors: black red green yellow blue magenta cyan white
+             brightblack brightred brightgreen brightyellow
+             brightblue brightmagenta brightcyan brightwhite
+; }}}
+
+; Default highlight groups {{{
+Normal               black             white
+Terminal             black             white
+
+#const transp_bg = get(g:, 'light_transp_bg', 0)
+
+Normal
+  /256/8
+    +transp_bg 1     white             none
+
+Terminal
+  /256/8
+    +transp_bg 1     white             none
+
+; Group              Foreground        Background        Attributes
+ColorColumn          fg                white
+Conceal              none              none
+Cursor               black             white
+CursorColumn         black             white
+CursorLine           black             white
+CursorLineNr         black             white
+DiffAdd              black             white             reverse
+DiffChange           black             white             reverse
+DiffDelete           black             white             reverse
+DiffText             black             white             bold,reverse
+Directory            black             white
+EndOfBuffer          black             white
+ErrorMsg             black             white             reverse
+FoldColumn           black             white
+Folded               black             white             italic
+IncSearch            black             white             reverse
+IncSearch/gui        black             white             standout
+LineNr               black             white
+MatchParen           black             white
+ModeMsg              black             white
+MoreMsg              black             white
+NonText              black             white
+Pmenu                black             white
+PmenuSbar            black             white
+PmenuSel             black             white             reverse
+PmenuThumb           black             white
+Question             black             white
+Search               black             white
+SignColumn           black             white
+SpecialKey           black             white
+SpellBad             black             white             s=red
+SpellCap             black             white             s=blue
+SpellLocal           black             white             s=magenta
+SpellRare            black             white             s=cyan reverse
+StatusLine           black             white
+StatusLineNC         black             white
+TabLine              black             white
+TabLineFill          black             white
+TabLineSel           black             white
+Title                black             white
+VertSplit            black             white
+Visual               black             white
+VisualNOS            black             white
+WarningMsg           black             white
+WildMenu             black             white
+Comment              black             none              italic
+Constant             black             none
+Error                black             white             reverse
+Identifier           black             none
+Ignore               black             none
+PreProc              black             none
+Special              black             none
+Statement            black             none
+Todo                 black             none
+Type                 black             none
+Underlined           black             none
+; See `:help CursorIM`
+CursorIM             none              fg
+; See `:help window-toolbar`
+ToolbarLine          none              white
+ToolbarButton        black             white             bold
+; }}}
+
+; Additional highlight groups {{{
+; Add additional highlight groups here if you want
+; }}}
+
+; B/W variant {{{
+Include: _bw.colortemplate
+; }}}

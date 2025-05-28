@@ -1,0 +1,230 @@
+; vim: ft=colortemplate fdm=marker et ts=2 sw=2
+
+; Mandatory metadata:
+Full name:     Dark
+Short name:    dark
+Author:        Myself <myself@somewhere.org>
+; Some keys such as Author may appear multiple times:
+Author:        Yourself <yourself@nowhere.org>
+
+; Optional metadata:
+Maintainer:    Myself <myself@somewhere.org>
+Maintainer:    Someone Else <some.else@some.where>
+URL:           https://me.org
+URL:           https://you.somewhere.net
+Description:   Template for dark colorscheme
+Description:   More details may go here
+License:       MIT
+
+; The backend determines how the code is generated.
+; 'vim9' is the default: use 'legacy' for legacy Vim script
+Options:       backend=viml    ; Generate Vim9 script code
+Options:       palette=true    ; Append the color palette to the output as a comment
+Options:       dateformat="%c" ; Custom date format (strftime() syntax)
+
+; An optional prefix for the color scheme's settings. This is typically
+; used in the help file (see `_help.colortemplate`) and in discriminators
+; (see below). If not provided, it is set equal to the short name.
+Prefix: drk
+
+; Variants tell Colortemplate for which environments to generate highlight
+; group definitions. The 'gui' variant is always enabled and doesn't have to be
+; specified (unless it's the only one to be supported).
+Environments:   gui 256 8 0
+
+; A template can import other templates:
+Include: _help.colortemplate
+
+verbatim
+# This is copied verbatim at the start of the output.
+# Interpolation allows you to replace metadata in the
+# output. For instance: @author1.
+endverbatim
+
+; The background must be defined before any color or highlight group.
+Background: dark
+
+verbatim
+# Multiple verbatim blocks are possible: no matter where
+# they appear in the template, they are concatenated at
+# the start of the output. Since this block appears after
+# the Background directive, the background value can be
+# interpolated: the background is set to @background.
+endverbatim
+
+; Linked groups do not depend on colors, so they may be
+; defined before defining colors:
+Added             -> diffAdded
+Changed           -> diffChanged
+Character         -> Constant
+Boolean           -> Constant
+Conditional       -> Statement
+CurSearch         -> IncSearch
+CursorLineFold    -> FoldColumn
+CursorLineSign    -> SignColumn
+Debug             -> Special
+debugPC           -> SignColumn
+debugBreakpoint   -> SignColumn
+Define            -> PreProc
+Delimiter         -> Special
+Exception         -> Statement
+Float             -> Constant
+Function          -> Identifier
+Include           -> PreProc
+Keyword           -> Statement
+Label             -> Statement
+LineNrAbove       -> LineNr
+LineNrBelow       -> LineNr
+Macro             -> PreProc
+MessageWindow     -> WarningMsg
+Number            -> Constant
+Operator          -> Statement
+PmenuKind         -> Pmenu
+PmenuKindSel      -> PmenuSel
+PmenuExtra        -> Pmenu
+PmenuExtraSel     -> PmenuSel
+PmenuMatch        -> Pmenu
+PmenuMatchSel     -> PmenuSel
+PopupNotification -> WarningMsg
+PopupSelected     -> PmenuSel
+PreCondit         -> PreProc
+QuickFixLine      -> Search
+Removed           -> diffRemoved
+Repeat            -> Statement
+SpecialChar       -> Special
+SpecialComment    -> Special
+StatusLineTerm    -> StatusLine
+StatusLineTermNC  -> StatusLineNC
+StorageClass      -> Type
+String            -> Constant
+Structure         -> Type
+Tag               -> Special
+Typedef           -> Type
+lCursor           -> Cursor
+
+; Each color has an arbitrary name, a hex value (for GUI and
+; terminals supporting millions of colors), a base-256 value
+; (that is, a number between 16 and 255), and an optional
+; base-16 value (a number between 0 and 15 or, better, a
+; color name: see :help cterm-colors).
+; The base-256 value is inferred automatically by
+; Colortemplate when ~ is used.
+
+; Color name         GUI         Base256  Base16 (optional)
+Color: black         #394759     ~        Black
+Color: red           #ff0000     ~        DarkRed
+Color: green         #00ff00     ~        DarkGreen
+Color: yellow        #ffff00     ~        DarkYellow
+Color: blue          #0000ff     ~        DarkBlue
+Color: magenta       #ff00ff     ~        DarkMagenta
+Color: cyan          #00ffff     ~        DarkCyan
+Color: white         #ebebeb     ~        LightGrey
+Color: brightblack   #d2d2d2     ~        DarkGrey
+Color: brightred     #ff6400     ~        LightRed
+Color: brightgreen   #64ff00     ~        LightGreen
+Color: brightyellow  #ffff64     ~        LightYellow
+Color: brightblue    #0064ff     ~        LightBlue
+Color: brightmagenta #ff64ff     ~        LightMagenta
+Color: brightcyan    #64ffff     ~        LightCyan
+Color: brightwhite   #e0e0ed     ~        White
+
+Term colors: black       red       green       yellow       blue       magenta       cyan       white
+             brightblack brightred brightgreen brightyellow brightblue brightmagenta brightcyan brightwhite
+
+verbatim
+# This block appears after Color directives, so colors can
+# be interpolated, too: for instance, black is defined as
+# @guiblack in the GUI, and @256black or @16black in terminals.
+endverbatim
+
+; Each highlight group definition consists of the highlight
+; group's name, the foreground color, the background color,
+; and optional style attributes.
+; NOTE: the highlight group's name *must* be anchored at the
+; start of the line! Other than that, spaces do not count.
+Normal               white             black
+Terminal             white             black
+
+; The following is a 'discriminator'. It is defined using
+; Vim 9 script syntax and it is used to override some
+; highlight group definitions when the discriminator has
+; certain values.
+#const transp_bg = get(g:, '@prefix_transp_bg', 0)
+
+; For example, Normal and Terminal are white on black by
+; default (see above), but if there are 256 or 8 colors
+; *and* transp_bg is equal to 1 then Normal and Terminal are
+; defined as white on a transparent background:
+Normal
+  /256/8+transp_bg 1 white             none
+Terminal
+  /256/8+transp_bg 1 white             none
+
+; Group              Foreground        Background        Attributes
+ColorColumn          fg                black
+Conceal              none              none
+Cursor               white             black
+CursorColumn         white             black
+CursorLine           white             black
+CursorLineNr         white             black
+DiffAdd              white             black             reverse
+DiffChange           white             black             reverse
+DiffDelete           white             black             reverse
+DiffText             white             black             bold,reverse
+Directory            white             black
+EndOfBuffer          white             black
+ErrorMsg             white             black             reverse
+FoldColumn           white             black
+Folded               white             black             italic
+; Every highlight group must have a default definition. The
+; default definition may be overriden for specific variants
+; and/or discriminator values. Here, IncSearch has
+; a 'standout' attribute instead of a 'reverse' attribute in
+; gVim:
+IncSearch            white             black             reverse
+IncSearch/gui        white             black             standout
+LineNr               white             black
+MatchParen           white             black
+ModeMsg              white             black
+MoreMsg              white             black
+NonText              white             black
+Pmenu                white             black
+PmenuSbar            white             black
+PmenuSel             white             black             reverse
+PmenuThumb           white             black
+Question             white             black
+Search               white             black
+SignColumn           white             black
+SpecialKey           white             black
+SpellBad             white             black             s=red
+SpellCap             white             black             s=blue
+SpellLocal           white             black             s=magenta
+SpellRare            white             black             s=cyan reverse
+StatusLine           white             black
+StatusLineNC         white             black
+TabLine              white             black
+TabLineFill          white             black
+TabLineSel           white             black
+Title                white             black
+VertSplit            white             black
+Visual               white             black
+VisualNOS            white             black
+WarningMsg           white             black
+WildMenu             white             black
+
+Comment              white             none              italic
+Constant             white             none
+Error                white             black             reverse
+Identifier           white             none
+Ignore               white             none
+PreProc              white             none
+Special              white             none
+Statement            white             none
+Todo                 white             none
+Type                 white             none
+Underlined           white             none
+CursorIM             none              fg
+ToolbarLine          none              black
+ToolbarButton        white             black             bold
+
+Include: _bw.colortemplate

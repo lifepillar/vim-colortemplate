@@ -1,0 +1,59 @@
+Color statistics for Test 51
+
+{{{ Color Similarity Table (dark background)
+black: GUI=#000000/rgb(  0,  0,  0)  Term= 16 #000000/rgb(  0,  0,  0)  [delta=0.000000]
+ peru: GUI=#cd853f/rgb(205,133, 63)  Term=172 #d78700/rgb(215,135,  0)  [delta=6.702832]
+}}} Color Similarity Table
+{{{ Critical Pairs (dark background)
+Not ISO-9241-3 conforming pairs of foreground/background colors
+{{{ GUI (dark)
+}}}
+{{{ Terminal (dark)
+}}}
+}}} Critical Pairs
+{{{ Contrast Ratio Matrix (dark background)
+Pairs of colors with contrast ≥4.5 can be safely used as a fg/bg combo
+█ Not W3C conforming   █ Not ISO-9241-3 conforming
+{{{ GUI (dark)
+	black	peru
+black		 7.02	black
+peru	 7.02		peru
+	black	peru
+}}}
+{{{ Terminal (dark)
+	black	peru
+black		 7.36	black
+peru	 7.36		peru
+	black	peru
+}}}
+}}} Contrast Ratio Matrix
+{{{ Color Difference Matrix (dark background)
+Pairs of colors whose color difference is ≥500 can be safely used as a fg/bg combo
+{{{ GUI (dark)
+	black	peru
+black		401.00	black
+peru	401.00		peru
+	black	peru
+}}}
+{{{ Terminal (dark)
+	black	peru
+black		350.00	black
+peru	350.00		peru
+	black	peru
+}}}
+}}} Color Difference Matrix
+{{{ Brightness Difference Matrix (dark background)
+Pairs of colors whose brightness difference is ≥125 can be safely used as a fg/bg combo
+{{{ GUI (dark)
+	black	peru
+black		146.55	black
+peru	146.55		peru
+	black	peru
+}}}
+{{{ Terminal (dark)
+	black	peru
+black		143.53	black
+peru	143.53		peru
+	black	peru
+}}}
+}}} Brightness Difference Matrix

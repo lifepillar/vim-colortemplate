@@ -36,19 +36,15 @@ colortemplate.txt`.
 
 ## Installation
 
-Colortemplate requires [vim-devel](https://github.com/lifepillar/vim-devel).
+Colortemplate is part of the
+[vim-devel](https://github.com/lifepillar/vim-devel) package. Just clone the
+repository:
 
     git clone https://github.com/lifepillar/vim-devel.git \
               ~/.vim/pack/devel
 
-    git clone https://github.com/lifepillar/vim-colortemplate.git \
-              ~/.vim/pack/plugins/colortemplate
-
-The "plugins" directory can have any other name.
-
-Also consider installing
-[StylePicker](https://github.com/lifepillar/vim-stylepicker)
-to make it even easier to create color schemes!
+and `:packadd colortemplate` to enable it (you may put the command in your
+`vimrc`).
 
 
 ## Quick Start

@@ -27,7 +27,8 @@ git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
 **Plugins:**
 
-- **Colortemplate**: the toolkit for developing Vim color schemes.
+- [**Colortemplate**](https://github.com/lifepillar/vim-colortemplate/): the
+  toolkit for developing Vim color schemes.
 
 “alpha level” means that the library generally works, but there may be serious
 bugs and the interface is still WIP.

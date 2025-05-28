@@ -25,6 +25,10 @@ git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 - **libversion**: utility library for version comparisons and requirements
   (alpha level).
 
+**Plugins:**
+
+- **Colortemplate**: the toolkit for developing Vim color schemes.
+
 “alpha level” means that the library generally works, but there may be serious
 bugs and the interface is still WIP.
 

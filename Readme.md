@@ -32,6 +32,9 @@ git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 - [**StylePicker**](https://github.com/lifepillar/vim-stylepicker): a color and
   style picker inside Vim!
 
+**Note:** please report issues about plugins using the corresponding
+repository.
+
 “alpha level” means that the library generally works, but there may be serious
 bugs and the interface is still WIP.
 

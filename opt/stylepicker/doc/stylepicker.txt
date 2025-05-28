@@ -22,7 +22,7 @@ StylePicker requires:
 - Preferrably, support for true colors. The style picker, however, works with
   256 colors or even less.
 - |ambiwidth| set to "single" (the default) unless ASCII mode is
-  enabled.
+  enabled (see |g:stylepicker_ascii|).
 - (Optional) |mouse| set to "a" or "n" if you want to use the mouse.
 
 ==============================================================================
@@ -54,16 +54,16 @@ buffer). To minimize interference with editing, the popup can be collapsed by
 pressing |_| (underscore). In collapsed status, the only key that is filtered
 by the style picker is the underscore, which expands the popup window again.
 The popup can be collapsed and expanded also by double clicking on the top
-line. In any case, all the keys can be customized by setting the "keyaliases"
-option: see |g:stylepicker_options|.
+line. In any case, all the keys can be customized: see
+|g:stylepicker_keyaliases|.
 
 The popup has a small "hamburger" symbol at the top-right, which can be used
 to drag the style picker window with the mouse. The window is not resizable.
 
 You may notice that the style picker uses several Unicode symbols. If you
-prefer to use only ASCII characters, you may do so by setting the "ascii"
-option to |true| before loading the plugin. If the plugin is loaded, just type
-this in the command line:
+prefer to use only ASCII characters, you may do so by setting
+|g:stylepicker_ascii| to |true| before loading the plugin. If the plugin is
+loaded, just type this in the command line:
 >
 	:call stylepicker#Set('ascii', 1)
 <
@@ -209,24 +209,17 @@ color.
 Both palettes are remembered if you close and then reopen the style picker
 during the same Vim session. But to make them persist across sessions, you
 must specify a location where they can be saved. For details, see
-|g:stylepicker_options|. The saved files are just text files with one color
-per line; they can be easily edited by hand if desired.
+|g:stylepicker_recentpath| and |g:stylepicker_favoritepath|. The saved files
+are just text files with one color per line; they can be easily edited by hand
+if desired.
 
 ==============================================================================
 Customization				*stylepicker-customization*
 
-The style picker can be customized by defining a global dictionary of options
-or by using a couple of functions. The global dictionary must be defined
-before the script is loaded: use it in your `vimrc` to set your preferred
-settings. For instance:
->
-	g:stylepicker_options = {
-	  ascii: true,
-	  asciimarker: '==> ',
-	  favoritepath: '~/.vim/favorite-colors.txt',
-	}
-<
-The functions can be invoked in scripts or on the command-line to dynamically
+The style picker can be customized by defining global variables or by using
+a couple of functions. The global variables must be defined before the script
+is loaded: use them in your `vimrc` to set your preferred settings. The
+functions can be invoked in scripts or on the command-line to dynamically
 configure the style picker after it has been loaded.
 
 					*stylepicker.Set()*
@@ -238,8 +231,8 @@ Set({option}, {value})
 >
 		:call stylepicker#Set('marker', '==> ')
 <
-		{option} is the name of an option, as described in
-		|g:stylepicker_options|.
+		{option} is the name of a global option with the
+		"g:stylepicker_" prefix removed.
 
 					*stylepicker.Settings()*
 Settings([{options}])
@@ -254,143 +247,132 @@ Settings([{options}])
 >
 		:echo stylepicker#Settings()
 <
-					*g:stylepicker_options*
-A dictionary of settings to configure the style picker. These are the
-available settings:
-
-allowkeymapping ~
-Allow for key mapping. When |true|, any key arrives to the popup after any
-mapping. This may interfere with the keyboard controls of the style picker. In
-such cases, you may set this to |false| or redefine some keys by setting the
-"keyaliases" option. See also "mapping" in |popup_create-arguments|.
+					*g:stylepicker_allowkeymapping*
+Allow for key mapping. See "mapping" in |popup_create-arguments|.
 >
-	g:stylepicker_options = {allowkeymapping: true}
+	g:stylepicker_allowkeymapping = true
 <
-ascii ~
+					*g:stylepicker_ascii*
 Whether the style picker should be limited to ASCII.
 >
-	g:stylepicker_options = {ascii: false}
+	g:stylepicker_ascii = false
 <
-asciiborderchars ~
-asciidigitchars ~
-asciidragsymbol ~
-asciileftsymbol ~
-asciimarker ~
-asciirightsymbol ~
-asciislidersymbols ~
-asciistar ~
-Same as the corresponding options without the “ascii” prefix, but they apply
-when the ascii option is set.
+					*g:stylepicker_asciiborderchars*
+					*g:stylepicker_asciidigitchars*
+					*g:stylepicker_asciidragsymbol*
+					*g:stylepicker_asciileftsymbol*
+					*g:stylepicker_asciimarker*
+					*g:stylepicker_asciirightsymbol*
+					*g:stylepicker_asciislidersymbols*
+					*g:stylepicker_asciistar*
+Same as the correponding options without “ascii”, but they apply when
+|g:stylepicker_ascii| is set.
 
-borderchars ~
+					*g:stylepicker_borderchars*
 The characters defining the border of the stylepicker. This must be a list
 with eight items, defining the characters to use for the top/right/bottom/left
 border, followed by the characters to use for the
 topleft/topright/botright/botleft corner.
 >
-	g:stylepicker_options = {
-	  borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-	}
+	g:stylepicker_borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
 <
-debug ~
+					*g:stylepicker_debug*
 Show debugging information at the bottom of the stylepicker.
 >
-	g:stylepicker_options = {debug: false}
+	g:stylepicker_debug = false
 <
-digitchars ~
+					*g:stylepicker_digitchars*
 The ten digits to use in the color palettes.
 >
-	g:stylepicker_options = {digitchars: [
+	g:stylepicker_digitchars = [
 	    '⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹',
-	]}
+	]
 <
-dragsymbol ~
+					*g:stylepicker_dragsymbol*
 The character to use as the drag icon.
 >
-	g:stylepicker_options = {dragsymbol: '𝌆'}
+	g:stylepicker_dragsymbol = '𝌆'
 <
-favoritepath ~
+					*g:stylepicker_favoritepath*
 The path to a file where favorite colors should be saved. This is unspecified
 by default, which means that favorite colors are lost when Vim is closed.
 
 Note: if the path is relative, it is considered relative to the current
 working directory. Use an absolute path to avoid ambiguities.
 >
-	g:stylepicker_options = {favoritepath: ''}
+	g:stylepicker_favoritepath = ''
 <
-highlight ~
+					*g:stylepicker_highlight*
 Highlight group name to use for the stylepicker's normal foreground and
 background color. See "highlight" in |popup_create-arguments|. For this
 setting to take effect, the style picker must be closed and reopened.
 >
-	g:stylepicker_options = {highlight: 'Normal'}
+	g:stylepicker_highlight = 'Normal'
 <
-keyaliases ~
+					*g:stylepicker_keyaliases*
 Map from user defined key codes to StylePicker's default keys. Use this to set
 your own mappings for the various actions in the style picker.
 >
-	g:stylepicker_options = {keyaliases: {}}
+	g:stylepicker_keyaliases = {}
 <
 For instance, to make |h| and |l| perform the actions of left and arrow keys:
 >
-	g:stylepicker_options = {keyaliases: {
+	let g:stylepicker_keyaliases {
 	  "h": "\<left>",
 	  "l": "\<right>",
-	}}
+	}
 <
-leftsymbol ~
+					*g:stylepicker_leftsymbol*
 The symbol to use as the icon to move to the previous pane.
 >
-	g:stylepicker_options = {leftsymbol: '◀︎'}
+	g:stylepicker_leftsymbol = '◀︎'
 <
-marker ~
+					*g:stylepicker_marker*
 The marker's text.
 >
-	g:stylepicker_options = {marker: '❯❯ '}
+	g:stylepicker_marker = '❯❯ '
 <
-minwidth ~
+					*g:stylepicker_minwidth*
 The minimum width of the popup. This is mainly useful to set the width of the
 style picker when collapsed. See "minwidth" in |popup_create-arguments|.
 >
-	g:stylepicker_options = {minwidth: 15}
+	g:stylepicker_minwidth = 15
 <
-numrecent ~
+					*g:stylepicker_numrecent*
 Number of recent colors to remember. 
 >
-	g:stylepicker_options = {numrecent: 20}
+	g:stylepicker_numrecent = 20
 <
-quotes ~
+					*g:stylepicker_quotes*
 List of quotations to show in the style picker. Every time the style picker is
 reopened, a quotation is randomly chosen for each pane from this list. Each
 quotation should be at most 42 characters long.
+
+					*g:stylepicker_recentpath*
+Same as |g:stylepicker_favoritepath|, but for the Recent Colors palette.
 >
-	g:stylepicker_options = {quotes: ['Put your favorite quotes here']}
+	g:stylepicker_recentpath = ''
 <
-recentpath ~
-Same as "favoritepath", but for the Recent Colors palette.
->
-	g:stylepicker_options = {recentpath: ''}
-<
-rightsymbol ~
+					*g:stylepicker_rightsymbol*
 The symbol to use as the icon to move to the next pane.
 >
-	g:stylepicker_options = {rightsymbol: '▶︎'}
+	g:stylepicker_rightsymbol = '▶︎'
 <
-star ~
+					*g:stylepicker_star*
 The symbol to use for stars.
 >
-	g:stylepicker_options = {star: '★'}
+	g:stylepicker_star = '★'
 <
-stepdelay ~
+					*g:stylepicker_stepdelay*
 The maximum delay between two digit key presses to consider them consecutive.
 Expressed in seconds, can be fractional.
 >
-	g:stylepicker_options = {stepdelay: 1.0}
+	g:stylepicker_stepdelay = 1.0
 <
-zindex ~
+					*g:stylepicker_zindex*
 Priority of the popup. See "zindex" in |popup_create-arguments|.
 >
-	g:stylepicker_options = {zindex: 50}
+	g:stylepicker_zindex = 50
 <
 
  vim:tw=78:ts=8:noet:ft=help:norl:

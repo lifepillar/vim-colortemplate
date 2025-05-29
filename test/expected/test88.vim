@@ -18,7 +18,12 @@ if empty(&t_Co)
   finish
 endif
 
+if str2nr(&t_Co) >= 256
+  finish
+endif
+
 if str2nr(&t_Co) >= 16
+  hi Normal ctermfg=White ctermbg=Black ctermul=NONE cterm=NONE
   finish
 endif
 

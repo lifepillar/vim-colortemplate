@@ -14,6 +14,10 @@ endtry
 #
 #                            Colortemplate's Data Model
 #
+# For a more detailed diagram, see:
+#
+#     https://github.com/lifepillar/vim-colortemplate/wiki/Colortemplate-Data-Model
+#
 #    ┌───────────┐
 #    │           │
 #    │Environment│

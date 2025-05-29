@@ -11,5 +11,4 @@ Normal   red red
 SpellBad  red none s=red undercurl
     /gui omit omit s=omit underline
 
-
-
+; vim: ft=colortemplate

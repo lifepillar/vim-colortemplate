@@ -8,3 +8,5 @@ Background: dark
 #const plugin = get(g:, 'foo_opt', 0)
 Target -> omit ; Omit default definition
 Target /gui/256+plugin 1 -> Search
+
+; vim: ft=colortemplate

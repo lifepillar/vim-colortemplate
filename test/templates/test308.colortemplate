@@ -19,6 +19,4 @@ Folded       brightblack       white        italic
   /256/8
      +foo 3  none       brightblack         reverse
 
-
-
-
+; vim: ft=colortemplate

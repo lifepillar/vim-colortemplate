@@ -12,7 +12,7 @@ Color: base2  #eee8d5   254   7
 Color: base01 #586e75   242  10
 Color: red    #dc322f   160   1
 
-#const visibility = get(g:, 'visbility', 'normal')
+#const visibility = get(g:, 'visibility', 'normal')
 
 Normal                           white black
 SpellCap                         violet            none  s=violet    undercurl

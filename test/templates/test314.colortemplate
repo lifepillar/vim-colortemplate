@@ -1,0 +1,20 @@
+Full name:    Test 314
+Short name:   test314
+Author:       me
+Environments: gui 256 8 0
+Background:   dark
+
+Color: grey  #444444 ~ Grey
+Color: white #ffffff ~ White
+Color: pink  #FF8AD8 ~ LightRed
+
+; Default definition
+Comment grey white bold,italic
+
+; Definition that applies only in gVim
+Comment/gui pink white italic
+
+; Definition that applies to terminals with t_Co >= 256
+Comment/256 grey white bold
+
+; vim: ft=colortemplate

@@ -40,8 +40,7 @@ Colortemplate is part of the
 [vim-devel](https://github.com/lifepillar/vim-devel) package. Just clone the
 repository:
 
-    git clone https://github.com/lifepillar/vim-devel.git \
-              ~/.vim/pack/devel
+    git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
 and `:packadd colortemplate` to enable it (you may put the command in your
 `vimrc`).

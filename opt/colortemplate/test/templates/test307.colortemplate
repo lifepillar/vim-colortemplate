@@ -14,6 +14,7 @@ SpellBad  red none s=red undercurl
     /8
     /0   omit omit s=omit underline
 
+; vim: ft=colortemplate
 
 
 

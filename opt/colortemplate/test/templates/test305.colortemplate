@@ -12,3 +12,6 @@ Short Name:   test305
 Author:       me
 Environments: 16
 Options: creator=false timestamp=false
+
+; vim: ft=colortemplate
+

@@ -10,3 +10,4 @@ Comment -> omit
 Title omit omit s=omit omit
 Options: creator=false timestamp=false
 
+; vim: ft=colortemplate

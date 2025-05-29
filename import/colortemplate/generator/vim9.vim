@@ -6,6 +6,7 @@ import '../colorscheme.vim' as colorscheme
 
 
 type  Relation      = ra.Relation
+const AntiEquiJoin  = ra.AntiEquiJoin
 const EquiJoin      = ra.EquiJoin
 const Filter        = ra.Filter
 const PartitionBy   = ra.PartitionBy
@@ -127,19 +128,31 @@ export class Generator extends base.Generator
     var env_linked_classes = linked_group_overrides->PartitionBy('Environment')
     var env_base_classes = base_group_overrides->PartitionBy('Environment')
 
-    # Skip definitions incorporated into the default definitions above
-    for environment in ['gui', best_cterm_env, '0']
-      if env_base_classes->has_key(environment)
-        env_base_classes[environment] = Query(
-          env_base_classes[environment]
-          ->Select((t) => !empty(t.DiscrName))  # Exclude definitions with an empty discriminator
-          ->Union(env_base_classes[environment]
+    for environment in environments
+      if environment->In(['gui', best_cterm_env, '0'])
+        # Skip definitions incorporated into the default definitions above
+        if env_base_classes->has_key(environment)
+          env_base_classes[environment] = Query(
+            env_base_classes[environment]
+            ->Select((t) => !empty(t.DiscrName))  # Exclude definitions with an empty discriminator
+            ->Union(env_base_classes[environment]
             ->SemiJoin(
               default_linked_groups,
               (t, u) => t.HiGroup == u.HiGroup
             )   # ...except those that by default were linked
+            )
           )
-        )
+        endif
+      else # For the other envs, add default definitions if not overridden
+        if !env_base_classes->has_key(environment)
+          env_base_classes[environment] = []
+        endif
+
+        env_base_classes[environment] += Query(AntiEquiJoin(
+          default_base_groups,
+          env_base_classes[environment]->Select((t) => empty(t.DiscrName)),
+          {on: 'HiGroup'}
+        ))
       endif
     endfor
 

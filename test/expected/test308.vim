@@ -31,10 +31,14 @@ if str2nr(&t_Co) >= 256
 endif
 
 if str2nr(&t_Co) >= 16
+  hi Normal ctermfg=DarkGray ctermbg=Gray ctermul=NONE cterm=NONE
+  hi Folded ctermfg=DarkGray ctermbg=Gray ctermul=NONE cterm=italic
   finish
 endif
 
 if str2nr(&t_Co) >= 8
+  hi Normal ctermfg=DarkGray ctermbg=Gray ctermul=NONE cterm=NONE
+  hi Folded ctermfg=DarkGray ctermbg=Gray ctermul=NONE cterm=italic
   if foo == 0
     hi Folded ctermfg=DarkGray ctermbg=Gray ctermul=NONE cterm=NONE
   elseif foo == 1

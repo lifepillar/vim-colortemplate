@@ -21,11 +21,13 @@ if str2nr(&t_Co) >= 256
 endif
 
 if str2nr(&t_Co) >= 16
+  hi Normal ctermfg=Red ctermbg=Red ctermul=NONE cterm=NONE
   hi SpellBad cterm=underline
   finish
 endif
 
 if str2nr(&t_Co) >= 8
+  hi Normal ctermfg=Red ctermbg=Red ctermul=NONE cterm=NONE
   hi SpellBad cterm=underline
   finish
 endif

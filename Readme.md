@@ -40,8 +40,7 @@ Colortemplate is part of the
 [vim-devel](https://github.com/lifepillar/vim-devel) package. Just clone the
 repository:
 
-    git clone https://github.com/lifepillar/vim-devel.git \
-              ~/.vim/pack/devel
+    git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
 and `:packadd colortemplate` to enable it (you may put the command in your
 `vimrc`).
@@ -67,16 +66,16 @@ Colortemplate is based on a very simple but very flexible template format.
 This is a minimal template (it doesn't define much, but it compiles):
 
 ```
-Full name:  My Gorgeous Theme
-Short name: gorgeous
-Author:     Me <me@somewhere.org>
+Full name:    My Gorgeous Theme
+Short name:   gorgeous
+Author:       Me <me@somewhere.org>
 
-Variants:   gui 256
-Background: dark
+Environments: gui 256
+Background:   dark
 
 ; Color palette
-Color:      myblack #333333 ~
-Color:      mywhite #fafafa ~
+Color:        myblack #333333 ~
+Color:        mywhite #fafafa ~
 
 ; Highlight group definitions
 Normal      mywhite myblack

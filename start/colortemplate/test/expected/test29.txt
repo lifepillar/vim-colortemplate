@@ -1,3 +1,0 @@
-  test29_transp_bg <-- this is ok (interpolated)
-  test29transp_bg  <-- ditto
-  @suppress            <-- this is ignored (not interpolated)

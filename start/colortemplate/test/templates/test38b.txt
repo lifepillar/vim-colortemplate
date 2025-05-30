@@ -1,5 +1,0 @@
-Options: creator=false timestamp=false backend=viml
-Environments: gui 256
-Include: test38c.txt
-
-; vim: ft=colortemplate

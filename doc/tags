@@ -1,0 +1,8 @@
+g:stylepicker_options	stylepicker.txt	/*g:stylepicker_options*
+stylepicker-contents	stylepicker.txt	/*stylepicker-contents*
+stylepicker-customization	stylepicker.txt	/*stylepicker-customization*
+stylepicker-popup	stylepicker.txt	/*stylepicker-popup*
+stylepicker-requirements	stylepicker.txt	/*stylepicker-requirements*
+stylepicker.Set()	stylepicker.txt	/*stylepicker.Set()*
+stylepicker.Settings()	stylepicker.txt	/*stylepicker.Settings()*
+stylepicker.txt	stylepicker.txt	/*stylepicker.txt*

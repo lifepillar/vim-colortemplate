@@ -1,9 +1,0 @@
-Options: creator=false timestamp=false backend=viml
-Environments: gui 256
-Full name:Test 39a
-Short name:test39a
-Author:y
-Maintainer:w
-Include: test39b.txt
-
-; vim: ft=colortemplate

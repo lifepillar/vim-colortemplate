@@ -1,9 +1,0 @@
-Options: creator=false timestamp=false backend=viml
-Environments: 256
-Full name:Test 78
-Short name:test78
-Author:z
-Background:dark
-Color: black  #000000 16
-Normal black none ; This arrow -> should be ignored
-; vim: ft=colortemplate

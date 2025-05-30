@@ -1,5 +1,5 @@
 Options: creator=false timestamp=false backend=vim9
-Environments: gui 256 16 8 0
+Environments: gui 256 16 0
 Full name:Test 311
 Short name:test311
 Author:y

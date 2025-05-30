@@ -13,7 +13,16 @@ g:colors_name = 'test311'
 hi! link StatusLineTerm StatusLine
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=255 ctermbg=16 ctermul=NONE cterm=NONE term=NONE
 
-if str2nr(&t_Co) >= 8
+if empty(&t_Co)
+  finish
+endif
+
+if str2nr(&t_Co) >= 256
+  finish
+endif
+
+if str2nr(&t_Co) >= 16
+  hi Normal ctermfg=White ctermbg=Black ctermul=NONE cterm=NONE
   finish
 endif
 

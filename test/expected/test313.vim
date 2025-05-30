@@ -13,18 +13,24 @@ g:colors_name = 'test313'
 hi! link StatusLineTerm StatusLine
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=255 ctermbg=16 ctermul=NONE cterm=NONE term=NONE
 
+if empty(&t_Co)
+  finish
+endif
+
 if str2nr(&t_Co) >= 256
   hi StatusLineTerm ctermfg=255 ctermbg=16 ctermul=NONE cterm=bold,reverse
   finish
 endif
 
 if str2nr(&t_Co) >= 16
+  hi Normal ctermfg=White ctermbg=Black ctermul=NONE cterm=NONE
   hi StatusLineTerm ctermfg=White ctermbg=Black ctermul=NONE cterm=bold,reverse
   finish
 endif
 
 if str2nr(&t_Co) >= 8
   hi! link StatusLineTerm Foobar
+  hi Normal ctermfg=White ctermbg=Black ctermul=NONE cterm=NONE
   finish
 endif
 

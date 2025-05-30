@@ -14,4 +14,3 @@ StatusLineTerm /256/16/0 white black reverse,bold
 StatusLineTerm /8 -> Foobar
 
 ; vim: ft=colortemplate
-

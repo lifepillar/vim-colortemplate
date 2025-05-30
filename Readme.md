@@ -42,9 +42,6 @@ repository:
 
     git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
-and `:packadd colortemplate` to enable it (you may put the command in your
-`vimrc`).
-
 
 ## Quick Start
 

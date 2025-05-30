@@ -13,9 +13,6 @@ package. Just clone the repository:
 
     git clone https://github.com/lifepillar/vim-devel.git ~/.vim/pack/devel
 
-and `:packadd stylepicker` to enable the plugin (you may add the command to
-your `vimrc`).
-
 
 ## Help
 

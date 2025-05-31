@@ -23,7 +23,6 @@ type Colorscheme = colorscheme.Colorscheme
 type Database    = colorscheme.Database
 
 const CompareByHiGroupName   = base.CompareByHiGroupName
-const CompareEnvironments    = base.CompareEnvironments
 const InstantiateBaseGroups  = base.InstantiateBaseGroups
 const LinkedGroupToString    = base.LinkedGroupToString
 const BaseGroupToString      = base.BaseGroupToString
@@ -61,7 +60,7 @@ export class Generator extends base.Generator
     endif
 
     var db              = theme.Db(background)
-    var environments    = sort(theme.environments, CompareEnvironments)
+    var environments    = theme.environments
     var best_cterm_env  = BestCtermEnvironment(environments)
     var discriminators  = sort(
       db.Discriminator

@@ -2,8 +2,7 @@ vim9script
 
 import 'libpath.vim'                                     as path
 import '../import/libcolortemplate.vim'                  as lib
-import '../import/colortemplate/generator/vim9.vim'      as vim9generator
-import '../import/colortemplate/generator/viml.vim'      as vimlgenerator
+import '../import/colortemplate/generator/base.vim'      as base
 import '../import/colortemplate/generator/template.vim'  as templategenerator
 
 type Colorscheme = lib.Colorscheme
@@ -405,19 +404,15 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   if generator == null
     if theme.options.backend == 'template'
-      generator = templategenerator.Generator.new()
+      generator = templategenerator.Generator.new(theme)
       filesuffix = '.colortemplate'
-    elseif theme.options.backend == 'vim9'
-      generator = vim9generator.Generator.new()
-    elseif theme.options.backend->In(['viml', 'legacy'])
-      generator = vimlgenerator.Generator.new()
     else
-      throw $'Unexpected value for generator: {theme.options.backend}'
+      generator = base.BaseGenerator.new(theme, theme.options.backend)
     endif
   endif
 
   var startGen   = reltime()
-  var content    = generator.Generate(theme)
+  var content    = generator.Generate()
   var elapsedGen = 1000.0 * reltimefloat(reltime(startGen))
   var name       = theme.shortname .. filesuffix
   var filePath   = filesuffix == '.vim' ? path.Join(outputDir, 'colors', name) : path.Join(outputDir, name)

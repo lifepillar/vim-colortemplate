@@ -9,12 +9,15 @@ set background=dark
 hi clear
 g:colors_name = 'test313'
 
-
 hi! link StatusLineTerm StatusLine
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=255 ctermbg=16 ctermul=NONE cterm=NONE term=NONE
 
 if empty(&t_Co)
-  finish
+  if has('gui_running')
+    set t_Co=16777216
+  else
+    set t_Co=0
+  endif
 endif
 
 if str2nr(&t_Co) >= 256

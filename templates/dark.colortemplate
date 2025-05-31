@@ -156,7 +156,7 @@ Terminal             white             black
 ; *and* transp_bg is equal to 1 then Normal and Terminal are
 ; defined as white on a transparent background:
 Normal
-  /256/8+transp_bg 1 white             none
+  /gui/256/8+transp_bg 1 white             none
 Terminal
   /256/8+transp_bg 1 white             none
 

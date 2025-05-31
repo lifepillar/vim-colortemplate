@@ -13,15 +13,29 @@ const SortBy               = ra.SortBy
 const Transform            = ra.Transform
 type  Tuple                = ra.Tuple
 
-const CompareEnvironments  = base.CompareEnvironments
 const CompareByHiGroupName = base.CompareByHiGroupName
-type  BaseGenerator        = base.Generator
 
 type  Colorscheme          = colorscheme.Colorscheme
 type  Database             = colorscheme.Database
 
 def NotIn(item: any, items: list<any>): bool
   return index(items, item) == -1
+enddef
+
+def CompareEnvironments(e1: string, e2: string): number
+  if e1 == e2
+    return 0
+  elseif e1 == 'default'
+    return -1
+  elseif e2 == 'default'
+    return 1
+  elseif e1 == 'gui'
+    return -1
+  elseif e2 == 'gui'
+    return 1
+  else
+    return str2nr(e1) > str2nr(e2) ? -1 : 1
+  endif
 enddef
 
 def CompareByHiGroupNameEnvironmentDiscrValue(t: Tuple, u: Tuple): number
@@ -230,18 +244,20 @@ def TermHiGroupDefinitions(db: Database): list<string>
   return output
 enddef
 
-export class Generator extends BaseGenerator
-  def Generate(theme: Colorscheme): list<string>
+export class Generator implements base.IGenerator
+  var theme: Colorscheme
+
+  def Generate(): list<string>
     var output: list<string> = []
 
     output += Header(theme)
 
     for background in ['dark', 'light']
-      if !theme.HasBackground(background)
+      if !this.theme.HasBackground(background)
         continue
       endif
 
-      var db = theme.Db(background)
+      var db = this.theme.Db(background)
 
       output->add('')
       output->add('Background: ' .. background)

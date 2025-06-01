@@ -1,6 +1,6 @@
 vim9script
 
-export const VERSION = '3.0.0-beta3'
+export const VERSION = '3.0.0-beta4'
 
 import './colortemplate/colorscheme.vim'    as colorscheme
 import './colortemplate/parser/v3.vim'      as v3parser

@@ -94,6 +94,16 @@ const ColorKind = {
 }
 
 # Integrity constraints {{{
+def IsValidDiscriminator(t: Tuple): bool
+  if t.DiscrName == 't_Co'
+    FailedMsg("'t_Co' is a reserved name and cannot be used as a discriminator")
+
+    return false
+  endif
+
+  return true
+enddef
+
 def IsValidColorName(t: Tuple): bool
   if t.Name == 'none' ||
      t.Name == 'fg'   ||
@@ -255,7 +265,8 @@ export class Database
       throw $'Invalid background: "{this.background}". Please use "dark" or "light".'
     endif
 
-    this.Color.OnInsertCheck('Valid color',           IsValidColorName)
+    this.Discriminator.OnInsertCheck('Valid discriminator', IsValidDiscriminator)
+    this.Color.OnInsertCheck('Valid color', IsValidColorName)
     this.Color.OnInsertCheck('Valid 256-based color', IsValidBase256Value)
 
     ForeignKey(this.Attribute, 'Environment')

@@ -364,9 +364,8 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return Error('Command can be executed only on Colortemplate buffers')
   endif
 
-  var parseOnly:  bool          = get(opts, 'parseonly', false)
-  var generator:  lib.Generator = get(opts, 'generator', null_object)
-  var filesuffix: string        = get(opts, 'filesuffix', '.vim')
+  var parseOnly:  bool   = get(opts, 'parseonly', false)
+  var filesuffix: string = get(opts, 'filesuffix', '.vim')
 
   var text      = join(getbufline(bufnr, 1, '$'), "\n")
   var overwrite = (bang == '!')
@@ -403,15 +402,18 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return false
   endif
 
-  if generator == null
-    if theme.options.backend == 'template'
-      generator = colortemplate.Generator.new(theme)
-      filesuffix = '.colortemplate'
-    elseif theme.options.backend == 'vim9'
-      generator = vim9.Generator.new(theme)
-    elseif theme.options.backend == 'viml'
-      generator = viml.Generator.new(theme)
-    endif
+  var backend = get(opts, 'backend', theme.options.backend)
+  var generator: lib.Generator
+
+  if backend == 'template'
+    generator = colortemplate.Generator.new(theme)
+    filesuffix = '.colortemplate'
+  elseif backend == 'vim9'
+    generator = vim9.Generator.new(theme)
+  elseif backend == 'viml'
+    generator = viml.Generator.new(theme)
+  else
+    return Error($"Invalid generator: '{backend}'")
   endif
 
   var startGen   = reltime()

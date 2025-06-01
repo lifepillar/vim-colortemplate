@@ -6,32 +6,32 @@ import '../../import/colortemplate/colorscheme.vim'        as colorscheme
 import '../../import/colortemplate/generator/template.vim' as generator
 import '../../import/colortemplate/generator/base.vim'     as base
 
-const KEY_NOT_FOUND     = ra.KEY_NOT_FOUND
-const Extend            = ra.Extend
-const EquiJoin          = ra.EquiJoin
-const Int               = ra.Int
-const Max               = ra.Max
-const Select            = ra.Select
-const Sort              = ra.Sort
-const SortBy            = ra.SortBy
-const Str               = ra.Str
-const Transform         = ra.Transform
-type  Rel               = ra.Rel
+const Extend           = ra.Extend
+const EquiJoin         = ra.EquiJoin
+const Int              = ra.Int
+const Max              = ra.Max
+const Query            = ra.Query
+const Select           = ra.Select
+const Sort             = ra.Sort
+const SortBy           = ra.SortBy
+const Str              = ra.Str
+const Transform        = ra.Transform
+type  Rel              = ra.Rel
+type  Tuple            = ra.Tuple
 
-const ANSI_HEX          = libcolor.ANSI_HEX
-const Approximate       = libcolor.Approximate
-const CtermColorNumber  = libcolor.CtermColorNumber
-const Cterm2Hex         = libcolor.Cterm2Hex
-const CtermName2Hex     = libcolor.CtermName2Hex
-const ColorNumber2Hex   = libcolor.ColorNumber2Hex
-const RgbName2Hex       = libcolor.RgbName2Hex
-const Xterm2Hex         = libcolor.Xterm2Hex
+const ANSI_HEX         = libcolor.ANSI_HEX
+const Approximate      = libcolor.Approximate
+const CtermColorNumber = libcolor.CtermColorNumber
+const Cterm2Hex        = libcolor.Cterm2Hex
+const CtermName2Hex    = libcolor.CtermName2Hex
+const ColorNumber2Hex  = libcolor.ColorNumber2Hex
+const RgbName2Hex      = libcolor.RgbName2Hex
+const Xterm2Hex        = libcolor.Xterm2Hex
 
-type  Colorscheme       = colorscheme.Colorscheme
-type  Database          = colorscheme.Database
+type  Colorscheme      = colorscheme.Colorscheme
+type  Database         = colorscheme.Database
 
-type  IGenerator        = base.IGenerator
-type  Generator         = generator.Generator
+type  Generator        = generator.Generator
 
 const ADJECTIVES = [
   'bald',
@@ -165,14 +165,17 @@ class NameGenerator
   enddef
 
   def GetName(guiValue: string, ctermValue: string): string
-    var t = this._db.Color.Lookup(['GUI', 'Base256', 'Base16'], [guiValue, ctermValue, ''])
+    var r = Query(this._db.Color->Select((t) => t.GUI == guiValue && t.Base256 == ctermValue))
+    var t: Tuple
 
-    if t is KEY_NOT_FOUND
+    if empty(r)
       var name = this.NextColorName()
 
       t = {Name: name, GUI: guiValue, Base256: ctermValue, Base256Hex: '', Base16: ''}
 
       this._db.Color.Insert(t)
+    else
+      t = r[0]
     endif
 
     return t.Name
@@ -320,8 +323,7 @@ export def Import()
   importer.Collect()
   new
   setlocal ft=colortemplate
-  var templateGenerator: IGenerator = Generator.new()
-  var theme: Colorscheme = importer.theme
-  var template = templateGenerator.Generate(theme)
+  var templateGenerator = Generator.new(importer.theme)
+  var template = templateGenerator.Generate()
   append(0, template)
 enddef

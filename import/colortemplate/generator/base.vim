@@ -63,7 +63,7 @@ enddef
 # {HiGroup: 'Normal', guifg: '#ffffff', guibg: '#000000', gui: 'NONE'}
 #
 # Which attributes are included depends on the environment.
-def MakeInstantiator(db: Database, environment: string): func(Tuple): Tuple
+def MakeInstantiator(db: Database, environment: string, best_cterm = ''): func(Tuple): Tuple
   # Get the valid attributes for the given environment
   # E.g., {guifg: 'Fg',  guibg: 'Bg', guisp: 'Special', gui: 'Style'}
   var attributes = db.Attribute
@@ -73,9 +73,15 @@ def MakeInstantiator(db: Database, environment: string): func(Tuple): Tuple
     }, true)
 
   # Get the number of colors supported by the environment
-  var numColors = db.Environment.Lookup(
-    ['Environment'], [environment]
-  ).NumColors
+  var numColors: number
+
+  if empty(best_cterm)
+    numColors = db.Environment.Lookup(
+      ['Environment'], [environment]
+    ).NumColors
+  else
+    numColors = str2nr(best_cterm)
+  endif
 
   # Determine the color attribute to use for cterm colors
   var ctermAttr = (numColors > 16 ? 'Base256' : 'Base16')
@@ -241,6 +247,7 @@ export class Generator implements IGenerator
   var indent:         number
   var space:          string
   var discriminatorNames: list<string> = []
+  var num_term_environments = 0
 
   def new(this.theme, language: string)
     this.Init(language)
@@ -252,6 +259,12 @@ export class Generator implements IGenerator
     this.shiftwidth = this.theme.options.shiftwidth
     this.SetLanguage()
     this.ResetIndent()
+
+    for env in this.theme.environments
+      if env != 'gui'
+        ++this.num_term_environments
+      endif
+    endfor
   enddef
 
   def SetLanguage()
@@ -341,14 +354,19 @@ export class Generator implements IGenerator
   def BaseGroupToString(t: Tuple): string
     var attributes: list<string> = []
 
-    for attr in [
-        'guifg', 'guibg', 'guisp', 'gui', 'font',
-        'ctermfg', 'ctermbg', 'ctermul', 'cterm',
-        'term', 'start', 'stop',
-        ]
+    for attr in ['guifg', 'guibg', 'guisp', 'gui', 'ctermfg', 'ctermbg', 'cterm', 'term']
       var value = get(t, attr, '')
 
       if !empty(value)
+        attributes->add($'{attr}={value}')
+      endif
+    endfor
+
+    # The following attributes are generated only if their value is not NONE
+    for attr in ['ctermul', 'term', 'start', 'stop', 'font']
+      var value = get(t, attr, '')
+
+      if !empty(value) && value != 'NONE'
         attributes->add($'{attr}={value}')
       endif
     endfor
@@ -388,16 +406,25 @@ export class Generator implements IGenerator
     endif
 
     if !theme.backgrounds.light
-      output->add('set background=dark')->add('')
+      output->add('set background=dark')
+      output->add('')
     elseif !theme.backgrounds.dark
-      output->add('set background=light')->add('')
+      output->add('set background=light')
+      output->add('')
     endif
 
     output->add('hi clear')
     output->add($"{this.let_keyword}g:colors_name = '{theme.shortname}'")
+    output->add('')
+
+    # Checking for t_Co is necessary only if code for at least two terminal
+    # environments must be generated.
+    if this.num_term_environments > 1
+      output->add($"{this.const_keyword}{this.var_prefix}t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)")
+      output->add('')
+    endif
 
     if !empty(theme.verbatimtext)
-      output->add('')
       output += theme.verbatimtext
       output->add('')
     endif
@@ -407,7 +434,7 @@ export class Generator implements IGenerator
 
   def EmitFooter(): list<string>
     var theme = this.theme
-    var output: list<string> = ['']
+    var output: list<string> = []
 
     if theme.options.palette # Write the color palette as a comment
       for background in ['dark', 'light']
@@ -444,12 +471,20 @@ export class Generator implements IGenerator
       return []
     endif
 
-    return this.theme.Db('dark').LinkedGroup->Select((t) => t.Condition == 0)
+    var output: list<string> = []
+
+    output = this.theme.Db('dark').LinkedGroup->Select((t) => t.Condition == 0)
       ->Intersect(
         this.theme.Db('light').LinkedGroup->Select((t) => t.Condition == 0)
       )
     ->Sort(CompareByHiGroupName)
     ->Transform((t) => this.LinkedGroupToString(t))
+
+    if !empty(output)
+      output->add('')
+    endif
+
+    return output
   enddef
 
   def Emit(background: string): list<string>
@@ -466,37 +501,42 @@ export class Generator implements IGenerator
       ->SortBy('DiscrName')
       ->Transform((t) => t.DiscrName)
 
+    var has_gui = 'gui'->In(this.theme.environments)
+    var has_256 = '256'->In(this.theme.environments)
+    var has_16  = '16'->In(this.theme.environments)
+    var has_8   = '8'->In(this.theme.environments)
+    var has_0   = '0'->In(this.theme.environments)
+
     var start_background         = this.StartBackground(background)
     var term_colors              = this.EmitTerminalColors(db)
     var verbatim_text            = this.EmitVerbatimText(db)
     var discriminators           = this.EmitDiscriminators(db)
     var default_linked_groups    = this.EmitDefaultLinkedGroups(db)
     var default_base_groups      = this.EmitDefaultBaseGroups(db)
-    var check_empty_t_co         = this.EmitCheckEmptyTCo()
-    var gui_definitions          = this.EmitGuiDefinitions(db)
-    var t256_definitions         = this.EmitBase256Definitions(db)
+    var gui_definitions          = has_gui ? this.EmitGuiDefinitions(db) : []
+    var t256_definitions         = has_256 ? this.EmitBase256Definitions(db) : []
     var common_cterm_definitions = this.EmitCommonCtermDefinitions(db)
-    var t16_definitions          = this.EmitBase16Definitions(db)
-    var t8_definitions           = this.EmitBase8Definitions(db)
-    var t0_definitions           = this.EmitBase0Definitions(db)
+    var t16_definitions          = has_16 ? this.EmitBase16Definitions(db) : []
+    var t8_definitions           = has_8 ? this.EmitBase8Definitions(db) : []
+    var t0_definitions           = has_0 ? this.EmitBase0Definitions(db) : []
 
-    if !empty(gui_definitions)
+    if has_gui && !empty(gui_definitions)
       gui_definitions = this.StartGuiBlock() + gui_definitions + this.EndGuiBlock()
     endif
 
-    if !empty(t256_definitions) || !empty(t16_definitions)
+    if has_256 && !empty(t256_definitions) || !empty(t16_definitions)
       t256_definitions = this.StartTermBlock('256') + t256_definitions + this.EndTermBlock('256')
     endif
 
-    if !empty(t16_definitions) || !empty(t8_definitions)
+    if has_16 && !empty(t16_definitions) || !empty(t8_definitions)
       t16_definitions = this.StartTermBlock('16') + t16_definitions + this.EndTermBlock('16')
     endif
 
-    if !empty(t8_definitions) || !empty(t0_definitions)
+    if has_8 && !empty(t8_definitions) || !empty(t0_definitions)
       t8_definitions = this.StartTermBlock('8') + t8_definitions + this.EndTermBlock('8')
     endif
 
-    if !empty(t0_definitions)
+    if has_0 && !empty(t0_definitions)
       t0_definitions = this.StartTermBlock('0') + t0_definitions + this.EndTermBlock('0')
     endif
 
@@ -508,7 +548,6 @@ export class Generator implements IGenerator
       + discriminators
       + default_linked_groups
       + default_base_groups
-      + check_empty_t_co
       + gui_definitions
       + t256_definitions
       + common_cterm_definitions
@@ -522,7 +561,6 @@ export class Generator implements IGenerator
     var output: list<string> = []
 
     if this.theme.IsLightAndDark()
-      output->this.Add('')
       output->this.Add($"if &background == '{background}'")
       this.Indent()
     endif
@@ -540,6 +578,7 @@ export class Generator implements IGenerator
 
       this.Deindent()
       output->this.Add('endif')
+      output->add('')
     endif
 
     return output
@@ -547,19 +586,17 @@ export class Generator implements IGenerator
 
   def StartGuiBlock(): list<string>
     return [
-      '',
       $"{this.space}if has('gui_running') || (has('termguicolors') && &termguicolors)",
     ]
   enddef
 
   def EndGuiBlock(): list<string>
-    return ['endif']
+    return [$'{this.space}endif', '']
   enddef
 
   def StartTermBlock(t_Co: string): list<string>
     return [
-      '',
-      $"{this.space}if str2nr(&t_Co) >= {t_Co}",
+      $"{this.space}if {this.var_prefix}t_Co >= {t_Co}",
     ]
   enddef
 
@@ -570,12 +607,13 @@ export class Generator implements IGenerator
     output->this.Add('finish')
     this.Deindent()
     output->this.Add('endif')
+    output->add('')
 
     return output
   enddef
 
   def EmitTerminalColors(db: Database): list<string>
-    var output: list<string> = ['']
+    var output: list<string> = []
 
     if !empty(db.termcolors)
       output->this.Add(printf(
@@ -608,7 +646,9 @@ export class Generator implements IGenerator
       ->SortBy('DiscrNum')
       ->Transform((t) => $'{this.space}{this.const_keyword}{this.var_prefix}{t.DiscrName} = {t.Definition}')
 
-    output->add('')
+    if !empty(output)
+      output->add('')
+    endif
 
     return output
   enddef
@@ -632,11 +672,15 @@ export class Generator implements IGenerator
         ->Transform((t) => this.LinkedGroupToString(t))
     endif
 
+    if !empty(output)
+      output->add('')
+    endif
+
     return output
   enddef
 
   def EmitDefaultBaseGroups(db: Database): list<string>
-    var Instantiate   = MakeInstantiator(db, 'default')
+    var Instantiate   = MakeInstantiator(db, 'default', this.best_cterm)
     var GuiOverride   = MakeGuiOverride(db)
     var CtermOverride = MakeCtermOverride(db, this.best_cterm)
     var TermOverride  = MakeTermOverride(db)
@@ -651,6 +695,7 @@ export class Generator implements IGenerator
       ))
 
     output += this.HookEndOfEnvironment(db, 'default')
+    output->add('')
 
     return output
   enddef
@@ -836,26 +881,6 @@ export class Generator implements IGenerator
     })
     ->Sort(CompareByHiGroupName)
     ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
-
-    return output
-  enddef
-
-  def EmitCheckEmptyTCo(): list<string>
-    var output: list<string> = ['']
-
-    this.Add(output, 'if empty(&t_Co)')
-    this.Indent()
-    this.Add(output, "if has('gui_running')")
-    this.Indent()
-    this.Add(output, 'set t_Co=16777216')
-    this.Deindent()
-    this.Add(output, 'else')
-    this.Indent()
-    this.Add(output, 'set t_Co=0')
-    this.Deindent()
-    this.Add(output, 'endif')
-    this.Deindent()
-    this.Add(output, 'endif')
 
     return output
   enddef

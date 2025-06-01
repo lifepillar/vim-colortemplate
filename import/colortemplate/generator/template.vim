@@ -250,7 +250,7 @@ export class Generator implements base.IGenerator
   def Generate(): list<string>
     var output: list<string> = []
 
-    output += Header(theme)
+    output += Header(this.theme)
 
     for background in ['dark', 'light']
       if !this.theme.HasBackground(background)

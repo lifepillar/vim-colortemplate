@@ -748,13 +748,15 @@ export class Generator implements IGenerator
     this.Indent()
 
     # Generate linked group overrides
-    output += db.LinkedGroup
+    var linkedGroups = db.LinkedGroup
       ->SemiJoin(db.Condition, (t, u) => {
         return t.Condition == u.Condition
           && u.Environment == t_Co
           && empty(u.DiscrName)
       })
       ->Sort(CompareByHiGroupName)
+
+    output += linkedGroups
       ->Transform((t) => this.LinkedGroupToString(t))
 
     var BaseGroups = db.BaseGroup
@@ -780,6 +782,7 @@ export class Generator implements IGenerator
       # generated, too.
       baseGroups = db.BaseGroup->Select((t) => t.Condition == 0)
         ->AntiEquiJoin(BaseGroups, {on: 'HiGroup'})
+        ->AntiEquiJoin(linkedGroups, {on: 'HiGroup'})
         ->Union(BaseGroups)
     endif
 

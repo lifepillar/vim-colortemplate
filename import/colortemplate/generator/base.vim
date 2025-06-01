@@ -4,7 +4,6 @@ import 'librelalg.vim'      as ra
 import '../colorscheme.vim' as colorscheme
 import '../version.vim'     as version
 
-const KEY_NOT_FOUND   = ra.KEY_NOT_FOUND
 const AntiEquiJoin    = ra.AntiEquiJoin
 const DictTransform   = ra.DictTransform
 const Extend          = ra.Extend
@@ -56,47 +55,6 @@ export def BestCtermEnvironment(environments: list<string>): string
     endif
   endfor
   return ''
-enddef
-
-const dark_regex  = '\m^\%(7\*\=\|9\*\=\|\d\d\|Brown\|DarkYellow\|\%(Light\|Dark\)\=\%(Gr[ae]y\)\|\%[Light]\%(Blue\|Green\|Cyan\|Red\|Magenta\|Yellow\)\|White\)$'
-const light_regex = '\m^\%(\%(0\|1\|2\|3\|4\|5\|6\|8\)\*\=\|Black\|Dark\%(Blue\|Green\|Cyan\|Red\|Magenta\)\)$'
-
-# In Vim < 8.1.0616, `hi Normal ctermbg=...` may change the value of
-# 'background'. This function checks the conditions under which that may
-# happen. The function's name is a reference to the original issue report,
-# which had an example using color 234.
-#
-# See https://github.com/lifepillar/vim-colortemplate/issues/13.
-export def CheckBugBg234(
-    db:          Database,
-    environment: string,
-    numColors:   number,
-    discrName:   string = '',
-    discrValue:  string = ''
-    ): bool
-  var definition = Query(EquiJoin(
-    db.BaseGroup->Select((t) => t.HiGroup == 'Normal'),
-    db.Condition->Select(
-      (t) => t.Environment == environment && t.DiscrName == discrName && t.DiscrValue == discrValue
-    ),
-    {on: 'Condition'}
-  ))
-
-  if empty(definition)
-    return false
-  endif
-
-  var bg = Query(db.Color->EquiJoin(definition, {onleft: 'Name', onright: 'Bg'}))[0]
-
-  if db.background == 'dark'
-    return (
-      numColors > 16       &&
-      bg.Base256 != 'NONE' &&
-      (str2nr(bg.Base256) >= 10 || str2nr(bg.Base256) == 7 || str2nr(bg.Base256) == 9)
-    ) || bg.Base16 =~? dark_regex
-  else # light background
-    return numColors > 0 && numColors <= 16 && bg.Base16 =~# light_regex
-  endif
 enddef
 
 # Return a function that transforms a BaseGroup tuple into a dictionary of
@@ -238,11 +196,8 @@ export interface IGenerator
   def Generate(): list<string>
 endinterface
 
-# TODO: rename VimScriptGenerator
-# TODO: move VimL stuff into specialized class
-# TODO: fix missing empty env blocks, which are sometimes necessary
 # TODO: performance! (generating discriminators is especially slow)
-export class BaseGenerator implements IGenerator
+export class Generator implements IGenerator
   var theme:          Colorscheme
   var language:       string
   var best_cterm:     string
@@ -255,7 +210,12 @@ export class BaseGenerator implements IGenerator
   var space:          string
   var discriminatorNames: list<string> = []
 
-  def new(this.theme, this.language = v:none)
+  def new(this.theme, language: string)
+    this.Init(language)
+  enddef
+
+  def Init(language: string)
+    this.language   = language
     this.best_cterm = BestCtermEnvironment(this.theme.environments)
     this.shiftwidth = this.theme.options.shiftwidth
     this.SetLanguage()
@@ -469,10 +429,10 @@ export class BaseGenerator implements IGenerator
 
     # All non-empty discriminator names
     this.discriminatorNames = db.Discriminator
+      ->Filter((t) => !empty(t.DiscrName))
       ->Project('DiscrName')
-      ->SortBy(['DiscrName'])
+      ->SortBy('DiscrName')
       ->Transform((t) => t.DiscrName)
-      ->filter((_, v) => !empty(v))
 
     var start_background         = this.StartBackground(background)
     var term_colors              = this.EmitTerminalColors(db)
@@ -487,7 +447,28 @@ export class BaseGenerator implements IGenerator
     var t16_definitions          = this.EmitBase16Definitions(db)
     var t8_definitions           = this.EmitBase8Definitions(db)
     var t0_definitions           = this.EmitBase0Definitions(db)
-    var end_background           = this.EndBackground(background)
+
+    if !empty(gui_definitions)
+      gui_definitions = this.StartGuiBlock() + gui_definitions + this.EndGuiBlock()
+    endif
+
+    if !empty(t256_definitions) || !empty(t16_definitions)
+      t256_definitions = this.StartTermBlock('256') + t256_definitions + this.EndTermBlock('256')
+    endif
+
+    if !empty(t16_definitions) || !empty(t8_definitions)
+      t16_definitions = this.StartTermBlock('16') + t16_definitions + this.EndTermBlock('16')
+    endif
+
+    if !empty(t8_definitions) || !empty(t0_definitions)
+      t8_definitions = this.StartTermBlock('8') + t8_definitions + this.EndTermBlock('8')
+    endif
+
+    if !empty(t0_definitions)
+      t0_definitions = this.StartTermBlock('0') + t0_definitions + this.EndTermBlock('0')
+    endif
+
+    var end_background = this.EndBackground(background)
 
     return start_background
       + term_colors
@@ -528,6 +509,35 @@ export class BaseGenerator implements IGenerator
       this.Deindent()
       output->this.Add('endif')
     endif
+
+    return output
+  enddef
+
+  def StartGuiBlock(): list<string>
+    return [
+      '',
+      $"{this.space}if has('gui_running') || (has('termguicolors') && &termguicolors)",
+    ]
+  enddef
+
+  def EndGuiBlock(): list<string>
+    return ['endif']
+  enddef
+
+  def StartTermBlock(t_Co: string): list<string>
+    return [
+      '',
+      $"{this.space}if str2nr(&t_Co) >= {t_Co}",
+    ]
+  enddef
+
+  def EndTermBlock(t_Co: string): list<string>
+    var output: list<string> = []
+
+    this.Indent()
+    output->this.Add('finish')
+    this.Deindent()
+    output->this.Add('endif')
 
     return output
   enddef
@@ -615,10 +625,7 @@ export class BaseGenerator implements IGenerator
 
   def EmitGuiDefinitions(db: Database): list<string>
     var Instantiate = MakeInstantiator(db, 'gui')
-    var output = [
-      '',
-      $"{this.space}if has('gui_running') || (has('termguicolors') && &termguicolors)",
-    ]
+    var output = []
 
     this.Indent()
 
@@ -650,26 +657,16 @@ export class BaseGenerator implements IGenerator
 
     # Emit discriminator-based definitions
     output += this.EmitDiscriminatorBasedDefinitions(db, 'gui')
-
-    this.Deindent()
-
-    if len(output) <= 2
-      return []
-    endif
-
     output += this.HookEndOfEnvironment(db, 'gui')
 
-    output->this.Add('endif')
+    this.Deindent()
 
     return output
   enddef
 
   def EmitTerminalDefinitions(db: Database, t_Co: string): list<string>
     var Instantiate = MakeInstantiator(db, t_Co)
-    var output = [
-      '',
-      $"{this.space}if str2nr(&t_Co) >= {t_Co}",
-    ]
+    var output = []
 
     this.Indent()
 
@@ -716,19 +713,9 @@ export class BaseGenerator implements IGenerator
 
     # Emit discriminator-based definitions
     output += this.EmitDiscriminatorBasedDefinitions(db, t_Co)
-
-    if len(output) <= 2
-      this.Deindent()
-      return []
-    endif
-
     output += this.HookEndOfEnvironment(db, t_Co)
 
-    output->this.Add('finish')
-
     this.Deindent()
-
-    output->this.Add('endif')
 
     return output
   enddef
@@ -821,45 +808,6 @@ export class BaseGenerator implements IGenerator
     return output
   enddef
 
-  def EmitCheckBugBg234(
-      db:          Database,
-      environment: string,
-      discrName:   string = '',
-      discrValue:  string = ''
-      ): list<string>
-    # Code needs to be generated only for cterm environments
-    var numColors: number
-
-    if environment == 'default'
-      numColors = str2nr(this.best_cterm)
-    else
-      numColors = str2nr(environment)
-    endif
-
-    if numColors == 0
-      return []
-    endif
-
-    var output: list<string> = []
-
-    if CheckBugBg234(db, environment, numColors, discrName, discrValue)
-      output->add('')
-
-      if environment == 'default'
-        this.Add(output, $"if !has('patch-8.0.0616') && !has('gui_running') \" Fix for Vim bug")
-      else
-        this.Add(output, $"if !has('patch-8.0.0616') \" Fix for Vim bug")
-      endif
-
-      this.Indent()
-      this.Add(output, $'set background={db.background}')
-      this.Deindent()
-      this.Add(output, $'endif')
-    endif
-
-    return output
-  enddef
-
   def EmitCheckEmptyTCo(): list<string>
     var output: list<string> = ['']
 
@@ -881,17 +829,6 @@ export class BaseGenerator implements IGenerator
   enddef
 
   def HookEndOfEnvironment(db: Database, environment: string): list<string>
-    if this.language == 'viml'
-      var output = this.EmitCheckBugBg234(db, environment)
-
-      output += mapnew(
-        this.discriminatorNames,
-        (_, name) => $'{this.space}unlet s:{name}'
-      )
-
-      return output
-    endif
-
     return []
   enddef
 
@@ -901,10 +838,6 @@ export class BaseGenerator implements IGenerator
       discrName: string,
       discrValue: string
       ): list<string>
-    if this.language == 'viml'
-      return this.EmitCheckBugBg234(db, environment, discrName, discrValue)
-    endif
-
     return []
   enddef
 endclass

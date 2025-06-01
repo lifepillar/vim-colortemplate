@@ -2,8 +2,9 @@ vim9script
 
 import 'libpath.vim'                                     as path
 import '../import/libcolortemplate.vim'                  as lib
-import '../import/colortemplate/generator/base.vim'      as base
-import '../import/colortemplate/generator/template.vim'  as templategenerator
+import '../import/colortemplate/generator/vim9.vim'      as vim9
+import '../import/colortemplate/generator/viml.vim'      as viml
+import '../import/colortemplate/generator/template.vim'  as colortemplate
 
 type Colorscheme = lib.Colorscheme
 type Result      = lib.ParserResult
@@ -404,10 +405,12 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   if generator == null
     if theme.options.backend == 'template'
-      generator = templategenerator.Generator.new(theme)
+      generator = colortemplate.Generator.new(theme)
       filesuffix = '.colortemplate'
-    else
-      generator = base.BaseGenerator.new(theme, theme.options.backend)
+    elseif theme.options.backend == 'vim9'
+      generator = vim9.Generator.new(theme)
+    elseif theme.options.backend == 'viml'
+      generator = viml.Generator.new(theme)
     endif
   endif
 

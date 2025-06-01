@@ -56,12 +56,19 @@ export def NotIn(v: any, items: list<any>): bool
 enddef
 
 export class Generator extends base.Generator
+  var backward_compatible: bool
+
   def new(this.theme)
     super.Init('viml')
+    this.backward_compatible = this.theme.options.vimlcompatibility > 0
   enddef
 
   def HookEndOfEnvironment(db: Database, environment: string): list<string>
-    var output = this.EmitCheckBugBg234(db, environment)
+    var output: list<string> = []
+
+    if this.backward_compatible
+      output += this.EmitCheckBugBg234(db, environment)
+    endif
 
     if environment->NotIn(['default', 'gui'])
       output += mapnew(
@@ -79,7 +86,11 @@ export class Generator extends base.Generator
       discrName: string,
       discrValue: string
       ): list<string>
-    return this.EmitCheckBugBg234(db, environment, discrName, discrValue)
+    if this.backward_compatible
+      return this.EmitCheckBugBg234(db, environment, discrName, discrValue)
+    endif
+
+    return []
   enddef
 
   def EmitCheckBugBg234(

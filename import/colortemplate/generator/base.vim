@@ -123,16 +123,35 @@ def MakeGuiOverride(db: Database): func(Tuple): Tuple
 
     var u = r[0]
 
-    t.guifg = db.Color.Lookup(['Name'], [u.Fg]).GUI
-    t.guibg = db.Color.Lookup(['Name'], [u.Bg]).GUI
-    t.guisp = db.Color.Lookup(['Name'], [u.Special]).GUI
-    t.gui   = u.Style
-    t.cterm = u.Style # For capable terminals when termguicolors is set
+    if !empty(u.Fg)
+      t.guifg = db.Color.Lookup(['Name'], [u.Fg]).GUI
+    endif
+
+    if !empty(u.Bg)
+      t.guibg = db.Color.Lookup(['Name'], [u.Bg]).GUI
+    endif
+
+    if !empty(u.Special)
+      t.guisp = db.Color.Lookup(['Name'], [u.Special]).GUI
+    endif
+
+    if !empty(u.Style)
+      t.gui   = u.Style
+
+      if !t->has_key('cterm')
+        t.cterm = u.Style # For capable terminals when termguicolors is set
+      endif
+    endif
 
     # See https://github.com/lifepillar/vim-colortemplate/issues/15
     if t.guifg == 'NONE' && t.guibg == 'NONE'
-      t.ctermfg = 'NONE'
-      t.ctermbg = 'NONE'
+      if !t->has_key('ctermfg')
+        t.ctermfg = 'NONE'
+      endif
+
+      if !t->has_key('ctermbg')
+        t.ctermbg = 'NONE'
+      endif
     endif
 
     return t
@@ -160,10 +179,21 @@ def MakeCtermOverride(db: Database, cterm: string): func(Tuple): Tuple
 
     var u = r[0]
 
-    t.ctermfg = db.Color.Lookup(['Name'], [u.Fg])[cterm_attr]
-    t.ctermbg = db.Color.Lookup(['Name'], [u.Bg])[cterm_attr]
-    t.ctermul = db.Color.Lookup(['Name'], [u.Special])[cterm_attr]
-    t.cterm   = u.Style
+    if !empty(u.Fg)
+      t.ctermfg = db.Color.Lookup(['Name'], [u.Fg])[cterm_attr]
+    endif
+
+    if !empty(u.Bg)
+      t.ctermbg = db.Color.Lookup(['Name'], [u.Bg])[cterm_attr]
+    endif
+
+    if !empty(u.Special)
+      t.ctermul = db.Color.Lookup(['Name'], [u.Special])[cterm_attr]
+    endif
+
+    if !empty(u.Style)
+      t.cterm = u.Style
+    endif
 
     return t
   }
@@ -186,7 +216,9 @@ def MakeTermOverride(db: Database): func(Tuple): Tuple
       return t
     endif
 
-    t.term = r[0].Style
+    if !empty(r[0].Style)
+      t.term = r[0].Style
+    endif
 
     return t
   }
@@ -543,7 +575,7 @@ export class Generator implements IGenerator
   enddef
 
   def EmitTerminalColors(db: Database): list<string>
-    var output: list<string> = []
+    var output: list<string> = ['']
 
     if !empty(db.termcolors)
       output->this.Add(printf(

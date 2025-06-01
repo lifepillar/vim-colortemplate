@@ -1,5 +1,4 @@
 Options: creator=false timestamp=false backend=viml
-Environments: gui 256
 Full name:Test 48a
 Short name:test48a
 Author:y
@@ -7,6 +6,6 @@ Maintainer:w
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Include: test48b.txt
-     ** ; Make sure that this line is reached
+Comment black pink italic
 
 ; vim: ft=colortemplate

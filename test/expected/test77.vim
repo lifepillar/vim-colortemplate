@@ -6,8 +6,7 @@ set background=dark
 hi clear
 let g:colors_name = 'test77'
 
-
-hi Normal ctermfg=7 ctermbg=NONE ctermul=NONE cterm=NONE
-hi EndOfBuffer ctermfg=0 ctermbg=NONE ctermul=NONE cterm=NONE
+hi Normal ctermfg=7 ctermbg=NONE cterm=NONE
+hi EndOfBuffer ctermfg=0 ctermbg=NONE cterm=NONE
 
 " vim: et ts=8 sw=2 sts=2

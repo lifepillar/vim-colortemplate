@@ -15,6 +15,7 @@ Color: darkblue  #0024ff 21
 
 ; guifg/guibg attributes must not be added to 256 overrides
 Normal                  white  black
-  /256+transp_bg 1  lightgrey  none s=omit omit
+  ; Here, s=omit not necessary because ctermul is omitted by default if NONE
+  /256+transp_bg 1  lightgrey  none
 
 ; vim: ft=colortemplate

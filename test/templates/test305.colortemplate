@@ -5,7 +5,7 @@ Color:        black #000000 0
 Color:        white #ffffff ~
 
 Normal  white omit  ; Foreground should become ctermfg=NONE
-Comment omit  black ; Background should become ctermfg=0
+Comment omit  black ; Background should become ctermbg=0
 
 Full Name:    Test 305
 Short Name:   test305

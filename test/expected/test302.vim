@@ -8,6 +8,8 @@ set background=dark
 hi clear
 g:colors_name = 'test302'
 
+const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+
 const plugin = get(g:, 'foo_opt', 0)
 
 
@@ -15,13 +17,9 @@ if has('gui_running') || (has('termguicolors') && &termguicolors)
   if plugin == 1
     hi! link Target Search
   endif
-
-  if empty(&t_Co)
-    finish
-  endif
 endif
 
-if str2nr(&t_Co) >= 256
+if t_Co >= 256
   if plugin == 1
     hi! link Target Search
   endif

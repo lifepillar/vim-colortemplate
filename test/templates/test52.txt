@@ -1,14 +1,13 @@
 Options: creator=false timestamp=false backend=viml
-Environments: gui 256
+Environments: gui 256 8
 Full name:Test 52
 Short name:test52
 Author:y
 Maintainer:w
 Background:dark
 ; Colors in the range 0-15 are ok in the third argument:
-Color:black rgb(0,0,0) 15 Black
-; Color number is out of range:
-Color:white #ffffff 256 White
+Color:black rgb(0,0,0) 0 Black
+Color:white rgb(255,255,255) 15 White
 Normal white black
 
 ; vim: ft=colortemplate

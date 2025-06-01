@@ -10,6 +10,5 @@ Background:light
 Color:foo #ffffff 255 Black
 Color:bar #000000 16  White
 Background: any
-; Ambiguous definition
 Normal foo bar
 ; vim: ft=colortemplate

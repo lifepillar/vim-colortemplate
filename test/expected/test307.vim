@@ -8,26 +8,23 @@ set background=dark
 hi clear
 g:colors_name = 'test307'
 
+const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
 
-hi Normal guifg=#df0000 guibg=#df0000 guisp=NONE gui=NONE ctermfg=160 ctermbg=160 ctermul=NONE cterm=NONE term=NONE
-hi SpellBad guifg=#df0000 guibg=NONE guisp=#df0000 gui=undercurl ctermfg=160 ctermbg=NONE ctermul=160 cterm=underline term=underline
+hi Normal guifg=#df0000 guibg=#df0000 guisp=NONE gui=NONE ctermfg=160 ctermbg=160 cterm=NONE term=NONE
+hi SpellBad guifg=#df0000 guibg=NONE guisp=#df0000 gui=undercurl ctermfg=160 ctermbg=NONE cterm=underline term=underline ctermul=160
 
-if empty(&t_Co)
+if t_Co >= 256
   finish
 endif
 
-if str2nr(&t_Co) >= 256
-  finish
-endif
-
-if str2nr(&t_Co) >= 16
-  hi Normal ctermfg=Red ctermbg=Red ctermul=NONE cterm=NONE
+if t_Co >= 16
+  hi Normal ctermfg=Red ctermbg=Red cterm=NONE
   hi SpellBad cterm=underline
   finish
 endif
 
-if str2nr(&t_Co) >= 8
-  hi Normal ctermfg=Red ctermbg=Red ctermul=NONE cterm=NONE
+if t_Co >= 8
+  hi Normal ctermfg=Red ctermbg=Red cterm=NONE
   hi SpellBad cterm=underline
   finish
 endif

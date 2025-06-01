@@ -73,6 +73,20 @@ def Test_Parser_ColoschemeNameWithHyphens()
   assert_equal('', result.label)
 enddef
 
+def Test_Parser_InvalidShortName()
+  var templates = [
+    ['Short name: invalid-name$'],
+    ['Short name: short name with spaces is invalid']
+  ]
+
+  for template in templates
+    var [result, _] = Parse(join(template, "\n"))
+
+    assert_false(result.success, $'Template should have failed: {template}')
+    assert_equal('Unexpected token', result.label)
+  endfor
+enddef
+
 def Test_Parser_MinimalColorDefinition()
   var template =<< trim END
   Background: dark
@@ -182,6 +196,14 @@ def Test_Parser_Base256Color0_15()
   endfor
 enddef
 
+def Test_Parser_OutOfRangeBase256Color()
+  var template = ['Background:light', 'Color:white #ffffff 256 White']
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success, $'Template should have failed: {template}')
+  assert_true(result.label =~ 'color index out of range')
+enddef
+
 def Test_Parser_OptionalBase16()
   var template =<< trim END
   Background: dark
@@ -209,6 +231,99 @@ def Test_Parser_OptionalBase16()
   assert_equal('59',       colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base256)
   assert_equal('#5f5f5f',  colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base256Hex)
   assert_equal('NONE',     colorscheme.dark.Color.Lookup(['Name'], ['bg3']).Base16)
+enddef
+
+def Test_Parser_ColorCannotBeRedefined()
+  var template =<< trim END
+  Options: creator=false timestamp=false backend=viml
+  Environments: gui 256
+  Full name:Test 35
+  Short name:test35
+  Author:y
+  Maintainer:w
+  Background:dark
+  Color:black rgb(0,0,0) 16 Black
+  Color:white #ffffff 255 White
+  Color:black #eeeeee 230 White  ; ERROR: cannot redefine color
+  Normal white black
+  ; vim: ft=colortemplate
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success)
+  assert_true(result.label =~ 'Uniqueness failed.*Duplicate key')
+enddef
+
+def Test_Parser_ColorCannotBeDefinedBeforeBackground()
+  var template =<< trim END
+  Environments: gui 256
+  Full name:Test 36
+  Short name:test36
+  Author:y
+  Maintainer:w
+  Color:white #ffffff 255 White ; Color defined before background
+  Background:dark
+  Color:black rgb(0,0,0) 16 Black
+  Normal white black
+  Background:light
+  Normal white white
+  ColorColumn white black ; black is undefined here
+  ; vim: ft=colortemplate
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success)
+  assert_true(result.label =~ "Missing 'Background' directive")
+enddef
+
+def Test_Parser_ReservedColorNames()
+  var templates = [
+  ['Background: dark', 'Color: none rgb(0,0,0) 16 Black'],
+  ['Background: dark', 'Color:   fg rgb(0,0,0) 16 Black'],
+  ['Background: dark', 'Color:   bg rgb(0,0,0) 16 Black'],
+  ]
+
+  for template in templates
+    var [result, _] = Parse(join(template, "\n"))
+
+    assert_false(result.success, $'Template should have failed: {template}')
+    assert_true(result.label =~ "Uniqueness failed")
+  endfor
+enddef
+
+def Test_Parser_InvalidStyleAttribute()
+  var template =<< trim END
+  Background:dark
+  Color:black rgb(0,0,0) 16 Black
+  Color:white #ffffff 255 White
+  Error white black idontexist
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success, $'Template should have failed: {template}')
+  assert_equal('Unexpected token', result.label)
+enddef
+
+def Test_Parser_InvalidEnvironment()
+  var template =<< trim END
+  Environments: gui 256
+  Full name:Test 6
+  Short name:test6
+  Author:y
+  Maintainer:w
+  Background:dark
+  Color:black rgb(0,0,0) 16 Black
+  Color:white #ffffff 255 White
+  Normal white black/white
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success, $'Template should have failed: {template}')
+  assert_match('Expected an environment value', result.label)
 enddef
 
 def Test_Parser_Lookahead()
@@ -423,6 +538,26 @@ def Test_Parser_NoDefaultLinkedGroup()
   assert_equal('256', r0[0]['Environment'])
   assert_equal('', r0[0]['DiscrName'])
   assert_equal('', r0[0]['DiscrValue'])
+enddef
+
+def Test_Parser_LinkedGroupExtraToken()
+  var template =<< trim END
+  Environments: gui 256
+  Full name:Test 75
+  Short name:test75
+  Author:y
+  Background:dark
+  Color:white #ffffff 231 15
+  Normal white white
+  ; The following should raise an error (link with multiple tokens):
+  ; See https://github.com/lifepillar/vim-colortemplate/issues/29
+  Cursor -> x y
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success, $'Template should have failed: {template}')
+  assert_match('Unexpected token', result.label)
 enddef
 
 def Test_Parser_DiscriminatorName()

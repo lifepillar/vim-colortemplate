@@ -4,11 +4,11 @@ Full name:Test 29
 Short name:test29
 Author:y
 Maintainer:w
-documentation
-  @shortname_transp_bg <-- this is ok (interpolated)
-  @shortnametransp_bg  <-- ditto
-  @suppress            <-- this is ignored (not interpolated)
-enddocumentation
+helpfile
+@shortname_transp_bg <-- this is ok (interpolated)
+@shortnametransp_bg <-- ditto
+@notavalidname <-- this is ignored (not interpolated)
+endhelpfile
 Background:dark
 Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White

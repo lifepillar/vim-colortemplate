@@ -8,27 +8,24 @@ set background=dark
 hi clear
 g:colors_name = 'test306'
 
+const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
 
-hi Normal guifg=#df0000 guibg=#df0000 guisp=NONE gui=NONE ctermfg=160 ctermbg=160 ctermul=NONE cterm=NONE term=NONE
-hi SpellBad guifg=#df0000 guibg=NONE guisp=#df0000 gui=underline ctermfg=160 ctermbg=NONE ctermul=160 cterm=undercurl term=undercurl
+hi Normal guifg=#df0000 guibg=#df0000 guisp=NONE gui=NONE ctermfg=160 ctermbg=160 cterm=NONE term=NONE
+hi SpellBad guifg=#df0000 guibg=NONE guisp=#df0000 gui=underline ctermfg=160 ctermbg=NONE cterm=undercurl term=undercurl ctermul=160
 
-if empty(&t_Co)
+if t_Co >= 256
   finish
 endif
 
-if str2nr(&t_Co) >= 256
+if t_Co >= 16
+  hi Normal ctermfg=Red ctermbg=Red cterm=NONE
+  hi SpellBad ctermfg=Red ctermbg=NONE cterm=undercurl ctermul=Red
   finish
 endif
 
-if str2nr(&t_Co) >= 16
-  hi Normal ctermfg=Red ctermbg=Red ctermul=NONE cterm=NONE
-  hi SpellBad ctermfg=Red ctermbg=NONE ctermul=Red cterm=undercurl
-  finish
-endif
-
-if str2nr(&t_Co) >= 8
-  hi Normal ctermfg=Red ctermbg=Red ctermul=NONE cterm=NONE
-  hi SpellBad ctermfg=Red ctermbg=NONE ctermul=Red cterm=undercurl
+if t_Co >= 8
+  hi Normal ctermfg=Red ctermbg=Red cterm=NONE
+  hi SpellBad ctermfg=Red ctermbg=NONE cterm=undercurl ctermul=Red
   finish
 endif
 

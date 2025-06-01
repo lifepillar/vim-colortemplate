@@ -1,7 +1,7 @@
 Options: creator=false timestamp=false backend=viml
 Environments: gui 256
-Full name:Test 50b
-Short name:test50b
+Full name:Test 50
+Short name:test50
 Author:y
 Maintainer:w
 Background:dark
@@ -9,7 +9,7 @@ Color:black rgb(0,0,0) 16 Black
 Color:white #ffffff 255 White
 Normal white black
 verbatim
-let g:terminal_ansi_colors = ['#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000']
+let g:terminal_ansi_colors = ['@black','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000']
 endverbatim
 
 ; vim: ft=colortemplate

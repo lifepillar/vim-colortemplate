@@ -8,19 +8,22 @@ set background=dark
 hi clear
 g:colors_name = 'test314'
 
+const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
 
-hi Comment guifg=#ff8ad8 guibg=#ffffff guisp=NONE gui=italic ctermfg=238 ctermbg=231 ctermul=NONE cterm=bold term=bold,italic
+hi CursorLineNr guifg=#ffd700 guibg=#005faf guisp=NONE gui=bold ctermfg=220 ctermbg=25 cterm=NONE term=bold
 
-if empty(&t_Co)
+if t_Co >= 256
+  hi! link CursorLineNr CursorLine
   finish
 endif
 
-if str2nr(&t_Co) >= 256
+if t_Co >= 16
+  hi! link CursorLineNr CursorLine
   finish
 endif
 
-if str2nr(&t_Co) >= 8
-  hi Comment ctermfg=Grey ctermbg=White ctermul=NONE cterm=bold,italic
+if t_Co >= 8
+  hi! link CursorLineNr CursorLine
   finish
 endif
 

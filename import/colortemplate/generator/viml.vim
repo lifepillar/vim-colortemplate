@@ -71,10 +71,6 @@ export class Generator extends base.Generator
     endif
 
     if environment->NotIn(['default', 'gui'])
-      if this.num_term_environments > 1 # then s:t_Co was defined
-        output->add($'{this.space}unlet s:t_Co')
-      endif
-
       output += mapnew(this.discriminatorNames, (_, name) => $'{this.space}unlet s:{name}')
     endif
 

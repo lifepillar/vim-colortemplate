@@ -1,13 +1,12 @@
 Options: creator=false timestamp=false backend=viml
-Environments: gui 256
+Environments: gui 256 8
 Full name:Test 49a
 Short name:test49a
 Author:y
 Maintainer:w
 Background:dark
-Color:black rgb(0,0,0) 16 Black
 Include: test49b.txt
 Include: test49c.txt
-     ** ; Make sure that this line is reached
+Normal white black
 
 ; vim: ft=colortemplate

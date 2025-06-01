@@ -6,7 +6,6 @@ set background=light
 hi clear
 let g:colors_name = 'test65'
 
-
 hi Normal guifg=NONE guibg=NONE guisp=NONE gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
 hi LineNr guifg=NONE guibg=NONE guisp=NONE gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
 

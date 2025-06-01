@@ -1,3 +1,2 @@
-Options: creator=false timestamp=false backend=viml
-Environments: gui 256
+Color:black rgb(0,0,0) 16 Black
 ; vim: ft=colortemplate

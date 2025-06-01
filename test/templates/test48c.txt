@@ -1,5 +1,6 @@
 Options: creator=false timestamp=false backend=viml
-Environments: gui 256
+Environments: gui 256 0
 Normal black white ; Normal is defined only if we reach this line
+Color: pink #E6C4EC ~
 
 ; vim: ft=colortemplate

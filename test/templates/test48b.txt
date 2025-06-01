@@ -1,6 +1,7 @@
 Options: creator=false timestamp=false backend=viml
 Environments: gui 256
+Color: white #ffffff ~
 Include: test48c.txt
-  **** ; Make sure that this line is reached
+Statement white black bold,underline
 
 ; vim: ft=colortemplate

@@ -31,7 +31,7 @@ def AssertGenerateTemplate(name: string)
 
   var bufnr = bufnr("%")
   var success = colortemplate.Build(bufnr, OUTDIR, '!', {
-    generator: templategenerator.Generator.new(),
+    backend: 'template',
     filesuffix: '.colortemplate'
   })
 

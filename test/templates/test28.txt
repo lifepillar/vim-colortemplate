@@ -1,9 +1,18 @@
 Options: creator=false timestamp=false backend=viml
 Environments: gui 256
 Full name:Test 28
+verbatim
+" Full name is @fullname
+endverbatim
 Short name:test28
+verbatim
+" Short name is @shortname
+endverbatim
 Author:aa
 Maintainer:mm
+verbatim
+" Author and maintainer: @author and @maintainer
+endverbatim
 Background:dark
 Color:black #000000 231 Black
 Color:white #ffffff 255 White
@@ -15,11 +24,11 @@ let author = '@author'
 let maintainer = '@maintainer'
 let background = '@background'
 let g:foo = [
-    \ @term16white
-    \ @term256black
-    \ @guiwhite]
+    \ '@16white',
+    \ '@256black',
+    \ '@white']
 " xxxx yyyy
-hi Foobar ctermfg=@white ctermbg=@black guibg=@black guifg=@white guisp=@white
+hi Foobar ctermfg=@256white ctermbg=@16black guibg=@black guifg=@white guisp=@white
 endverbatim
 
 Background:light
@@ -33,11 +42,11 @@ let author = '@author'
 let maintainer = '@maintainer'
 let background = '@background'
 let g:foo = [
-    \ @term16white
-    \ @term256black
-    \ @guiwhite]
+    \ '@16white',
+    \ '@256black',
+    \ '@white']
 " xxxx yyyy
-hi Foobar ctermfg=@white ctermbg=@black guibg=@black guifg=@white guisp=@white
+hi Foobar ctermfg=@256white ctermbg=@16black guibg=@black guifg=@white guisp=@white
 endverbatim
 
 ; vim: ft=colortemplate

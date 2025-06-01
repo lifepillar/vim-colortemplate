@@ -34,9 +34,7 @@ def AssertBuild(name: string)
   var success: bool
 
   try
-    success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {
-      generator: vim9generator.Generator.new(),
-    })
+    success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {backend: 'vim9'})
   finally
     execute $':{bufnr}bwipe'
   endtry
@@ -105,6 +103,10 @@ enddef
 
 def Test_Vim9Generator_314()
   AssertBuild('test314')
+enddef
+
+def Test_Vim9Generator_315()
+  AssertBuild('test315')
 enddef
 
 var results = tt.Run('_Vim9Generator_')

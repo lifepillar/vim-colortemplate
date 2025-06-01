@@ -107,6 +107,21 @@ def MakeInstantiator(db: Database, environment: string, best_cterm = ''): func(T
   }
 enddef
 
+def ApplyFixForIssue15(t: Tuple): Tuple
+  # See https://github.com/lifepillar/vim-colortemplate/issues/15
+  if get(t, 'guifg', '') == 'NONE' && get(t, 'guibg', '') == 'NONE'
+    if !t->has_key('ctermfg')
+      t.ctermfg = 'NONE'
+    endif
+
+    if !t->has_key('ctermbg')
+      t.ctermbg = 'NONE'
+    endif
+  endif
+
+  return t
+enddef
+
 # Return a function that takes an instantiated BaseGroup tuple (see
 # MakeInstantiator()) and returns the same tuple updated with values coming
 # from a corresponding gui overriding definition, if present. The tuple is
@@ -124,7 +139,7 @@ def MakeGuiOverride(db: Database): func(Tuple): Tuple
     var r = Query(guiDefinitions->Select((w) => w.HiGroup == t.HiGroup))
 
     if empty(r)
-      return t
+      return ApplyFixForIssue15(t)
     endif
 
     var u = r[0]
@@ -149,18 +164,7 @@ def MakeGuiOverride(db: Database): func(Tuple): Tuple
       endif
     endif
 
-    # See https://github.com/lifepillar/vim-colortemplate/issues/15
-    if t.guifg == 'NONE' && t.guibg == 'NONE'
-      if !t->has_key('ctermfg')
-        t.ctermfg = 'NONE'
-      endif
-
-      if !t->has_key('ctermbg')
-        t.ctermbg = 'NONE'
-      endif
-    endif
-
-    return t
+    return ApplyFixForIssue15(t)
   }
 enddef
 
@@ -247,7 +251,7 @@ export class Generator implements IGenerator
   var indent:         number
   var space:          string
   var discriminatorNames: list<string> = []
-  var num_term_environments = 0
+  var needs_t_Co = false
 
   def new(this.theme, language: string)
     this.Init(language)
@@ -259,12 +263,6 @@ export class Generator implements IGenerator
     this.shiftwidth = this.theme.options.shiftwidth
     this.SetLanguage()
     this.ResetIndent()
-
-    for env in this.theme.environments
-      if env != 'gui'
-        ++this.num_term_environments
-      endif
-    endfor
   enddef
 
   def SetLanguage()
@@ -299,19 +297,23 @@ export class Generator implements IGenerator
   enddef
 
   def Generate(): list<string>
-    var output: list<string> = this.language == 'vim9'
+    var header: list<string> = this.language == 'vim9'
       ? ['vim9script', '']
       : []
+    var output: list<string> = []
 
     this.ResetIndent()
 
-    output += this.EmitHeader()
+    header += this.EmitHeader()
+
     output += this.EmitCommonLinkedGroups()
     output += this.Emit('dark')
     output += this.Emit('light')
     output += this.EmitFooter()
 
-    return output
+    var t_Co = this.needs_t_Co ? this.Emit_t_Co() : []
+
+    return header + t_Co + output
   enddef
 
   def Add(output: list<string>, text: string)
@@ -417,13 +419,6 @@ export class Generator implements IGenerator
     output->add($"{this.let_keyword}g:colors_name = '{theme.shortname}'")
     output->add('')
 
-    # Checking for t_Co is necessary only if code for at least two terminal
-    # environments must be generated.
-    if this.num_term_environments > 1
-      output->add($"{this.const_keyword}{this.var_prefix}t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)")
-      output->add('')
-    endif
-
     if !empty(theme.verbatimtext)
       output += theme.verbatimtext
       output->add('')
@@ -520,23 +515,31 @@ export class Generator implements IGenerator
     var t8_definitions           = has_8 ? this.EmitBase8Definitions(db) : []
     var t0_definitions           = has_0 ? this.EmitBase0Definitions(db) : []
 
-    if has_gui && !empty(gui_definitions)
+    var must_generate_gui = has_gui && !empty(gui_definitions)
+    var must_generate_256 = has_256 && !(empty(t256_definitions) && empty(t16_definitions))
+    var must_generate_16  = has_16 && !(empty(t16_definitions) && empty(t8_definitions))
+    var must_generate_8   = has_8 && !(empty(t8_definitions) && empty(t0_definitions))
+    var must_generate_0   = has_0 && !empty(t0_definitions)
+
+    this.needs_t_Co = must_generate_256 || must_generate_16 || must_generate_8 || must_generate_0
+
+    if must_generate_gui
       gui_definitions = this.StartGuiBlock() + gui_definitions + this.EndGuiBlock()
     endif
 
-    if has_256 && !(empty(t256_definitions) && empty(t16_definitions))
+    if must_generate_256
       t256_definitions = this.StartTermBlock('256') + t256_definitions + this.EndTermBlock('256')
     endif
 
-    if has_16 && !(empty(t16_definitions) && empty(t8_definitions))
+    if must_generate_16
       t16_definitions = this.StartTermBlock('16') + t16_definitions + this.EndTermBlock('16')
     endif
 
-    if has_8 && !(empty(t8_definitions) && empty(t0_definitions))
+    if must_generate_8
       t8_definitions = this.StartTermBlock('8') + t8_definitions + this.EndTermBlock('8')
     endif
 
-    if has_0 && !empty(t0_definitions)
+    if must_generate_0
       t0_definitions = this.StartTermBlock('0') + t0_definitions + this.EndTermBlock('0')
     endif
 
@@ -886,6 +889,13 @@ export class Generator implements IGenerator
     ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
 
     return output
+  enddef
+
+  def Emit_t_Co(): list<string>
+    return [
+      $"{this.const_keyword}{this.var_prefix}t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)",
+      '',
+    ]
   enddef
 
   def HookEndOfEnvironment(db: Database, environment: string): list<string>

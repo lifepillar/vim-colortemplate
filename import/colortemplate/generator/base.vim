@@ -524,15 +524,15 @@ export class Generator implements IGenerator
       gui_definitions = this.StartGuiBlock() + gui_definitions + this.EndGuiBlock()
     endif
 
-    if has_256 && !empty(t256_definitions) || !empty(t16_definitions)
+    if has_256 && !(empty(t256_definitions) && empty(t16_definitions))
       t256_definitions = this.StartTermBlock('256') + t256_definitions + this.EndTermBlock('256')
     endif
 
-    if has_16 && !empty(t16_definitions) || !empty(t8_definitions)
+    if has_16 && !(empty(t16_definitions) && empty(t8_definitions))
       t16_definitions = this.StartTermBlock('16') + t16_definitions + this.EndTermBlock('16')
     endif
 
-    if has_8 && !empty(t8_definitions) || !empty(t0_definitions)
+    if has_8 && !(empty(t8_definitions) && empty(t0_definitions))
       t8_definitions = this.StartTermBlock('8') + t8_definitions + this.EndTermBlock('8')
     endif
 

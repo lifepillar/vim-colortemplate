@@ -363,7 +363,7 @@ export class Generator implements IGenerator
     endfor
 
     # The following attributes are generated only if their value is not NONE
-    for attr in ['ctermul', 'term', 'start', 'stop', 'font']
+    for attr in ['ctermul', 'start', 'stop', 'font']
       var value = get(t, attr, '')
 
       if !empty(value) && value != 'NONE'

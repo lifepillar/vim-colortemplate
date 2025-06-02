@@ -442,7 +442,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     filesuffix = '.colortemplate'
   elseif backend == 'vim9'
     generator = vim9.Generator.new(theme)
-  elseif backend == 'viml'
+  elseif backend->In(['viml', 'legacy'])
     generator = viml.Generator.new(theme)
   else
     return Error($"Invalid generator: '{backend}'")

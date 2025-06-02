@@ -1,6 +1,6 @@
 Full Name:  Test 300
 Author:     No One
 Short Name: test300
-Options:    creator=false timestamp=false
+Options:    creator=false timestamp=false warnings=false
 
 ; vim: ft=colortemplate

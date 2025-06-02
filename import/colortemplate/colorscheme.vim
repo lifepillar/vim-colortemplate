@@ -563,6 +563,7 @@ export class Colorscheme
     shiftwidth:        2,
     timestamp:         true,
     vimlcompatibility: 0,
+    warnings:          true,
   }
 
   def new()

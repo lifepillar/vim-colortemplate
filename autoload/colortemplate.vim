@@ -119,7 +119,8 @@ enddef
 
 # Error reporting {{{
 class ErrorReporter
-  var ok = true    # Is the color scheme without errors?
+  var ok = true # Is the color scheme without errors?
+  public var warnings = true # Record and emit warnings?
 
   def new(opts: dict<any> = {})
     var clear = get(opts, 'clear', true)
@@ -140,7 +141,9 @@ class ErrorReporter
   enddef
 
   def AddWarning(bufnr: number, msg: string, lnum = 1, col = 1)
-    this.AddItem(bufnr, msg, 'W', lnum, col)
+    if this.warnings
+      this.AddItem(bufnr, msg, 'W', lnum, col)
+    endif
   enddef
 
   def AddError(bufnr: number, msg: string, lnum = 1, col = 1)
@@ -464,6 +467,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return true
   endif
 
+  errorReporter.warnings = theme.options.warnings
   errorReporter.CheckColorscheme(bufnr, theme)
 
   if clearqflist && getqflist({size: true}).size > 0

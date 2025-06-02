@@ -18,10 +18,14 @@ syn case    match
 
 syn match   colortemplateDiscrName    "+\s*\h\w*\>"
 syn match   colortemplateVariant      "/\s*\d\+\|/gui\>"
-syn match   colortemplateSpecial        "\<sp\?="
+syn match   colortemplateSpecial        "\<s="
 syn match   colortemplateTermCode     "\<st\%(art\|op\)="
+
+syn case ignore
+
 syn match   colortemplateHiGroupDef   "^\h\w*\>" contains=colortemplateHiGroup
 syn match   colortemplateHiGroup      contained "\<Conceal\>"
+
 syn keyword colortemplateHiGroup      contained Added Boolean Changed Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
 syn keyword colortemplateHiGroup      contained CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter
 syn keyword colortemplateHiGroup      contained DiffAdd diffAdded DiffChange diffChanged DiffDelete diffRemoved DiffText Directory
@@ -44,6 +48,12 @@ syn keyword colortemplateHiGroup      contained vimMenuPriority vimMenuRhs vimNo
 syn keyword colortemplateHiGroup      contained vimSetEqual vimStdPlugin vimSubstPat vimSubstRange vimSubstRep vimSubstRep4 vimSynKeyRegion vimSynLine
 syn keyword colortemplateHiGroup      contained vimSynMatchRegion vimSynMtchCchar vimSynMtchGroup vimSynPatMod vimSynRegion vimSyncLinebreak vimSyncLinecont vimSyncLines
 syn keyword colortemplateHiGroup      contained vimSyncMatch vimSyncRegion vimUserCmd vimUserFunc
+# Basic color names
+syn keyword colortemplateConstant     contained Black Blue Brown Cyan DarkRed DarkGreen DarkYellow DarkBlue DarkMagenta DarkCyan Green LightGray LightGrey
+syn keyword colortemplateConstant     contained DarkGray DarkGrey Gray Grey LightRed LightGreen LightYellow LightBlue LightMagenta LightCyan Magenta Red Yellow White
+
+syn case match
+
 syn keyword colortemplateAttr         bold underline undercurl underdouble underdotted underdashed strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial      fg bg ul none omit
 syn match   colortemplateComment      ";.*$" contains=colortemplateTodo,@Spell
@@ -55,9 +65,6 @@ syn match   colortemplateArrow        "->"
 syn match   colortemplateHexColor     "#[A-Fa-f0-9]\{6\}" contained
 syn keyword colortemplateFunction     contained rgb
 syn keyword colortemplateTodo         contained TODO FIXME XXX DEBUG NOTE
-# Basic color names
-syn keyword colortemplateConstant     contained Black Blue Brown Cyan DarkRed DarkGreen DarkYellow DarkBlue DarkMagenta DarkCyan Green LightGray LightGrey
-syn keyword colortemplateConstant     contained DarkGray DarkGrey Gray Grey LightRed LightGreen LightYellow LightBlue LightMagenta LightCyan Magenta Red Yellow White
 
 # These are defined for syntax completion. Since they are `contained`, but not
 # really contained into anything, this rule is never triggered.

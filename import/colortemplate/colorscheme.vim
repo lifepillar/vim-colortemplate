@@ -65,6 +65,7 @@ type Tuple          = ra.Tuple
 type Rel            = ra.Rel
 type Relation       = ra.Relation
 
+const AntiJoin      = ra.AntiJoin
 const Bool          = ra.Bool
 const DictTransform = ra.DictTransform
 const EquiJoin      = ra.EquiJoin
@@ -72,7 +73,6 @@ const FailedMsg     = ra.FailedMsg
 const Float         = ra.Float
 const ForeignKey    = ra.ForeignKey
 const Int           = ra.Int
-const Minus         = ra.Minus
 const LeftEquiJoin  = ra.LeftEquiJoin
 const PartitionBy   = ra.PartitionBy
 const Project       = ra.Project
@@ -234,9 +234,10 @@ export class Database
   ])
 
   var HighlightGroup = Rel.new('Highlight Group', {
-    HiGroup:   Str,
-    DiscrName: Str,
-  }, 'HiGroup')
+    HiGroup:        Str,
+    NormalizedName: Str,
+    DiscrName:      Str,
+  }, [['HiGroup'], ['NormalizedName']])
 
   var HighlightGroupDef = Rel.new('Highlight Group Definition', {
     HiGroup:   Str,
@@ -347,18 +348,26 @@ export class Database
   enddef
 
   def InsertHighlightGroup_(hiGroupName: string, discrName: string)
-    var u = this.HighlightGroup.Lookup(['HiGroup'], [hiGroupName])
+    var normalizedName = tolower(hiGroupName)
+    var u = this.HighlightGroup.Lookup(['NormalizedName'], [normalizedName])
 
     if u is KEY_NOT_FOUND
       this.HighlightGroup.Insert({
-        HiGroup:     hiGroupName,
-        DiscrName:   discrName,
+        HiGroup:        hiGroupName,
+        NormalizedName: normalizedName,
+        DiscrName:      discrName,
       })
+    elseif u.HiGroup != hiGroupName
+      throw printf(
+        "Inconsistent spelling of highlight group: '%s' was spelled '%s' (%s background)",
+        hiGroupName, u.HiGroup, this.background
+      )
     elseif !empty(discrName)
       if empty(u.DiscrName)
         this.HighlightGroup.Upsert({
-          HiGroup:     hiGroupName,
-          DiscrName:   discrName,
+          HiGroup:        hiGroupName,
+          NormalizedName: normalizedName,
+          DiscrName:      discrName,
         })
       elseif u.DiscrName != discrName
         throw printf(
@@ -479,10 +488,11 @@ export class Database
   def MissingDefaultDefs(): list<string>
     # Return the highlight groups for which no default definition exists
     return this.HighlightGroup
-      ->Project('HiGroup')
-      ->Minus(this.HighlightGroupDef
+      ->Project(['HiGroup', 'NormalizedName'])
+      ->AntiJoin(this.HighlightGroupDef
         ->Select((t) => t.Condition == 0)
-        ->Project('HiGroup')
+        ->Project('HiGroup'),
+        (t, u) => t.NormalizedName == tolower(u.HiGroup)
       )
       ->SortBy('HiGroup')
       ->Transform((t) => t.HiGroup)

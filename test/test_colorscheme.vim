@@ -64,7 +64,7 @@ def Test_Colorscheme_InsertLinkedGroup()
   db.InsertLinkedGroup('default', '', '', 'Comment', 'String')
 
   assert_true(RelEq(
-    [{HiGroup: 'Comment', DiscrName: ''}],
+    [{HiGroup: 'Comment', NormalizedName: 'comment', DiscrName: ''}],
     db.HighlightGroup.Instance()
   ), '01')
 
@@ -86,7 +86,7 @@ def Test_Colorscheme_InsertLinkedGroup()
   db.InsertLinkedGroup('default', 'titled', 'true', 'Comment', 'Title')
 
   assert_true(RelEq([
-    {HiGroup: 'Comment', DiscrName: 'titled'}],
+    {HiGroup: 'Comment', NormalizedName: 'comment', DiscrName: 'titled'}],
     db.HighlightGroup.Instance()
   ), '04')
 
@@ -119,7 +119,7 @@ def Test_Colorscheme_InsertBaseGroup()
   db.InsertBaseGroup('default', '', '', 'Normal', 'fg', 'bg', 'none', 'bold')
 
   assert_true(RelEq([
-    {HiGroup: 'Normal', DiscrName: ''}],
+    {HiGroup: 'Normal', NormalizedName: 'normal', DiscrName: ''}],
     db.HighlightGroup.Instance()
   ), '01')
 

@@ -540,6 +540,20 @@ def Test_Parser_NoDefaultLinkedGroup()
   assert_equal('', r0[0]['DiscrValue'])
 enddef
 
+def Test_Parser_InconsistentSpelling()
+  var template =<< trim END
+  Background: dark
+  Color: white #ffffff ~
+  StatusLineTerm white white
+  StatuslineTerm/256 white white ; Spelled differently
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success, $'Template should have failed: {template}')
+  assert_match('Inconsistent spelling', result.label)
+enddef
+
 def Test_Parser_LinkedGroupExtraToken()
   var template =<< trim END
   Environments: gui 256

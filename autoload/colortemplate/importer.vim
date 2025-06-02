@@ -1,7 +1,8 @@
 vim9script
 
-import 'librelalg.vim'     as ra
-import 'libcolor.vim'      as libcolor
+import 'librelalg.vim' as ra
+import 'libcolor.vim'  as libcolor
+
 import '../../import/colortemplate/colorscheme.vim'        as colorscheme
 import '../../import/colortemplate/generator/template.vim' as generator
 import '../../import/colortemplate/generator/base.vim'     as base

@@ -1,13 +1,17 @@
 vim9script
 
 import 'libpath.vim'                                     as path
-import '../import/libcolortemplate.vim'                  as lib
+import '../import/colortemplate/colorscheme.vim'         as colorscheme
+import '../import/colortemplate/colorstats.vim'          as stats
+import '../import/colortemplate/parser/v3.vim'           as parser
+import '../import/colortemplate/generator/base.vim'      as base
 import '../import/colortemplate/generator/vim9.vim'      as vim9
 import '../import/colortemplate/generator/viml.vim'      as viml
 import '../import/colortemplate/generator/template.vim'  as colortemplate
 
-type Colorscheme = lib.Colorscheme
-type Result      = lib.ParserResult
+type  Colorscheme = colorscheme.Colorscheme
+type  Result      = parser.ParserResult
+const Parse       = parser.Parse
 
 # Cache for generated color schemes
 var theme_cache: dict<Colorscheme>
@@ -447,7 +451,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
   Notice('Building' .. (empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)) .. '…')
 
   var startTime = reltime()
-  var [result: Result, theme: Colorscheme] = lib.Parse(text, path.Parent(inputPath))
+  var [result: Result, theme: Colorscheme] = Parse(text, path.Parent(inputPath))
   var elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
 
   if !result.success
@@ -482,7 +486,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   # If we get here, the color scheme can be generated!
   var backend = get(opts, 'backend', theme.options.backend)
-  var generator: lib.Generator
+  var generator: base.IGenerator
 
   if backend == 'template'
     generator = colortemplate.Generator.new(theme)
@@ -581,7 +585,7 @@ export def Stats()
   var nr = bufnr()
 
   if IsCached(nr) || Build(nr, null_string, null_string, {parseonly: true})
-    lib.ColorStats(CachedTheme(nr))
+    stats.ColorStats(CachedTheme(nr))
   endif
 enddef
 # }}}

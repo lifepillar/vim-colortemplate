@@ -85,6 +85,18 @@ def CheckMissing(theme: Colorscheme): bool
     return true
 enddef
 
+def CheckColorschemeConsistency(theme: Colorscheme): bool
+  if !CheckMetadata(theme)
+    return false
+  endif
+
+  if !CheckMissing(theme)
+    return false
+  endif
+
+  return true
+enddef
+
 
 def WriteFile(filePath: string, content: list<string>, overwrite: bool = false): bool
   if overwrite || !path.Exists(filePath)
@@ -394,11 +406,7 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return true
   endif
 
-  if !CheckMetadata(theme)
-    return false
-  endif
-
-  if !CheckMissing(theme)
+  if !CheckColorschemeConsistency(theme)
     return false
   endif
 

@@ -39,7 +39,7 @@ def Test_Colorscheme_Database()
     db.Environment.Lookup(['Environment'], ['default']).Environment
   )
   # Aliases for colors must be predefined
-  assert_equal(['', 'bg', 'fg', 'none'],
+  assert_equal(['', 'bg', 'fg', 'none', 'ul'],
     db.Color->Project('Name')->SortBy('Name')->Transform((t) => t.Name)
   )
   # A default empty discriminator must be predefined

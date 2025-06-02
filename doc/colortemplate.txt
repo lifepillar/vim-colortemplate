@@ -373,8 +373,9 @@ directives.
 The foreground and background colors must always be present: if you want to
 skip the generation of a foreground or background attribute, you may use the
 special keyword `omit` (see below). You may use the special values `fg`, `bg`,
-and `none` for the default foreground color, the default background color and
-for disabling the corresponding highlighting, respectively.
+`ul` and `none` for the normal foreground color, the normal background color,
+the normal underline color and for disabling the corresponding highlighting,
+respectively. See |E419| for when it is possible to use `fg`, `bg`, and `ul`.
 
 The special keyword `omit` may be used when you want to inherit a color from
 Vim's default color scheme. For instance, this directive:

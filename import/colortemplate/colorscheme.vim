@@ -108,6 +108,7 @@ def IsValidColorName(t: Tuple): bool
   if t.Name == 'none' ||
      t.Name == 'fg'   ||
      t.Name == 'bg'   ||
+     t.Name == 'ul'   ||
      t.Name == 'omit'
     FailedMsg($'"{t.Name}" is a reserved name and cannot be used as a color name')
 
@@ -200,7 +201,8 @@ export class Database
     {Name: '',     GUI: '',     Base256: '',     Base256Hex: '', Base16: '',   }, # For when color is omitted
     {Name: 'none', GUI: 'NONE', Base256: 'NONE', Base256Hex: '', Base16: 'NONE'},
     {Name: 'fg',   GUI: 'fg',   Base256: 'fg',   Base256Hex: '', Base16: 'fg', },
-    {Name: 'bg',   GUI: 'bg',   Base256: 'bg',   Base256Hex: '', Base16: 'bg', }
+    {Name: 'bg',   GUI: 'bg',   Base256: 'bg',   Base256Hex: '', Base16: 'bg', },
+    {Name: 'ul',   GUI: 'ul',   Base256: 'ul',   Base256Hex: '', Base16: 'ul', },
   ])
 
   # Discriminators are variables that can be used to conditionally define
@@ -485,7 +487,6 @@ export class Database
       ->SortBy('HiGroup')
       ->Transform((t) => t.HiGroup)
   enddef
-
 endclass
 
 export class Colorscheme

@@ -436,7 +436,7 @@ export class Generator implements IGenerator
         if theme.HasBackground(background)
           var db = theme.Db(background)
           var palette = db.Color
-            ->Select((t) => !empty(t.Name) && t.Name != 'none' && t.Name != 'fg' && t.Name != 'bg')
+            ->Select((t) => !(empty(t.Name) || t.Name->In(['none', 'fg', 'bg', 'ul'])))
             ->SortBy('Name')
 
           output->add(this.comment_symbol .. 'Background: ' .. background)

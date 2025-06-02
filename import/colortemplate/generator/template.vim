@@ -110,7 +110,7 @@ enddef
 
 def Colors(db: Database): list<string>
   var output = db.Color
-    ->Select((t) => t.Name->NotIn(['', 'fg', 'bg', 'none']))
+    ->Select((t) => t.Name->NotIn(['', 'none', 'fg', 'bg', 'ul']))
     ->Transform((t) => {
       var base16 = empty(t.Base16) || t.Base16 == 'NONE' ? '' : ' ' .. t.Base16
 

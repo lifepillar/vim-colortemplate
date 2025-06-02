@@ -40,7 +40,7 @@ enddef
 def SimilarityTable(theme: Colorscheme, background: string): list<string>
   var db     = theme.Db(background)
   var colors = db.Color
-    ->Select((t) => t.Name->NotIn(['', 'none', 'fg', 'bg']))
+    ->Select((t) => t.Name->NotIn(['', 'none', 'fg', 'bg', 'ul']))
     ->Extend((t) => {
       var rgbGui  = Hex2Rgb(t.GUI)
       var rgbTerm = Hex2Rgb(t.Base256Hex)
@@ -84,7 +84,7 @@ def CriticalPairs(theme: Colorscheme, background: string, gui: bool): list<strin
 
   var low_contrast_pairs = EquiJoin(
     db.BaseGroup->Select(
-      (t) => t.Fg->NotIn(['', 'none', 'fg', 'bg']) && t.Bg->NotIn(['', 'none', 'fg', 'bg'])
+      (t) => t.Fg->NotIn(['', 'none', 'fg', 'bg', 'ul']) && t.Bg->NotIn(['', 'none', 'fg', 'bg', 'ul'])
     ),
     db.Condition->Select((t) => t.Environment == 'default' || t.Environment == variant),
     {on: 'Condition'}
@@ -128,7 +128,7 @@ enddef
 
 def BuildMatrix(theme: Colorscheme, background: string, F: func(any, any): float, attr: string): list<string>
   var db     = theme.Db(background)
-  var colors = db.Color->Select((t) => t.Name->NotIn(['', 'none', 'fg', 'bg']))->SortBy('Name')
+  var colors = db.Color->Select((t) => t.Name->NotIn(['', 'none', 'fg', 'bg', 'ul']))->SortBy('Name')
   var names  = mapnew(colors, (_, t) => t.Name)
   var M      = Matrix(colors, F, attr)
 

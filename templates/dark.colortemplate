@@ -1,4 +1,4 @@
-; vim: ft=colortemplate fdm=marker et ts=2 sw=2
+; vim: ft=colortemplate fdm=marker et ts=2 sw=2 vsts=21,18,18,2
 
 ; Mandatory metadata:
 Full name:     Dark
@@ -18,7 +18,7 @@ License:       MIT
 
 ; The backend determines how the code is generated.
 ; 'vim9' is the default: use 'legacy' for legacy Vim script
-Options:       backend=vim9    ; Generate Vim9 script code
+Options:       backend=viml    ; Generate Vim9 script code
 Options:       palette=true    ; Append the color palette to the output as a comment
 Options:       dateformat="%c" ; Custom date format (strftime() syntax)
 

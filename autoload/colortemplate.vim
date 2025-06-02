@@ -182,7 +182,8 @@ def ColorschemePath(bufnr: number): string
   return path.Join(b:colortemplate_outdir, 'colors', name .. '.vim')
 enddef
 
-def ReportError(result: Result, bufnr: number)
+def ReportError(result: Result, bufnr: number, opts: dict<any> = {})
+  var errorpopup = get(opts, 'errorpopup', true)
   var errmsg   = result.label
   var included = matchlist(errmsg, 'in included file "\(.\{-}\)", byte \(\d\+\)')
   var errpos: number
@@ -204,16 +205,29 @@ def ReportError(result: Result, bufnr: number)
   execute ':' nr 'buffer'
   execute 'goto' errpos
 
-  popup_atcursor(errmsg, {
-    pos:         'botleft',
-    line:        'cursor-1',
-    col:         'cursor',
-    border:      [1, 1, 1, 1],
-    borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-    moved:       'any',
-    fixed:       true,
-    highlight:   'WarningMsg',
-  })
+  setqflist([{
+    filename: bufname(nr),
+    lnum:     byte2line(errpos),
+    col:      1,
+    text:     errmsg,
+    type:     'E',
+  }], 'a')
+
+  botright cwindow
+  wincmd p
+
+  if errorpopup
+    popup_atcursor(errmsg, {
+      pos:         'botleft',
+      line:        'cursor-1',
+      col:         'cursor',
+      border:      [1, 1, 1, 1],
+      borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+      moved:       'any',
+      fixed:       true,
+      highlight:   'WarningMsg',
+    })
+  endif
 enddef
 # }}}
 
@@ -397,11 +411,13 @@ enddef
 # Main {{{
 export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): bool
   if !IsColortemplateBuffer(bufname(bufnr))
-    return Error('Command can be executed only on Colortemplate buffers')
+    return Error('Command can be executed only in Colortemplate buffers')
   endif
 
-  var parseOnly:  bool   = get(opts, 'parseonly', false)
-  var filesuffix: string = get(opts, 'filesuffix', '.vim')
+  var parseOnly:   bool   = get(opts, 'parseonly', false)
+  var filesuffix:  string = get(opts, 'filesuffix', '.vim')
+  var clearqflist: bool   = get(opts, 'clearqflist', true)
+  var errorpopup:  bool   = get(opts, 'errorpopup', true)
 
   var text      = join(getbufline(bufnr, 1, '$'), "\n")
   var overwrite = (bang == '!')
@@ -414,12 +430,16 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   Notice('Building' .. (empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)) .. '…')
 
+  if clearqflist
+    setqflist([], 'r')
+  endif
+
   var startTime = reltime()
   var [result: Result, theme: Colorscheme] = lib.Parse(text, path.Parent(inputPath))
   var elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
 
   if !result.success
-    ReportError(result, bufnr)
+    ReportError(result, bufnr, {errorpopup: errorpopup})
     return false
   endif
 
@@ -432,6 +452,10 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   if !CheckColorschemeConsistency(theme)
     return false
+  endif
+
+  if clearqflist
+    cclose
   endif
 
   var backend = get(opts, 'backend', theme.options.backend)
@@ -498,9 +522,14 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
   var success   = true
   var failed    = []
 
+  setqflist([], 'r')
+
   for template in templates
     execute "edit" template
-    if !Build(bufnr(), null_string, bang)
+    if !Build(bufnr(), null_string, bang, {
+        clearqflist: false,
+        errorpopup:  false,
+    })
       failed->add(path.Basename(template))
       success = false
     endif
@@ -509,6 +538,8 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
   var elapsed = 1000.0 * reltimefloat(reltime(startTime))
 
   if success
+    cclose
+
     Notice(printf(
       'Success! %d color scheme%s built in %.00fms', N, N == 1 ? '' : 's', elapsed
     ))

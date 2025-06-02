@@ -56,72 +56,6 @@ def IsColortemplateBuffer(bufname: string): bool
   return getbufvar(bufname, '&ft') == 'colortemplate'
 enddef
 
-def CheckMetadata(theme: Colorscheme): bool
-  if empty(theme.fullname)
-    return Error('Please define the full name of the color scheme')
-  endif
-
-  if empty(theme.shortname)
-    return Error('Please define the short name of the color scheme')
-  endif
-
-  if empty(theme.authors)
-    return Error('Please define the author of the color scheme')
-  endif
-
-  return true
-enddef
-
-def CheckMissing(theme: Colorscheme): bool
-  for background in ['dark', 'light']
-    var db = theme.Db(background)
-    var missing = db.MissingDefaultDefs()
-
-    if !empty(missing)
-      return Error($"Default definitions are missing for {join(missing, ', ')} ({db.background} background)")
-    endif
-  endfor
-
-    return true
-enddef
-
-def CheckNoneNormal(theme: Colorscheme): bool
-  for background in ['dark', 'light']
-    if !theme.HasBackground(background)
-      continue
-    endif
-
-    var db = theme.Db(background)
-    var groups = db.HighlightGroupsUsingAliasesInconsistently()
-
-    if !empty(groups)
-      return Error(
-        "Some highlight groups use special color names 'fg', 'bg', or 'ul', " ..
-        $"but Normal does not define the corresponding color (see `:help E419`): {groups}"
-      )
-    endif
-  endfor
-
-    return true
-enddef
-
-def CheckColorschemeConsistency(theme: Colorscheme): bool
-  if !CheckMetadata(theme)
-    return false
-  endif
-
-  if !CheckMissing(theme)
-    return false
-  endif
-
-  if !CheckNoneNormal(theme)
-    return false
-  endif
-
-  return true
-enddef
-
-
 def WriteFile(filePath: string, content: list<string>, overwrite: bool = false): bool
   if overwrite || !path.Exists(filePath)
     var dirPath = path.Parent(filePath)
@@ -181,54 +115,132 @@ def ColorschemePath(bufnr: number): string
 
   return path.Join(b:colortemplate_outdir, 'colors', name .. '.vim')
 enddef
+# }}}
 
-def ReportError(result: Result, bufnr: number, opts: dict<any> = {})
-  var errorpopup = get(opts, 'errorpopup', true)
-  var errmsg   = result.label
-  var included = matchlist(errmsg, 'in included file "\(.\{-}\)", byte \(\d\+\)')
-  var errpos: number
-  var nr:     number
+# Error reporting {{{
+class ErrorReporter
+  var ok = true    # Is the color scheme without errors?
 
-  if empty(included)
-    nr = bufnr
-    errpos = result.errpos + 1
-  else
-    execute 'edit' included[1]
-    nr = bufnr()
-    errpos = str2nr(included[2]) + 1
-  endif
+  def new(opts: dict<any> = {})
+    var clear = get(opts, 'clear', true)
 
-  Error(
-    $'Build failed: {errmsg} (line {byte2line(errpos)}, byte {errpos})'
-  )
+    if clear
+      setqflist([], 'r')
+    endif
+  enddef
 
-  execute ':' nr 'buffer'
-  execute 'goto' errpos
+  def AddItem(bufnr: number, msg: string, type: string, lnum: number, col: number)
+    setqflist([{
+        filename: bufname(bufnr),
+        lnum:     lnum,
+        col:      col,
+        text:     msg,
+        type:     type,
+      }], 'a')
+  enddef
 
-  setqflist([{
-    filename: bufname(nr),
-    lnum:     byte2line(errpos),
-    col:      1,
-    text:     errmsg,
-    type:     'E',
-  }], 'a')
+  def AddWarning(bufnr: number, msg: string, lnum = 1, col = 1)
+    this.AddItem(bufnr, msg, 'W', lnum, col)
+  enddef
 
-  botright cwindow
-  wincmd p
+  def AddError(bufnr: number, msg: string, lnum = 1, col = 1)
+    this.AddItem(bufnr, msg, 'E', lnum, col)
+    this.ok = false
+  enddef
 
-  if errorpopup
-    popup_atcursor(errmsg, {
-      pos:         'botleft',
-      line:        'cursor-1',
-      col:         'cursor',
-      border:      [1, 1, 1, 1],
-      borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-      moved:       'any',
-      fixed:       true,
-      highlight:   'WarningMsg',
-    })
-  endif
-enddef
+  def AddParserError(bufnr: number, result: Result, opts: dict<any> = {})
+    var popup    = get(opts, 'popup', true)
+    var errmsg   = result.label
+    var included = matchlist(errmsg, 'in included file "\(.\{-}\)", byte \(\d\+\)')
+    var errpos: number
+    var nr:     number
+
+    if empty(included)
+      nr = bufnr
+      errpos = result.errpos + 1
+    else
+      execute 'edit' included[1]
+      nr = bufnr()
+      errpos = str2nr(included[2]) + 1
+    endif
+
+    Error(
+      $'Build failed: {errmsg} (line {byte2line(errpos)}, byte {errpos})'
+    )
+
+    execute ':' nr 'buffer'
+    execute 'goto' errpos
+
+    this.AddError(bufnr, errmsg, byte2line(errpos))
+
+    if popup
+      popup_atcursor(errmsg, {
+        pos:         'botleft',
+        line:        'cursor-1',
+        col:         'cursor',
+        border:      [1, 1, 1, 1],
+        borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        moved:       'any',
+        fixed:       true,
+        highlight:   'WarningMsg',
+      })
+    endif
+  enddef
+
+  def ShowQuickFixList()
+    ClearScreen()
+    botright copen
+    wincmd p
+  enddef
+
+  def HideQuickFixList()
+    cclose
+  enddef
+
+  def CheckColorscheme(bufnr: number, theme: Colorscheme)
+    if empty(theme.shortname)
+      this.AddError(bufnr, 'Please define the short name of the color scheme.')
+    endif
+
+    if empty(theme.environments)
+      this.AddWarning(bufnr, '`Environments` metadata is missing (see :help colortemplate-environments).')
+    endif
+
+    if empty(theme.fullname)
+      this.AddWarning(bufnr, 'Please define the full name of the color scheme.')
+    endif
+
+    if empty(theme.authors)
+      this.AddWarning(bufnr, 'Please define the author of the color scheme.')
+    endif
+
+    for background in []
+      if !theme.HasBackground(background)
+        continue
+      endif
+
+      # Check for missing default definitions
+      var db = theme.Db(background)
+      var missing = db.MissingDefaultDefs()
+
+      if !empty(missing)
+        this.AddWarning(bufnr,
+          $"Default definitions are missing for {join(missing, ', ')} ({db.background} background)."
+        )
+      endif
+
+      # Check that 'fg', 'bg', 'ul' are used only if normal color is defined
+      var groups = db.HighlightGroupsUsingAliasesInconsistently()
+
+      if !empty(groups)
+        this.AddWarning(bufnr,
+          $"Special color names 'fg', 'bg', or 'ul' are used by {groups}, " ..
+          $"but Normal does not define the corresponding color (see `:help E419`)."
+        )
+      endif
+    endfor
+  enddef
+endclass
 # }}}
 
 # Toolbar {{{
@@ -414,15 +426,16 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return Error('Command can be executed only in Colortemplate buffers')
   endif
 
-  var parseOnly:   bool   = get(opts, 'parseonly', false)
+  var parseOnly:   bool   = get(opts, 'parseonly',   false)
   var filesuffix:  string = get(opts, 'filesuffix', '.vim')
-  var clearqflist: bool   = get(opts, 'clearqflist', true)
-  var errorpopup:  bool   = get(opts, 'errorpopup', true)
+  var errorpopup:  bool   = get(opts, 'errorpopup',   true)
+  var clearqflist: bool   = get(opts, 'clearqflist',  true)
 
-  var text      = join(getbufline(bufnr, 1, '$'), "\n")
-  var overwrite = (bang == '!')
-  var outputDir = empty(outdir) ? get(b:, 'colortemplate_outdir', '') : path.Expand(outdir)
-  var inputPath = path.Expand(bufname(bufnr))
+  var errorReporter = ErrorReporter.new({clear: clearqflist})
+  var text          = join(getbufline(bufnr, 1, '$'), "\n")
+  var overwrite     = (bang == '!')
+  var outputDir     = empty(outdir) ? get(b:, 'colortemplate_outdir', '') : path.Expand(outdir)
+  var inputPath     = path.Expand(bufname(bufnr))
 
   if empty(outputDir)
     return Error('Output directory not set: please set b:colortemplate_outdir')
@@ -430,16 +443,17 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   Notice('Building' .. (empty(inputPath) ? '' : ' ' .. path.Stem(inputPath)) .. '…')
 
-  if clearqflist
-    setqflist([], 'r')
-  endif
-
   var startTime = reltime()
   var [result: Result, theme: Colorscheme] = lib.Parse(text, path.Parent(inputPath))
   var elapsedParse = 1000.0 * reltimefloat(reltime(startTime))
 
   if !result.success
-    ReportError(result, bufnr, {errorpopup: errorpopup})
+    errorReporter.AddParserError(bufnr, result, {popup: errorpopup})
+
+    if clearqflist
+      errorReporter.ShowQuickFixList()
+    endif
+
     return false
   endif
 
@@ -450,14 +464,17 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     return true
   endif
 
-  if !CheckColorschemeConsistency(theme)
+  errorReporter.CheckColorscheme(bufnr, theme)
+
+  if clearqflist && getqflist({size: true}).size > 0
+    errorReporter.ShowQuickFixList()
+  endif
+
+  if !errorReporter.ok
     return false
   endif
 
-  if clearqflist
-    cclose
-  endif
-
+  # If we get here, the color scheme can be generated!
   var backend = get(opts, 'backend', theme.options.backend)
   var generator: lib.Generator
 
@@ -516,20 +533,20 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
     return Error(printf('Path not readable: %s', buildDir))
   endif
 
-  var templates = path.Children(buildDir, '[^_]*.colortemplate')
-  var N         = len(templates)
-  var startTime = reltime()
-  var success   = true
-  var failed    = []
-
-  setqflist([], 'r')
+  var templates     = path.Children(buildDir, '[^_]*.colortemplate')
+  var N             = len(templates)
+  var startTime     = reltime()
+  var success       = true
+  var failed        = []
+  var errorReporter = ErrorReporter.new()
 
   for template in templates
     execute "edit" template
+
     if !Build(bufnr(), null_string, bang, {
         clearqflist: false,
         errorpopup:  false,
-    })
+        })
       failed->add(path.Basename(template))
       success = false
     endif
@@ -537,9 +554,13 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
 
   var elapsed = 1000.0 * reltimefloat(reltime(startTime))
 
-  if success
-    cclose
+  if getqflist({size: true}).size == 0
+    errorReporter.HideQuickFixList()
+  else
+    errorReporter.ShowQuickFixList()
+  endif
 
+  if success
     Notice(printf(
       'Success! %d color scheme%s built in %.00fms', N, N == 1 ? '' : 's', elapsed
     ))

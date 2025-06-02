@@ -470,7 +470,7 @@ def GetHelpFile(v: list<string>, ctx: Context)
   var theme: Colorscheme = ctx.state.theme
 
   if empty(theme.shortname)
-    throw 'Please define the short name of the color scheme first'
+    throw 'Please define the short name of the color scheme first.'
   endif
 
   const auxPath = path.Join('doc', theme.shortname .. '.txt')

@@ -550,7 +550,7 @@ const ATTRIBUTE       = R(printf('\C\%(%s\)\>',
                           'nocombine',
                           'omit'
                         ], '\|')))
-const COL16           = R('\%(\d\+\)\|' .. join(ANSI_COLORS, '\|'))
+const COL16           = R('\c\%(\d\+\)\|' .. join(ANSI_COLORS, '\|'))
 const NUM256          = R('\d\{1,3}\>')
 const NUMBER          = R('-\=\d\+\%(\.\d*\)\=')
 const STRING          = R('"[^"]*"')

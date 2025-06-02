@@ -274,7 +274,7 @@ export def ApproximateColor(n: number)
   setline('.', substitute(getline('.'), '\~', string(approx.xterm), ''))
 enddef
 
-export def NearbyColors(n: float)
+export def NearbyColors(n: number)
   var ctx = Context.new(getline('.'))
   var result = ColorParser(ctx)
 
@@ -284,5 +284,5 @@ export def NearbyColors(n: float)
 
   const guiValue = result.value[3]
 
-  echo ColorsWithin(guiValue, n)
+  echo ColorsWithin(guiValue, 1.0 * n)
 enddef

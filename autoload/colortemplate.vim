@@ -472,6 +472,8 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
 
   if clearqflist && getqflist({size: true}).size > 0
     errorReporter.ShowQuickFixList()
+  else
+    errorReporter.HideQuickFixList()
   endif
 
   if !errorReporter.ok

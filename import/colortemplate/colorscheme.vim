@@ -73,6 +73,7 @@ const FailedMsg     = ra.FailedMsg
 const Float         = ra.Float
 const ForeignKey    = ra.ForeignKey
 const Int           = ra.Int
+const Join          = ra.Join
 const LeftEquiJoin  = ra.LeftEquiJoin
 const PartitionBy   = ra.PartitionBy
 const Project       = ra.Project
@@ -92,6 +93,10 @@ const ColorKind = {
   'gui': 'GUI',
   '':    'GUI',
 }
+
+def In(item: any, items: list<any>): bool
+  return index(items, item) != -1
+enddef
 
 # Integrity constraints {{{
 def IsValidDiscriminator(t: Tuple): bool
@@ -496,6 +501,38 @@ export class Database
       )
       ->SortBy('HiGroup')
       ->Transform((t) => t.HiGroup)
+  enddef
+
+  # Special color names 'fg', 'bg', 'ul' can only be used if the corresponding
+  # Normal color is defined (`:help E419`). The following query returns the
+  # highlight groups violating that rule.
+  def HighlightGroupsUsingAliasesInconsistently(): list<string>
+    var normal = this.HighlightGroup.Lookup(['NormalizedName'], ['normal'])
+
+    if normal is KEY_NOT_FOUND
+      # Every highlight group using 'fg', 'bg', or 'ul' is a mistake
+      return this.BaseGroup
+        ->Select((t) => t.Fg->In(['fg', 'bg', 'ul']) || t.Bg->In(['fg', 'bg', 'ul']) || t.Special->In(['fg', 'bg', 'ul']))
+        ->SortBy('HiGroup')
+        ->Transform((v) => v.HiGroup)
+    endif
+
+    # This query is a safe approximation of the true condition that should be
+    # tested. In some edge cases when Normal is overridden it may raise false
+    # positives, though.
+    return this.BaseGroup
+      ->Select((t) => t.HiGroup == normal.HiGroup)
+      ->Join(this.BaseGroup, (n, u) => {
+        return (
+          n.Fg == 'none' && (u.Fg == 'fg' || u.Bg == 'fg' || u.Special == 'fg')
+        ) || (
+          n.Bg == 'none' && (u.Fg == 'bg' || u.Bg == 'bg' || u.Special == 'bg')
+        ) || (
+          n.Special == 'none' && (u.Fg == 'ul' || u.Bg == 'ul' || u.Special == 'ul')
+        )
+      }, {prefix: 'g_'})
+      ->SortBy('g_HiGroup')
+      ->Transform((v) => v.g_HiGroup)
   enddef
 endclass
 

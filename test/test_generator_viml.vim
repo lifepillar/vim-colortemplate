@@ -30,7 +30,7 @@ def Verify(name: string)
 enddef
 
 def AssertBuild(name: string)
-  var template = path.Join(TESTDIR, 'templates', name .. '.txt')
+  var template = path.Join(TESTDIR, 'templates', name .. '.colortemplate')
 
   execute 'split' template
 

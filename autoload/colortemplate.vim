@@ -373,43 +373,32 @@ export def SetOutputDir(dirpath: string): bool
 
   b:colortemplate_outdir = newdir
 
-  if get(g:, 'colortemplate_rtp', true)
-    execute 'set runtimepath^=' .. fnameescape(b:colortemplate_outdir)
-  endif
-
   return true
 enddef
 
-var enabledColors:  list<string> = []
-var prevColors:     string
-var prevBackground: string
+var prevColors:     string = ''
+var prevBackground: string = ''
 
 export def ShowColorscheme(bufnr: number)
-  var sourcePath    = ColorschemePath(bufnr)
-  var colorsName    = path.Stem(sourcePath)
-  var currentColors = get(g:, 'colors_name', 'default')
+  var sourcePath = ColorschemePath(bufnr)
 
-  if currentColors->NotIn(enabledColors)
-    prevColors = currentColors
+  if empty(prevColors)
+    prevColors     = get(g:, 'colors_name', 'default')
     prevBackground = &background
   endif
 
   try
-    execute 'colorscheme' colorsName
+    execute 'source' sourcePath
   catch
     Error(v:exception)
     return
   endtry
-
-  if colorsName->NotIn(enabledColors)
-    enabledColors->add(colorsName)
-  endif
 enddef
 
 export def HideColorscheme()
-  enabledColors = []
-  &background   = prevBackground
+  &background = prevBackground
   execute 'colorscheme' prevColors
+  prevColors = ''
 enddef
 
 export def ViewSource(bufnr: number): bool

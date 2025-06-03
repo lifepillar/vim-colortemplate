@@ -4,14 +4,12 @@ import 'librelalg.vim'      as ra
 import '../colorscheme.vim' as colorscheme
 import '../version.vim'     as version
 
+const KEY_NOT_FOUND   = ra.KEY_NOT_FOUND
 const AntiEquiJoin    = ra.AntiEquiJoin
 const DictTransform   = ra.DictTransform
-const Extend          = ra.Extend
-const EquiJoin        = ra.EquiJoin
 const Filter          = ra.Filter
 const Intersect       = ra.Intersect
-const Join            = ra.Join
-const Minus           = ra.Minus
+const PartitionBy     = ra.PartitionBy
 const Project         = ra.Project
 const Query           = ra.Query
 const Select          = ra.Select
@@ -21,7 +19,6 @@ const SortBy          = ra.SortBy
 const Table           = ra.Table
 const Transform       = ra.Transform
 const Union           = ra.Union
-type  Relation        = ra.Relation
 type  Tuple           = ra.Tuple
 
 type  Colorscheme = colorscheme.Colorscheme
@@ -252,6 +249,8 @@ export class Generator implements IGenerator
   var space:          string
   var discriminatorNames: list<string> = []
   var needs_t_Co = false
+
+  var _cache: dict<any> = {}
 
   def new(this.theme, language: string)
     this.Init(language)
@@ -489,6 +488,10 @@ export class Generator implements IGenerator
 
     var db = this.theme.Db(background)
 
+    # Partition and cache highlight group definitions
+    this._cache.linked = PartitionBy(db.LinkedGroup, 'Condition')
+    this._cache.base   = PartitionBy(db.BaseGroup,   'Condition')
+
     # All non-empty discriminator names
     this.discriminatorNames = db.Discriminator
       ->Filter((t) => !empty(t.DiscrName))
@@ -498,9 +501,9 @@ export class Generator implements IGenerator
 
     var has_gui = 'gui'->In(this.theme.environments)
     var has_256 = '256'->In(this.theme.environments)
-    var has_16  = '16'->In(this.theme.environments)
-    var has_8   = '8'->In(this.theme.environments)
-    var has_0   = '0'->In(this.theme.environments)
+    var has_16  =  '16'->In(this.theme.environments)
+    var has_8   =   '8'->In(this.theme.environments)
+    var has_0   =   '0'->In(this.theme.environments)
 
     var start_background         = this.StartBackground(background)
     var term_colors              = this.EmitTerminalColors(db)
@@ -508,18 +511,18 @@ export class Generator implements IGenerator
     var discriminators           = this.EmitDiscriminators(db)
     var default_linked_groups    = this.EmitDefaultLinkedGroups(db)
     var default_base_groups      = this.EmitDefaultBaseGroups(db)
-    var gui_definitions          = has_gui ? this.EmitGuiDefinitions(db) : []
+    var gui_definitions          = has_gui ? this.EmitGuiDefinitions(db)     : []
     var t256_definitions         = has_256 ? this.EmitBase256Definitions(db) : []
     var common_cterm_definitions = this.EmitCommonCtermDefinitions(db)
-    var t16_definitions          = has_16 ? this.EmitBase16Definitions(db) : []
-    var t8_definitions           = has_8 ? this.EmitBase8Definitions(db) : []
-    var t0_definitions           = has_0 ? this.EmitBase0Definitions(db) : []
+    var t16_definitions          = has_16  ? this.EmitBase16Definitions(db)  : []
+    var t8_definitions           = has_8   ? this.EmitBase8Definitions(db)   : []
+    var t0_definitions           = has_0   ? this.EmitBase0Definitions(db)   : []
 
     var must_generate_gui = has_gui && !empty(gui_definitions)
     var must_generate_256 = has_256 && !(empty(t256_definitions) && empty(t16_definitions))
-    var must_generate_16  = has_16 && !(empty(t16_definitions) && empty(t8_definitions))
-    var must_generate_8   = has_8 && !(empty(t8_definitions) && empty(t0_definitions))
-    var must_generate_0   = has_0 && !empty(t0_definitions)
+    var must_generate_16  = has_16  && !(empty(t16_definitions)  && empty(t8_definitions))
+    var must_generate_8   = has_8   && !(empty(t8_definitions)   && empty(t0_definitions))
+    var must_generate_0   = has_0   && !empty(t0_definitions)
 
     this.needs_t_Co = must_generate_256 || must_generate_16 || must_generate_8 || must_generate_0
 
@@ -658,19 +661,19 @@ export class Generator implements IGenerator
 
   def EmitDefaultLinkedGroups(db: Database): list<string>
     var output: list<string> = []
-    var Linked = db.LinkedGroup->Select((t) => t.Condition == 0)
+    var linked = this._cache.linked->get(0, []) # Default linked group definitions
 
     if this.theme.IsLightAndDark()
       var background       = db.background
       var other_background = background == 'dark' ? 'light' : 'dark'
       var OtherLinked      = this.theme.Db(other_background).LinkedGroup->Select((t) => t.Condition == 0)
 
-      output += Linked
-        ->Minus(OtherLinked) # TODO: use anti-join
+      output += linked
+        ->AntiEquiJoin(OtherLinked, {on: ['HiGroup', 'Condition']})
         ->Sort(CompareByHiGroupName)
         ->Transform((t) => this.LinkedGroupToString(t))
     else # Single background
-      output += Linked
+      output += linked
         ->Sort(CompareByHiGroupName)
         ->Transform((t) => this.LinkedGroupToString(t))
     endif
@@ -688,7 +691,7 @@ export class Generator implements IGenerator
     var CtermOverride = MakeCtermOverride(db, this.best_cterm)
     var TermOverride  = MakeTermOverride(db)
 
-    var output = db.BaseGroup->Select((t) => t.Condition == 0) # Default definitions
+    var output = this._cache.base->get(0, []) # Default definitions
       ->Sort(CompareByHiGroupName)
       ->Transform((t): string => this.BaseGroupToString(
         Instantiate(t)
@@ -705,35 +708,29 @@ export class Generator implements IGenerator
 
   def EmitGuiDefinitions(db: Database): list<string>
     var Instantiate = MakeInstantiator(db, 'gui')
+    var c = db.Condition.Lookup(
+      ['Environment', 'DiscrName', 'DiscrValue'],
+      ['gui',         '',           ''         ]
+    )
     var output = []
 
     this.Indent()
 
-    # Generate linked group overrides
-    output += db.LinkedGroup
-      ->SemiJoin(db.Condition, (t, u) => {
-        return t.Condition == u.Condition
-          && u.Environment == 'gui'
-          && empty(u.DiscrName)
-      })
-      ->Sort(CompareByHiGroupName)
-      ->Transform((t) => this.LinkedGroupToString(t))
+    if c isnot KEY_NOT_FOUND
+      # Generate linked group overrides
+      output += this._cache.linked->get(c.Condition, [])
+        ->Sort(CompareByHiGroupName)
+        ->Transform((t) => this.LinkedGroupToString(t))
 
-    # Base group overrides have already been merged into default definitions.
-    # The exception is when a default linked group is overridden with a base
-    # group: in this case, the overriding definition must be output
-    # separately.
-    output += db.BaseGroup
-      ->SemiJoin(db.Condition, (t, u) => {
-        return t.Condition == u.Condition
-          && u.Environment == 'gui'
-          && empty(u.DiscrName)
-      })
-      ->SemiJoin(
-        db.LinkedGroup, (t, u) => t.HiGroup == u.HiGroup && u.Condition == 0
-      )
-      ->Sort(CompareByHiGroupName)
-      ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
+      # Base group overrides have already been merged into default definitions.
+      # The exception is when a default linked group is overridden with a base
+      # group: in this case, the overriding definition must be output
+      # separately.
+      output += this._cache.base->get(c.Condition, [])
+        ->SemiJoin(this._cache.linked->get(0, []), (t, u) => t.HiGroup == u.HiGroup)
+        ->Sort(CompareByHiGroupName)
+        ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
+    endif
 
     # Emit discriminator-based definitions
     output += this.EmitDiscriminatorBasedDefinitions(db, 'gui')
@@ -746,53 +743,41 @@ export class Generator implements IGenerator
 
   def EmitTerminalDefinitions(db: Database, t_Co: string): list<string>
     var Instantiate = MakeInstantiator(db, t_Co)
+    var c = db.Condition.Lookup(
+      ['Environment', 'DiscrName', 'DiscrValue'],
+      [ t_Co,         '',          ''          ]
+    )
     var output = []
 
     this.Indent()
 
+    var t_Co_linked = this._cache.linked->get(c->get('Condition', -1), [])
+    var t_Co_base = this._cache.base->get(c->get('Condition', -1), [])
+
     # Generate linked group overrides
-    var linkedGroups = db.LinkedGroup
-      ->SemiJoin(db.Condition, (t, u) => {
-        return t.Condition == u.Condition
-          && u.Environment == t_Co
-          && empty(u.DiscrName)
-      })
+    output += t_Co_linked
       ->Sort(CompareByHiGroupName)
-
-    output += linkedGroups
       ->Transform((t) => this.LinkedGroupToString(t))
-
-    var BaseGroups = db.BaseGroup
-      ->SemiJoin(db.Condition, (t, u) => {
-        return t.Condition == u.Condition
-          && u.Environment == t_Co
-          && empty(u.DiscrName)
-      })
-    var baseGroups: Relation
 
     # best_cterm and '0' definitions were already merged into default
     # definitions. The exception is when the default definition is a linked
     # group and the override is a base group: in this case, the overriding
     # definition must be kept.
     if t_Co == this.best_cterm || t_Co == '0'
-      BaseGroups = BaseGroups
-        ->SemiJoin(
-          db.LinkedGroup, (t, u) => t.HiGroup == u.HiGroup && u.Condition == 0
-        )
-      baseGroups = Query(BaseGroups)
+      output += t_Co_base
+        ->SemiJoin(this._cache.linked->get(0, []), (t, u) => t.HiGroup == u.HiGroup)
+        ->Sort(CompareByHiGroupName)
+        ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
     else
       # All default base group definitions that are not overridden must be
       # generated, too.
-      baseGroups = db.BaseGroup->Select((t) => t.Condition == 0)
-        ->AntiEquiJoin(BaseGroups, {on: 'HiGroup'})
-        ->AntiEquiJoin(linkedGroups, {on: 'HiGroup'})
-        ->Union(BaseGroups)
+      output += this._cache.base->get(0, []) # Default definitions (Condition = 0)
+        ->AntiEquiJoin(t_Co_base,   {on: 'HiGroup'})
+        ->AntiEquiJoin(t_Co_linked, {on: 'HiGroup'})
+        ->Union(t_Co_base)
+        ->Sort(CompareByHiGroupName)
+        ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
     endif
-
-    # Generate base group overrides
-    output += baseGroups
-      ->Sort(CompareByHiGroupName)
-      ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
 
     # Emit discriminator-based definitions
     output += this.EmitDiscriminatorBasedDefinitions(db, t_Co)
@@ -865,28 +850,25 @@ export class Generator implements IGenerator
       discrName:   string,
       discrValue:  string
       ): list<string>
+    var c = db.Condition.Lookup(
+      ['Environment', 'DiscrName', 'DiscrValue'],
+      [ environment,   discrName,   discrValue ]
+    )
+
+    if c is KEY_NOT_FOUND
+      return []
+    endif
+
     var Instantiate = MakeInstantiator(db, environment)
     var output: list<string> = []
 
-    output += db.LinkedGroup
-    ->SemiJoin(db.Condition, (t, u) => {
-      return t.Condition == u.Condition
-        && u.Environment == environment
-        && u.DiscrName   == discrName
-        && u.DiscrValue  == discrValue
-    })
-    ->Sort(CompareByHiGroupName)
-    ->Transform((t) => this.LinkedGroupToString(t))
+    output += this._cache.linked->get(c.Condition, [])
+      ->Sort(CompareByHiGroupName)
+      ->Transform((t) => this.LinkedGroupToString(t))
 
-    output += db.BaseGroup
-    ->SemiJoin(db.Condition, (t, u) => {
-      return t.Condition == u.Condition
-        && u.Environment == environment
-        && u.DiscrName   == discrName
-        && u.DiscrValue  == discrValue
-    })
-    ->Sort(CompareByHiGroupName)
-    ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
+    output += this._cache.base->get(c.Condition, [])
+      ->Sort(CompareByHiGroupName)
+      ->Transform((t) => this.BaseGroupToString(Instantiate(t)))
 
     return output
   enddef
@@ -903,10 +885,10 @@ export class Generator implements IGenerator
   enddef
 
   def HookEndOfDiscriminatorBlock(
-      db: Database,
+      db:          Database,
       environment: string,
-      discrName: string,
-      discrValue: string
+      discrName:   string,
+      discrValue:  string
       ): list<string>
     return []
   enddef

@@ -1,5 +1,5 @@
 Options: creator=false timestamp=false backend=viml
 Environments: gui 256
-Include: test38c.txt
+Include: test38c.colortemplate
 
 ; vim: ft=colortemplate

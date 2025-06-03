@@ -6,6 +6,6 @@ Author:y
 Maintainer:w
 Background: dark
 Color:pink #F0E0F3 225
-Include: test39b.txt
+Include: test39b.colortemplate
 
 ; vim: ft=colortemplate

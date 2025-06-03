@@ -1,7 +1,7 @@
 Options: creator=false timestamp=false backend=viml
 Environments: gui 256
 Color: white #ffffff ~
-Include: test48c.txt
+Include: test48c.colortemplate
 Statement white black bold,underline
 
 ; vim: ft=colortemplate

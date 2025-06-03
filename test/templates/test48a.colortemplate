@@ -5,7 +5,7 @@ Author:y
 Maintainer:w
 Background:dark
 Color:black rgb(0,0,0) 16 Black
-Include: test48b.txt
+Include: test48b.colortemplate
 Comment black pink italic
 
 ; vim: ft=colortemplate

@@ -5,8 +5,8 @@ Short name:test49a
 Author:y
 Maintainer:w
 Background:dark
-Include: test49b.txt
-Include: test49c.txt
+Include: test49b.colortemplate
+Include: test49c.colortemplate
 Normal white black
 
 ; vim: ft=colortemplate

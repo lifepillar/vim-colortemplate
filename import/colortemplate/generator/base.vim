@@ -119,118 +119,6 @@ def ApplyFixForIssue15(t: Tuple): Tuple
   return t
 enddef
 
-# Return a function that takes an instantiated BaseGroup tuple (see
-# MakeInstantiator()) and returns the same tuple updated with values coming
-# from a corresponding gui overriding definition, if present. The tuple is
-# updated in-place.
-def MakeGuiOverride(db: Database): func(Tuple): Tuple
-  var guiDefinitions = Query(db.BaseGroup
-    ->SemiJoin(db.Condition, (t, u) => {
-      return t.Condition == u.Condition
-        && u.Environment == 'gui'
-        && empty(u.DiscrName) # && empty(t.DiscrValue) implied
-    })
-  )
-
-  return (t: Tuple): Tuple => {
-    var r = Query(guiDefinitions->Select((w) => w.HiGroup == t.HiGroup))
-
-    if empty(r)
-      return ApplyFixForIssue15(t)
-    endif
-
-    var u = r[0]
-
-    if !empty(u.Fg)
-      t.guifg = db.Color.Lookup(['Name'], [u.Fg]).GUI
-    endif
-
-    if !empty(u.Bg)
-      t.guibg = db.Color.Lookup(['Name'], [u.Bg]).GUI
-    endif
-
-    if !empty(u.Special)
-      t.guisp = db.Color.Lookup(['Name'], [u.Special]).GUI
-    endif
-
-    if !empty(u.Style)
-      t.gui   = u.Style
-
-      if !t->has_key('cterm')
-        t.cterm = u.Style # For capable terminals when termguicolors is set
-      endif
-    endif
-
-    return ApplyFixForIssue15(t)
-  }
-enddef
-
-# Same as MakeGuiOverride(), but for cterm* attributes
-def MakeCtermOverride(db: Database, cterm: string): func(Tuple): Tuple
-  var cterm_attr = str2nr(cterm) > 16 ? 'Base256' : 'Base16'
-
-  var CtermDefinitions = Query(db.BaseGroup
-    ->SemiJoin(db.Condition, (t, u) => {
-      return t.Condition == u.Condition
-        && u.Environment == cterm
-        && empty(u.DiscrName) # && empty(t.DiscrValue) implied
-    })
-  )
-
-  return (t: Tuple): Tuple => {
-    var r = Query(CtermDefinitions->Select((w) => w.HiGroup == t.HiGroup))
-
-    if empty(r)
-      return t
-    endif
-
-    var u = r[0]
-
-    if !empty(u.Fg)
-      t.ctermfg = db.Color.Lookup(['Name'], [u.Fg])[cterm_attr]
-    endif
-
-    if !empty(u.Bg)
-      t.ctermbg = db.Color.Lookup(['Name'], [u.Bg])[cterm_attr]
-    endif
-
-    if !empty(u.Special)
-      t.ctermul = db.Color.Lookup(['Name'], [u.Special])[cterm_attr]
-    endif
-
-    if !empty(u.Style)
-      t.cterm = u.Style
-    endif
-
-    return t
-  }
-enddef
-
-# Same as MakeGuiOverride(), but for term* attributes
-def MakeTermOverride(db: Database): func(Tuple): Tuple
-  var TermDefinitions = Query(db.BaseGroup
-    ->SemiJoin(db.Condition, (t, u) => {
-      return t.Condition == u.Condition
-        && u.Environment == '0'
-        && empty(u.DiscrName) # && empty(t.DiscrValue) implied
-    })
-  )
-
-  return (t: Tuple): Tuple => {
-    var r = Query(TermDefinitions->Select((w) => w.HiGroup == t.HiGroup))
-
-    if empty(r)
-      return t
-    endif
-
-    if !empty(r[0].Style)
-      t.term = r[0].Style
-    endif
-
-    return t
-  }
-enddef
-
 export interface IGenerator
   def Generate(): list<string>
 endinterface
@@ -687,9 +575,9 @@ export class Generator implements IGenerator
 
   def EmitDefaultBaseGroups(db: Database): list<string>
     var Instantiate   = MakeInstantiator(db, 'default', this.best_cterm)
-    var GuiOverride   = MakeGuiOverride(db)
-    var CtermOverride = MakeCtermOverride(db, this.best_cterm)
-    var TermOverride  = MakeTermOverride(db)
+    var GuiOverride   = this.MakeGuiOverride(db)
+    var CtermOverride = this.MakeCtermOverride(db, this.best_cterm)
+    var TermOverride  = this.MakeTermOverride(db)
 
     var output = this._cache.base->get(0, []) # Default definitions
       ->Sort(CompareByHiGroupName)
@@ -892,4 +780,110 @@ export class Generator implements IGenerator
       ): list<string>
     return []
   enddef
+
+  # Return a function that takes an instantiated BaseGroup tuple (see
+  # MakeInstantiator()) and returns the same tuple updated with values coming
+  # from a corresponding gui overriding definition, if present. The tuple is
+  # updated in-place.
+  def MakeGuiOverride(db: Database): func(Tuple): Tuple
+    var c = db.Condition.Lookup(
+      ['Environment', 'DiscrName', 'DiscrValue'],
+      ['gui',         '',          ''          ]
+    )
+    var guiDefinitions = this._cache.base->get(c->get('Condition', -1), [])
+
+    return (t: Tuple): Tuple => {
+      var r = Query(guiDefinitions->Select((w) => w.HiGroup == t.HiGroup))
+
+      if empty(r)
+        return ApplyFixForIssue15(t)
+      endif
+
+      var u = r[0]
+
+      if !empty(u.Fg)
+        t.guifg = db.Color.Lookup(['Name'], [u.Fg]).GUI
+      endif
+
+      if !empty(u.Bg)
+        t.guibg = db.Color.Lookup(['Name'], [u.Bg]).GUI
+      endif
+
+      if !empty(u.Special)
+        t.guisp = db.Color.Lookup(['Name'], [u.Special]).GUI
+      endif
+
+      if !empty(u.Style)
+        t.gui   = u.Style
+
+        if !t->has_key('cterm')
+          t.cterm = u.Style # For capable terminals when termguicolors is set
+        endif
+      endif
+
+      return ApplyFixForIssue15(t)
+    }
+  enddef
+
+  # Same as MakeGuiOverride(), but for cterm* attributes
+  def MakeCtermOverride(db: Database, cterm: string): func(Tuple): Tuple
+    var c = db.Condition.Lookup(
+      ['Environment', 'DiscrName', 'DiscrValue'],
+      [cterm,         '',          ''          ]
+    )
+    var ctermDefinitions = this._cache.base->get(c->get('Condition', -1), [])
+    var cterm_attr = str2nr(cterm) > 16 ? 'Base256' : 'Base16'
+
+    return (t: Tuple): Tuple => {
+      var r = Query(ctermDefinitions->Select((w) => w.HiGroup == t.HiGroup))
+
+      if empty(r)
+        return t
+      endif
+
+      var u = r[0]
+
+      if !empty(u.Fg)
+        t.ctermfg = db.Color.Lookup(['Name'], [u.Fg])[cterm_attr]
+      endif
+
+      if !empty(u.Bg)
+        t.ctermbg = db.Color.Lookup(['Name'], [u.Bg])[cterm_attr]
+      endif
+
+      if !empty(u.Special)
+        t.ctermul = db.Color.Lookup(['Name'], [u.Special])[cterm_attr]
+      endif
+
+      if !empty(u.Style)
+        t.cterm = u.Style
+      endif
+
+      return t
+    }
+  enddef
+
+  # Same as MakeGuiOverride(), but for term* attributes
+  def MakeTermOverride(db: Database): func(Tuple): Tuple
+    var c = db.Condition.Lookup(
+      ['Environment', 'DiscrName', 'DiscrValue'],
+      ['0',           '',          ''          ]
+    )
+    var termDefinitions = this._cache.base->get(c->get('Condition', -1), [])
+
+    return (t: Tuple): Tuple => {
+      var r = Query(termDefinitions->Select((w) => w.HiGroup == t.HiGroup))
+
+      if empty(r)
+        return t
+      endif
+
+      if !empty(r[0].Style)
+        t.term = r[0].Style
+      endif
+
+      return t
+    }
+  enddef
+
 endclass

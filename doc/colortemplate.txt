@@ -270,13 +270,19 @@ a space-separated sequence of one or more of the following values:
 >
 	gui, 256, 16, 8, 0.
 <
-`gui` is for GUI versions of Vim and for terminals supporting millions of
-colors (see |termguicolors|). The other values are for supporting terminals
-with the corresponding number of colors; `0`, in particular, is for when
-|t_Co| is set to zero (terminals not supporting colors).
+`gui` is for GUI versions of Vim. The other values are for supporting
+terminals with the corresponding number of colors; `0`, in particular, is for
+when |t_Co| is set to zero (terminals not supporting colors).
 
-For example, to generate code for gVim, true-color terminals and 256-color
-terminals, add this to your template:
+Note: given their hybrid nature, there is no explicit environment for
+true-color terminals: when a terminal supports millions of colors and
+|termguicolors| is set, Vim uses |highlight-guifg| and |highlight-guibg|
+attributes for the colors, but keeps using cterm* attributes for the rest
+(because |termguicolors| is, well, about colors). A template must be
+interpreted in the same way. More on that in |colortemplate-hi-groups|.
+
+To generate code for gVim, true-color terminals and 256-color terminals, add
+this to your template:
 >
 	Environments: gui 256
 <
@@ -370,7 +376,6 @@ For example:
 	SpellRare  white   black  s=cyan  bold,reverse
 	DiffAdd    orange  blue           reverse
 	SpellBad   white   black  s=red   underline
-
 <
 Note: a highlight group's name must appear at the start of a line, without any
 leading space. Other than that, spaces do not matter, and a highlight group
@@ -509,6 +514,43 @@ above:
 <
 Discriminator values can be integers, strings, or the values `true` and
 `false`. Strings must be double-quoted.
+
+Colortemplate implicitly defines two special discriminators called `t_Co` and
+`tgc`, respectively. `t_Co` is used by Colortemplate to define the various
+environments: it is never needed in templates, except for some advanced and
+uncommon use cases. The other discriminator is a flag that is set to true if
+|termguicolors| is set, and it is false otherwise. For an example of using
+`tgc`, see the end of this section.
+
+You cannot define discriminators with the same name as one of the predefined
+discriminators.
+
+When you are designing a color scheme for true-color terminals with
+|termguicolors| set, you must keep in mind that multiple definitions
+participate in making the attributes for a given highlight group. For example,
+consider this snippet:
+>
+	Environments: gui 256
+
+	Title      orange lightgreen italic
+	  /256     red    green      bold
+<
+With this definition, a terminal with `termguicolors` set will assign `Title`
+the default colors (an orange foreground and a lightgreen background), but
+with display `Title`s in boldface, not in italic.
+
+If you want to use the GUI attributes for true-color terminals, you must
+explicitly do so. The predefined `tgc` discriminator can be used for the
+purpose. For example:
+>
+	Environments: gui 256
+
+	Title         orange lightgreen italic
+	  /256        red    green      bold
+	    +tgc true omit   omit       italic
+<
+Here, the last clause will reset the style attribute to italic when
+|termguicolors| is set.
 
 ==============================================================================
 Verbatim blocks					*colortemplate-verbatim*

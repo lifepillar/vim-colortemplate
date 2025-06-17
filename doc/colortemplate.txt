@@ -812,8 +812,10 @@ in the order they should appear in the toolbar.
 	    'OutDir',
 	])
 <
-Beside the default entries shown above, arbitrary entries can be used. For
-each user-defined entry, a corresponding action should be defined using the
+For the complete list of predefined actions, see the "toolbaractions" setting.
+
+Beside the predefined entries, arbitrary entries can be used. For each
+user-defined item, a corresponding action should be defined using the
 "toolbaractions" setting.
 
 toolbaractions ~

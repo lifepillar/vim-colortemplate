@@ -1,0 +1,16 @@
+Options:      creator=false timestamp=false backend=vim9
+Full name:    Test 319
+Short name:   test319
+Author:       y
+Environments: gui 256 0
+Background:   dark
+
+Color: Blue             #5fd7ff        81             blue
+Color: Black            #000000        16             black
+
+#const bold = get(g:, 'bold', false)
+
+Normal Blue Black
+Normal/0+bold true omit omit bold
+
+; vim: ft=colortemplate

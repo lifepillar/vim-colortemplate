@@ -1,0 +1,14 @@
+Options:      creator=false timestamp=false backend=vim9
+Full name:    Test 318
+Short name:   test318
+Author:       y
+Environments: gui 256 8
+Background:   dark
+
+Color: Blue             #5fd7ff        81             blue
+Color: Black            #000000        16             black
+
+Normal Blue Black
+
+; vim: ft=colortemplate
+

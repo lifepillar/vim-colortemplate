@@ -123,7 +123,6 @@ export interface IGenerator
   def Generate(): list<string>
 endinterface
 
-# TODO: performance! (generating discriminators is especially slow)
 export class Generator implements IGenerator
   var theme:          Colorscheme
   var language:       string
@@ -406,11 +405,11 @@ export class Generator implements IGenerator
     var t8_definitions           = has_8   ? this.EmitBase8Definitions(db)   : []
     var t0_definitions           = has_0   ? this.EmitBase0Definitions(db)   : []
 
-    var must_generate_gui = has_gui && !empty(gui_definitions)
-    var must_generate_256 = has_256 && !(empty(t256_definitions) && empty(t16_definitions))
-    var must_generate_16  = has_16  && !(empty(t16_definitions)  && empty(t8_definitions))
-    var must_generate_8   = has_8   && !(empty(t8_definitions)   && empty(t0_definitions))
     var must_generate_0   = has_0   && !empty(t0_definitions)
+    var must_generate_8   = has_8   && (!empty(t8_definitions) || must_generate_0)
+    var must_generate_16  = has_16  && (!empty(t16_definitions) || must_generate_8 || must_generate_0)
+    var must_generate_256 = has_256 && (!empty(t256_definitions) || must_generate_16 || must_generate_8 || must_generate_0)
+    var must_generate_gui = has_gui && !empty(gui_definitions)
 
     this.needs_t_Co = must_generate_256 || must_generate_16 || must_generate_8 || must_generate_0
 

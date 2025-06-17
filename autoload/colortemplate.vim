@@ -381,6 +381,11 @@ var prevBackground: string = ''
 
 export def ShowColorscheme(bufnr: number)
   var sourcePath = ColorschemePath(bufnr)
+  var colorsName = path.Stem(sourcePath)
+
+  # This is necessary to make sure that the color scheme is found
+  # (see, for instamce, https://github.com/vim/vim/issues/17558).
+  execute $'set runtimepath^={fnameescape(b:colortemplate_outdir)}'
 
   if empty(prevColors)
     prevColors     = get(g:, 'colors_name', 'default')
@@ -388,7 +393,7 @@ export def ShowColorscheme(bufnr: number)
   endif
 
   try
-    execute 'source' sourcePath
+    execute 'colorscheme' colorsName
   catch
     Error(v:exception)
     return
@@ -397,8 +402,14 @@ enddef
 
 export def HideColorscheme()
   &background = prevBackground
-  execute 'colorscheme' prevColors
-  prevColors = ''
+
+  try
+    execute 'colorscheme' prevColors
+  catch
+    Error(v:exception)
+  finally
+    prevColors = ''
+  endtry
 enddef
 
 export def ViewSource(bufnr: number): bool

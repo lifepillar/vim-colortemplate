@@ -1,6 +1,7 @@
 vim9script
 
 import 'libpath.vim'                                     as path
+import autoload './colortemplate/config.vim'             as config
 import '../import/colortemplate/colorscheme.vim'         as colorscheme
 import '../import/colortemplate/colorstats.vim'          as stats
 import '../import/colortemplate/parser/v3.vim'           as parser
@@ -9,6 +10,7 @@ import '../import/colortemplate/generator/vim9.vim'      as vim9
 import '../import/colortemplate/generator/viml.vim'      as viml
 import '../import/colortemplate/generator/template.vim'  as colortemplate
 
+type  Config      = config.Config
 type  Colorscheme = colorscheme.Colorscheme
 type  Result      = parser.ParserResult
 const Parse       = parser.Parse
@@ -251,73 +253,33 @@ endclass
 # }}}
 
 # Toolbar {{{
-class Toolbar
-  public var entries: list<string>
-  public var actions: dict<string>
+export def ShowToolbar()
+  if Config.UseToolbar() && getbufvar('%', '&ft') == 'colortemplate' && expand('%:t') !~# '\m^_'
+    nunmenu WinBar
 
-  def new()
-    this.entries = [
-      'Build!',
-      'BuildAll!',
-      'Show',
-      'Hide',
-      'Check',
-      'Stats',
-      'Source',
-      'HiTest',
-      'OutDir',
-    ]
-    this.actions = extend({
-          \ 'Build!':     ':Colortemplate!<cr>',
-          \ 'BuildAll!':  ':ColortemplateAll!<cr>',
-          \ 'Check':      ':ColortemplateCheck<cr>',
-          \ 'Colortest':  ':ColortemplateTest<cr>',
-          \ 'HiTest':     ':ColortemplateHiTest<cr>',
-          \ 'Hide':       ':ColortemplateHide<cr>',
-          \ 'OutDir':     ':ColortemplateOutdir<cr>',
-          \ 'Show':       ':ColortemplateShow<cr>',
-          \ 'Source':     ':ColortemplateSource<cr>',
-          \ 'Stats':      ':ColortemplateStats<cr>',
-          \ }, get(g:, 'colortemplate_toolbar_actions', {}))
-  enddef
+    var n = 1
+    var actions = Config.ToolbarActions()
 
-  def Show()
-    if has('menu')
-        && get(g:, 'colortemplate_toolbar', true)
-        && getbufvar('%', '&ft') == 'colortemplate'
-        && expand('%:t') !~# '\m^_'
-      nunmenu WinBar
+    for name in Config.ToolbarItems()
+      var action = get(actions, name, ":echomsg 'Please define an action for this menu item (`:help colortemplate-toolbar`).'<cr>")
 
-      var n = 1
+      execute $'nnoremenu <silent> 1.{n} WinBar.{escape(name, '@\/ ')} {action}'
 
-      for entry in this.entries
-        if this.actions->has_key(entry)
-          execute printf(
-            'nnoremenu <silent> 1.%d WinBar.%s %s', n, escape(entry, '@\/ '), this.actions[entry]
-          )
-          ++n
-        endif
-      endfor
+      ++n
+    endfor
 
-      nnoremenu 1.99 WinBar.✕ :nunmenu WinBar<cr>
-    endif
-  enddef
+    nnoremenu 1.99 WinBar.✕ :nunmenu WinBar<cr>
+  endif
+enddef
 
-  def Hide()
-    if getbufvar('%', '&ft') == 'colortemplate'
-      nunmenu WinBar
-    endif
-  enddef
-endclass
+export def HideToolbar()
+  if has('menu') && getbufvar('%', '&ft') == 'colortemplate'
+    nunmenu WinBar
+  endif
+enddef
 # }}}
 
 # Public {{{
-const toolbar = Toolbar.new()
-
-export def GetToolbar(): Toolbar
-  return toolbar
-enddef
-
 export def ColorTest(bufnr: number)
   ShowColorscheme(bufnr)
   runtime syntax/colortest.vim
@@ -333,6 +295,44 @@ export def Validate(bufnr: number)
     runtime colors/tools/check_colors.vim
     input('[Colortemplate] Press a key to continue')
     wincmd c
+  endif
+enddef
+
+export def SetOutputDir(dirpath: string): bool
+  if !IsColortemplateBuffer('%')
+    return Error('Directory can be set only in Colortemplate buffers')
+  endif
+
+  var newdir = path.Expand(dirpath)
+
+  if !path.IsDirectory(newdir)
+    return Error(printf(
+      'Directory does not exist or path is not a directory: %s', newdir
+    ))
+  elseif !path.IsWritable(newdir)
+    return Error('Directory is not writable')
+  endif
+
+  b:colortemplate_outdir = newdir
+
+  return true
+enddef
+
+export def InitOutputDir(force = false)
+  if force || empty(get(b:, 'colortemplate_outdir', ''))
+    b:colortemplate_outdir = ''  # Ensure that the variable exists
+
+    var outdir = expand('%:p:h')
+
+    if empty(outdir)
+      return
+    endif
+
+    if path.Basename(outdir) =~? '\m^\%(color\)\=templates\=$'
+      outdir = path.Parent(outdir)
+    endif
+
+    colortemplate.SetOutputDir(outdir)
   endif
 enddef
 
@@ -354,26 +354,6 @@ export def AskOutputDir(): string
   SetOutputDir(newdir)
 
   return b:colortemplate_outdir
-enddef
-
-export def SetOutputDir(dirpath: string): bool
-  if !IsColortemplateBuffer('%')
-    return Error('Directory can be set only in Colortemplate buffers')
-  endif
-
-  var newdir = path.Expand(dirpath)
-
-  if !path.IsDirectory(newdir)
-    return Error(printf(
-      'Directory does not exist or path is not a directory: %s', newdir
-    ))
-  elseif !path.IsWritable(newdir)
-    return Error('Directory is not writable')
-  endif
-
-  b:colortemplate_outdir = newdir
-
-  return true
 enddef
 
 var prevColors:     string = ''

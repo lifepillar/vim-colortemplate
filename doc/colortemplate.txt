@@ -270,7 +270,7 @@ a space-separated sequence of one or more of the following values:
 >
 	gui, 256, 16, 8, 0.
 <
-`gui` is for GUI versions of Vim and for terminaml supporting millions of
+`gui` is for GUI versions of Vim and for terminals supporting millions of
 colors (see |termguicolors|). The other values are for supporting terminals
 with the corresponding number of colors; `0`, in particular, is for when
 |t_Co| is set to zero (terminals not supporting colors).
@@ -526,7 +526,7 @@ respectively. For example:
 >
 	verbatim
 	g:terminal_color_@16black = '@black'
-        endverbatim
+	endverbatim
 <
 might generate the following code:
 >
@@ -704,6 +704,7 @@ Color difference ranges between 0.0 (no difference) and 765.0 (maximum
 difference). It is recommended that, at least for the Normal highlight group,
 the difference is 500 or more.
 
+
 Brightness difference ranges between 0.0 (no difference) and 255.0 (maximum
 difference). At least for the Normal highlight group, the difference should be
 no less than 125.
@@ -711,11 +712,11 @@ no less than 125.
 ==============================================================================
 Colortemplate mappings				*colortemplate-mappings*
 
-If you do not want Colortemplate to define any mapping, set
-|g:colortemplate_no_mappings| to |true|. Colortemplate also honours
-|g:no_plugin_maps|.
+All the mappings defined by Colortemplate are buffer-local. If you do not want
+Colortemplate to define any mapping, set "mappings" to |false| in
+|g:colortemplate_options|.
 
-Note that all mappings defined by Colortemplate are buffer-local.
+Colortemplate also honours |g:no_plugin_maps|.
 
 						*colortemplate-ga*
 [count]ga		If the cursor is on a `Color` line, display some
@@ -724,14 +725,14 @@ Note that all mappings defined by Colortemplate are buffer-local.
 
 						*colortemplate-gl*
 gl			Toggle the display of highlight group information
-                        under the under the cursor. To choose what display to
-                        use, set |g:colortemplate_higroup_popup| and
-                        |g:colortemplate_higroup_command_line|.
+			under the under the cursor. To choose what display to
+			use, set "higrouppopup" and "higroupcommandline" in
+			|g:colortemplate_options|.
 
 						*colortemplate-gs*
 gs			Open the style picker. For this to work, 
-                        the StylePicker plugin must be available
-                        (https://github.com/lifepillar/vim-stylepicker).
+			the StylePicker plugin must be available
+			(https://github.com/lifepillar/vim-stylepicker).
 
 						*colortemplate-gx*
 [count]gx		If the cursor is on a `Color` line, replace `~` with
@@ -739,9 +740,9 @@ gs			Open the style picker. For this to work,
 
 						*colortemplate-gy*
 [count]gy		If the cursor is on a `Color` line, show the xterm
-                        approximations of the color at perceptual distance
-                        (CIELAB ΔE*) at most [count] from the GUI value in the
-                        command line.
+			approximations of the color at perceptual distance
+			(CIELAB ΔE*) at most [count] from the GUI value in the
+			command line.
 
 						*colortemplate-ctrl-l*
 CTRL-L			Show/redraw the window toolbar and redraw the screen.
@@ -750,47 +751,56 @@ CTRL-L			Show/redraw the window toolbar and redraw the screen.
 ==============================================================================
 Colortemplate options				*colortemplate-options*
 
-					*g:colortemplate_fancy_import*
-When importing a color scheme with |ColortemplateImport|, Colortemplate by
-default generates random fancy names for colors. Set this to |false| if you
-prefer dull names such as Color0001, Color0002, etc. instead.
+Colortemplate can be customized by defining a global dictionary of options,
+which is typically done in your |vimrc|. For instance:
 >
-	g:colortemplate_fancy_import = true
+	g:colortemplate_options = {
+	  higrouppopup: false,
+	  toolbaritems: ['Build!', 'Show', 'Hide', 'Stats'],
+	}
 <
-					*g:colortemplate_higroup_command_line*
-When set to |true|, Colortemplate displays the details of the highlight group
-under the cursor in the command line, when requested to do so (see |gl|).
->
-	g:colortemplate_higroup_command_line = true
-<
-					*g:colortemplate_higroup_popup*
-When |true|, Colortemplate displays the details of the highlight group under
-the mouse pointer in a popup window, when requested to do so (see |gl|).
->
-	g:colortemplate_higroup_popup = true
-<
-					*g:colortemplate_no_mappings*
-Set to |true| to suppress mappings.
->
-	g:colortemplate_no_mappings = false
-<
-					*b:colortemplate_outdir*
+The possible keys for the dictionary are described below.
+
+						*b:colortemplate_outdir*
 The directory for the generated color scheme and optional auxiliary files.
 This is set automatically when opening a template and is usually set to
 a reasonable default. You may view and change the current value of this option
 with |:ColortemplateOutdir| or by clicking on "OutDir" in the window toolbar.
 
-					*g:colortemplate_toolbar*
-Set to |false| if you do not want to use the toolbar.
+						*g:colortemplate_options*
+A dictionary of settings to configure Colortemplate. These are the available
+settings:
+
+fancynames ~
+When importing a color scheme with |ColortemplateImport|, Colortemplate by
+default generates random fancy names for colors. Set this to |false| if you
+prefer dull names such as Color0001, Color0002, etc. instead.
 >
-	g:colortemplate_toolbar = true
+	g:colortemplate_options = {fancyname: true}
 <
-					*g:colortemplate_toolbar_items*
-A List with the names of the menu entries to be used in the window toolbar.
-Each menu entry must have a corresponding definition in
-|g:colortemplate_toolbar_actions|.
+higroupcommandline ~
+When set to |true|, Colortemplate displays some information about the
+highlight group under the cursor in the command line when requested to do so
+(see |gl|).
 >
-	g:colortemplate_toolbar_items = [
+	g:colortemplate_options = {higroupcommandline: true}
+<
+higrouppopup ~
+When |true|, Colortemplate displays some information about the highlight group
+under the mouse pointer in a popup window when requested to do so (see |gl|).
+>
+	g:colortemplate_options = {higrouppopup: true}
+<
+mappings ~
+Set to |false| to prevent Colortemplate to define any mappings.
+>
+	g:colortemplate_options = {mappings: true}
+<
+toolbaritems ~
+A |list| with the names of the menu entries to be used in the window toolbar,
+in the order they should appear in the toolbar.
+>
+	g:colortemplate_options = {toolbaritems: [
 	    'Build!',
 	    'BuildAll!',
 	    'Show',
@@ -802,17 +812,44 @@ Each menu entry must have a corresponding definition in
 	    'OutDir',
 	])
 <
-					*g:colortemplate_toolbar_actions*
-A Dictionary mapping menu entries to the corresponding commands. For instance:
+Beside the default entries shown above, arbitrary entries can be used. For
+each user-defined entry, a corresponding action should be defined using the
+"toolbaractions" setting.
+
+toolbaractions ~
+A |dict| defining the commands to be executed for each menu entry.
 >
-	g:colortemplate_toolbar_actions = {
-	    'Build!': ':Colortemplate!<cr>',
-            'StylePicker': ':StylePicker<cr>',
+	g:colortemplate_options = {toolbaractions: {
+	  'Build!':    ':Colortemplate!<cr>',
+	  'BuildAll!': ':ColortemplateAll!<cr>',
+	  'Check':     ':ColortemplateCheck<cr>',
+	  'Colortest': ':ColortemplateTest<cr>',
+	  'HiTest':    ':ColortemplateHiTest<cr>',
+	  'Hide':      ':ColortemplateHide<cr>',
+	  'OutDir':    ':ColortemplateOutdir<cr>',
+	  'Show':      ':ColortemplateShow<cr>',
+	  'Source':    ':ColortemplateSource<cr>',
+	  'Stats':     ':ColortemplateStats<cr>',
 	}
 <
 This option only defines the actions associated to each label. For a menu
 entry to actually be visible in the toolbar, it must be listed in
-|g:colortemplate_toolbar_items| as well.
+"toolbaritems", too.
+
+It is possible to override the default actions as well as defining new
+actions. For example:
+>
+	g:colortemplate_options = {
+	  toolbaritems = ['Build!', 'Stats', 'StylePicker'],
+	  toolbaractions: {
+	    'Stats':       ':echomsg "No stats!"',
+	    'StylePicker': ':StylePicker<cr>',
+	}
+<
+With this settings, the toolbar will display three items. The first item will
+build the color scheme as usual, the second item will echo "No stats!", and
+the last, custom, item will open the style picker (if the StylePicker plugin
+is installed).
 
 ==============================================================================
 Colortemplate commands				*colortemplate-commands*
@@ -874,15 +911,18 @@ Window toolbar					*colortemplate-toolbar*
 
 The window toolbar (|WinBar|) provides a quick way to execute the most common
 tasks, streamlining your workflow. The toolbar appears automaticaly when you
-open a template file whose name does not start with an underscore.
+open a template file whose name does not start with an underscore. There is no
+toolbar if Vim is compiled without |+menu|.
 
 A close button is present at the rightmost end of the toolbar if you wish to
 close it. To show a hidden toolbar or refresh the current toolbar, press
-CTRL-L. If you do not want the toolbar, unset |g:colortemplate_toolbar|.
+CTRL-L. 
 
-The menu entries and the corresponding actions may be customised with
-|g:colortemplate_toolbar_items| and |g:colortemplate_toolbar_actions|. By
-default, the window toolbar has the following menu entries:
+The menu entries and the corresponding actions may be customised with the
+"toolbaritems" and "toolbaractions" settings (see |g:colortemplate_options|).
+If you do not want the toolbar, set "toolbaritems" to an empty list.
+
+By default, the window toolbar has the following menu entries:
 
 Build! ~
 Execute |:Colortemplate!|
@@ -914,6 +954,9 @@ Show the current output directory and prompt for a new path. See
 
 ==============================================================================
 Colortemplate functions				*colortemplate-functions*
+
+				*colortemplate#config#Settings()*
+Return Colortemplate's settings' dictionary.
 
 				*colortemplate#util#ToggleHighlightInfo()*
 Toggle the display of highlight group information for the text under the

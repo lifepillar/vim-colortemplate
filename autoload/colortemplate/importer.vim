@@ -6,6 +6,9 @@ import 'libcolor.vim'  as libcolor
 import '../../import/colortemplate/colorscheme.vim'        as colorscheme
 import '../../import/colortemplate/generator/template.vim' as generator
 import '../../import/colortemplate/generator/base.vim'     as base
+import autoload './config.vim'                             as config
+
+type Config = config.Config
 
 const Extend           = ra.Extend
 const EquiJoin         = ra.EquiJoin
@@ -185,12 +188,12 @@ class NameGenerator
   def NextColorName(): string
     ++this._n
 
-    if get(g:, 'colortemplate_fancy_import', true)
+    if Config.FancyNames()
       if this._n <= len(this._fancyNames)
         return this._fancyNames[this._n - 1]
       endif
 
-      Fatal('Too many colors. Try setting g:colortemplate_fancy_import to false')
+      Fatal('Too many colors. Try setting "fancynames" to false (`:help colortemplate-options`).')
     endif
 
     return 'Color' .. repeat('0', float2nr(4 - log10(this._n + 1))) .. this._n

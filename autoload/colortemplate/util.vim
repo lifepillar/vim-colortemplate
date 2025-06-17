@@ -3,6 +3,9 @@ vim9script
 import 'libcolor.vim'                             as libcolor
 import 'libparser.vim'                            as libparser
 import '../../import/colortemplate/parser/v3.vim' as parser
+import autoload './config.vim'                    as config
+
+type Config = config.Config
 
 const Approximate  = libcolor.Approximate
 const Hex2Rgb      = libcolor.Hex2Rgb
@@ -231,7 +234,7 @@ export def BalloonExpr(): string # See :help popup_beval_example
 enddef
 
 export def ToggleHighlightInfo()
-  if get(g:, 'colortemplate_higroup_popup', true)
+  if Config.HiGroupPopup()
     if sBalloonID > 0 && popup_getpos(sBalloonID) != null_dict
       popup_close(sBalloonID)
     endif
@@ -245,7 +248,7 @@ export def ToggleHighlightInfo()
     endif
   endif
 
-  if get(g:, 'colortemplate_higroup_command_line', true)
+  if Config.HiGroupCommandLine()
     if exists("#colortemplate_syn_info")
       autocmd! colortemplate_syn_info
       augroup! colortemplate_syn_info

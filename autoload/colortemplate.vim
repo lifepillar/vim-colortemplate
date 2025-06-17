@@ -381,6 +381,10 @@ export def ShowColorscheme(bufnr: number)
 enddef
 
 export def HideColorscheme()
+  if empty(prevColors)
+    return
+  endif
+
   &background = prevBackground
 
   try

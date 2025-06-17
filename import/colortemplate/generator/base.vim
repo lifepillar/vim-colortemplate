@@ -710,12 +710,22 @@ export class Generator implements IGenerator
       var first = true
 
       for condition in conditions
+        var clause = 'elseif '
+
         if first
-          output->this.Add($'if {this.var_prefix}{discrName} == {condition.DiscrValue}')
+          clause = 'if '
           first = false
-        else
-          output->this.Add($'elseif {this.var_prefix}{discrName} == {condition.DiscrValue}')
         endif
+
+        if condition.DiscrValue == 'true'
+          clause ..= $'{this.var_prefix}{discrName}'
+        elseif condition.DiscrValue == 'false'
+          clause ..= $'!{this.var_prefix}{discrName}'
+        else
+          clause ..= $'{this.var_prefix}{discrName} == {condition.DiscrValue}'
+        endif
+
+        output->this.Add(clause)
 
         this.Indent()
 

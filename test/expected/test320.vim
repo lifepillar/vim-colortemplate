@@ -19,7 +19,7 @@ if t_Co >= 8
 endif
 
 if t_Co >= 0
-  if bold == true
+  if bold
     hi Normal term=bold
   endif
   finish

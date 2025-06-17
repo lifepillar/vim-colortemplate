@@ -863,21 +863,31 @@ Create a template document in a new buffer by extracting information from the
 currently defined highlight groups. A typical workflow to import an existing
 color scheme is as follows:
 
-1. Create a minimal |vimrc| with the following content:
+1. Create a |vimrc| with the following content:
 >
-	syntax on
+	set nocompatible
 	set viminfofile=NONE
+	filetype on
+	filetype plugin on
+	filetype indent on
+	syntax on
+	set mouse=a
+	set runtimepath+=~/.vim/pack/devel/start/colortemplate
+
+	# Optional, only if the color scheme is not already in rtp:
+	# set runtimepath+=/path/to/some/colorscheme-dir
 <
-   Using a minimal vimrc will ensure that most "extra" highlight group
-   definitions (from plugins, etc.) will not be imported.
-2. Run `vim -Nu vimrc` where `vimrc` is the script above;
+    Using a minimal vimrc will ensure that most "extra" highlight group
+    definitions (from plugins, etc.) will not be imported. Adjust the path
+    above depending on where Colortemplate is located.
+2. Run `vim -u vimrc` where `vimrc` is the script above.
 3. Choose a color scheme with |:colorscheme|.
 4. Execute |:ColortemplateImport|.
 
-Note: although the generated template should compile out of the box and
-faithfully reproduce your currently active color scheme, keep in mind that
-this function is only meant to facilitate the initial scaffolding of a new
-template.
+Note: although the generated template will compile out of the box in most
+cases and will faithfully reproduce your currently active color scheme, keep
+in mind that this function is only meant to facilitate the initial scaffolding
+of a new template.
 
 Buffer-local commands ~
 						*:Colortemplate[!]*

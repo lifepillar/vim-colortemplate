@@ -411,7 +411,7 @@ export class Generator implements IGenerator
     var must_generate_256 = has_256 && (!empty(t256_definitions) || must_generate_16 || must_generate_8 || must_generate_0)
     var must_generate_gui = has_gui && !empty(gui_definitions)
 
-    this.needs_t_Co = must_generate_256 || must_generate_16 || must_generate_8 || must_generate_0
+    this.needs_t_Co = this.needs_t_Co || must_generate_256 || must_generate_16 || must_generate_8 || must_generate_0
 
     if must_generate_gui
       gui_definitions = this.StartGuiBlock() + gui_definitions + this.EndGuiBlock()

@@ -1,0 +1,21 @@
+Options:      creator=false timestamp=false backend=vim9
+Full name:    Test 321
+Short name:   test321
+Author:       y
+Environments: gui 256
+Background:   any
+
+Color: White #ffffff 16 white
+Color: Black #000000 231 black
+
+Background: dark
+#const flag = get(g:, 'flag', true)
+Normal Black White
+Comment Black White /256+flag false omit omit bold
+
+Background: light
+Normal White Black
+Comment White Black
+
+; vim: ft=colortemplate
+

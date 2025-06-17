@@ -136,6 +136,7 @@ export class Generator implements IGenerator
   var space:          string
   var discriminatorNames: list<string> = []
   var needs_t_Co = false
+  var needs_tgc  = false
 
   var _cache: dict<any> = {}
 
@@ -191,15 +192,14 @@ export class Generator implements IGenerator
     this.ResetIndent()
 
     header += this.EmitHeader()
-
     output += this.EmitCommonLinkedGroups()
     output += this.Emit('dark')
     output += this.Emit('light')
     output += this.EmitFooter()
 
-    var t_Co = this.needs_t_Co ? this.Emit_t_Co() : []
+    var special_vars = this.EmitSpecialVars() # t_Co and tgc
 
-    return header + t_Co + output
+    return header + special_vars + output
   enddef
 
   def Add(output: list<string>, text: string)
@@ -229,6 +229,10 @@ export class Generator implements IGenerator
       output->add(this.comment_symbol .. printf('%s%s', space, items[i]))
       ++i
     endwhile
+  enddef
+
+  def DiscriminatorToString(t: Tuple): string
+    return $'{this.space}{this.const_keyword}{this.var_prefix}{t.DiscrName} = {t.Definition}'
   enddef
 
   def LinkedGroupToString(t: Tuple): string
@@ -411,8 +415,6 @@ export class Generator implements IGenerator
     var must_generate_256 = has_256 && (!empty(t256_definitions) || must_generate_16 || must_generate_8 || must_generate_0)
     var must_generate_gui = has_gui && !empty(gui_definitions)
 
-    this.needs_t_Co = this.needs_t_Co || must_generate_256 || must_generate_16 || must_generate_8 || must_generate_0
-
     if must_generate_gui
       gui_definitions = this.StartGuiBlock() + gui_definitions + this.EndGuiBlock()
     endif
@@ -478,8 +480,10 @@ export class Generator implements IGenerator
   enddef
 
   def StartGuiBlock(): list<string>
+    this.needs_tgc  = true
+
     return [
-      $"{this.space}if has('gui_running') || (has('termguicolors') && &termguicolors)",
+      $"{this.space}if has('gui_running') || {this.var_prefix}tgc",
     ]
   enddef
 
@@ -488,6 +492,16 @@ export class Generator implements IGenerator
   enddef
 
   def StartTermBlock(t_Co: string): list<string>
+    this.needs_t_Co = true
+
+    if t_Co == this.best_cterm
+      this.needs_tgc  = true
+
+      return [
+        $"{this.space}if {this.var_prefix}tgc || {this.var_prefix}t_Co >= {t_Co}",
+      ]
+    endif
+
     return [
       $"{this.space}if {this.var_prefix}t_Co >= {t_Co}",
     ]
@@ -535,9 +549,9 @@ export class Generator implements IGenerator
 
   def EmitDiscriminators(db: Database): list<string>
     var output = db.Discriminator
-      ->Filter((t) => !empty(t.DiscrName))
+      ->Filter((t) => !empty(t.DiscrName) && t.DiscrName != 't_Co' && t.DiscrName != 'tgc')
       ->SortBy('DiscrNum')
-      ->Transform((t) => $'{this.space}{this.const_keyword}{this.var_prefix}{t.DiscrName} = {t.Definition}')
+      ->Transform((t) => this.DiscriminatorToString(t))
 
     if !empty(output)
       output->add('')
@@ -707,6 +721,14 @@ export class Generator implements IGenerator
         continue
       endif
 
+      if discrName == 't_Co'
+        this.needs_t_Co = true
+      endif
+
+      if discrName == 'tgc'
+        this.needs_tgc = true
+      endif
+
       var first = true
 
       for condition in conditions
@@ -770,11 +792,24 @@ export class Generator implements IGenerator
     return output
   enddef
 
-  def Emit_t_Co(): list<string>
-    return [
-      $"{this.const_keyword}{this.var_prefix}t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)",
-      '',
-    ]
+  def EmitSpecialVars(): list<string>
+    var output: list<string> = []
+
+    if this.needs_t_Co
+      var t = this.theme.dark.Discriminator.Lookup(['DiscrName'], ['t_Co'])
+      output->add(this.DiscriminatorToString(t))
+    endif
+
+    if this.needs_tgc
+      var t = this.theme.dark.Discriminator.Lookup(['DiscrName'], ['tgc'])
+      output->add(this.DiscriminatorToString(t))
+    endif
+
+    if !empty(output)
+      output->add('')
+    endif
+
+    return output
   enddef
 
   def HookEndOfEnvironment(db: Database, environment: string): list<string>

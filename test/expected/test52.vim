@@ -8,10 +8,11 @@ hi clear
 let g:colors_name = 'test52'
 
 let s:t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+let s:tgc = has('termguicolors') && &termguicolors
 
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=15 ctermbg=0 cterm=NONE
 
-if s:t_Co >= 256
+if s:tgc || s:t_Co >= 256
   finish
 endif
 

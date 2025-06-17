@@ -10,11 +10,12 @@ hi clear
 g:colors_name = 'test312'
 
 const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+const tgc = has('termguicolors') && &termguicolors
 
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=255 ctermbg=16 cterm=NONE term=NONE
 hi StatusLineTermNC guifg=#ffffff guibg=#000000 guisp=NONE gui=reverse ctermfg=255 ctermbg=16 cterm=reverse term=reverse
 
-if t_Co >= 256
+if tgc || t_Co >= 256
   finish
 endif
 

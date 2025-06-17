@@ -109,6 +109,14 @@ def Test_Vim9Generator_315()
   AssertBuild('test315')
 enddef
 
+def Test_Vim9Generator_316()
+  AssertBuild('test316')
+enddef
+
+def Test_Vim9Generator_317()
+  AssertBuild('test317')
+enddef
+
 def Test_Vim9Generator_318()
   AssertBuild('test318')
 enddef

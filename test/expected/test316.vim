@@ -1,24 +1,27 @@
 vim9script
 
-# Name:         Test 318
+# Name:         Test 316
 # Author:       y
 
 set background=dark
 
 hi clear
-g:colors_name = 'test318'
+g:colors_name = 'test316'
 
 const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
 const tgc = has('termguicolors') && &termguicolors
 
-hi Normal guifg=#5fd7ff guibg=#000000 guisp=NONE gui=NONE ctermfg=81 ctermbg=16 cterm=NONE
+hi Visual guifg=NONE guibg=#003f5f guisp=NONE gui=NONE ctermfg=81 ctermbg=16 cterm=reverse
 
 if tgc || t_Co >= 256
+  if tgc
+    hi Visual cterm=NONE
+  endif
   finish
 endif
 
 if t_Co >= 8
-  hi Normal ctermfg=blue ctermbg=black cterm=NONE
+  hi Visual ctermfg=blue ctermbg=black cterm=reverse
   finish
 endif
 

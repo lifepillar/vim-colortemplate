@@ -99,16 +99,6 @@ def In(item: any, items: list<any>): bool
 enddef
 
 # Integrity constraints {{{
-def IsValidDiscriminator(t: Tuple): bool
-  if t.DiscrName == 't_Co'
-    FailedMsg("'t_Co' is a reserved name and cannot be used as a discriminator")
-
-    return false
-  endif
-
-  return true
-enddef
-
 def IsValidColorName(t: Tuple): bool
   if t.Name == 'none' ||
      t.Name == 'fg'   ||
@@ -144,7 +134,7 @@ export class Database
   public var rawverbatimtext: list<string> = []  # Non interpolated
   public var verbatimtext:    list<string> = []  # After interpolation
 
-  var _nextDiscriminatorNum = 0
+  var _nextDiscriminatorNum = 2
   var _nextConditionNum = 0
 
   # Supported environments. «default» is special because it denotes the
@@ -217,10 +207,27 @@ export class Database
     DiscrName:     Str,
     DiscrNum:      Int,
     RawDefinition: Str, # Not interpolated
-    Definition:    Str,    # After interpolation
+    Definition:    Str, # After interpolation
   }, [['DiscrName'], ['DiscrNum']]
   ).InsertMany([
-    {DiscrName: '', RawDefinition: '', Definition: '', DiscrNum: 0},
+  {
+    DiscrName:     '',
+    RawDefinition: '',
+    Definition:    '',
+    DiscrNum:      0,
+  },
+  {
+    DiscrName:     't_Co',
+    RawDefinition: "has('gui_running') ? 16777216 : str2nr(&t_Co)",
+    Definition:    "has('gui_running') ? 16777216 : str2nr(&t_Co)",
+    DiscrNum:      1,
+  },
+  {
+    DiscrName:     'tgc',
+    RawDefinition: "has('termguicolors') && &termguicolors",
+    Definition:    "has('termguicolors') && &termguicolors",
+    DiscrNum:      2,
+  },
   ])
 
   # A condition determines the context for a highlight group definition to be
@@ -273,7 +280,6 @@ export class Database
       throw $'Invalid background: "{this.background}". Please use "dark" or "light".'
     endif
 
-    this.Discriminator.OnInsertCheck('Valid discriminator', IsValidDiscriminator)
     this.Color.OnInsertCheck('Valid color', IsValidColorName)
     this.Color.OnInsertCheck('Valid 256-based color', IsValidBase256Value)
 

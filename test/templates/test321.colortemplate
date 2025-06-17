@@ -5,8 +5,8 @@ Author:       y
 Environments: gui 256
 Background:   any
 
-Color: White #ffffff 16 white
-Color: Black #000000 231 black
+Color: White #ffffff 231 white
+Color: Black #000000  16 black
 
 Background: dark
 #const flag = get(g:, 'flag', true)

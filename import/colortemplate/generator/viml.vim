@@ -70,10 +70,6 @@ export class Generator extends base.Generator
       output += this.EmitCheckBugBg234(db, environment)
     endif
 
-    if environment->NotIn(['default', 'gui'])
-      output += mapnew(this.discriminatorNames, (_, name) => $'{this.space}unlet s:{name}')
-    endif
-
     return output
   enddef
 

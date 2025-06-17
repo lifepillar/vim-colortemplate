@@ -10,19 +10,20 @@ hi clear
 g:colors_name = 'test310'
 
 const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+const tgc = has('termguicolors') && &termguicolors
 
 const visibility = get(g:, 'visibility', 'normal')
 
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=255 ctermbg=16 cterm=NONE term=NONE
 hi SpellCap guifg=#6c71c4 guibg=NONE guisp=#6c71c4 gui=undercurl ctermfg=61 ctermbg=NONE cterm=underline term=bold,underline
 
-if has('gui_running') || (has('termguicolors') && &termguicolors)
+if has('gui_running') || tgc
   if visibility == "high"
     hi SpellCap guifg=#6c71c4 guibg=#eee8d5 guisp=#dc322f gui=reverse,undercurl cterm=reverse,undercurl
   endif
 endif
 
-if t_Co >= 256
+if tgc || t_Co >= 256
   if visibility == "high"
     hi SpellCap ctermfg=61 ctermbg=254 cterm=reverse,underline
   elseif visibility == "low"

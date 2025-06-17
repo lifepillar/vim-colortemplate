@@ -38,15 +38,24 @@ def Test_Colorscheme_Database()
     'default',
     db.Environment.Lookup(['Environment'], ['default']).Environment
   )
+
   # Aliases for colors must be predefined
   assert_equal(['', 'bg', 'fg', 'none', 'ul'],
     db.Color->Project('Name')->SortBy('Name')->Transform((t) => t.Name)
   )
+
   # A default empty discriminator must be predefined
   assert_equal(
-    [{DiscrName: '', RawDefinition: '', Definition: '', DiscrNum: 0}],
-    db.Discriminator.Instance()
+    {DiscrName: '', RawDefinition: '', Definition: '', DiscrNum: 0},
+    db.Discriminator.Lookup(['DiscrNum'], [0])
   )
+
+  # A special `t_Co` discriminator must be predefined
+  assert_false(db.Discriminator.Lookup(['DiscrName'], ['t_Co']) is KEY_NOT_FOUND)
+
+  # A special `tgc` discriminator must be predefined
+  assert_false(db.Discriminator.Lookup(['DiscrName'], ['tgc']) is KEY_NOT_FOUND)
+
   # A default condition must be predefined
   assert_equal(
     [{Condition: 0, Environment: 'default', DiscrName: '', DiscrValue: ''}],

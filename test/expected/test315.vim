@@ -9,10 +9,11 @@ hi clear
 g:colors_name = 'test315'
 
 const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+const tgc = has('termguicolors') && &termguicolors
 
 hi Comment guifg=#ff8ad8 guibg=#ffffff guisp=NONE gui=italic ctermfg=238 ctermbg=231 cterm=bold term=bold,italic
 
-if t_Co >= 256
+if tgc || t_Co >= 256
   finish
 endif
 

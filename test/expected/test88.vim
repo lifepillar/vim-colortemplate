@@ -8,6 +8,7 @@ hi clear
 let g:colors_name = 'test88'
 
 let s:t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+let s:tgc = has('termguicolors') && &termguicolors
 
 hi Normal guifg=#ffffff guibg=#000000 guisp=NONE gui=NONE ctermfg=255 ctermbg=16 cterm=NONE
 
@@ -15,7 +16,7 @@ if !has('patch-8.0.0616') && !has('gui_running') " Fix for Vim bug
   set background=dark
 endif
 
-if s:t_Co >= 256
+if s:tgc || s:t_Co >= 256
   finish
 endif
 

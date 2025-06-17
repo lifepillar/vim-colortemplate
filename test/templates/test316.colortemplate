@@ -1,0 +1,16 @@
+Options:      creator=false timestamp=false backend=vim9
+Full name:    Test 316
+Short name:   test316
+Author:       y
+Environments: gui 256 8
+Background:   dark
+
+Color: Blue             #5fd7ff        81             blue
+Color: DarkBlue1        #003f5f        31             darkblue
+Color: Black            #000000        16             black
+
+Visual                  Blue           Black              reverse
+  /gui                  none           DarkBlue1
+  /256+tgc true         omit           omit s=omit      ; none
+
+; vim: ft=colortemplate

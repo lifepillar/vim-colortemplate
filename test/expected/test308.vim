@@ -9,13 +9,14 @@ hi clear
 g:colors_name = 'test308'
 
 const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+const tgc = has('termguicolors') && &termguicolors
 
 const foo = get(g:, 'foo', 0)
 
 hi Normal guifg=#888888 guibg=#f0f0f0 guisp=NONE gui=NONE ctermfg=102 ctermbg=255 cterm=NONE term=NONE
 hi Folded guifg=#888888 guibg=#f0f0f0 guisp=NONE gui=italic ctermfg=102 ctermbg=255 cterm=italic term=italic
 
-if t_Co >= 256
+if tgc || t_Co >= 256
   if foo == 0
     hi Folded ctermfg=102 ctermbg=255 cterm=NONE
   elseif foo == 1

@@ -141,9 +141,10 @@ enddef
 
 def Discriminators(db: Database): list<string>
   var output: list<string> = []
-  var defs = db.Discriminator->Select((t) => !empty(t.DiscrName))->SortBy('DiscrNum')->Transform(
-    (t) => $'#const {t.DiscrName} = {t.RawDefinition}'
-  )
+  var defs = db.Discriminator
+    ->Select((t) => !empty(t.DiscrName) && t.DiscrName != 't_Co' && t.DiscrName != 'tgc')
+    ->SortBy('DiscrNum')
+    ->Transform((t) => $'#const {t.DiscrName} = {t.RawDefinition}')
 
   if !empty(defs)
     output->add('')

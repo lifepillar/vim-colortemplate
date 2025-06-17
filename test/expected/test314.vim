@@ -9,10 +9,11 @@ hi clear
 g:colors_name = 'test314'
 
 const t_Co = has('gui_running') ? 16777216 : str2nr(&t_Co)
+const tgc = has('termguicolors') && &termguicolors
 
 hi CursorLineNr guifg=#ffd700 guibg=#005faf guisp=NONE gui=bold ctermfg=220 ctermbg=25 cterm=NONE term=bold
 
-if t_Co >= 256
+if tgc || t_Co >= 256
   hi! link CursorLineNr CursorLine
   finish
 endif

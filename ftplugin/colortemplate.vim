@@ -33,7 +33,7 @@ setlocal omnifunc=syntaxcomplete#Complete
 
 if has('balloon_eval') || has('balloon_eval_term')
   setlocal balloonexpr=colortemplate#util#BalloonExpr()
-  b:undo_ftplugin = "|setl balloonexpr<"
+  b:undo_ftplugin ..= " balloonexpr<"
 endif
 
 if Config.Mappings()

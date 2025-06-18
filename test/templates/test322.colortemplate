@@ -1,0 +1,20 @@
+Options:      creator=false timestamp=false backend=vim9
+Full name:    Test 322
+Short name:   test322
+Author:       y
+Environments: gui 256 16 8 0
+
+Background: dark
+
+Color: violet #6c71c4 61 13
+
+#const extra = get(g:, '@prefix_extra', true)
+
+vimCommentString -> omit ; Skip default definition
+
+; Since the default definition is omitted and overrides are defined only for
+; gui, 256 and 16 environments, no definition will be generated for 8-color and
+; 0-color environments.
+vimCommentString /gui/256/16 +extra true violet none
+
+; vim: ft=colortemplate

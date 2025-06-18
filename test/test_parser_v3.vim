@@ -997,7 +997,7 @@ def Test_Parser_VerbatimIdentifierWithNumbers()
   assert_equal(expected, colorscheme.dark.verbatimtext)
 enddef
 
-def Test_Parser_auxfile()
+def Test_Parser_AuxFile()
   var template =<< trim END
     auxfile foo/bar
     abc '▇' def
@@ -1009,6 +1009,20 @@ def Test_Parser_auxfile()
   assert_equal('', result.label)
   assert_true(result.success)
   assert_equal({'foo/bar': ["abc '▇' def"]}, colorscheme.auxfiles)
+enddef
+
+def Test_Parser_MissingDiscriminator()
+  var template =<< trim END
+  Background: dark
+  Color: violet #6c71c4 61 13
+  vimCommentString -> omit
+  vimCommentString /gui/256/16 +extra 1 violet none
+  END
+
+  var [result, _] = Parse(join(template, "\n"))
+
+  assert_false(result.success, $'Template should have failed: {template}')
+  assert_match("Discriminator: {DiscrName: 'extra'} not found", result.label)
 enddef
 
 

@@ -180,7 +180,7 @@ class ErrorReporter
     execute ':' nr 'buffer'
     execute 'goto' errpos
 
-    this.AddError(bufnr, errmsg, byte2line(errpos))
+    this.AddError(nr, errmsg, byte2line(errpos))
 
     if popup
       popup_atcursor(errmsg, {

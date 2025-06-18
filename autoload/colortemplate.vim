@@ -543,7 +543,6 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
         })
       failed->add(path.Basename(template))
       success = false
-      break
     endif
   endfor
 

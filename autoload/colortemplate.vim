@@ -16,11 +16,10 @@ type  Result      = parser.ParserResult
 const Parse       = parser.Parse
 
 # Cache for generated color schemes
-var theme_cache: dict<Colorscheme>
+var theme_cache: dict<Colorscheme> = {}
 
 # Helper functions {{{
 def CacheTheme(bufnr: number, theme: Colorscheme)
-  unlockvar theme_cache
   theme_cache[bufnr] = theme
 enddef
 
@@ -544,6 +543,7 @@ export def BuildAll(directory: string = '', bang: string = ''): bool
         })
       failed->add(path.Basename(template))
       success = false
+      break
     endif
   endfor
 

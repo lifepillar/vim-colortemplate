@@ -184,14 +184,15 @@ class ErrorReporter
 
     if popup
       popup_atcursor(errmsg, {
-        pos:         'botleft',
-        line:        'cursor-1',
-        col:         'cursor',
         border:      [1, 1, 1, 1],
         borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-        moved:       'any',
+        close:       'clicked',
+        col:         'cursor',
         fixed:       true,
         highlight:   'WarningMsg',
+        line:        'cursor-1',
+        moved:       'any',
+        pos:         'botleft',
       })
     endif
   enddef

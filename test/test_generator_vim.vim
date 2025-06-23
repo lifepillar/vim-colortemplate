@@ -3,7 +3,7 @@ vim9script
 import 'libpath.vim'                                as path
 import 'libtinytest.vim'                            as tt
 import '../autoload/colortemplate.vim'              as colortemplate
-import '../import/colortemplate/generator/viml.vim' as vimlgenerator
+import '../import/colortemplate/generator/vim.vim'  as vimgenerator
 
 # Helper functions {{{
 const TESTDIR = fnamemodify(resolve(expand('<sfile>:p')), ':h')
@@ -38,7 +38,7 @@ def AssertBuild(name: string)
   var success: bool
 
   try
-    success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {backend: 'viml'})
+    success = colortemplate.Build(bufnr('%'), TESTDIR, '!', {backend: 'vim'})
   finally
     execute $':{bufnr}bwipe'
   endtry
@@ -49,179 +49,179 @@ def AssertBuild(name: string)
 enddef
 # }}}
 
-def Test_VimLGenerator_1()
+def Test_VimGenerator_1()
   AssertBuild('test1')
 enddef
 
-def Test_VimLGenerator_5()
+def Test_VimGenerator_5()
   AssertBuild('test5')
 enddef
 
-def Test_VimLGenerator_7()
+def Test_VimGenerator_7()
   AssertBuild('test7')
 enddef
 
-def Test_VimLGenerator_22()
+def Test_VimGenerator_22()
   AssertBuild('test22')
 enddef
 
-def Test_VimLGenerator_24()
+def Test_VimGenerator_24()
   AssertBuild('test24')
 enddef
 
-def Test_VimLGenerator_27()
+def Test_VimGenerator_27()
   AssertBuild('test27')
 enddef
 
-def Test_VimLGenerator_28()
+def Test_VimGenerator_28()
   AssertBuild('test28')
 enddef
 
-def Test_VimLGenerator_29()
+def Test_VimGenerator_29()
   AssertBuild('test29')
 enddef
 
-def Test_VimLGenerator_30()
+def Test_VimGenerator_30()
   AssertBuild('test30')
 enddef
 
-def Test_VimLGenerator_34()
+def Test_VimGenerator_34()
   AssertBuild('test34')
 enddef
 
-def Test_VimLGenerator_37()
+def Test_VimGenerator_37()
   AssertBuild('test37')
 enddef
 
-def Test_VimLGenerator_38()
+def Test_VimGenerator_38()
   AssertBuild('test38a')
 enddef
 
-def Test_VimLGenerator_39()
+def Test_VimGenerator_39()
   AssertBuild('test39a')
 enddef
 
-def Test_VimLGenerator_41()
+def Test_VimGenerator_41()
   AssertBuild('test41')
 enddef
 
-def Test_VimLGenerator_42()
+def Test_VimGenerator_42()
   AssertBuild('test42')
 enddef
 
-def Test_VimLGenerator_44()
+def Test_VimGenerator_44()
   AssertBuild('test44a')
 enddef
 
-def Test_VimLGenerator_46()
+def Test_VimGenerator_46()
   AssertBuild('test46a')
 enddef
 
-def Test_VimLGenerator_48()
+def Test_VimGenerator_48()
   AssertBuild('test48a')
 enddef
 
-def Test_VimLGenerator_49()
+def Test_VimGenerator_49()
   AssertBuild('test49a')
 enddef
 
-def Test_VimLGenerator_50()
+def Test_VimGenerator_50()
   AssertBuild('test50')
 enddef
 
-def Test_VimLGenerator_51()
+def Test_VimGenerator_51()
   AssertBuild('test51')
 enddef
 
-def Test_VimLGenerator_52()
+def Test_VimGenerator_52()
   AssertBuild('test52')
 enddef
 
-def Test_VimLGenerator_53()
+def Test_VimGenerator_53()
   AssertBuild('test53')
 enddef
 
-def Test_VimLGenerator_65()
+def Test_VimGenerator_65()
   AssertBuild('test65')
 enddef
 
-def Test_VimLGenerator_68a()
+def Test_VimGenerator_68a()
   AssertBuild('test68a')
 enddef
 
-def Test_VimLGenerator_69()
+def Test_VimGenerator_69()
   AssertBuild('test69')
 enddef
 
-def Test_VimLGenerator_70()
+def Test_VimGenerator_70()
   AssertBuild('test70')
 enddef
 
-def Test_VimLGenerator_71()
+def Test_VimGenerator_71()
   AssertBuild('test71')
 enddef
 
-def Test_VimLGenerator_72()
+def Test_VimGenerator_72()
   AssertBuild('test72')
 enddef
 
-def Test_VimLGenerator_73()
+def Test_VimGenerator_73()
   AssertBuild('test73')
 enddef
 
-def Test_VimLGenerator_74()
+def Test_VimGenerator_74()
   AssertBuild('test74')
 enddef
 
 # See: https://github.com/lifepillar/vim-colortemplate/issues/36
 # When defining a base 256 color as 0 (code for terminal black) with Color and
 # then setting a highlight to it, it used to be ignored.
-def Test_VimLGenerator_77()
+def Test_VimGenerator_77()
   AssertBuild('test77')
 enddef
 
-def Test_VimLGenerator_78()
+def Test_VimGenerator_78()
   AssertBuild('test78')
 enddef
 
-def Test_VimLGenerator_79()
+def Test_VimGenerator_79()
   AssertBuild('test79')
 enddef
 
-def Test_VimLGenerator_82()
+def Test_VimGenerator_82()
   AssertBuild('test82')
 enddef
 
-def Test_VimLGenerator_84()
+def Test_VimGenerator_84()
   AssertBuild('test84')
 enddef
 
-def Test_VimLGenerator_85()
+def Test_VimGenerator_85()
   AssertBuild('test85')
 enddef
 
-def Test_VimLGenerator_86()
+def Test_VimGenerator_86()
   AssertBuild('test86')
 enddef
 
-def Test_VimLGenerator_88()
+def Test_VimGenerator_88()
   AssertBuild('test88')
 enddef
 
-def Test_VimLGenerator_89()
+def Test_VimGenerator_89()
   AssertBuild('test89')
 enddef
 
-def Test_VimLGenerator_93()
+def Test_VimGenerator_93()
   AssertBuild('test-93')
 enddef
 
-def Test_VimLGenerator_94()
+def Test_VimGenerator_94()
   AssertBuild('test94')
 enddef
 
 
-var results = tt.Run('_VimLGenerator_')
+var results = tt.Run('_VimGenerator_')
 
 delete(COLDIR, "d")
 delete(DOCDIR, "d")

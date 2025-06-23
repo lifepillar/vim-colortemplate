@@ -1,4 +1,4 @@
-Options: creator=false timestamp=false backend=viml
+Options: creator=false timestamp=false backend=vim
 Environments: gui 256 8
 Full name:Test 52
 Short name:test52

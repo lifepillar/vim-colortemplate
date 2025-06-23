@@ -568,7 +568,7 @@ export class Colorscheme
     palette:           false,
     shiftwidth:        2,
     timestamp:         true,
-    vimlcompatibility: 0,
+    vimcompatibility:  0,
     warnings:          true,
   }
 

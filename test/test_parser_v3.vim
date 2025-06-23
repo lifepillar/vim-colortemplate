@@ -235,7 +235,7 @@ enddef
 
 def Test_Parser_ColorCannotBeRedefined()
   var template =<< trim END
-  Options: creator=false timestamp=false backend=viml
+  Options: creator=false timestamp=false backend=vim
   Environments: gui 256
   Full name:Test 35
   Short name:test35

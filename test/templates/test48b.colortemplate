@@ -1,4 +1,4 @@
-Options: creator=false timestamp=false backend=viml
+Options: creator=false timestamp=false backend=vim
 Environments: gui 256
 Color: white #ffffff ~
 Include: test48c.colortemplate

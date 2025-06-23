@@ -1,4 +1,4 @@
-Options: creator=false timestamp=false backend=viml vimlcompatibility=1
+Options: creator=false timestamp=false backend=vim vimcompatibility=1
 Environments: gui 256 16 8
 Full name:Test 88
 Short name:test88

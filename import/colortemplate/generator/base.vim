@@ -158,7 +158,7 @@ export class Generator implements IGenerator
       this.let_keyword    = ''
       this.const_keyword  = 'const '
       this.var_prefix     = ''
-    elseif this.language == 'viml'
+    elseif this.language == 'vim'
       this.comment_symbol = '" '
       this.let_keyword    = 'let '
       this.const_keyword  = 'let '

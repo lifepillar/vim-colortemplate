@@ -59,8 +59,8 @@ export class Generator extends base.Generator
   var backward_compatible: bool
 
   def new(this.theme)
-    super.Init('viml')
-    this.backward_compatible = this.theme.options.vimlcompatibility > 0
+    super.Init('vim')
+    this.backward_compatible = this.theme.options.vimcompatibility > 0
   enddef
 
   def HookEndOfEnvironment(db: Database, environment: string): list<string>

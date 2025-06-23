@@ -7,7 +7,7 @@ import '../import/colortemplate/colorstats.vim'          as stats
 import '../import/colortemplate/parser/v3.vim'           as parser
 import '../import/colortemplate/generator/base.vim'      as base
 import '../import/colortemplate/generator/vim9.vim'      as vim9
-import '../import/colortemplate/generator/viml.vim'      as viml
+import '../import/colortemplate/generator/vim.vim'       as vim
 import '../import/colortemplate/generator/template.vim'  as colortemplate
 
 type  Config      = config.Config
@@ -477,8 +477,8 @@ export def Build(bufnr: number, outdir = '', bang = '', opts: dict<any> = {}): b
     filesuffix = '.colortemplate'
   elseif backend == 'vim9'
     generator = vim9.Generator.new(theme)
-  elseif backend->In(['viml', 'legacy'])
-    generator = viml.Generator.new(theme)
+  elseif backend->In(['vim', 'viml', 'legacy'])
+    generator = vim.Generator.new(theme)
   else
     return Error($"Invalid generator: '{backend}'")
   endif

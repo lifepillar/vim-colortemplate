@@ -8,7 +8,7 @@ Options:       dateformat="%Y %b %d"
 Options:       palette=false
 Options:       shiftwidth=2
 Options:       timestamp=false
-Options:       vimlcompatibility=0
+Options:       vimcompatibility=0
 Options:       warnings=true
 
 Environments: gui 256

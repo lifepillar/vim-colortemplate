@@ -113,6 +113,8 @@ Terminal
     +transp_bg 1     white             none
 
 ; Group              Foreground        Background        Attributes
+Bold                 black             white             bold
+BoldItalic           black             white             bold,italic
 ColorColumn          fg                white
 Conceal              none              none
 Cursor               black             white
@@ -130,6 +132,7 @@ FoldColumn           black             white
 Folded               black             white             italic
 IncSearch            black             white             reverse
 IncSearch/gui        black             white             standout
+Italic               black             white             italic
 LineNr               black             white
 MatchParen           black             white
 ModeMsg              black             white

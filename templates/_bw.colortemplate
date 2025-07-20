@@ -4,6 +4,8 @@
 ; Default highlight groups {{{
 ; Group              Unused Unused  Term attributes
 Normal        /0     omit omit
+Bold          /0     omit omit    bold
+BoldItalic    /0     omit omit    bold,italic
 ColorColumn   /0     omit omit    reverse
 Conceal       /0     omit omit
 Cursor        /0     omit omit
@@ -20,6 +22,7 @@ ErrorMsg      /0     omit omit    bold,reverse,italic
 FoldColumn    /0     omit omit    reverse
 Folded        /0     omit omit    italic,reverse,underline
 IncSearch     /0     omit omit    reverse,bold,italic
+Italic        /0     omit omit    italic
 LineNr        /0     omit omit    reverse
 MatchParen    /0     omit omit    bold,underline
 ModeMsg       /0     omit omit

@@ -212,11 +212,15 @@ VisualNOS            white             black
 WarningMsg           white             black
 WildMenu             white             black
 
+Bold                 white             none              bold
+BoldItalic           white             none              bold,italic
 Comment              white             none              italic
 Constant             white             none
 Error                white             black             reverse
 Identifier           white             none
 Ignore               white             none
+Italic               white             none              italic
+Comment              white             none              italic
 PreProc              white             none
 Special              white             none
 Statement            white             none

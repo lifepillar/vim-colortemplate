@@ -26,11 +26,11 @@ syn case ignore
 syn match   colortemplateHiGroupDef   "^\h\w*\>" contains=colortemplateHiGroup
 syn match   colortemplateHiGroup      contained "\<Conceal\>"
 
-syn keyword colortemplateHiGroup      contained Added Boolean Changed Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
+syn keyword colortemplateHiGroup      contained Added Bold BoldItalic Boolean Changed Character ColorColumn Comment Conditional Constant CurSearch Cursor CursorColumn CursorIM
 syn keyword colortemplateHiGroup      contained CursorLine CursorLineFold CursorLineNr CursorLineSign Define Debug Delimiter
 syn keyword colortemplateHiGroup      contained DiffAdd diffAdded DiffChange diffChanged DiffDelete diffRemoved DiffText Directory
 syn keyword colortemplateHiGroup      contained EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
-syn keyword colortemplateHiGroup      contained IncSearch Include Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
+syn keyword colortemplateHiGroup      contained IncSearch Include Italic Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
 syn keyword colortemplateHiGroup      contained Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuMatch PmenuMatchSel
 syn keyword colortemplateHiGroup      contained PmenuSbar PmenuSel PmenuThumb PopupNotification PopupSelected PreCondit PreProc Question
 syn keyword colortemplateHiGroup      contained QuickFixLine Removed Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap

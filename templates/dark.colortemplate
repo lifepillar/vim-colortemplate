@@ -220,7 +220,6 @@ Error                white             black             reverse
 Identifier           white             none
 Ignore               white             none
 Italic               white             none              italic
-Comment              white             none              italic
 PreProc              white             none
 Special              white             none
 Statement            white             none

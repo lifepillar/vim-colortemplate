@@ -54,6 +54,7 @@ syn keyword colortemplateConstant     contained DarkGray DarkGrey Gray Grey Ligh
 
 syn case match
 
+syn match   colortemplateVim9Script   "vim9\%[script]\>"
 syn keyword colortemplateAttr         bold underline undercurl underdouble underdotted underdashed strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial      fg bg ul none omit
 syn match   colortemplateColorKey     "Color\s*:"
@@ -102,6 +103,7 @@ hi def link colortemplateTermCode     String
 hi def link colortemplateTodo         Todo
 hi def link colortemplateVariant      PreProc
 hi def link colortemplateVerb         Title
+hi def link colortemplateVim9Script   Title
 
 b:current_syntax = "colortemplate"
 

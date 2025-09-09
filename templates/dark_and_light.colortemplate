@@ -14,6 +14,11 @@ Options:       backend=vim9 palette=true
 
 Include: _help.colortemplate
 
+; Add the following to force Vim9 script syntax highlighting in this template's
+; verbatim blocks. Adding vim9script here has no effect on the resulting color
+; scheme (this keyword is effectively treated as a comment).
+vim9script
+
 verbatim
 # For dual background colorschemes, verbatim text before a Background
 # directive or in the scope of `Background: any` is put at the top of the

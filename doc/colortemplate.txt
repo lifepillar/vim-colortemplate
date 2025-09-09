@@ -151,7 +151,8 @@ generated color scheme or arbitrary text that is written to other files. See
 |colortemplate-verbatim| and |colortemplate-auxfiles| for details.
 
 Finally, line comments may appear anywhere: they start with a semicolon and
-they are ignored by Colortemplate.
+they are ignored by Colortemplate. The special keyword `vim9script` on a line
+by itself is also treated as a comment (see |colortemplate-verbatim|).
 
 ==============================================================================
 Metadata					*colortemplate-meta*
@@ -584,6 +585,16 @@ Vim version).
 A template may contain an arbitrary number of verbatim blocks: they are
 concatenated in the order in which they are encountered and written into the
 color scheme before any discriminator or highlight group definition.
+
+The content of verbatim blocks is highlighted using Vim script syntax. If
+verbatim blocks actually use Vim9 script syntax, the highlighting may be off.
+To force Vim9 script syntax highlighting in verbatim blocks, add `vim9script`
+on a line by itself at the top of the template.
+
+Note that adding `vim9script` in a template has no other effect than changing
+the way verbatim blocks are highlighted: in particular, such a keyword is
+unrelated to the `vim9` backend option (see |colortemplate-meta|), which
+determines the syntax of the resulting color scheme.
 
 ==============================================================================
 Help file					*colortemplate-helpfile*

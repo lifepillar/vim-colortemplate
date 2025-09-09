@@ -1,5 +1,10 @@
 ; vim: ft=colortemplate fdm=marker et ts=2 sw=2 vsts=21,18,18,2
 
+; Add the following to force Vim9 script syntax highlighting in this template's
+; verbatim blocks. Adding vim9script here has no effect on the resulting color
+; scheme (this keyword is effectively treated as a comment).
+vim9script
+
 ; Mandatory metadata:
 Full name:     Dark
 Short name:    dark

@@ -515,6 +515,7 @@ const K_ENVIRONMENT   = R('\(gui\|256\|88\|16\|8\|0\)\>')
 const K_ENVIRONMENTS  = R('\(Environments\|Variants\)\>')
 const K_VERBATIM      = Regex('verbatim')
 const K_VERSION       = T('Version')
+const K_VIM9SCRIPT    = R('vim9\%[script]\>')
 
 const BAR             = T('/')
 const COLON           = T(':')
@@ -743,7 +744,9 @@ const Statement       = Seq(
                           L_TEXTLINE
                         )                                             ->Apply(DefineDiscriminator)
 
-const Declaration     = OneOf(Statement, VerbatimBlock, AuxFile, Directive, HiGroupDecl)
+const Vim9Script      = Skip(K_VIM9SCRIPT)
+
+const Declaration     = OneOf(Statement, VerbatimBlock, AuxFile, Directive, Vim9Script, HiGroupDecl)
 
 export const Template = Seq(
                         Skip(SpaceOrComment),

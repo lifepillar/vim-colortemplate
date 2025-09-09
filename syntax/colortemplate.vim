@@ -56,9 +56,10 @@ syn case match
 
 syn keyword colortemplateAttr         bold underline undercurl underdouble underdotted underdashed strikethrough reverse inverse italic standout nocombine NONE
 syn keyword colortemplateSpecial      fg bg ul none omit
+syn match   colortemplateColorKey     "Color\s*:"
 syn match   colortemplateComment      ";.*$" contains=colortemplateTodo,@Spell
-syn match   colortemplateKey          "\%(Color\|Background\|Environments\|Include\|\%(Full\|Short\)\s\+[Nn]ame\|Author\|Maintainer\|URL\|Description\|License\|Term\s\+[Cc]olors\|Options\|Prefix\|Variants\):"
-syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortemplateKey nextgroup=colortemplateColorDef
+syn region  colortemplateMeta         matchgroup=colortemplateKey start="\%(Background\|Environments\|Include\|\%(Full\|Short\)\s\+[Nn]ame\|Author\|Maintainer\|URL\|Description\|License\|Term\s\+[Cc]olors\|Options\|Prefix\|Variants\)\s*:" end="$" oneline keepend contains=colortemplateComment
+syn match   colortemplateColorSpec    "^\s*Color\s*:\s*\w\+" contains=colortemplateColorKey nextgroup=colortemplateColorDef
 syn match   colortemplateColorDef     ".\+$" contained contains=colortemplateNumber,colortemplateHexColor,colortemplateFunction,colortemplateConstant,colortemplateCompound,colortemplateComment,colortemplateRgbName
 syn match   colortemplateNumber       "\<\d\+\>" contained
 syn match   colortemplateArrow        "->"
@@ -82,6 +83,7 @@ syn region colortemplateHelp matchgroup=colortemplateVerb start=/helpfile/ end=/
 
 hi def link colortemplateArrow        Delimiter
 hi def link colortemplateAttr         Label
+hi def link colortemplateColorKey     Special
 hi def link colortemplateConst        PreProc
 hi def link colortemplateConstant     Type
 hi def link colortemplateComment      Comment

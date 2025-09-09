@@ -1,12 +1,13 @@
 ; vim: ft=colortemplate fdm=marker cc=22 et ts=2 sw=2
 
 ; Template for black & white terminals
-; Default highlight groups {{{
+; Default highlight groups
 ; Group              Unused Unused  Term attributes
 Normal        /0     omit omit
 Bold          /0     omit omit    bold
 BoldItalic    /0     omit omit    bold,italic
 ColorColumn   /0     omit omit    reverse
+ComplMatchIns /0     omit omit
 Conceal       /0     omit omit
 Cursor        /0     omit omit
 CursorColumn  /0     omit omit    reverse
@@ -33,6 +34,7 @@ PmenuSbar     /0     omit omit
 PmenuSel      /0     omit omit
 PmenuThumb    /0     omit omit
 PopupSelected /0     omit omit    reverse
+PreInsert     /0     omit omit
 Question      /0     omit omit    standout
 Search        /0     omit omit    underline,italic
 SignColumn    /0     omit omit    reverse
@@ -69,4 +71,3 @@ ToolbarLine   /0     omit omit    reverse
 ToolbarButton /0     omit omit    bold,reverse
 debugBreakpoint/0    omit omit    reverse
 debugPC       /0     omit omit    reverse
-; }}}

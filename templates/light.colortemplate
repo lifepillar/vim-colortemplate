@@ -25,6 +25,7 @@ Added             -> diffAdded
 Boolean           -> Constant
 Changed           -> diffChanged
 Character         -> Constant
+ComplMatchIns     -> Normal
 Conditional       -> Statement
 CurSearch         -> IncSearch
 CursorLineFold    -> FoldColumn
@@ -53,6 +54,7 @@ PmenuMatchSel     -> PmenuMatchSel
 PopupNotification -> WarningMsg
 PopupSelected     -> PmenuSel
 PreCondit         -> PreProc
+PreInsert         -> NonText
 QuickFixLine      -> Search
 Removed           -> diffRemoved
 Repeat            -> Statement

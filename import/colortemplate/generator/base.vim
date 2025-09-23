@@ -60,7 +60,13 @@ enddef
 # {HiGroup: 'Normal', guifg: '#ffffff', guibg: '#000000', gui: 'NONE'}
 #
 # Which attributes are included depends on the environment.
-def MakeInstantiator(db: Database, environment: string, best_cterm = ''): func(Tuple): Tuple
+def MakeInstantiator(
+    db:          Database,
+    environment: string,
+    best_cterm:  string = '',
+    discrName:   string = '',
+    discrValue:  string = '',
+    ): func(Tuple): Tuple
   # Get the valid attributes for the given environment
   # E.g., {guifg: 'Fg',  guibg: 'Bg', guisp: 'Special', gui: 'Style'}
   var attributes = db.Attribute
@@ -68,6 +74,12 @@ def MakeInstantiator(db: Database, environment: string, best_cterm = ''): func(T
     ->DictTransform((t) => {
       return {[t.AttrKey]: t.AttrType}
     }, true)
+
+  # Hack to also emit guifg/guibg when +tgc is used
+  if discrName == 'tgc' && discrValue == 'true'
+    attributes['guifg'] = 'Fg'
+    attributes['guibg'] = 'Bg'
+  endif
 
   # Get the number of colors supported by the environment
   var numColors: number
@@ -778,7 +790,7 @@ export class Generator implements IGenerator
       return []
     endif
 
-    var Instantiate = MakeInstantiator(db, environment)
+    var Instantiate = MakeInstantiator(db, environment, '', discrName, discrValue)
     var output: list<string> = []
 
     output += this._cache.linked->get(c.Condition, [])

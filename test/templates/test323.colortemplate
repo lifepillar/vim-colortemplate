@@ -1,0 +1,17 @@
+Options:      creator=false timestamp=false backend=vim9
+Full name:    Test 323
+Short name:   test323
+Author:       y
+Environments: gui 256 8 0
+
+Background: dark
+
+Color: dark1 #d74f7f 61 darkred
+
+; See https://github.com/lifepillar/vim-colortemplate/issues/97
+SpellBad             dark1             none              underline
+ /gui                none              omit              s=dark1 undercurl
+ /256+tgc true       dark1             none              underline
+ /256/16/8           dark1             none              underline
+
+; vim: ft=colortemplate

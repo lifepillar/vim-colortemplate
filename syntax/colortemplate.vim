@@ -35,7 +35,7 @@ syn keyword colortemplateHiGroup      contained Normal Number Operator Pmenu Pme
 syn keyword colortemplateHiGroup      contained PmenuSbar PmenuSel PmenuThumb PopupNotification PopupSelected PreCondit PreInsert PreProc Question
 syn keyword colortemplateHiGroup      contained QuickFixLine Removed Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup      contained SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
-syn keyword colortemplateHiGroup      contained Structure TabLine TabLineFill TabLineSel TabPanel TabPanelFill TabPanelSel Tag Terminal Title Todo Type
+syn keyword colortemplateHiGroup      contained Structure TabLine TabLineFill TabLineSel TabPanel TabPanelFill TabPanelSel Tag Terminal Title TitleBar TitleBarNC Todo Type
 syn keyword colortemplateHiGroup      contained Typedef Underlined VertSplit debugPC debugBreakpoint ToolbarLine ToolbarButton
 syn keyword colortemplateHiGroup      contained Visual VisualNOS WarningMsg WildMenu lCursor
 syn keyword colortemplateHiGroup      contained Menu Scrollbar Tooltip User1 User2 User3 User4 User5 User6 User7 User8 User9

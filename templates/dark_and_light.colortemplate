@@ -93,6 +93,7 @@ ModeMsg              white             black
 MoreMsg              white             black
 NonText              white             black
 Pmenu                white             black
+PmanuShadow          white             black
 PmenuSbar            white             black
 PmenuSel             white             black             reverse
 PmenuThumb           white             black
@@ -201,6 +202,7 @@ NonText              black             white
 Pmenu                black             white
 PmenuSbar            black             white
 PmenuSel             black             white
+PmenuShadow          black             white
 PmenuThumb           black             white
 Question             black             white
 Search               black             white

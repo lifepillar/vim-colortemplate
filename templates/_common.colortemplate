@@ -28,6 +28,7 @@ Macro                -> PreProc
 MessageWindow        -> WarningMsg
 Number               -> Constant
 Operator             -> Statement
+PmenuBorder          -> Pmenu
 PmenuKind            -> Pmenu
 PmenuKindSel         -> PmenuSel
 PmenuExtra           -> Pmenu

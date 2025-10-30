@@ -31,8 +31,8 @@ syn keyword colortemplateHiGroup      contained CursorLine CursorLineFold Cursor
 syn keyword colortemplateHiGroup      contained DiffAdd diffAdded DiffChange diffChanged DiffDelete diffRemoved DiffText Directory
 syn keyword colortemplateHiGroup      contained EndOfBuffer Error ErrorMsg Exception Float FoldColumn Folded Function Identifier Ignore
 syn keyword colortemplateHiGroup      contained IncSearch Include Italic Keyword Label LineNr LineNrAbove LineNrBelow Macro MatchParen MessageWindow ModeMsg MoreMsg NonText
-syn keyword colortemplateHiGroup      contained Normal Number Operator Pmenu PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuMatch PmenuMatchSel
-syn keyword colortemplateHiGroup      contained PmenuSbar PmenuSel PmenuThumb PopupNotification PopupSelected PreCondit PreInsert PreProc Question
+syn keyword colortemplateHiGroup      contained Normal Number Operator Pmenu PmenuBorder PmenuKind PmenuKindSel PmenuExtra PmenuExtraSel PmenuMatch PmenuMatchSel
+syn keyword colortemplateHiGroup      contained PmenuSbar PmenuSel PmenuShadow PmenuThumb PopupNotification PopupSelected PreCondit PreInsert PreProc Question
 syn keyword colortemplateHiGroup      contained QuickFixLine Removed Repeat Search SignColumn Special SpecialChar SpecialComment SpecialKey SpellBad SpellCap
 syn keyword colortemplateHiGroup      contained SpellLocal SpellRare Statement StatusLine StatusLineNC StatusLineTerm StatusLineTermNC StorageClass String
 syn keyword colortemplateHiGroup      contained Structure TabLine TabLineFill TabLineSel TabPanel TabPanelFill TabPanelSel Tag Terminal Title TitleBar TitleBarNC Todo Type

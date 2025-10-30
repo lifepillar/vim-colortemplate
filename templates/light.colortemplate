@@ -45,6 +45,7 @@ Macro             -> PreProc
 MessageWindow     -> WarningMsg
 Number            -> Constant
 Operator          -> Statement
+PmenuBorder       -> Pmenu
 PmenuKind         -> Pmenu
 PmenuKindSel      -> PmenuSel
 PmenuExtra        -> Pmenu
@@ -143,6 +144,7 @@ NonText              black             white
 Pmenu                black             white
 PmenuSbar            black             white
 PmenuSel             black             white             reverse
+PmenuShadow          black             white
 PmenuThumb           black             white
 Question             black             white
 Search               black             white

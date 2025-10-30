@@ -30,8 +30,10 @@ ModeMsg       /0     omit omit
 MoreMsg       /0     omit omit
 NonText       /0     omit omit
 Pmenu         /0     omit omit    reverse
+PmenuBorder   /0     omit omit
 PmenuSbar     /0     omit omit
 PmenuSel      /0     omit omit
+PmenuShadow   /0     omit omit
 PmenuThumb    /0     omit omit
 PopupSelected /0     omit omit    reverse
 PreInsert     /0     omit omit

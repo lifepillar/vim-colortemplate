@@ -29,7 +29,9 @@ b:undo_ftplugin ..= 'unlet! b:colortemplate_outdir|setl cms< com< fo< ofu<'
 setlocal comments=:;
 setlocal commentstring=;%s
 setlocal formatoptions=cjloqr1
-setlocal omnifunc=syntaxcomplete#Complete
+if &omnifunc == ""
+  setlocal omnifunc=syntaxcomplete#Complete
+endif
 
 if has('balloon_eval') || has('balloon_eval_term')
   setlocal balloonexpr=colortemplate#util#BalloonExpr()

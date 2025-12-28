@@ -160,6 +160,8 @@ TabLine              black             white
 TabLineFill          black             white
 TabLineSel           black             white
 Title                black             white
+TitleBar             black             white
+TitleBarNC           black             white
 VertSplit            black             white
 Visual               black             white
 VisualNOS            black             white

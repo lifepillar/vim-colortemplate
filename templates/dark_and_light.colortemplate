@@ -111,6 +111,8 @@ TabLine              white             black
 TabLineFill          white             black
 TabLineSel           white             black
 Title                white             black
+TitleBar             white             black
+TitleBarNC           white             black
 VertSplit            white             black
 Visual               white             black
 VisualNOS            white             black
@@ -218,6 +220,8 @@ TabLine              black             white
 TabLineFill          black             white
 TabLineSel           black             white
 Title                black             white
+TitleBar             black             white
+TitleBarNC           black             white
 VertSplit            black             white
 Visual               black             white
 VisualNOS            black             white

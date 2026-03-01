@@ -258,9 +258,15 @@ def DefineDiscriminator(v: list<string>, ctx: Context)
   var rawDef:     string = v[3]
   var definition: string = join(Interpolate(rawDef, ctx))
 
-  for db in ActiveDatabases(ctx)
-    db.InsertDiscriminator(discrName, rawDef, definition)
-  endfor
+  if discrName == 't_Co' || discrName == 'tgc' # Allow overriding
+    for db in ActiveDatabases(ctx)
+      db.UpsertDiscriminator(discrName, rawDef, definition)
+    endfor
+  else
+    for db in ActiveDatabases(ctx)
+      db.InsertDiscriminator(discrName, rawDef, definition)
+    endfor
+  endif
 enddef
 
 def SetHiGroupName(v: list<string>, ctx: Context)

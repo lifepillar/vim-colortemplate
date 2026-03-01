@@ -332,6 +332,25 @@ export class Database
     })
   enddef
 
+  def UpsertDiscriminator(
+      discrName:     string,
+      rawDefinition: string,
+      definition:    string,
+      )
+    var t = this.Discriminator.Lookup(['DiscrName'], [discrName])
+
+    if t is KEY_NOT_FOUND
+      this.InsertDiscriminator(discrName, rawDefinition, definition)
+    else
+      this.Discriminator.Upsert({
+        DiscrName:     discrName,
+        RawDefinition: rawDefinition,
+        Definition:    definition,
+        DiscrNum:      t.DiscrNum,
+      })
+    endif
+  enddef
+
   def InsertOrRetrieveCondition_(
       environment: string,
       discrName:   string,

@@ -517,15 +517,14 @@ above:
 Discriminator values can be integers, strings, or the values `true` and
 `false`. Strings must be double-quoted.
 
-Colortemplate implicitly defines two special discriminators called `t_Co` and
-`tgc`, respectively. `t_Co` is used by Colortemplate to define the various
-environments: it is never needed in templates, except for some advanced and
-uncommon use cases. The other discriminator is a flag that is set to true if
-|termguicolors| is set, and it is false otherwise. For an example of using
-`tgc`, see the end of this section.
-
-You cannot define discriminators with the same name as one of the predefined
-discriminators.
+Colortemplate provides default definitions for two special discriminators
+called `t_Co` and `tgc`, respectively. `t_Co` is used by Colortemplate to
+define the various environments: it is never needed in templates, except for
+some advanced and uncommon use cases. The other discriminator is a flag that
+is set to true if |termguicolors| is set, and it is false otherwise. For an
+example of using `tgc`, see the end of this section. You may provide your own
+definitions for such discriminators, but that is not necessary except in very
+rare circumstances.
 
 When you are designing a color scheme for true-color terminals with
 |termguicolors| set, you must keep in mind that multiple definitions

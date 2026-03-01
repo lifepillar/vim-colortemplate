@@ -1,0 +1,19 @@
+Options:      creator=false timestamp=false backend=vim
+Full name:    Test 325
+Short name:   test325
+Author:       y
+Environments: gui 256
+
+Background: dark
+
+Color: dark1  #d74f7f 61 black
+Color: white1 #fcfcfc 251 white
+
+; It is possible to override predefined t_Co and tgc
+#const t_Co = rand() % 2 ? 16 : 16777216
+#const tgc  = rand() % 2 ? true : false
+
+Normal dark1 white1
+ /256+tgc true dark1 none
+
+; vim: ft=colortemplate

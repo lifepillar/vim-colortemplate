@@ -220,6 +220,9 @@ def Test_VimGenerator_94()
   AssertBuild('test94')
 enddef
 
+def Test_VimGenerator_325()
+  AssertBuild('test325')
+enddef
 
 var results = tt.Run('_VimGenerator_')
 

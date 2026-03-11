@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **A March 11th, 2026 this project resides on [Codeberg](https://codeberg.org/lifepillar/vim-colortemplate)**.
+
 # The Toolkit for Vim Color Scheme Designers!
 
 Colortemplate is a 100% Vim9 script plugin for Vim 9.1 or later, which makes it
